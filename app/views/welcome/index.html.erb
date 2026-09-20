@@ -7,7 +7,7 @@
       <%# Guarded like the CTA below it: an installation with no demo seeded should
           not offer a door that opens onto a page with no way in. %>
       <%= link_to t(".nav_demo"), demo_path if demo_available? %>
-      <%= link_to "github ↗", REPO_URL, class: "gh", rel: "noopener" if REPO_URL %>
+      <%= link_to "github ↗", REPO_URL, class: "gh", target: "_blank", rel: "noopener" if REPO_URL %>
       <%= link_to t(".login"), new_session_path, class: "gh" %>
     </div>
   </nav>
@@ -91,15 +91,15 @@
       <h2><%= t(".band_heading_html") %></h2>
       <p><%= t(".band_note") %></p>
     </div>
-    <%= link_to t(".band_cta"), REPO_URL, class: "btn", rel: "noopener" if REPO_URL %>
+    <%= link_to t(".band_cta"), REPO_URL, class: "btn", target: "_blank", rel: "noopener" if REPO_URL %>
   </div>
 
   <footer>
     <div class="sig"><%= t(".footer_sig") %></div>
     <div class="contrast">
       <% if REPO_URL %>
-        <%= link_to "github", REPO_URL, rel: "noopener" %> ·
-        <%= link_to t(".footer_docs"), "#{REPO_URL}#readme", rel: "noopener" %> ·
+        <%= link_to "github", REPO_URL, target: "_blank", rel: "noopener" %> ·
+        <%= link_to t(".footer_docs"), "#{REPO_URL}#readme", target: "_blank", rel: "noopener" %> ·
       <% end %>
       <%= render "welcome/contrast_toggle" %> ·
       <%= link_to service_host, root_path %>

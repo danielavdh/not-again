@@ -1,6 +1,8 @@
 <% content_for :title, t("page.dashboard") %>
 
 <div class="backend_table dashboard">
+	<%= render partial: 'shared/flash' %>
+
 	<% if current_admin.full_access? || sudo? %>
 		<h2>
 		<%= t(".welcome_full_access", 
@@ -19,8 +21,6 @@
 			<p><%= t(".read_only_can_do") %></p>
 		<% end %>
 	<% end %>
-
-	<%= render partial: 'shared/flash' %>
 
 <% if @entities.present? && @entities.count > 1 %>
 
@@ -55,10 +55,6 @@
 							   entities: group_entities.map(&:code).join(",") 
 							   } %>
 				</div>
-				<%# A family archive is the whole family's ledger, posting-level, in one
-				    file — access to one member is not access to the rest, so this is
-				    shown only to an admin with write access to EVERY member.
-				    See Admin#can_use_archive?. %>
 				<% if current_admin.can_use_archive?(Archives::Storage.scope_key_for(group_entities.first)) %>
 				<div class="family-downloads">
 					<span class="family-downloads-label">

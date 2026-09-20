@@ -4,7 +4,7 @@
     <div class="brand"><%= link_to "not-again", root_path %></div>
     <div class="navmeta">
       <%= link_to t("welcome.index.nav_features"), root_path(anchor: "what") %>
-      <%= link_to "github ↗", REPO_URL, class: "gh", rel: "noopener" if REPO_URL %>
+      <%= link_to "github ↗", REPO_URL, class: "gh", target: "_blank", rel: "noopener" if REPO_URL %>
       <%= link_to t("welcome.index.login"), new_session_path, class: "gh" %>
     </div>
   </nav>

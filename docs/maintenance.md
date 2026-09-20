@@ -124,6 +124,14 @@ backup_db.sh <container> <db_user> <db_name> <bucket> <aws_profile> [prefix]
 
 The profile matters when each app's storage lives in its own project with its own key: omitting it means the upload fails with AccessDenied rather than quietly writing to the wrong place. A cron line can be added before the app it backs up exists — the script exits 0 with a note when its container is not running, so nothing has to be remembered on deploy day.
 
+⚠️ **The server's `/root/backup_db.sh` is a copy, and nothing keeps it in step.** It was `scp`-ed there once during setup; `kamal deploy` never touches it, because it runs on the host rather than in the container. So after pulling a version of this app that changed the script, copy it up again:
+
+```
+diff <(ssh root@<your server> cat /root/backup_db.sh) lib/scripts/backup_db.sh
+```
+
+Nothing means it is current. Anything means the server is running an older backup policy than the one you just read — and the failure is silent, because an out-of-date script still produces backups every night.
+
 **The dump is verified before upload** — non-empty, and beginning with the five bytes `PGDMP` that mark a custom-format archive. `pg_dump` can exit 0 having written nothing useful, and an empty file uploaded over a good one is how a backup system reports success for months and then has nothing.
 
 **Pruning is a lifecycle rule on the bucket**, not the script's job: 30 days for `daily/`, 90 for `weekly/`, 365 for `monthly/`, 3653 for `yearly/`.
