@@ -1,0 +1,69 @@
+<% content_for :title, @receipt.title %>
+
+<div class="backend_table">
+  <%= render partial: 'shared/flash' %>
+
+  <table class="backend_show">
+    <thead>
+      <tr>
+        <th class="firstCell"><%= @receipt.title %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="list-line-odd">
+        <td class="firstCell"><%= t("attrs.date") %>:</td>
+        <td><%= format_date(@receipt.receipt_date) %></td>
+      </tr>
+      <tr class="list-line-even">
+        <td class="firstCell"><%= t("receipts.entity") %>:</td>
+        <td><%= @receipt.entity&.name %></td>
+      </tr>
+      <% if @receipt.description.present? %>
+        <tr class="list-line-odd">
+          <td class="firstCell"><%= t("receipts.description_col") %>:</td>
+          <td><%= @receipt.description %></td>
+        </tr>
+      <% end %>
+      <tr class="<%= @receipt.description.present? ? 'list-line-even' : 'list-line-odd' %>">
+        <td class="firstCell"><%= t("receipts.linked_to") %>:</td>
+        <td>
+          <% if @receipt.posting %>
+            <%= @receipt.posting.account&.code %> - <%= @receipt.posting.description.presence || @receipt.posting.journal_entry&.memo %>
+          <% else %>
+            <%= t("receipts.unlinked") %>
+          <% end %>
+        </td>
+      </tr>
+      <% if @receipt.scan %>
+        <tr class="<%= @receipt.description.present? ? 'list-line-odd' : 'list-line-even' %>">
+          <td class="firstCell">
+            <img src="<%= @receipt.thumbnail_url %>" alt="<%= @receipt.title %>">
+          </td>
+          <td>
+            <% if @receipt.image? %>
+              <img src="<%= @receipt.preview_url %>" alt="<%= @receipt.title %>">
+            <% else %>
+              <a href="<%= @receipt.original_url %>"><%= @receipt.display_filename %></a>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+
+
+<div class="crud_navigation">
+ 	<%= link_to receipts_path, 
+			class: 'backend_link button green' do %>
+			<span class="bigger-screen"><%= t("crud.receipts")%></span>
+	  		<svg class="tiny-screen stroke s40">
+				<use xlink:href='#arrow_left'></use>
+			</svg>
+	<% end %>
+  <% if can_upload_receipts? %>
+    <%= link_to t("crud.edit"), edit_receipt_path(@receipt), class: "backend_link button green" %>
+  <% end %>
+</div>

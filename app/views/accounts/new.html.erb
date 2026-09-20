@@ -1,0 +1,18 @@
+<% content_for :title, t(".new_account") %>
+
+<div id="new_edit_view">
+
+    <h1><%= t(".new_account") %></h1>
+	
+	<%= render partial: 'shared/flash' %>
+
+    <% if @account.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <%= render 'form', account: @account %>
+
+</div>
+<div class="crud_navigation">
+    <%= link_to t("crud.accounts"), accounts_path, class: "backend_link button green"  %>
+</div>

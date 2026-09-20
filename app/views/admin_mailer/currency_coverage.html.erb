@@ -1,0 +1,13 @@
+<p><%= t(".greeting", name: @admin.username) %></p>
+
+<% if @published.any? %>
+  <p><%= t(".published_by", code: @code, sources: @published.map { |s| RateSourceConfig.label_for(s) }.join(", ")) %></p>
+<% else %>
+  <p><%= t(".published_by_nobody", code: @code) %></p>
+<% end %>
+
+<% if @missing.any? %>
+  <p><%= t(".not_published_by", sources: @missing.map { |s| RateSourceConfig.label_for(s) }.join(", ")) %></p>
+<% end %>
+
+<p><%= @published.any? ? t(".will_fetch") : t(".enter_by_hand") %></p>

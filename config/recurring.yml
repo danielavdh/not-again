@@ -1,0 +1,110 @@
+# examples:
+#   periodic_cleanup:
+#     class: CleanSoftDeletedRecordsJob
+#     queue: background
+#     args: [ 1000, { batch_size: 500 } ]
+#     schedule: every hour
+#   periodic_cleanup_with_command:
+#     command: "SoftDeletedRecord.due.delete_all"
+#     priority: 2
+#     schedule: at 5am every day
+#    schedule: '0 3 1 * *'
+#    schedule: '0 20 28-31 * *'
+production:
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+  # One entry per rate source, because they publish at genuinely different
+  # times — not a shared schedule with branching inside the job.
+  #
+  # HMRC: published on the penultimate Thursday of the PRECEDING month and fixed
+  # for the month it names, so it exists before the month begins.
+  fetch_hmrc_exchange_rates:
+    class: FetchExchangeRatesJob
+    args: ['hmrc']
+    schedule: '0 3 1 * *'
+  # ECB: a month-END spot rate. The job refuses any day but the last, so the
+  # 28-31 window catches whichever that is.
+  fetch_ecb_exchange_rates:
+    class: FetchExchangeRatesJob
+    args: ['ecb']
+    schedule: '0 20 28-31 * *'
+  # ESTV: the monthly average runs from the 25th of one month to the 24th of the
+  # next, so the figure for a month is complete around the 25th. The feed serves
+  # the CURRENT month only and declares which month that is, so whatever it says
+  # is what gets stored.
+  fetch_estv_exchange_rates:
+    class: FetchExchangeRatesJob
+    args: ['estv']
+    schedule: '0 4 26 * *'
+  # Bundesbank: the average of a month's ECB daily rates, sent to the BMF on the
+  # first working day of the FOLLOWING month. Asking earlier returns a valid
+  # response with no data, which the job treats as "not published yet" rather
+  # than as a failure — so the 3rd is safe even when the 1st is a weekend.
+  fetch_bundesbank_exchange_rates:
+    class: FetchExchangeRatesJob
+    args: ['bundesbank']
+    schedule: '0 4 3 * *'
+  # The safety net under the four per-source jobs above. They fetch the CURRENT
+  # period; this fills anything the books need and the database lacks — a missed
+  # run, a backdated entry, an entity whose books start years back, a currency
+  # added today. Argument-free and idempotent, so running it daily is free when
+  # there is nothing to do.
+  #
+  # Without it a missed fetch was permanent: three retries, one email, then
+  # silence until the following month.
+  fill_rate_gaps:
+    class: FillRateGapsJob
+    schedule: '0 5 * * *'
+  hmrc_sandbox_healthcheck:
+    class: Hmrc::SandboxHealthcheckJob
+    schedule: every monday at 4am
+  # German Vordrucke appear Aug/Sep, HMRC's SA1xx in Nov/Dec — monthly catches
+  # both without hammering anyone. Silent unless a form has actually changed.
+  tax_form_watch:
+    class: TaxFormWatchJob
+    schedule: '0 6 2 * *'   # 06:00 on the 2nd of each month
+  entity_retention_sweep:
+    class: Entities::RetentionSweepJob
+    schedule: '0 5 1 * *'   # 05:00 on the 1st of each month
+  # Daily, not monthly like most sweeps here — the one-month window is a
+  # promise about the DRAFT's own age, not about when this job happens to
+  # run, so a draft created on the 3rd should not still be sitting there on
+  # the 33rd waiting for a scheduled-monthly sweep to catch up.
+  admin_draft_sweep:
+    class: Admins::DraftSweepJob
+    schedule: every day at 5:15am
+  # Once a year, checking the year BEFORE the one that just ended — see the
+  # job's own comment for why. 05:30, after entity_retention_sweep.
+  archive_sweep:
+    class: Archives::SweepJob
+    schedule: '30 5 1 1 *'   # 05:30 on 1 January
+  # Hourly, because the demo is public: rate limiting caps entries per IP, not
+  # in total, so a day between sweeps is a day of rows piling up.
+  session_sweep:
+    class: SessionSweepJob
+    schedule: every hour at minute 42
+  # Sign-in records are personal data (an IP address identifies a person) and are
+  # kept only as long as they serve their purpose — see SignInEvent::RETENTION.
+  # 04:30, after the 03:00 backup, so the nightly dump still holds the day that
+  # is about to be dropped.
+  sign_in_event_sweep:
+    command: "SignInEvent.expired.delete_all"
+    schedule: every day at 4:30am
+  # Monday 07:00 — after the 03:00 backup and the 04:00 HMRC healthcheck, so it
+  # reports on a night that has already happened.
+  #
+  # ⚠️ Mails EVERY week, pass or fail, unlike everything else here. Nothing else
+  # watches whether the scheduler itself is alive, and an alert-on-failure job
+  # cannot: it is silent when all is well AND when it is dead. A report that
+  # always arrives makes a missing Monday the alarm. See Maintenance::WeeklyCheck.
+  maintenance_report:
+    class: MaintenanceReportJob
+    schedule: every monday at 7am
+development:
+  entity_retention_sweep:
+    class: Entities::RetentionSweepJob
+    schedule: '0 5 1 * *'
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every day at 9pm

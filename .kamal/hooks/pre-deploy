@@ -1,0 +1,27 @@
+#!/bin/sh
+# set -e matters: a shell script exits with the status of its LAST command, so
+# without it a failing migration followed by a succeeding catalogue load would
+# report success and the deploy would go ahead on a half-migrated database.
+set -e
+
+# ⚠️ The destination has to be passed through. Kamal exports KAMAL_DESTINATION to
+# its hooks, but `kamal app exec` inside the hook is a fresh invocation, so
+# without this a `kamal deploy -d staging` would run its migrations against
+# whatever config/deploy.yml points at — the wrong database, silently.
+#
+# This installation uses no destination, so it expands to nothing. It is kept
+# because adding one later would otherwise reintroduce exactly that bug.
+DEST=${KAMAL_DESTINATION:+-d $KAMAL_DESTINATION}
+
+kamal app exec $DEST "bin/rails db:migrate"
+
+# The tax catalogues are reference data shipped with the code: db/tax_categories/*.yml
+# become rows in tax_categories. This must run AFTER db:migrate, and it used
+# to be a step held in someone's head — which is how production spent weeks
+# carrying rows for categories the files no longer declared.
+#
+# It is the ONLY place that may delete a category row. Read the output: a
+# "removed N stale category row(s)" line means keys disappeared from a file, and
+# any bookkeeper whose accounts used them is emailed by
+# TaxCategoryRemovalNotificationJob.
+kamal app exec $DEST "bin/rails tax_categories:load"

@@ -1,0 +1,132 @@
+h1. Privacy Policy & Terms of Use
+
+This page covers both the privacy policy and the terms of use for [SERVICE NAME], the   online bookkeeping service available at "[WEBSITE]":https://[WEBSITE]. It explains what personal data we process, why, and on what legal basis, and sets out the terms on which the service is provided.
+
+h2. Who we are
+
+The service is operated by [TRADING NAME] ([LEGAL NAME]), [STREET], [CITY], [COUNTRY]. For the purposes of data protection law, we are the data controller for the personal data described below. You can reach us at [EMAIL]. Our full provider details are in the "Impressum":#impressum section below.
+
+h2. What personal data we process
+
+* *Account details* — your name, email address and a securely hashed password.
+
+* *Bookkeeping records you enter* — accounts, transactions, journal entries and bank entries, including amounts, dates and descriptions.
+
+* *Documents you upload* — receipts and supporting files.
+
+* *Tax data* — the income and expense figures and filing obligations used to submit Making Tax Digital (MTD) returns to HM Revenue & Customs (HMRC).
+
+* *HMRC authorisation* — the OAuth access tokens that let us file on your behalf once you have authorised us with HMRC.
+
+* *Technical data* — the cookies listed below, and the fraud-prevention data HMRC requires us to send with each submission.
+
+h2. Why we process it, and our lawful basis
+
+We process your data for two purposes only:
+
+* *To provide the bookkeeping and filing service you signed up for.* Lawful basis: performance of a contract.
+
+* *To meet Making Tax Digital filing duties and to keep the tax records the law requires.* Lawful basis: compliance with a legal obligation.
+
+We do not process your data for advertising, and we do not sell it or share it with third parties for marketing.
+
+h2. Sharing your data with HMRC
+
+When you file a return, we transmit the relevant income and expense figures, together with the fraud-prevention data HMRC requires, to HM Revenue & Customs through their MTD APIs, on your instruction. HMRC is a separate data controller for the information it receives.
+
+h2. Where your data is stored
+
+All of your data is stored within the European Union:
+
+* The application and database are hosted with Hetzner in Germany.
+
+* Uploaded files, receipts, tax filings and your books archive are stored with Scaleway Object Storage in Paris, France.
+
+* A nightly copy of everything, including database backups, is kept with OVH Object Storage in Strasbourg, France, for redundancy across two providers.
+
+* Outgoing email — including this policy's own transactional mail — is sent through Brevo.
+
+h2. How long we keep it
+
+We keep your records for as long as your account is active, and for as long afterwards as the applicable law requires them to be retained. Record-keeping periods differ between countries and tax regimes, so we retain your data for whatever period the law that applies to you requires. When data is no longer required and there is no legal obligation to keep it, it is deleted.
+
+h2. Your rights
+
+Depending on where you are based, your rights arise under the data protection law that applies to you — for example the EU GDPR (including the EEA), the UK GDPR, or the Swiss Federal Act on Data Protection (FADP). These typically include the right to access your personal data, to have inaccurate data corrected, to have data erased (except where we must keep it to meet a legal obligation), to restrict or object to processing, and to data portability. You also have the right to complain to the relevant data protection authority (in Switzerland, the FDPIC). To exercise any of these rights, contact us at [EMAIL].
+
+h2. Cookies
+
+We use only the cookies strictly necessary to run the service and to remember choices you make. We do not use analytics, advertising, tracking or third-party cookies, so no cookie banner is required. The cookies we set are:
+
+* *Session cookie* — keeps you logged in. Essential.
+
+* *High-contrast preference* — remembers the accessibility display option, set only when you switch it on.
+
+* *Fraud-prevention data* — technical details HMRC requires us to send with each Making Tax Digital submission. Used only for filing.
+
+h2. Security
+
+Data is encrypted in transit using HTTPS, and credentials and HMRC authorisation tokens are stored encrypted. If you believe you have found a security vulnerability or wish to report a security incident, please email [EMAIL]. Machine-readable contact details are also published at "/.well-known/security.txt":/.well-known/security.txt.
+
+h2. If we hold data for your business
+
+If you keep books for other people through this service, we act as your data processor under Article 28 GDPR for that data:
+
+* We only do with it what the app does when you use it — nothing else.
+
+* Anyone with access to the server, including us, is bound to keep what they see confidential.
+
+* Security measures are listed under "Security" above.
+
+* Sub-processors are listed under "Where your data is stored" above; each has its own data processing agreement for their part.
+
+* You can review, correct and export your own data at any time, through the reports and exports already in the app. It is deleted once its statutory retention period ends.
+
+* Receipts you upload are kept here for as long as your books are, but not separately backed up, because you are required to keep a copy as well.
+
+* If the people running this installation discover a security incident affecting your data, they will contact you directly, using the email address on your account.
+
+* This service is open source — what we do with your data can be verified by reading the code,
+not just by asking us.
+
+h2. Terms of use
+
+By using [SERVICE NAME] you agree to the following terms:
+
+* The service is provided to allow you to keep your books and file Making Tax Digital returns.
+
+* You are responsible for the accuracy and completeness of the figures you enter and submit to HMRC. We provide the software; the returns you file are your own.
+
+* You are responsible for keeping your login credentials confidential.
+
+* The service is provided on an "as is" basis, and we do not guarantee uninterrupted availability.
+
+* We may update these terms and this policy from time to time; the current version is always the one published on this page.
+
+If you have any questions about this policy or these terms, contact us at [EMAIL].
+
+h2. Exchange rate data
+
+This service uses published exchange rates from the European Central Bank, the Deutsche Bundesbank (BBEX3 time series), HM Revenue & Customs, and the Swiss Federal Tax Administration / Federal Office for Customs and Border Security. Bundesbank and BMF data is used under Datenlizenz Deutschland – Namensnennung – Version 2.0. Rates are reproduced as published; we do not alter them.
+
+h2. Impressum
+
+Information pursuant to § 5 DDG (German Digital Services Act).
+
+h2. Provider
+
+[LEGAL NAME]
+
+[STREET]
+
+[CITY]
+
+[COUNTRY]
+
+h2. Contact
+
+Email: [EMAIL]
+
+h2. Responsible for content
+
+[LEGAL NAME], address as above.

@@ -1,0 +1,22 @@
+<div id="new_edit_view">
+
+    <%= render partial: "shared/flash" %>
+
+    <% if @admin.errors.any? %>
+    <p class="error_message"><%= t(".errors_on_page") %></p>
+    <% end %>
+
+    <h1><%= t(".edit_h1", admin: @admin.username) %></h1>
+
+    <%= render 'form', admin: @admin %>
+
+    <div class="crud_navigation">
+    <% if sudo? %>
+        <%= link_to t(".show"), @admin, class: "backend_link" %> |
+        <%= link_to t(".index"), admins_path, class: "backend_link" %>
+    <% else %>
+        <%= link_to t("crud.back"), admin_path(current_admin), class: "backend_link" %>
+    <% end %>
+    </div>
+
+</div>

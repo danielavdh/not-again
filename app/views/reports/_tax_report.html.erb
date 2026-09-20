@@ -1,0 +1,136 @@
+<%# The saved tax report: the scheme's tagged accounts, grouped by tax
+    category, banded income / expenses / other with a net line. Same figures
+    the submission carries — data comes from Reports::TaxReport. %>
+<% show_translated = translated_column?(@currencies_with_data, @display_currency, forced: true) %>
+<% colspan = report_colspan(@currencies_with_data, @display_currency, forced: true) %>
+<table class="reports">
+  <thead>
+    <tr>
+      <th><%= t("reports.show.category") %></th>
+      <% @currencies_with_data.each do |curr| %>
+        <th><%= curr %></th>
+      <% end %>
+      <% if show_translated %>
+        <th>
+          <%# A tax report's currency is the scheme's — never a dropdown. %>
+          <%= @display_currency %>
+          <%= render "reports/rate_source", sources: rate_sources, selectable: false %>
+        </th>
+      <% end %>
+    </tr>
+    <tr class="separator-row"></tr>
+  </thead>
+
+  <tbody>
+    <% (@data[:category_groups] || []).each do |cat| %>
+
+      <%# Section heading, and the running total for the section that just ended. %>
+      <% if cat[:section_header] %>
+        <% if (preceding = cat[:preceding_section_total]) && @data[:section_totals][preceding] %>
+          <tr class="list-header final-total">
+            <td><%= t("reports.show.total") %> <%= t("tax.section.#{preceding}") %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td class="right"><%= format_cents_with_currency(@data[:section_totals][preceding][:currency_totals][curr], curr) %></td>
+            <% end %>
+            <% if show_translated %><td class="right"><%= format_cents_with_currency(@data[:section_totals][preceding][:translated_total], @display_currency) %></td><% end %>
+          </tr>
+          <tr class="separator-row"></tr>
+        <% end %>
+        <tr class="list-header">
+          <td colspan="<%= colspan %>"><%= t("tax.section.#{cat[:section]}") %></td>
+        </tr>
+      <% end %>
+
+      <%# Category heading — the box on the form, its reference, its member accounts under it. %>
+      <tr class="list-header">
+        <td colspan="<%= colspan %>"><%= [cat[:reference], cat[:label]].compact.join(" — ") %></td>
+      </tr>
+
+      <% cat[:accounts].each do |account| %>
+        <% next if account[:translated_total] == 0 && account[:currency_totals].values.all?(&:zero?) %>
+        <% acct_label = "#{account[:code]} - #{account[:name]}" %>
+
+        <% if @short_version %>
+          <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+            <td class="indent"><%= acct_label %><% if account[:inactive] %> <em>(<%= t("attrs.inactive") %>)</em><% end %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td class="right"><%= format_cents_with_currency(account[:currency_totals][curr], curr) %></td>
+            <% end %>
+            <% if show_translated %><td class="right"><%= format_cents_with_currency(account[:translated_total], @display_currency) %></td><% end %>
+          </tr>
+        <% else %>
+          <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+            <td class="indent"><%= acct_label %><% if account[:inactive] %> <em>(<%= t("attrs.inactive") %>)</em><% end %></td>
+            <% @currencies_with_data.each do |curr| %><td></td><% end %>
+            <% if show_translated %><td></td><% end %>
+          </tr>
+
+          <% (account[:entries] || []).each do |entry| %>
+            <tr class="entry-row <%= cycle('list-line-odd', 'list-line-even') %>">
+              <td class="indent2">
+                <% if entry[:balance_account_id] && entry[:edit_type] && current_admin.may_open_entry_forms? %>
+                  <%= link_to "#{entry[:date]} - #{entry[:description]}",
+                       send("edit_#{entry[:edit_type]}_account_path", entry[:balance_account_id],
+                         journal_entry_id: entry[:journal_entry_id]),
+                       class: 'report-account-link popup-edit' %>
+                <% else %>
+                  <%= entry[:date] %> - <%= entry[:description] %>
+                <% end %>
+              </td>
+              <% @currencies_with_data.each do |curr| %>
+                <td class="right"><%= entry[:currency] == curr ? format_cents_with_currency(entry[:amount], curr) : '' %></td>
+              <% end %>
+              <% if show_translated %><td class="right"><%= format_cents_with_currency(entry[:translated_amount], @display_currency) %></td><% end %>
+            </tr>
+          <% end %>
+
+          <tr class="account-total-row <%= cycle('list-line-odd', 'list-line-even') %>">
+            <td class="indent2"><%= t("reports.show.total") %> <%= account[:name] %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td class="right"><%= format_cents_with_currency(account[:currency_totals][curr], curr) %></td>
+            <% end %>
+            <% if show_translated %><td class="right"><%= format_cents_with_currency(account[:translated_total], @display_currency) %></td><% end %>
+          </tr>
+        <% end %>
+      <% end %>
+
+      <%# Category total — the figure that goes in the box. %>
+      <tr class="parent-row <%= cycle('list-line-odd', 'list-line-even') %>">
+        <td class="indent"><%= t("reports.show.total") %> <%= cat[:label] %></td>
+        <% @currencies_with_data.each do |curr| %>
+          <td class="right"><%= format_cents_with_currency(cat[:currency_totals][curr], curr) %></td>
+        <% end %>
+        <% if show_translated %><td class="right"><%= format_cents_with_currency(cat[:translated_total], @display_currency) %></td><% end %>
+      </tr>
+    <% end %>
+
+    <%# Final section total for the section the report ends on. %>
+    <% if @data[:last_section] && @data[:section_totals][@data[:last_section]] %>
+      <tr class="list-header final-total">
+        <td><%= t("reports.show.total") %> <%= t("tax.section.#{@data[:last_section]}") %></td>
+        <% @currencies_with_data.each do |curr| %>
+          <td class="right"><%= format_cents_with_currency(@data[:section_totals][@data[:last_section]][:currency_totals][curr], curr) %></td>
+        <% end %>
+        <% if show_translated %><td class="right"><%= format_cents_with_currency(@data[:section_totals][@data[:last_section]][:translated_total], @display_currency) %></td><% end %>
+      </tr>
+    <% end %>
+
+    <%# Net: income − expenses. %>
+    <tr class="separator-row"></tr>
+    <tr class="list-header final-total">
+      <td><%= t("reports.show.net") %></td>
+      <% @currencies_with_data.each do |curr| %>
+        <td class="right"><%= format_cents_with_currency(@data[:net][:currency_totals][curr], curr) %></td>
+      <% end %>
+      <% if show_translated %><td class="right"><%= format_cents_with_currency(@data[:net][:translated_total], @display_currency) %></td><% end %>
+    </tr>
+
+    <% if @fx_variance && @fx_variance != 0 %>
+      <tr class="fx-variance">
+        <td><%= fx_variance_label_link(start_date: @report.start_date, end_date: @report.end_date, entities: [@report.report_group.entity.code], currency: @display_param) %></td>
+        <% @currencies_with_data.each do |curr| %><td class="right">-</td><% end %>
+        <% if show_translated %><td class="right"><%= format_cents_with_currency(@fx_variance, @display_currency) %></td><% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,197 @@
+<% content_for :title, "Gebruikershandleiding" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>Hoe je deze app gebruikt</h1>
+
+  <p>Deze app houdt je geld bij &thinsp;&mdash;&thinsp; wat er binnenkomt, wat er uitgaat en wat er op elk account overblijft. Je richt hem zelf in, afgestemd op de manier waarop je onderneming is georganiseerd.</p>
+  <p>Eén set boeken heet een <strong>entiteit</strong>: een onderneming, een verhuurd pand, of gewoon je eigen huishouden. Je kunt er hier meerdere naast elkaar bijhouden, elk met eigen rekeningen en eigen cijfers.</p>
+  <p>Voordat je begint, is het de moeite waard een plan te schetsen: welke inkomstenstromen heb je, waaraan geef je geld uit en welke bankrekeningen en creditcards moet je bijhouden?</p>
+
+  <nav class="guide-toc" aria-label="Inhoud">
+    <ul>
+      <li><a href="#two-sides">Elke boeking heeft twee kanten</a></li>
+      <li><a href="#starting">Beginnen met wat er al is</a></li><br />
+      <li><a href="#accounts">Je accounts</a></li>
+      <li><a href="#adding-account">Een account aanmaken</a></li>
+      <li><a href="#deposit">Inkomsten vastleggen &thinsp;&mdash;&thinsp; een storting</a></li>
+      <li><a href="#withdrawal">Uitgaven vastleggen &thinsp;&mdash;&thinsp; een opname</a></li>
+      <li><a href="#transfer">Geld overboeken tussen eigen rekeningen &thinsp;&mdash;&thinsp; een overboeking</a></li>
+      <li><a href="#basis">Kasstelsel en factuurstelsel</a></li>
+      <li><a href="#splitting">Een rekening splitsen tussen zakelijk en privé</a></li><br />
+      <li><a href="#receipts">Bonnen bijvoegen</a></li>
+      <li><a href="#repeating">Een vorige boeking herhalen</a></li>
+      <li><a href="#correcting">Een fout corrigeren</a></li>
+      <li><a href="#reports">Je cijfers bekijken (Rapporten)</a></li>
+      <li><a href="#closing-year">Een boekjaar afsluiten</a></li>
+      <li><a href="#reconcile">Je saldo controleren met de bank</a></li><br />
+      <li><a href="#access">Anderen toegang geven</a></li>
+      <li><a href="#tax">Belastingrapportage instellen</a></li>
+      <li><a href="#filing">Zelf je kwartaalcijfers indienen</a></li>
+      <li><a href="#families">Meerdere bedrijven samen houden &thinsp;&mdash;&thinsp; families</a></li>
+      <li><a href="#cross-business">Wanneer een van je ondernemingen voor een andere betaalt</a></li>
+      <li><a href="#archive">Al je gegevens downloaden</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="two-sides">Elke boeking heeft twee kanten</h2>
+  <p>Geld verschijnt of verdwijnt nooit zomaar: het komt ergens vandaan en gaat ergens heen. Daarom vraagt de app bij elke boeking om een tweede rekening. Een bedrag op je bankrekening kwam uit een verkoop, van een klant of uit je eigen zak &thinsp;&mdash;&thinsp; en het is die tweede keuze, niet de bankregel, die je later vertelt wat je onderneming werkelijk heeft verdiend en uitgegeven.</p>
+  <p>Je hoeft nooit uit te zoeken welke kant welke is. Kies de bankrekening waarin je werkt, geef aan of er geld in of uit ging, en kies de rekening die zegt waarvoor. De app schrijft beide kanten en houdt ze gelijk.</p>
+
+  <h2 id="starting">Beginnen met wat er al is</h2>
+  <p>Bestond je onderneming al voordat je deze app ging gebruiken, dan staat er al geld op je bankrekening. Dat bedrag &thinsp;&mdash;&thinsp; het beginsaldo &thinsp;&mdash;&thinsp; moet één keer worden vastgelegd, anders klopt elk saldo dat de app je laat zien voorgoed precies dat bedrag niet.</p>
+  <p>Boek het als een overboeking, dan kloppen beide kanten. Maak eerst een rekening van het type Eigen vermogen aan, bijvoorbeeld &laquo;Beginkapitaal&raquo;. Open die rekening, klik op Nieuwe overboeking, kies je bankrekening als bestemming, vul in wat er op de startdag op de bank stond, en dateer het op die dag.</p>
+  <p>Doe hetzelfde voor al het andere dat er al was &thinsp;&mdash;&thinsp; een creditcardsaldo, een lening. Daarna boek je gewoon verder.</p>
+
+  <h2 id="accounts">Je accounts</h2>
+  <p>Accounts zijn de categorieën waarmee je je geld organiseert. Je maakt ze zelf aan onder Accounts in het menu. Zie ze als gelabelde emmers: één voor je bankrekening, één voor huur, één voor reiskosten, één voor omzet, enzovoort. Balansaccounts (bankrekeningen, leningen, creditcards) hebben een valuta. Inkomsten- en uitgavenaccounts niet &thinsp;&mdash;&thinsp; die verzamelen alleen totalen.</p>
+  <p>Zodra je accounts zijn ingericht, is de dagelijkse boekhouding eenvoudig: je legt vast wat er is bewogen en waar het naartoe is gegaan.</p>
+
+  <h2 id="adding-account">Een account aanmaken</h2>
+  <p>Ga naar Accounts in het menu en klik op Nieuw account. Vul in:</p>
+  <ul>
+    <li>Naam &thinsp;&mdash;&thinsp; wat het best past, bijv. &laquo;ING Betaalrekening&raquo; of &laquo;Honoraria&raquo; of &laquo;Reizen&raquo;. Op elk moment te wijzigen.</li>
+    <li>Nummer &thinsp;&mdash;&thinsp; een zescijferige code met betekenis. Accounts worden op de pagina gerangschikt op basis van dit nummer.<br/>
+		<code>5</code>04401: Het eerste cijfer bepaalt het type account, en de app vult Type voor je in:<br />
+		<code>1</code> activa &middot; <code>2</code> passiva &middot; <code>3</code> eigen vermogen &middot; <code>4</code> inkomsten &middot; <code>5</code> uitgaven &middot; <code>6</code> privé<br />
+		5<code>04</code>401: De volgende 2 cijfers staan voor je bedrijf/entiteit<br />
+		504<code>4</code>01: Gebruik cijfer 4 voor categorieën (bijv. inkoopkosten; auto en reis; huur, belastingen, energie en verzekering; onderhoud&nbsp;...)<br />
+		5044<code>01</code>: De laatste cijfers zijn voor details (bijv. elektriciteit, water, verzekering, huur, belastingen&nbsp;...)
+	</li>
+    <li>Type account (met voorbeelden van wat er meestal in staat):<br />
+		Activa: Bankrekeningen, kas, onroerend goed, apparatuur&nbsp;...<br />
+		Passiva: Creditcards, zakelijke leningen, roodstanden, hypotheken, btw te betalen&nbsp;...<br />
+		Eigen vermogen: Startkapitaal, ingehouden winst, reserves&nbsp;...<br />
+		Inkomsten: Honoraria, omzet, dienstverleningsopbrengsten, ontvangen rente, subsidies&nbsp;...<br />
+		Uitgaven: Huur, reizen, kantoorkosten, personeelskosten, adviseurshonoraria (accountant, advocaat), verzekeringen&nbsp;...<br />
+		Privé: Onttrekkingen, privégedeelte van gemengde kosten, gezondheid, voeding&nbsp;...
+	</li>
+    <li>Valuta &thinsp;&mdash;&thinsp; alleen voor balansaccounts (Activa, Passiva, Eigen vermogen).</li>
+    <li>Bovenliggend account &thinsp;&mdash;&thinsp; optioneel. Wijs een bovenliggend account toe om accounts te groeperen. Bovenliggende accounts ontvangen zelf nooit boekingen. Ze tonen het totaal van hun onderliggende accounts.</li>
+  </ul>
+  <p>Sla het account op en het verschijnt in je lijst, klaar voor gebruik.</p>
+
+  <h2 id="deposit">Inkomsten vastleggen &thinsp;&mdash;&thinsp; een storting</h2>
+  <p>Wanneer er geld op je bankrekening binnenkomt, leg je dit vast als een storting.</p>
+  <ol>
+    <li>Ga naar je bankrekening in de accountlijst en klik op Nieuwe storting.</li>
+    <li>Voer de datum, een omschrijving en het bedrag in.</li>
+    <li>Kies het inkomstenaccount dat beschrijft waarvoor het geld bestemd was (bijv. Omzet, Advieshonoraria).</li>
+    <li>Klik op Opslaan.</li>
+  </ol>
+  <p>Je kunt meerdere regels toevoegen als de storting verschillende soorten inkomsten omvat. Elke regel krijgt zijn eigen account en bedrag.</p>
+
+  <h2 id="withdrawal">Uitgaven vastleggen &thinsp;&mdash;&thinsp; een opname</h2>
+  <p>Wanneer er geld je bankrekening verlaat, leg je dit vast als een opname &thinsp;&mdash;&thinsp; hetzelfde idee als een storting, maar omgekeerd.</p>
+  <ol>
+    <li>Ga naar je bankrekening en klik op Nieuwe opname.</li>
+    <li>Voer de datum, omschrijving en het bedrag in.</li>
+    <li>Kies het uitgavenaccount (bijv. Kantoorbenodigdheden, Reizen, Huur).</li>
+    <li>Klik op Opslaan.</li>
+  </ol>
+  <p>Je hoeft niet elke transactie afzonderlijk in te voeren. Als je in de loop van een maand &euro;340 aan reizen hebt uitgegeven, is één opname van &euro;340 op het reisaccount prima. Tel ze op in een spreadsheet en voer de totalen in.</p>
+
+  <h2 id="transfer">Geld overboeken tussen eigen rekeningen &thinsp;&mdash;&thinsp; een overboeking</h2>
+  <p>Als je geld overmaakt van de ene bankrekening naar de andere (bijvoorbeeld van een betaalrekening naar een spaarrekening), leg je dit vast als een overboeking.</p>
+  <ol>
+    <li>Ga naar het account waarvan het geld vertrekt.</li>
+    <li>Klik op Nieuwe overboeking, kies het doelaccount, voer het bedrag in en sla op.</li>
+  </ol>
+  <p>Als de twee accounts in verschillende valuta worden bijgehouden, voer je het bedrag in dat daadwerkelijk op het doelaccount is bijgeschreven. De app berekent de impliciete wisselkoers ter plekke en toont die aan je voordat je opslaat.</p>
+
+  <h2 id="basis">Kasstelsel en factuurstelsel</h2>
+  <p>Bij het kasstelsel boekt u op het moment dat het geld binnenkomt of uw rekening verlaat. Bij het factuurstelsel boekt u op het moment dat u iets levert of ontvangt, niet wanneer er betaald wordt.<br />
+	  De meeste ondernemers werken met het factuurstelsel; het kasstelsel mag alleen als u vrijwel uitsluitend aan particulieren levert. Weet u het niet zeker, dan kan de Belastingdienst of uw boekhouder het u vertellen.</p>
+
+  <h3>Kasstelsel</h3>
+  <p>Het volgt het geld: u boekt de omzet wanneer het geld binnenkomt, en een kostenpost wanneer u die betaalt. Er wordt niets vastgelegd voordat het op uw rekening of in de kas staat, dus elke boeking is een gewone ontvangst of uitgave. Een workshop in december die in februari betaald wordt, valt in de winst van februari.</p>
+
+  <h3>Factuurstelsel</h3>
+  <p>Bij het factuurstelsel boekt u de omzet wanneer u de factuur schrijft, tegen een rekening Debiteuren (activa). Komt het geld binnen, dan boekt u dat weg met een overboeking: Debiteuren =&gt; Bankrekening. Een kostenpost boekt u tegen Crediteuren (passiva) zodra de leverancier factureert. Bij betaling boekt u die ook weg met een overboeking: Bankrekening =&gt; Crediteuren. Een workshop in december die in februari betaald wordt, valt in de winst van december, en uw balans per jaareinde laat zien wat er beide kanten op nog openstaat.</p>
+
+  <h2 id="splitting">Een rekening splitsen tussen zakelijk en privé</h2>
+  <p>Sommige kosten zijn maar gedeeltelijk zakelijk. Je thuisinternet gebruik je misschien voor 60&nbsp;% voor werk, je auto voor 40&nbsp;% voor klantenbezoeken. Wanneer je deze vastlegt, kun je het bedrag direct splitsen.</p>
+  <p>Klik op de % knop naast het bedrag. Er opent een klein venster waarin je:</p>
+  <ul>
+    <li>Het zakelijke gebruikspercentage bevestigt of aanpast.</li>
+    <li>De twee bedragen automatisch ziet berekend worden.</li>
+    <li>Het tweede account kiest &thinsp;&mdash;&thinsp; meestal een privé- of onttrekkingsaccount.</li>
+    <li>Op Toepassen klikt.</li>
+  </ul>
+  <p>Het formulier heeft nu twee regels: het zakelijke gedeelte op het uitgavenaccount, het privégedeelte op het privéaccount. Beide worden samen opgeslagen en de boeken blijven in evenwicht.</p>
+  <p>Om een splitsing later te wijzigen, klik op % op een van beide regels. Het venster opent opnieuw met de huidige splitsing ingevuld; breng je aanpassingen aan en klik op Toepassen.</p>
+
+  <h2 id="receipts">Bonnen bijvoegen</h2>
+  <p>Bij elke storting of opname kun je op de + knop naast een regel klikken om een foto of bestand bij te voegen (JPEG, PNG, PDF). Als je al eerder een bon afzonderlijk hebt geüpload, gebruik dan het koppelicoon om deze te verbinden. Aan één regel kunnen meerdere bonnen worden bijgevoegd.</p>
+
+  <h2 id="repeating">Een vorige boeking herhalen</h2>
+  <p>Voor alles wat terugkeert &thinsp;&mdash;&thinsp; maandelijkse huur, een doorlopend abonnement &thinsp;&mdash;&thinsp; gebruik je de Kopieer-knop op een bestaande boeking. Er opent een vooraf ingevuld formulier. Pas de datum en alle andere gegevens (zoals bedrag of omschrijving) aan en sla op. Veel sneller dan opnieuw beginnen.</p>
+
+  <h2 id="correcting">Een fout corrigeren</h2>
+  <p>Alles wat je zelf hebt geboekt, kun je wijzigen of verwijderen. Alleen de rekeningen die de app zelf aanmaakt en bijhoudt &thinsp;&mdash;&thinsp; zoals de ingehouden winst &thinsp;&mdash;&thinsp; kun je niet aanraken.</p>
+  <p>Om te bewerken, ga naar je bankrekening, zoek de boeking in het grootboek en klik op Bewerken. Breng je wijzigingen aan en sla op.</p>
+  <p>Om een boeking te verwijderen, klik op Bekijken om de journaalboeking erachter te openen &thinsp;&mdash;&thinsp; de tweezijdige vastlegging die de app voor je heeft geschreven. Verwijderen gaat in twee stappen, omdat een geboekte boeking deel is van je cijfers en er eerst uit moet: klik op Ontboeken/Verwijderen om te ontboeken &thinsp;&mdash;&thinsp; ze wordt een concept, verdwenen uit je cijfers maar nog niet weg. Klik bij de ontboekte boeking (het concept) op Verwijderen om ze volledig te wissen.</p>
+
+  <h2 id="reports">Je cijfers bekijken</h2>
+  <p>Op het dashboard heeft elk van je ondernemingen zijn eigen rapportknoppen. De belangrijkste zijn:</p>
+  <ul>
+    <li>Winst &amp; Verlies &thinsp;&mdash;&thinsp; inkomsten minus uitgaven voor elke gewenste periode. Dit is het getal dat je accountant of belastingaangifte vraagt.</li>
+    <li>Balans &thinsp;&mdash;&thinsp; een momentopname van wat je bezit (banksaldi, vorderingen) en wat je schuldig bent (leningen, onbetaalde rekeningen) op een bepaalde datum.</li>
+    <li>Proefbalans &thinsp;&mdash;&thinsp; elk account met zijn lopend saldo. Handig om te controleren of niets op de verkeerde plaats is geboekt.</li>
+    <li>Aangepaste rapporten &thinsp;&mdash;&thinsp; Maak op het dashboard een rapportgroep aan en geef die een naam (bijv. MTD, Kinderen, Scouts, Vereniging).<br />
+		Klik op de rapportgroep om te selecteren welke accounts erin verschijnen en in welke volgorde. Sleep ze omhoog of omlaag om ze te rangschikken. Opslaan. Elk rapport in de groep volgt deze indeling.<br />
+		Voeg afzonderlijke rapporten toe aan de groep (Q1, Q2 of 2026, 2027) &thinsp;&mdash;&thinsp; elk is simpelweg een datumbereik (van&nbsp;/&nbsp;tot). Voer een rapport uit om de cijfers voor die periode te zien, exact zoals je ze hebt gerangschikt.
+	</li>
+	<li>Belastingrapporten &thinsp;&mdash;&thinsp; Een rapportgroep voor één belastingschema in plaats van een die je zelf hebt samengesteld, aangemaakt op de <%= link_to "belastinginstellingenpagina", easy_manual_path(anchor: "tax") %> verderop. Verder hetzelfde idee als een Aangepast rapport.</li>
+  </ul>
+  <p>De pagina Rapporten in het menu toont elk rapport dat je hebt opgeslagen, het nieuwste eerst.<br />
+	Eenmaal per jaar maakt de app een onverwijderbare back-up van elke afzonderlijke boeking voor elk account in elke onderneming of familie; een back-up kan ook handmatig worden geactiveerd voor het lopende jaar tot nu toe. Ook deze verschijnen hier en zijn beschikbaar om te downloaden.</p>
+  <p>Aangepaste rapporten hebben een lange en een korte versie. De korte versie toont alleen accounttotalen; de lange versie somt elke afzonderlijke boeking onder elk account op &thinsp;&mdash;&thinsp; en laat je op een boeking klikken om deze te corrigeren zonder het rapport te verlaten.</p>
+  <p>Bij downloaden krijg je de versie die op het scherm staat. Een rapport e-mailen stuurt je beide tegelijk &thinsp;&mdash;&thinsp; de korte versie en de lange, de lange met een link naar de bon van elke boeking &thinsp;&mdash;&thinsp; plus een bestandsformaat voor de accountant (bijvoorbeeld DATEV), als die voor deze onderneming is ingesteld. Is er niets te melden voor de periode, dan krijg je in plaats daarvan een kort e-mailtje dat dit meldt, zonder bijlage.</p>
+
+  <h2 id="closing-year">Een boekjaar afsluiten</h2>
+  <p>Als je boekjaar voorbij is, ga je naar het dashboard en klik je op &laquo;Jaar afsluiten&raquo; in de titelrij van je onderneming. De app telt al je inkomsten en uitgaven van het jaar op en verplaatst het resultaat naar je Ingehouden winst (het lopende totaal van wat je onderneming gedurende haar hele bestaan heeft verdiend).</p>
+  <p>De eerste keer vraagt de app hoe je boekjaar loopt: het kalenderjaar (1 januari tot 31 december), het Britse belastingjaar (6 april tot 5 april), of een andere einddatum die je kiest. Kies degene die bij je onderneming past &thinsp;&mdash;&thinsp; dit wordt één keer ingesteld.</p>
+  <p>Je kunt een jaar pas afsluiten als het voorbij is &thinsp;&mdash;&thinsp; als het huidige jaar nog loopt, vertelt de app je wanneer je het kunt afsluiten.</p>
+  <p>Als je achterloopt en er meer dan één jaar wacht, sluit de app ze één voor één af, het oudste eerst &thinsp;&mdash;&thinsp; klik gewoon opnieuw op &laquo;Jaar afsluiten&raquo; voor het volgende.</p>
+  <p>Als je later iets corrigeert met een datum binnen een jaar dat je al hebt afgesloten, werkt de app de afsluiting van dat jaar automatisch voor je bij en toont een melding ter bevestiging.</p>
+
+  <h2 id="reconcile">Je saldo controleren met de bank</h2>
+  <p>Af en toe is het de moeite waard te bevestigen dat wat de app toont overeenkomt met je bankafschrift. Ga naar je bankrekening en klik op de R knop. Voer de afschriftdatum en het saldo van het afschrift in. De app toont je zijn eigen getal en het verschil. Er wordt niets opgeslagen &thinsp;&mdash;&thinsp; het is slechts een snelle controle. Als er een verschil is, ontbreekt er waarschijnlijk een boeking of heeft een boeking het verkeerde bedrag.</p>
+
+  <h2 id="access">Anderen toegang geven</h2>
+  <p>Als admin kun je anderen beperkte toegang geven tot je boekhouding. Een alleen-lezen admin kan alle accounts en rapporten bekijken, maar kan niets toevoegen of wijzigen. Een alleen-upload admin kan bonnen uploaden vanaf zijn telefoon. Beiden worden aangemaakt en beheerd vanaf je profielpagina.</p>
+
+  <h2 id="tax">Belastingrapportage instellen</h2>
+  <p>Zoek je onderneming op het dashboard en klik in de rij Belasting op &laquo;Instellen&raquo;. Vink een aangifte aan die je wilt indienen.</p>
+  <p>Kan die rechtstreeks vanuit de app worden verstuurd, dan wordt je gevraagd of je van hieruit wilt indienen.<br />
+  Zeg ja, en kies wiens aangifte het is, of voeg een nieuwe belastingplichtige toe (belastingnummer en een naam).<br />
+  Zeg nee, als je je cijfers ergens anders indient (bijv. via je boekhouder).</p>
+  <p>Opslaan.</p>
+  <p>Je komt uit bij de rapportgroep van de aangevinkte aangifte. Je beschikbare opbrengsten- en kostenrekeningen staan rechts. Kies voor elke rekening die voor dit schema relevant is de juiste belastingcategorie (de app probeert er een te raden), dan &laquo;+&raquo; om de rekening aan het schema toe te voegen.</p>
+  <p>&laquo;Rapport toevoegen&raquo; om een periode te kiezen. Je cijfers verschijnen gesorteerd zoals het belastingformulier ernaar vraagt. Download ze als belasting-CSV of laat ze je mailen (inclusief bonlinks).</p>
+  <p><strong>Herhaal</strong> dit om meer belastingschema&rsquo;s toe te voegen.</p>
+
+  <h2 id="filing">Zelf je kwartaalcijfers indienen</h2>
+    <p>Sommige aangiften kunnen rechtstreeks vanuit de app worden verstuurd &thinsp;&mdash;&thinsp; UK Making Tax Digital (MTD), btw binnenkort &thinsp;&mdash;&thinsp; maar niet je jaarlijkse aangifte.</p>
+    <ol>
+      <li>Zeg ja wanneer de belastinginstelling vraagt naar indienen vanuit de app, en kies of voeg de belastingplichtige toe. Sla op en wijs je rekeningen toe (zie &laquo;Belastingrapportage instellen&raquo;).</li>
+      <li>Om verbinding te maken met je belastingdienst, klik op Verbinden &thinsp;&mdash;&thinsp; op het dashboard of op de belastinginstellingenpagina. Log in bij de belastingdienst.</li>
+      <li>Ga zodra je verbonden bent naar de indieningen, vanaf het dashboard of de belastinginstellingenpagina.</li>
+      <li>Dien de huidige periode in.</li>
+    </ol>
+    <p>De indieningspagina toont de perioden die de belastingdienst verwacht, met bij elke een knop om er een rapport voor toe te voegen &thinsp;&mdash;&thinsp; de datums komen van hen, jij geeft alleen een naam. Handig om de cijfers te controleren voordat je ze verstuurt.</p>
+    <p>Bij UK MTD beslaat elke indiening het belastingjaar tot nu toe en vervangt die de vorige (cumulatief). Ook een periode zonder mutaties moet worden ingediend. Daarna krijg je een e-mail met een kopie van wat er is verstuurd &thinsp;&mdash;&thinsp; dat is jouw bewijs.</p>
+
+  <h2 id="families">Meerdere bedrijven samen houden &thinsp;&mdash;&thinsp; families</h2>
+  <p>Als je hier meer dan één boekhouding bijhoudt &thinsp;&mdash;&thinsp; een bedrijf en een huishouden, of twee kleine bedrijven &thinsp;&mdash;&thinsp; kun je ze samenvoegen tot een familie. Je winst-en-verliesrekening, balans en proefbalans bestrijken dan de hele familie in één keer, terwijl elk bedrijf zijn eigen accounts en overige rapporten behoudt. Om dit in te stellen, ga naar je profielpagina en geef elk bedrijf dezelfde familienaam.</p>
+
+  <h2 id="cross-business">Wanneer een van je ondernemingen voor een andere betaalt</h2>
+  <p>Hiervoor heb je toegang tot beide sets boeken nodig, en ze mogen niet in dezelfde familie zitten &thinsp;&mdash;&thinsp; binnen een familie dekken de rapporten beide al, dus dan is er niets bijzonders nodig.</p>
+  <p>Soms betaalt de bankrekening van het ene bedrijf een kost die eigenlijk bij een ander hoort, en beide moeten het in hun eigen boeken tonen. Registreer het als een gewone opname van de rekening die betaald heeft &thinsp;&mdash;&thinsp; maar kies voor de uitgave de rekening van het ANDERE bedrijf. De app merkt dit op en opent een kort formulier dat vraagt om een giftrekening in het betalende bedrijf en een kapitaalrekening in het ontvangende bedrijf. Voer het bedrag in en bevestig.</p>
+  <p>De app schrijft beide kanten voor je &thinsp;&mdash;&thinsp; één boeking in elk bedrijf, elk op zich sluitend &thinsp;&mdash;&thinsp; en toont de regels van het andere bedrijf eronder. Als de gift- of kapitaalrekening nog niet bestaat, kun je ze meteen aanmaken. Verwijderen en kopiëren werkt zoals altijd; om te bewerken klik je op een willekeurig bedrag van het gekoppelde paar. Daarmee opent het formulier en kun je je wijzigingen aanbrengen.</p>
+
+  <h2 id="archive">Al je gegevens downloaden</h2>
+  <p>Voor een volledige export ga je naar het dashboard en download je elk jaarafsluitingsarchief, en klik je bovendien op de datum van vandaag om een archief met de actuele posten tot vandaag te genereren &thinsp;&mdash;&thinsp; samen vormen ze de volledige geschiedenis, niets ontbreekt, niets is dubbel. De volledige lijst is ook te vinden op de pagina Rapporten.</p>
+
+</div>
+<%= render "help/back" %>

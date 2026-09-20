@@ -1,0 +1,21 @@
+# https://www.robotstxt.org/robotstxt.html
+#
+# The public half of this app — the front page, the demo, the two guides and the
+# legal notice — is meant to be found, so it is not listed here.
+#
+# The private half needs no rules of its own: every page behind the login answers
+# an anonymous request with a redirect to the sign-in page, so a crawler that
+# wanders in finds one page under many URLs. Disallowing that one page keeps the
+# whole of it out of search results, and stays correct when routes are added.
+#
+# The /*/ forms are the locale prefixes: /en/session/new and so on.
+
+User-agent: *
+Disallow: /login
+Disallow: /*/login
+Disallow: /session
+Disallow: /*/session
+Disallow: /otp
+Disallow: /*/otp
+Disallow: /passwords
+Disallow: /*/passwords

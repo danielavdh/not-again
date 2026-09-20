@@ -1,0 +1,15 @@
+<% if @problems.empty? -%>
+Nothing needs attention this week.
+<% else -%>
+<%= @problems.size %> of <%= @findings.size %> checks need attention.
+<% end -%>
+
+<% @findings.each do |f| -%>
+<%= f.ok ? "OK" : "!!" %>  <%= f.area %>
+    <%= f.detail %>
+<% end -%>
+
+--
+This report is sent every Monday whether or not anything is wrong. That is
+deliberate: if it stops arriving, something has gone wrong with the scheduler
+itself, and no alert would have been sent either.

@@ -1,0 +1,122 @@
+<%= form_with model: journal_entry,
+              url: if journal_entry.persisted?
+			  		 update_transfer_account_path(account, journal_entry_id: journal_entry.id)
+		  		   else
+			  		 create_transfer_account_path(account)
+				   end,
+			  method: journal_entry.persisted? ? :patch : :post,
+              id: "transfer_entry_form",
+              class: "form_transfer_entry",
+	          data: {
+	            controller: "transfer",
+	            transfer_currencies_value: @transfer_account_currencies.to_json,
+	            rate_warning:        t("accounts.entries.rate_warning"),
+	            rate_warning_profit: t("accounts.entries.rate_warning_profit"),
+	            rate_warning_loss:   t("accounts.entries.rate_warning_loss")
+	          },
+              local: true do |f| %>  
+				  
+    <%= render "journal_entries/entry_header_fields", f: f, entry: journal_entry %>
+
+    <div class="field flex transfer">
+      
+	  <%# --- From Account --- %>
+      <div>
+        <%= f.label :from_account_id,
+			 t("attrs.from_account") %>
+		<span class="error_message">
+			<%= journal_entry&.errors[:from_account_id].to_sentence %>
+		</span><br />
+        <%= f.select :from_account_id, 
+                       options_for_select(@account_options, journal_entry.from_account_id || account.id), 
+                       { include_blank: t("attrs.from_account_blank") },
+                       class: 'form-select', 
+	   				   id: :journal_entry_from_account_id, 
+                       data: { 
+						   tomselect: true, 
+						   tomselect_placeholder: 'Select source account...' ,
+                     	   action: "change->transfer#updateCurrencies"
+					 	  } %>
+		<span class="currency-indicator" data-transfer-target="fromCurrency"></span>
+      </div>
+
+	  <%# --- To Account --- %>
+      <div>
+        <%= f.label :to_account_id, 
+			t("attrs.to_account") %>
+		<span class="error_message">
+			<%= journal_entry&.errors[:to_account_id].to_sentence %>
+		</span><br />
+        <%= f.select :to_account_id, 
+                       options_for_select(@account_options, journal_entry.to_account_id), 
+                       { include_blank: 'Select destination account...'} ,
+                       class: 'form-select', 
+		   			   id: :journal_entry_to_account_id, 
+                       data: { 
+						   tomselect: true, 
+						   tomselect_placeholder: t("attrs.to_account_blank"),
+                     	   action: "change->transfer#updateCurrencies"
+					    } %>
+		<span class="currency-indicator" data-transfer-target="toCurrency"></span>
+      </div>
+      
+	  <%# --- Amount (sent) --- %>
+      <div>
+      	<div>
+      	  <%= f.label :transfer_amount_display,
+		  	 	t("attrs.amount_sent") %>
+	  		<span class="error_message">
+	  			<%= journal_entry&.errors[:transfer_amount].to_sentence %>
+	  		</span><br />
+	  	  <%= f.text_field :transfer_amount_display, 
+	  	                value: f.object.transfer_amount_display_formatted, 
+	  	                class: 'posting-amount right',
+   	  		   			  id: :journal_entry_transfer_amount_display, 
+	  					  inputmode: 'decimal',
+	  					  data: { 
+	  						amount_field: true,
+      	                    transfer_target: "sourceAmount",
+      	                    action: "input->transfer#calculateRate"
+	  					   } %>
+	  	  <%= f.hidden_field :transfer_amount %>
+      	</div>
+
+		<%# --- Amount received (hidden if currency same) --- %>
+      	<div id="target_amount_wrapper" 
+      	     class="<%= 'hidden' unless journal_entry.cross_currency_transfer? %>"
+      	     data-transfer-target="targetWrapper">
+      	  <%= f.label :target_amount_display,
+		  	 	t("attrs.amount_received") %>
+      	  <span class="error_message">
+	  			<%= journal_entry.errors[:target_amount_display].to_sentence %>
+	  		</span><br />
+      	  <%= f.text_field :target_amount_display, 
+      	                   value: journal_entry.target_amount_display_formatted, 
+      	                   class: 'posting-amount right',
+      	                   id: :journal_entry_target_amount_display, 
+      	                   inputmode: 'decimal',
+      	                   data: { 
+      	                     amount_field: true,
+      	                     transfer_target: "targetAmount",
+      	                     action: "input->transfer#calculateRate"
+      	                   } %>
+      	  <%= f.hidden_field :target_amount %>
+      	</div>
+
+		<%# --- Exchange Rate (calculated) --- %>
+      	<div id="exchange_rate_display" 
+      	     class="<%= 'hidden' unless journal_entry.cross_currency_transfer? %>"
+      	     data-transfer-target="rateWrapper">
+      	  <label><%= t("accounts.entries.rate") %></label><br />
+      	  <span class="exchange-rate-value" data-transfer-target="rateDisplay">
+      	    <%= journal_entry.implied_exchange_rate&.round(4) || '—' %>
+      	  </span>
+      	</div>
+      </div>
+      
+    </div>
+          
+  <div class="actions">
+    <%= f.submit t("attrs.save_transfer") %>
+  </div>
+<% end %>

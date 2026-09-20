@@ -1,0 +1,45 @@
+<%# Account Detail %>
+<% content_for :title, t("jargon.account") %>
+
+<div class="backend_table">
+    <%= render partial: 'shared/flash' %>
+
+    <table class="backend_show">
+        <thead>
+            <tr>
+                <th class="firstCell"><%= @account.code %> - <%= @account.name %></th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr class="list-line-odd">
+                <td class="firstCell"><%= t("attrs.type") %>:</td>
+                <td><%= account_type_badge(@account.account_type) %></td>
+            </tr>
+            <tr class="list-line-even">
+                <td class="firstCell"><%= t("jargon.currency") %>:</td>
+                <td><%= @account.currency %></td>
+            </tr>
+            <tr class="list-line-odd">
+                <td class="firstCell"><%= t("attrs.parent") %>:</td>
+                <td><%= @account.parent ? link_to(@account.parent.name, account_path(@account.parent), class: "backend_link") : '-' %>
+				</td>
+            </tr>
+            <tr class="list-line-even">
+                <td class="firstCell"><%= t("attrs.status") %>:</td>
+                <td><%= @account.active? ? t("attrs.active") : t("attrs.inactive") %></td>
+            </tr>
+            <tr class="list-line-odd">
+                <td class="firstCell"><%= t("jargon.current") %> <%= t("jargon.balance") %>:</td>
+                <td><%= format_amount_signed(@balance, @account.currency) %></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="crud_navigation">
+		<%= link_to t("crud.accounts"), accounts_path, class: "backend_link button green" %>
+		<%= link_to t("crud.edit"), edit_account_path(@account), class: "backend_link button green" %>
+  	<%= link_to t("page.ledger", code: @account.code), ledger_account_path(@account), class: "backend_link button green" %>
+</div>

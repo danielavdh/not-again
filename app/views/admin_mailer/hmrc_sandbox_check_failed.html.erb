@@ -1,0 +1,9 @@
+<p>The weekly HMRC <strong>sandbox healthcheck</strong> failed after all retries.</p>
+
+<p>Error: <code><%= @error %></code></p>
+
+<p>This is our early-warning that HMRC may have changed something in the MTD sandbox
+(fraud prevention header spec, OAuth, or availability). Real filing is unaffected, but
+it is worth checking the
+<a href="https://github.com/hmrc/income-tax-mtd-changelog">HMRC MTD changelog</a> and
+running <code>bin/rails hmrc:fph_validate</code> on the server to see the detail.</p>

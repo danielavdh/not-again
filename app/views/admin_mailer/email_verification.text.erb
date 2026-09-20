@@ -1,0 +1,19 @@
+<% if @invite -%>
+<%= @granter ? t('.invite_heading', granter: @granter.email_address, service: SERVICE_NAME) : t('.invite_heading_anon', service: SERVICE_NAME) %>
+
+<%= @granter ? t('.invite_intro', granter: @granter.email_address) : t('.invite_intro_anon') %>
+
+<% @links.each do |ae| -%>
+  <%= ae.entity.code %> — <%= ae.entity.name %> (<%= t("access.#{ae.access_level}") %>)
+<% end -%>
+
+<%= t('.invite_instruction', username: @admin.username) %>
+<% else -%>
+<%= t('.subject') %>
+
+<%= t('.instruction') %>
+<% end -%>
+
+<%= link_to t('.button'), verify_email_url(token: @token, locale: I18n.locale) %>
+
+<%= t('.expiry') %>

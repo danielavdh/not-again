@@ -1,0 +1,5 @@
+The following orphaned <%= @entities.one? ? "entity has" : "entities have" %> passed the retention period and may now be confirmed for deletion. Nothing has been deleted — review and confirm each in the entities list.
+
+<% @entities.each do |e| -%>
+  <%= e.code %>  <%= e.name %>  (orphaned <%= e.orphaned_at&.to_date %>, due since <%= e.deletion_due_on %>)
+<% end -%>

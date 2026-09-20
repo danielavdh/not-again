@@ -1,0 +1,18 @@
+<% content_for :title, t("languages.edit_title") %>
+
+<div id="new_edit_view">
+
+    <% if @language.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <h1><%= t("languages.edit_title") %></h1>
+    <%= render partial: 'shared/flash' %>
+
+    <%= render 'form', language: @language %>
+
+    <div class="crud_navigation">
+        <%= link_to t("crud.language"), languages_path, class: "backend_link" %>
+    </div>
+
+</div>

@@ -1,0 +1,131 @@
+  <%= render partial: 'shared/flash' unless local_assigns[:modal] %>
+
+  <%= form_with model: receipt,
+                url: receipt.new_record? ? receipts_path : receipt_path(receipt),
+                class: "form_receipt #{'modal' if local_assigns[:modal]}",
+                multipart: true,
+                local: true do |f| %>
+					
+	<%= f.hidden_field :posting_id, class: "receipt-form-posting-id" %>
+
+    <% if receipt.errors.any? %>
+      <div class="error-messages">
+        <ul>
+          <% receipt.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+      <div class="field">
+        <%= f.label :title, t("receipts.title_label") %>
+	    <span class="error_message">
+	    <%= receipt&.errors[:title].to_sentence %>
+	    </span><br />
+        <%= f.text_field :title, required: true, placeholder: t("receipts.title_placeholder"), autofocus: true %>
+      </div>
+
+      <div class="field">
+        <%= f.label :receipt_date, t("attrs.date") %>
+	    <span class="error_message">
+	    <%= receipt&.errors[:receipt_date].to_sentence %>
+	    </span><br />
+        <%= f.date_field :receipt_date, value: f.object.receipt_date || Date.current %>
+      </div>
+
+      <div class="field">
+        <%= f.label :entity_id, t("receipts.entity") %>
+        <% if entities.size == 1 %>
+          <%= f.hidden_field :entity_id, value: entities.first.id %>
+          <span class="receipt-entity-name"><%= entities.first.name %></span>
+        <% else %>
+          <%# data-code lets the JS auto-select the entity from a posting row's account. %>
+          <%= f.select :entity_id,
+                options_for_select(entities.map { |e| [e.name, e.id, { 'data-code' => e.code }] }, f.object.entity_id),
+                { include_blank: t("receipts.select_entity") } %>
+        <% end %>
+      </div>
+
+      <div class="field">
+        <%= f.label :description, t("receipts.description_col") %>
+	    <span class="error_message">
+	    <%= receipt&.errors[:description].to_sentence %>
+	    </span><br />
+        <%= f.text_area :description, class: "less_height" %>
+      </div>
+
+      <% if receipt.new_record? %>
+        <div class="field file-upload">
+          <div class="receipt-upload-buttons">
+            <label class="button green receipt-file-btn">
+              <svg class="stroke"><use xlink:href="#te_upload"></use></svg>
+              <%= t("receipts.choose_file") %>
+              <%= f.file_field :scan,
+                    accept: "image/jpeg,image/png,image/heic,application/pdf",
+                    class: "receipt-file-input",
+                    data: { receipt_file: true } %>
+            </label>
+            <label class="button green receipt-camera-btn">
+              <svg class="stroke"><use xlink:href="#te_camera"></use></svg>
+              <%= t("receipts.take_photo") %>
+              <%= f.file_field :scan,
+                    accept: "image/*",
+                    capture: "environment",
+                    class: "receipt-file-input",
+                    data: { receipt_camera: true } %>
+            </label>
+          </div>
+          <div id="receipt-file-preview" class="receipt-file-preview hidden">
+            <img src="" alt="Preview">
+            <span></span>
+          </div>
+        </div>
+	  <% else %>
+	    <% if receipt.scan %>
+	      <div class="field file-upload">
+	        <div class="receipt-current-file" data-original-preview>
+	          <% if receipt.thumbnail_url %>
+	            <img src="<%= receipt.thumbnail_url %>" 
+					 alt="<%= receipt.title %>" 
+					 class="receipt-edit-thumb">
+	          <% end %>
+	          <span><%= truncate(receipt.display_filename, length: 30) %></span>
+	        </div>
+	        <div class="receipt-upload-buttons">
+	          <label class="button green receipt-file-btn">
+	            <svg><use xlink:href="#te_upload"></use></svg>
+	            <%= t("receipts.replace_file") %>
+	            <%= f.file_field :scan,
+	                  accept: "image/jpeg,image/png,image/heic,application/pdf",
+	                  class: "receipt-file-input",
+	                  data: { receipt_file: true } %>
+	          </label>
+	        </div>
+			<div class="receipt-file-preview hidden">
+			  <img src="" alt="Preview">
+			  <span></span>
+			</div>
+	      </div>
+	    <% end %>
+	  <% end %>
+
+	  <% if local_assigns[:modal] %>
+	    <div class="modal-actions">
+	      <button type="button" class="button ghost" data-modal-close>
+	        <%= t("crud.cancel") %>
+	      </button>
+	      <button type="submit" class="button green">
+	        <%= t("receipts.upload") %>
+	      </button>
+	    </div>
+	  <% else %>
+    	<div class="actions">
+    	  <%= f.submit receipt.new_record? ? t("receipts.upload") : t("crud.update") %>
+    	</div>
+	  <% end %>
+
+
+	
+
+  <% end %>

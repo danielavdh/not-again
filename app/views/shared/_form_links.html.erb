@@ -1,0 +1,9 @@
+<div class="form_links obscured">
+	<% if page == "new_password" %>
+		<%= link_to t("shared.menu.back_home"), root_path, class: 'admin_links' %>
+		<%= link_to t('.back_to_login'), new_session_path, class: 'admin_links' %>
+	<% else %>
+		<%= link_to t("shared.menu.back_home"), root_path, class: 'admin_links' %>
+		<%= link_to t(".admin_forgotten"), new_password_path, class: 'admin_links' %>
+	<% end %>
+</div>

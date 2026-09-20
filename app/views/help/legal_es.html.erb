@@ -1,0 +1,162 @@
+<%= render "help/back" %>
+
+<h1>Política de privacidad y condiciones de uso</h1>
+
+<p>Esta página abarca tanto la política de privacidad como las condiciones de uso de <%= SERVICE_NAME %>, el servicio de contabilidad en línea disponible en <%= link_to service_host, "https://#{service_host}" %>. Explica qué datos personales tratamos, por qué y sobre qué base jurídica, y establece las condiciones en las que se presta el servicio.</p>
+
+<h2>Quiénes somos</h2>
+
+<p>El servicio está gestionado por <%= CONTACT_TRADING %> (<%= CONTACT_NAME %>), <%= CONTACT_STREET %>, <%= CONTACT_CITY %>, <%= CONTACT_COUNTRY %>. A efectos de la legislación de protección de datos, somos el responsable del tratamiento de los datos personales que se describen a continuación. Puede ponerse en contacto con nosotros en <%= mail_to CONTACT_EMAIL %>. Encontrará los datos completos del proveedor en la sección <%= link_to "Impressum", "#impressum" %> más abajo.</p>
+
+<h2>Qué datos personales tratamos</h2>
+
+<ul>
+<li><strong>Datos de la cuenta</strong> — su nombre, dirección de correo electrónico y una contraseña con hash seguro.</li>
+<li><strong>Registros contables que introduce</strong> — cuentas, transacciones, asientos de diario y apuntes bancarios, incluidos importes, fechas y descripciones.</li>
+<li><strong>Documentos que sube</strong> — recibos y archivos justificativos.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Datos fiscales</strong> — las cifras de ingresos y gastos y las obligaciones de presentación utilizadas para enviar declaraciones de Making Tax Digital (MTD) a HM Revenue &amp; Customs (HMRC).</li>
+<li><strong>Autorización de HMRC</strong> — los tokens de acceso OAuth que nos permiten presentar en su nombre una vez que nos ha autorizado ante HMRC.</li>
+<% end %>
+<li><strong>Datos técnicos</strong> — las cookies que se enumeran a continuación<% if @authorities_in_use.include?("hmrc") %> y los datos de prevención de fraude que HMRC nos exige enviar con cada presentación<% end %>.</li>
+</ul>
+
+<h2>Por qué los tratamos y nuestra base jurídica</h2>
+
+<p>Tratamos sus datos únicamente para dos fines:</p>
+
+<ul>
+<li><strong>Para prestar el servicio de contabilidad y presentación al que se ha suscrito.</strong> Base jurídica: ejecución de un contrato.</li>
+<li><strong>Para cumplir las obligaciones fiscales de presentación y conservar los registros fiscales que exige la ley.</strong> Base jurídica: cumplimiento de una obligación legal.</li>
+</ul>
+
+<p>No tratamos sus datos con fines publicitarios, y no los vendemos ni los compartimos con terceros con fines de marketing.</p>
+
+<% if @authorities_in_use.any? %>
+<h2>Presentación ante autoridades fiscales</h2>
+
+<% @authorities_in_use.each do |authority| %>
+<%= raw t("filing.#{authority}.legal_html") %>
+<% end %>
+<% end %>
+
+<h2>Dónde se almacenan sus datos</h2>
+
+<p>Todos sus datos se almacenan dentro de la Unión Europea:</p>
+
+<ul>
+<li>La aplicación y la base de datos están alojadas en Hetzner en Alemania.</li>
+<li>Los archivos subidos, los recibos, las presentaciones fiscales y el archivo de sus libros se almacenan en Scaleway Object Storage en París, Francia.</li>
+<li>Se guarda una copia nocturna de todo, incluidas las copias de seguridad de la base de datos, en OVH Object Storage en Estrasburgo, Francia, para mayor redundancia entre dos proveedores.</li>
+<li>El correo saliente — incluidas las notificaciones de esta propia política — se envía a través de Brevo.</li>
+</ul>
+
+<h2>Cuánto tiempo los conservamos</h2>
+
+<p>Conservamos sus registros mientras su cuenta esté activa y, posteriormente, durante el tiempo que la legislación aplicable exija su conservación. Los plazos de conservación varían según el país y el régimen fiscal, por lo que conservamos sus datos durante el periodo que exija la ley que le sea aplicable. Cuando los datos ya no son necesarios y no existe ninguna obligación legal de conservarlos, se eliminan.</p>
+
+<h2>Sus derechos</h2>
+
+<p>Según dónde se encuentre, sus derechos derivan de la legislación de protección de datos que le sea aplicable — por ejemplo, el RGPD de la UE (incluido el EEE), el RGPD del Reino Unido o la Ley Federal suiza de Protección de Datos (FADP). Estos incluyen normalmente el derecho de acceso a sus datos personales, a la rectificación de datos inexactos, a la supresión (salvo cuando debamos conservarlos para cumplir una obligación legal), a la limitación u oposición al tratamiento, y a la portabilidad de los datos. También tiene derecho a presentar una reclamación ante la autoridad de protección de datos competente (en Suiza, el FDPIC). Para ejercer cualquiera de estos derechos, póngase en contacto con nosotros en <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Cookies</h2>
+
+<p>Utilizamos únicamente las cookies estrictamente necesarias para el funcionamiento del servicio y para recordar las opciones que elige. No utilizamos cookies de análisis, publicidad, seguimiento ni de terceros, por lo que no se requiere ningún banner de cookies. Las cookies que utilizamos son:</p>
+
+<ul>
+<li><strong>Cookie de sesión</strong> — le mantiene conectado. Esencial.</li>
+<li><strong>Preferencia de alto contraste</strong> — recuerda la opción de visualización de accesibilidad, establecida solo cuando la activa.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Datos de prevención de fraude</strong> — detalles técnicos que HMRC nos exige enviar con cada presentación de Making Tax Digital. Se utilizan únicamente para la presentación.</li>
+<% end %>
+</ul>
+
+<h2>Seguridad</h2>
+
+<p>Los datos se cifran en tránsito mediante HTTPS, y las credenciales se almacenan cifradas<% if @authorities_in_use.any? %>, junto con los tokens de autorización OAuth que nos permiten presentar en su nombre<% end %>. Si cree que ha encontrado una vulnerabilidad de seguridad o desea informar de un incidente de seguridad, envíe un correo electrónico a <%= mail_to CONTACT_EMAIL %>. Los datos de contacto legibles por máquina también se publican en <%= link_to "/.well-known/security.txt", "/.well-known/security.txt" %>.</p>
+
+<h2>Si tratamos datos para su negocio</h2>
+
+<p>Si a través de este servicio lleva la contabilidad de otras personas, actuamos como su encargado del tratamiento conforme al artículo 28 del RGPD para esos datos:</p>
+
+<ul>
+<li>Solo hacemos con ellos lo que la aplicación hace cuando usted la utiliza — nada más.</li>
+<li>Cualquiera con acceso al servidor, incluidos nosotros, está obligado a mantener la confidencialidad de lo que ve.</li>
+<li>Las medidas de seguridad se indican arriba, en «Seguridad».</li>
+<li>Los subencargados están indicados arriba, en «Dónde se almacenan sus datos»; cada uno cuenta con su propio contrato de encargo de tratamiento para su parte.</li>
+<li>Puede revisar, corregir y exportar sus propios datos en cualquier momento, mediante los informes y exportaciones ya disponibles en la aplicación. Se eliminan una vez finalizado su plazo legal de conservación.</li>
+<li>Los recibos que suba se conservan aquí mientras existan sus libros, pero no se guarda una copia de seguridad aparte — conserve su propia copia de cada recibo durante el plazo que exija la normativa del lugar donde declara, igual que haría con uno en papel.</li>
+<li>Si las personas que administran esta instalación detectan un incidente de seguridad que afecte a sus datos, se pondrán en contacto con usted directamente, mediante el correo electrónico de su cuenta.</li>
+<li>Este servicio es de código abierto — lo que hacemos con sus datos puede verificarse leyendo el código, no solo confiando en nuestra palabra.</li>
+</ul>
+
+<h2>Condiciones de uso</h2>
+
+<p>Al utilizar <%= SERVICE_NAME %>, usted acepta las siguientes condiciones:</p>
+
+<ul>
+<li>El servicio se presta para permitirle llevar su contabilidad<% if @authorities_in_use.any? %> y presentar declaraciones ante las autoridades fiscales conectadas<% end %>.</li>
+<% if @authorities_in_use.any? %>
+<li>Usted es responsable de la exactitud y la integridad de las cifras que introduce y presenta ante esas autoridades. Nosotros proporcionamos el software; las declaraciones que presenta son suyas.</li>
+<% end %>
+<li>Usted es responsable de mantener la confidencialidad de sus credenciales de acceso.</li>
+<li>El servicio se presta "tal cual", y no garantizamos una disponibilidad ininterrumpida.</li>
+<li>Podemos actualizar estas condiciones y esta política de vez en cuando; la versión vigente es siempre la publicada en esta página.</li>
+</ul>
+
+<p>Si tiene cualquier pregunta sobre esta política o estas condiciones, póngase en contacto con nosotros en <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Tipos de cambio</h2>
+
+<p>Este servicio utiliza tipos de cambio publicados por el Banco Central Europeo, el Deutsche Bundesbank (serie temporal BBEX3), HM Revenue &amp; Customs y la Administración Federal de Contribuciones de Suiza / la Oficina Federal de Aduanas y Seguridad Fronteriza. Los datos del Bundesbank y del BMF se utilizan conforme a la Datenlizenz Deutschland – Namensnennung – Version 2.0. Los tipos se reproducen tal como se publican; no los modificamos.</p>
+
+<% if @eu_declaration %>
+<section id="eu-declaration">
+<h2>Declaración UE de Conformidad</h2>
+
+<p><%= link_to "Descargar la Declaración UE de Conformidad (PDF)", @eu_declaration.doc_url %></p>
+</section>
+<% end %>
+
+<section id="impressum">
+<h2>Impressum</h2>
+
+<p>Datos conforme al § 5 DDG (Ley alemana de servicios digitales).</p>
+
+<h2>Proveedor</h2>
+
+<div id="logo">
+	<span id="w1">W</span><span id="w2">W</span><span id="w3">W</span>ebsites<span id="dotcom"><span>.</span>com</span>
+</div>
+
+
+<p>
+<%= CONTACT_NAME %><br />
+<%= CONTACT_STREET %><br />
+<%= CONTACT_CITY %><br />
+<%= CONTACT_COUNTRY %>
+</p>
+
+<h2>Contacto</h2>
+
+<p>Correo electrónico: <%= mail_to CONTACT_EMAIL %></p>
+
+<h2>Responsable del contenido</h2>
+
+<p><%= CONTACT_NAME %>, dirección como se indica arriba.</p>
+</section>
+
+<%= render "help/back" %>
+
+
+<% if current_admin&.sudo? %>
+<section id="eu-declaration-upload">
+<h2>Declaración UE de Conformidad</h2>
+<%= form_with url: documents_path, method: :post, local: true do %>
+<%= hidden_field_tag :kind, "eu_declaration_of_conformity" %>
+<%= file_field_tag :doc, accept: "application/pdf" %>
+<%= submit_tag @eu_declaration ? "Reemplazar" : "Subir", class: "button green" %>
+<% end %>
+</section>
+<% end %>
+

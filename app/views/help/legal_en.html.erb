@@ -1,0 +1,164 @@
+<%= render "help/back" %>
+
+<h1>Privacy Policy &amp; Terms of Use</h1>
+
+<p>This page covers both the privacy policy and the terms of use for <%= SERVICE_NAME %>, the   online bookkeeping service available at <%= link_to service_host, "https://#{service_host}" %>. It explains what personal data we process, why, and on what legal basis, and sets out the terms on which the service is provided.</p>
+
+<h2>Who we are</h2>
+
+<p>The service is operated by <%= CONTACT_TRADING %> (<%= CONTACT_NAME %>), <%= CONTACT_STREET %>, <%= CONTACT_CITY %>, <%= CONTACT_COUNTRY %>. For the purposes of data protection law, we are the data controller for the personal data described below. You can reach us at <%= mail_to CONTACT_EMAIL %>. Our full provider details are in the <%= link_to "Impressum", "#impressum" %> section below.</p>
+
+<h2>What personal data we process</h2>
+
+<ul>
+<li><strong>Account details</strong> — your name, email address and a securely hashed password.</li>
+<li><strong>Bookkeeping records you enter</strong> — accounts, transactions, journal entries and bank entries, including amounts, dates and descriptions.</li>
+<li><strong>Documents you upload</strong> — receipts and supporting files.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Tax data</strong> — the income and expense figures and filing obligations used to submit Making Tax Digital (MTD) returns to HM Revenue &amp; Customs (HMRC).</li>
+<li><strong>HMRC authorisation</strong> — the OAuth access tokens that let us file on your behalf once you have authorised us with HMRC.</li>
+<% end %>
+<li><strong>Technical data</strong> — the cookies listed below<% if @authorities_in_use.include?("hmrc") %>, and the fraud-prevention data HMRC requires us to send with each submission<% end %>.</li>
+</ul>
+
+<h2>Why we process it, and our lawful basis</h2>
+
+<p>We process your data for two purposes only:</p>
+
+<ul>
+<li><strong>To provide the bookkeeping and filing service you signed up for.</strong> Lawful basis: performance of a contract.</li>
+<li><strong>To meet tax filing duties and to keep the tax records the law requires.</strong> Lawful basis: compliance with a legal obligation.</li>
+</ul>
+
+<p>We do not process your data for advertising, and we do not sell it or share it with third parties for marketing.</p>
+
+<% if @authorities_in_use.any? %>
+<h2>Filing with tax authorities</h2>
+
+<% @authorities_in_use.each do |authority| %>
+<%= raw t("filing.#{authority}.legal_html") %>
+<% end %>
+<% end %>
+
+<h2>Where your data is stored</h2>
+
+<p>All of your data is stored within the European Union:</p>
+
+<ul>
+<li>The application and database are hosted with Hetzner in Germany.</li>
+<li>Uploaded files, receipts, tax filings and your books archive are stored with Scaleway Object Storage in Paris, France.</li>
+<li>A nightly copy of everything, including database backups, is kept with OVH Object Storage in Strasbourg, France, for redundancy across two providers.</li>
+<li>Outgoing email — including this policy's own transactional mail — is sent through Brevo.</li>
+</ul>
+
+<h2>How long we keep it</h2>
+
+<p>We keep your records for as long as your account is active, and for as long afterwards as the applicable law requires them to be retained. Record-keeping periods differ between countries and tax regimes, so we retain your data for whatever period the law that applies to you requires. When data is no longer required and there is no legal obligation to keep it, it is deleted.</p>
+
+<h2>Your rights</h2>
+
+<p>Depending on where you are based, your rights arise under the data protection law that applies to you — for example the EU GDPR (including the EEA), the UK GDPR, or the Swiss Federal Act on Data Protection (FADP). These typically include the right to access your personal data, to have inaccurate data corrected, to have data erased (except where we must keep it to meet a legal obligation), to restrict or object to processing, and to data portability. You also have the right to complain to the relevant data protection authority (in Switzerland, the FDPIC). To exercise any of these rights, contact us at <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Cookies</h2>
+
+<p>We use only the cookies strictly necessary to run the service and to remember choices you make. We do not use analytics, advertising, tracking or third-party cookies, so no cookie banner is required. The cookies we set are:</p>
+
+<ul>
+<li><strong>Session cookie</strong> — keeps you logged in. Essential.</li>
+<li><strong>High-contrast preference</strong> — remembers the accessibility display option, set only when you switch it on.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Fraud-prevention data</strong> — technical details HMRC requires us to send with each Making Tax Digital submission. Used only for filing.</li>
+<% end %>
+</ul>
+
+<h2>Security</h2>
+
+<p>Data is encrypted in transit using HTTPS, and credentials are stored encrypted<% if @authorities_in_use.any? %>, along with the OAuth authorisation tokens that let us file on your behalf<% end %>. If you believe you have found a security vulnerability or wish to report a security incident, please email <%= mail_to CONTACT_EMAIL %>. Machine-readable contact details are also published at <%= link_to "/.well-known/security.txt", "/.well-known/security.txt" %>.</p>
+
+<h2>If we hold data for your business</h2>
+
+<p>If you keep books for other people through this service, we act as your data processor under Article 28 GDPR for that data:</p>
+
+<ul>
+<li>We only do with it what the app does when you use it — nothing else.</li>
+<li>Anyone with access to the server, including us, is bound to keep what they see confidential.</li>
+<li>Security measures are listed under "Security" above.</li>
+<li>Sub-processors are listed under "Where your data is stored" above; each has its own data processing agreement for their part.</li>
+<li>You can review, correct and export your own data at any time, through the reports and exports already in the app. It is deleted once its statutory retention period ends.</li>
+<li>Receipts you upload are kept here for as long as your books are, but not separately backed up, because you are required to keep a copy as well.</li>
+<li>If the people running this installation discover a security incident affecting your data, they will contact you directly, using the email address on your account.</li>
+<li>This service is open source — what we do with your data can be verified by reading the code,
+not just by asking us.</li>
+</ul>
+
+<h2>Terms of use</h2>
+
+<p>By using <%= SERVICE_NAME %> you agree to the following terms:</p>
+
+<ul>
+<li>The service is provided to allow you to keep your books<% if @authorities_in_use.any? %> and file returns with the tax authorities it connects to<% end %>.</li>
+<% if @authorities_in_use.any? %>
+<li>You are responsible for the accuracy and completeness of the figures you enter and submit to those authorities. We provide the software; the returns you file are your own.</li>
+<% end %>
+<li>You are responsible for keeping your login credentials confidential.</li>
+<li>The service is provided on an "as is" basis, and we do not guarantee uninterrupted availability.</li>
+<li>We may update these terms and this policy from time to time; the current version is always the one published on this page.</li>
+</ul>
+
+<p>If you have any questions about this policy or these terms, contact us at <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Exchange rate data</h2> 
+
+<p>This service uses published exchange rates from the European Central Bank, the Deutsche Bundesbank (BBEX3 time series), HM Revenue & Customs, and the Swiss Federal Tax Administration / Federal Office for Customs and Border Security. Bundesbank and BMF data is used under Datenlizenz Deutschland – Namensnennung – Version 2.0. Rates are reproduced as published; we do not alter them.</p>
+
+
+<% if @eu_declaration %>
+<section id="eu-declaration">
+<h2>EU Declaration of Conformity</h2>
+
+<p><%= link_to "Download the EU Declaration of Conformity (PDF)", @eu_declaration.doc_url %></p>
+</section>
+<% end %>
+
+<section id="impressum">
+<h2>Impressum</h2>
+
+<p>Information pursuant to § 5 DDG (German Digital Services Act).</p>
+
+<h2>Provider</h2>
+
+<div id="logo">
+	<span id="w1">W</span><span id="w2">W</span><span id="w3">W</span>ebsites<span id="dotcom"><span>.</span>com</span>
+</div>
+
+
+<p>
+<%= CONTACT_NAME %><br />
+<%= CONTACT_STREET %><br />
+<%= CONTACT_CITY %><br />
+<%= CONTACT_COUNTRY %>
+</p>
+
+<h2>Contact</h2>
+
+<p>Email: <%= mail_to CONTACT_EMAIL %></p>
+
+<h2>Responsible for content</h2>
+
+<p><%= CONTACT_NAME %>, address as above.</p>
+</section>
+
+<%= render "help/back" %>
+
+
+<% if current_admin&.sudo? %>
+<section id="eu-declaration-upload">
+<h2>EU Declaration of Conformity</h2>
+<%= form_with url: documents_path, method: :post, local: true do %>
+<%= hidden_field_tag :kind, "eu_declaration_of_conformity" %>
+<%= file_field_tag :doc, accept: "application/pdf" %>
+<%= submit_tag @eu_declaration ? "Replace" : "Upload", class: "button green" %>
+<% end %>
+</section>
+<% end %>
+

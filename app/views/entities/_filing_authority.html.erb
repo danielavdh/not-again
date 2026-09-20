@@ -1,0 +1,72 @@
+<%# locals: (authority:, entity:) %>
+
+<%# The permission half of one authority's block: are we currently allowed to
+    file, where do we go to file, and the buttons to grant or revoke it.
+
+    Separate from the fields above only because the Disconnect button is a
+    button_to, which renders a <form>, and forms cannot nest inside the entity
+    form. Everything else about this authority is saved by the page's one Save.
+
+    Only once a taxpayer is chosen — there is nothing to authorise until we know
+    whose books these are. %>
+
+<% return unless (taxpayer = authority[:taxpayer]) %>
+
+<%# The Connect button below starts an OAuth round trip, and the callback that
+    ends it may need browser-collected values that only a script can gather. So
+    the collector has to be running BEFORE the button is pressed, which is why
+    the marker sits on this page and not only on the filing page. Named by the
+    connector — no view knows which authority wants what. %>
+<section id="<%= authority[:anchor] %>"
+         data-browser-collector="<%= authority[:browser_collector] %>">
+  <h2><%= t("filing.connection_title", authority: authority[:name]) %></h2>
+
+  <% if taxpayer.connected? %>
+    <p class="hint">
+      <%= t("filing.connected_label",
+            expires: taxpayer.token_expires_at && "#{l(taxpayer.token_expires_at, format: :short_date)} #{taxpayer.token_expires_at.strftime('%H:%M')}") %>
+    </p>
+    <% authority[:groups].each do |group| %>
+      <% if (path = scheme_filing_path(entity, group.tax_scheme)) %>
+        <%# The SUBMISSION name, not the scheme label: what gets sent is an MTD
+            quarterly update, not the SA105 it eventually feeds. No authority
+            either — this link sits inside a section headed "Connection to HMRC". %>
+        <%= link_to t("filing.scheme_submission",
+                      scheme: group.submission_name),
+                    path, class: "backend_link button green" %><br /><br />
+      <% end %>
+    <% end %>
+    <%= button_to t("filing.disconnect", authority: authority[:name]),
+                  filing_disconnect_entity_path(entity,
+                    connector: authority[:connector], taxpayer_id: taxpayer.id),
+                  method: :delete,
+                  data: { sure: t("filing.disconnect_confirm",
+                                  authority: authority[:name], entity: entity.name) },
+                  class: "backend_link button red" %>
+  <% else %>
+    <p class="hint"><%= t("filing.not_connected_label") %></p>
+    <%# A NEW TAB, and the dashboard's Connect link does the same.
+        Two reasons, both about what happens when the login does NOT go smoothly:
+
+        · From the authority's own site there is no way back. Browser Back lands
+          on filing#connect, which generates a fresh state and redirects to the
+          authority again, so it loops. Abandoning the login stranded you.
+        · This link sits OUTSIDE the form above and below its Save button, so
+          leaving the page discarded anything unsaved in it, silently.
+
+        The cost, accepted deliberately: the callback lands in the NEW tab, so
+        afterwards the app is open twice and this tab still says "not connected"
+        until it is reloaded. That is visible and a reload fixes it, which is
+        better than a trap the user cannot see. Do not try to close the tab from
+        the callback or message between tabs — JS complexity for something a
+        reload already solves.
+
+        The session is shared across tabs, so the OAuth state, the entity and the
+        chosen taxpayer survive the round trip exactly as before. %>
+    <%= link_to t("filing.connect", authority: authority[:name]),
+                filing_connect_entity_path(entity,
+                  connector: authority[:connector], taxpayer_id: taxpayer.id),
+                target: "_blank", rel: "noopener",
+                class: "backend_link button green" %>
+  <% end %>
+</section>

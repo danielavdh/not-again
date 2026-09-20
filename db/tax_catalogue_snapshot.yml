@@ -1,0 +1,743 @@
+# Where every tax category files its figure. Generated — do not hand-edit:
+#
+#   bin/rails acc:tax_categories:snapshot
+#
+# TaxCatalogueSnapshotTest fails when a catalogue file disagrees with
+# this. That is the point: editing a filing field in place rewrites history,
+# because the loader upserts the SAME row and an already-filed period then
+# resolves against the new box.
+#
+# If the AUTHORITY changed something, do not update this file — add a new
+# year file and leave the old one alone. Update this only when WE were
+# wrong, and commit it alongside the correction.
+ch_selbst_2026.yml:
+  nettoerloese:
+    section: income
+    api_section:
+    export_column: 959b:2.1
+    api_field:
+  bestandesaenderungen:
+    section: income
+    api_section:
+    export_column: 959b:2.2
+    api_field:
+  finanzertrag:
+    section: income
+    api_section:
+    export_column: 959b:2.7
+    api_field:
+  betriebsfremder_ertrag:
+    section: income
+    api_section:
+    export_column: 959b:2.8
+    api_field:
+  ausserordentlicher_ertrag:
+    section: income
+    api_section:
+    export_column: 959b:2.9
+    api_field:
+  materialaufwand:
+    section: expenses
+    api_section:
+    export_column: 959b:2.3
+    api_field:
+  personalaufwand:
+    section: expenses
+    api_section:
+    export_column: 959b:2.4
+    api_field:
+  uebriger_betrieblicher_aufwand:
+    section: expenses
+    api_section:
+    export_column: 959b:2.5
+    api_field:
+  abschreibungen:
+    section: expenses
+    api_section:
+    export_column: 959b:2.6
+    api_field:
+  finanzaufwand:
+    section: expenses
+    api_section:
+    export_column: 959b:2.7
+    api_field:
+  betriebsfremder_aufwand:
+    section: expenses
+    api_section:
+    export_column: 959b:2.8
+    api_field:
+  ausserordentlicher_aufwand:
+    section: expenses
+    api_section:
+    export_column: 959b:2.9
+    api_field:
+  direkte_steuern:
+    section: expenses
+    api_section:
+    export_column: 959b:2.10
+    api_field:
+de_euer_2026.yml:
+  betriebseinnahmen_kleinunternehmer:
+    section: income
+    api_section:
+    export_column: '111'
+    api_field:
+  betriebseinnahmen_umsatzsteuerpflichtig:
+    section: income
+    api_section:
+    export_column: '112'
+    api_field:
+  betriebseinnahmen_umsatzsteuerfrei:
+    section: income
+    api_section:
+    export_column: '103'
+    api_field:
+  vereinnahmte_umsatzsteuer:
+    section: income
+    api_section:
+    export_column: '140'
+    api_field:
+  erstattete_umsatzsteuer:
+    section: income
+    api_section:
+    export_column: '141'
+    api_field:
+  veraeusserung_anlagevermoegen:
+    section: income
+    api_section:
+    export_column: '102'
+    api_field:
+  private_kfz_nutzung:
+    section: income
+    api_section:
+    export_column: '106'
+    api_field:
+  sonstige_entnahmen:
+    section: income
+    api_section:
+    export_column: '108'
+    api_field:
+  betriebsausgabenpauschale:
+    section: expenses
+    api_section:
+    export_column: '195'
+    api_field:
+  waren_rohstoffe:
+    section: expenses
+    api_section:
+    export_column: '100'
+    api_field:
+  fremdleistungen:
+    section: expenses
+    api_section:
+    export_column: '110'
+    api_field:
+  personalkosten:
+    section: expenses
+    api_section:
+    export_column: '120'
+    api_field:
+  afa_grundstuecke:
+    section: expenses
+    api_section:
+    export_column: '136'
+    api_field:
+  afa_immaterielle_wirtschaftsgueter:
+    section: expenses
+    api_section:
+    export_column: '131'
+    api_field:
+  afa_bewegliche_wirtschaftsgueter:
+    section: expenses
+    api_section:
+    export_column: '130'
+    api_field:
+  geringwertige_wirtschaftsgueter:
+    section: expenses
+    api_section:
+    export_column: '132'
+    api_field:
+  miete_geschaeftsraeume:
+    section: expenses
+    api_section:
+    export_column: '150'
+    api_field:
+  doppelte_haushaltsfuehrung:
+    section: expenses
+    api_section:
+    export_column: '152'
+    api_field:
+  sonstige_grundstuecksaufwendungen:
+    section: expenses
+    api_section:
+    export_column: '151'
+    api_field:
+  telekommunikation:
+    section: expenses
+    api_section:
+    export_column: '280'
+    api_field:
+  reisekosten:
+    section: expenses
+    api_section:
+    export_column: '221'
+    api_field:
+  fortbildung:
+    section: expenses
+    api_section:
+    export_column: '281'
+    api_field:
+  rechts_steuerberatung:
+    section: expenses
+    api_section:
+    export_column: '194'
+    api_field:
+  miete_leasing_bewegliche:
+    section: expenses
+    api_section:
+    export_column: '222'
+    api_field:
+  erhaltungsaufwendungen:
+    section: expenses
+    api_section:
+    export_column: '225'
+    api_field:
+  beitraege_versicherungen:
+    section: expenses
+    api_section:
+    export_column: '223'
+    api_field:
+  edv_kosten:
+    section: expenses
+    api_section:
+    export_column: '228'
+    api_field:
+  arbeitsmittel:
+    section: expenses
+    api_section:
+    export_column: '229'
+    api_field:
+  abfallbeseitigung:
+    section: expenses
+    api_section:
+    export_column: '226'
+    api_field:
+  verpackung_transport:
+    section: expenses
+    api_section:
+    export_column: '227'
+    api_field:
+  werbekosten:
+    section: expenses
+    api_section:
+    export_column: '224'
+    api_field:
+  schuldzinsen_anlagevermoegen:
+    section: expenses
+    api_section:
+    export_column: '232'
+    api_field:
+  uebrige_schuldzinsen:
+    section: expenses
+    api_section:
+    export_column: '234'
+    api_field:
+  vorsteuer:
+    section: expenses
+    api_section:
+    export_column: '185'
+    api_field:
+  gezahlte_umsatzsteuer:
+    section: expenses
+    api_section:
+    export_column: '186'
+    api_field:
+  uebrige_betriebsausgaben:
+    section: expenses
+    api_section:
+    export_column: '183'
+    api_field:
+  geschenke:
+    section: expenses
+    api_section:
+    export_column: '174'
+    api_field:
+  bewirtung:
+    section: expenses
+    api_section:
+    export_column: '175'
+    api_field:
+  verpflegungsmehraufwand:
+    section: expenses
+    api_section:
+    export_column: '171'
+    api_field:
+  haeusliches_arbeitszimmer:
+    section: expenses
+    api_section:
+    export_column: '172'
+    api_field:
+  tagespauschale_homeoffice:
+    section: expenses
+    api_section:
+    export_column: '163'
+    api_field:
+  sonstige_beschraenkt_abziehbar:
+    section: expenses
+    api_section:
+    export_column: '177'
+    api_field:
+  kfz_leasing:
+    section: expenses
+    api_section:
+    export_column: '144'
+    api_field:
+  kfz_steuern_versicherungen:
+    section: expenses
+    api_section:
+    export_column: '145'
+    api_field:
+  kfz_sonstige_fahrtkosten:
+    section: expenses
+    api_section:
+    export_column: '146'
+    api_field:
+  kfz_nutzungseinlage:
+    section: expenses
+    api_section:
+    export_column: '147'
+    api_field:
+de_vermietung_2026.yml:
+  mieteinnahmen:
+    section: income
+    api_section:
+    export_column: '01'
+    api_field:
+  einnahmen_andere_raeume:
+    section: income
+    api_section:
+    export_column: '02'
+    api_field:
+  mieteinnahmen_angehoerige:
+    section: income
+    api_section:
+    export_column: '03'
+    api_field:
+  umlagen_nebenkosten:
+    section: income
+    api_section:
+    export_column: '04'
+    api_field:
+  mieteinnahmen_frueherer_jahre:
+    section: income
+    api_section:
+    export_column: '06'
+    api_field:
+  einnahmen_garagen_werbeflaechen:
+    section: income
+    api_section:
+    export_column: '07'
+    api_field:
+  vereinnahmte_umsatzsteuer:
+    section: income
+    api_section:
+    export_column: '09'
+    api_field:
+  erstattete_umsatzsteuer:
+    section: income
+    api_section:
+    export_column: '10'
+    api_field:
+  afa_gebaeude:
+    section: expenses
+    api_section:
+    export_column: '30'
+    api_field:
+  afa_bewegliche_wirtschaftsgueter:
+    section: expenses
+    api_section:
+    export_column: '60'
+    api_field:
+  schuldzinsen:
+    section: expenses
+    api_section:
+    export_column: '33'
+    api_field:
+  geldbeschaffungskosten:
+    section: expenses
+    api_section:
+    export_column: '34'
+    api_field:
+  erhaltungsaufwand:
+    section: expenses
+    api_section:
+    export_column: '36'
+    api_field:
+  umgelegte_kosten:
+    section: expenses
+    api_section:
+    export_column: '52'
+    api_field:
+  nicht_umgelegte_kosten:
+    section: expenses
+    api_section:
+    export_column: '48'
+    api_field:
+  gezahlte_umsatzsteuer:
+    section: expenses
+    api_section:
+    export_column: '58'
+    api_field:
+  sonstige_kosten:
+    section: expenses
+    api_section:
+    export_column: '49'
+    api_field:
+gb_property_2026.yml:
+  rent_income:
+    section: income
+    api_section:
+    export_column: '20'
+    api_field: periodAmount
+  premiums_of_lease_grant:
+    section: income
+    api_section:
+    export_column: '22'
+    api_field: premiumsOfLeaseGrant
+  reverse_premiums:
+    section: income
+    api_section:
+    export_column: '23'
+    api_field: reversePremiums
+  other_property_income:
+    section: income
+    api_section:
+    export_column:
+    api_field: otherIncome
+  rent_rates_insurance:
+    section: expenses
+    api_section:
+    export_column: '24'
+    api_field: premisesRunningCosts
+  repairs_maintenance:
+    section: expenses
+    api_section:
+    export_column: '25'
+    api_field: repairsAndMaintenance
+  loan_interest:
+    section: expenses
+    api_section:
+    export_column: '26'
+    api_field: financialCosts
+  residential_finance_costs:
+    section: expenses
+    api_section:
+    export_column: '44'
+    api_field: residentialFinancialCost
+  legal_professional_fees:
+    section: expenses
+    api_section:
+    export_column: '27'
+    api_field: professionalFees
+  cost_of_services:
+    section: expenses
+    api_section:
+    export_column: '28'
+    api_field: costOfServices
+  travel_costs:
+    section: expenses
+    api_section:
+    export_column:
+    api_field: travelCosts
+  other_property_expenses:
+    section: expenses
+    api_section:
+    export_column: '29'
+    api_field: other
+  tax_taken_off:
+    section: other
+    api_section: income
+    export_column: '21'
+    api_field: taxDeducted
+gb_self_employment_2026.yml:
+  sales_income:
+    section: income
+    api_section:
+    export_column: '15'
+    api_field: turnover
+  other_income:
+    section: income
+    api_section:
+    export_column: '16'
+    api_field: other
+  cost_of_goods_bought:
+    section: expenses
+    api_section:
+    export_column: '17'
+    api_field: costOfGoods
+  staff_costs:
+    section: expenses
+    api_section:
+    export_column: '19'
+    api_field: wagesAndStaffCosts
+  travel_costs:
+    section: expenses
+    api_section:
+    export_column: '20'
+    api_field: carVanTravelExpenses
+  premises_running_costs:
+    section: expenses
+    api_section:
+    export_column: '21'
+    api_field: premisesRunningCosts
+  maintenance_costs:
+    section: expenses
+    api_section:
+    export_column: '22'
+    api_field: maintenanceCosts
+  admin_costs:
+    section: expenses
+    api_section:
+    export_column: '23'
+    api_field: adminCosts
+  advertising_costs:
+    section: expenses
+    api_section:
+    export_column: '24'
+    api_field: advertisingCosts
+  business_entertainment:
+    section: expenses
+    api_section:
+    export_column: '24'
+    api_field: businessEntertainmentCosts
+  interest:
+    section: expenses
+    api_section:
+    export_column: '25'
+    api_field: interestOnBankOtherLoans
+  financial_charges:
+    section: expenses
+    api_section:
+    export_column: '26'
+    api_field: financeCharges
+  bad_debt:
+    section: expenses
+    api_section:
+    export_column: '27'
+    api_field: irrecoverableDebts
+  professional_fees:
+    section: expenses
+    api_section:
+    export_column: '28'
+    api_field: professionalFees
+  depreciation:
+    section: expenses
+    api_section:
+    export_column: '29'
+    api_field: depreciation
+  other_expenses:
+    section: expenses
+    api_section:
+    export_column: '30'
+    api_field: otherExpenses
+  payments_to_subcontractors:
+    section: expenses
+    api_section:
+    export_column: '18'
+    api_field: paymentsToSubcontractors
+  tax_taken_off:
+    section: other
+    api_section: income
+    export_column: '82'
+    api_field: taxTakenOffTradingIncome
+nl_winst_2025.yml:
+  netto_omzet:
+    section: income
+    api_section:
+    export_column: bd-i_TurnoverNetFiscal
+    api_field:
+  wijziging_voorraad_onderhanden_werk:
+    section: income
+    api_section:
+    export_column: bd-i_StockAndWorkInProgressChangeFiscal
+    api_field:
+  geactiveerde_productie_eigen_bedrijf:
+    section: income
+    api_section:
+    export_column: bd-i_CapitalizedProductionOwnBusinessFiscal
+    api_field:
+  overige_opbrengsten:
+    section: income
+    api_section:
+    export_column: bd-i_RevenuesOtherFiscal
+    api_field:
+  kosten_grond_hulpstoffen:
+    section: expenses
+    api_section:
+    export_column: bd-i_RawAncillaryMaterialsPurchasePriceSalesFiscal
+    api_field:
+  kosten_uitbesteed_werk:
+    section: expenses
+    api_section:
+    export_column: bd-i_OutsourcedWorkCostsAndOtherExternalCostsFiscal
+    api_field:
+  lonen_en_salarissen:
+    section: expenses
+    api_section:
+    export_column: bd-i_WagesSalariesFiscal
+    api_field:
+  arbeidsbeloning_fiscale_partner:
+    section: expenses
+    api_section:
+    export_column: bd-i_WagesEarnedByPartnerTaxPurposesFiscal
+    api_field:
+  sociale_lasten:
+    section: expenses
+    api_section:
+    export_column: bd-i_SocialSecurityCostsFiscal
+    api_field:
+  pensioenlasten:
+    section: expenses
+    api_section:
+    export_column: bd-i_PensionCostsFiscal
+    api_field:
+  overige_personeelskosten:
+    section: expenses
+    api_section:
+    export_column: bd-i_PersonnelCostsOtherFiscal
+    api_field:
+  ontvangen_uitkeringen_loonsubsidies:
+    section: expenses
+    api_section:
+    export_column: bd-i_BenefitsAndWageSubsidiesReceivedFiscal
+    api_field:
+  afschrijving_goodwill:
+    section: expenses
+    api_section:
+    export_column: bd-i_GoodwillDepreciationFiscal
+    api_field:
+  afschrijving_overige_immateriele_activa:
+    section: expenses
+    api_section:
+    export_column: bd-i_IntangibleFixedAssetsOtherDepreciation
+    api_field:
+  afschrijving_gebouwen_terreinen:
+    section: expenses
+    api_section:
+    export_column: bd-i_BuildingsLandDepreciationFiscal
+    api_field:
+  afschrijving_machines_installaties:
+    section: expenses
+    api_section:
+    export_column: bd-i_MachineryDepreciationFiscal
+    api_field:
+  afschrijving_andere_bedrijfsmiddelen:
+    section: expenses
+    api_section:
+    export_column: bd-i_TangibleFixedAssetsOtherDepreciation
+    api_field:
+  overige_waardeveranderingen_vaste_activa:
+    section: expenses
+    api_section:
+    export_column: bd-i_TangibleAndIntangibleFixedAssetsOtherValuationChangeAmount
+    api_field:
+  bijzondere_waardevermindering_vlottende_activa:
+    section: expenses
+    api_section:
+    export_column: bd-i_CurrentAssetsSpecialValuationDecreaseAmount
+    api_field:
+  auto_en_transportkosten:
+    section: expenses
+    api_section:
+    export_column: bd-i_CarAndTransportCostsFiscal
+    api_field:
+  huisvestingskosten:
+    section: expenses
+    api_section:
+    export_column: bd-i_AccommodationCostsFiscal
+    api_field:
+  onderhoud_overige_materiele_activa:
+    section: expenses
+    api_section:
+    export_column: bd-i_MaintenanceOtherTangibleFixedAssetsFiscal
+    api_field:
+  verkoopkosten:
+    section: expenses
+    api_section:
+    export_column: bd-i_SalesCostsFiscal
+    api_field:
+  andere_kosten:
+    section: expenses
+    api_section:
+    export_column: bd-i_CostOtherFiscal
+    api_field:
+  opbrengsten_overige_vorderingen:
+    section: income
+    api_section:
+    export_column: bd-i_RevenuesOtherReceivablesFiscal
+    api_field:
+  opbrengsten_banktegoeden:
+    section: income
+    api_section:
+    export_column: bd-i_RevenuesBankCreditsFiscal
+    api_field:
+  ontvangen_dividend:
+    section: income
+    api_section:
+    export_column: bd-i_DividendExceptParticipatingInterestDividendFiscal
+    api_field:
+  kwijtscheldingswinst:
+    section: income
+    api_section:
+    export_column: bd-i_ProfitDueToDebtRemission
+    api_field:
+  waardeverandering_vorderingen:
+    section: expenses
+    api_section:
+    export_column: bd-i_ReceivablesValuationChangeAmount
+    api_field:
+  waardeverandering_effecten:
+    section: income
+    api_section:
+    export_column: bd-i_StockValuationChangeAmount
+    api_field:
+  kosten_schulden_rentelasten:
+    section: expenses
+    api_section:
+    export_column: bd-i_InterestExpenditureEtcCostsDebtsFiscal
+    api_field:
+  boekwinst_op_activa:
+    section: income
+    api_section:
+    export_column: bd-i_AssetsBookProfitsFiscal
+    api_field:
+  opheffing_terugkeerreserve_positief:
+    section: income
+    api_section:
+    export_column: bd-i_ReturnReserveDiscontinuationPositiveFiscal
+    api_field:
+  overige_buitengewone_baten:
+    section: income
+    api_section:
+    export_column: bd-i_ExtraordinaryIncomeBusinessOtherFiscal
+    api_field:
+  boekverlies_op_activa:
+    section: expenses
+    api_section:
+    export_column: bd-i_AssetsBookLossFiscal
+    api_field:
+  afboeking_herinvesteringsreserve:
+    section: expenses
+    api_section:
+    export_column: bd-i_ReinvestmentReservesWriteDownFiscal
+    api_field:
+  opheffing_terugkeerreserve_negatief:
+    section: expenses
+    api_section:
+    export_column: bd-i_ReturnReserveDiscontinuationNegativeFiscal
+    api_field:
+  overige_buitengewone_lasten:
+    section: expenses
+    api_section:
+    export_column: bd-i_ExtraordinaryExpenditureBusinessOtherFiscal
+    api_field:

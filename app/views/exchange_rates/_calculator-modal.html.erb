@@ -1,0 +1,47 @@
+<dialog id="fx-calculator" class="fx-calculator">
+  <h3 class="modal-title"><%= t("exchange_rates.calculator") %></h3>
+  <div class="modal-body">
+    <div class="field">
+      <label for="fx-start-amount"><%= t("attrs.amount") %></label>
+      <input type="text" id="fx-start-amount" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label for="fx-from-currency"><%= t("attrs.from_currency") %></label>
+      <select id="fx-from-currency">
+        <% @currencies.each do |c| %>
+          <option value="<%= c %>" <%= 'selected' if c != account.currency && c == @currencies.first %>><%= c %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fx-rate-date"><%= t("attrs.date") %></label>
+      <input type="month" id="fx-rate-date" value="<%= Date.current.strftime('%Y-%m') %>">
+    </div>
+    <div class="field">
+      <label for="fx-to-currency"><%= t("attrs.to_currency") %></label>
+      <select id="fx-to-currency">
+        <% @currencies.each do |c| %>
+          <option value="<%= c %>" <%= 'selected' if c == account.currency %>><%= c %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fx-rate"><%= t("attrs.rate") %></label>
+      <input type="text" id="fx-rate" inputmode="decimal">
+      <small id="fx-rate-source"></small>
+    </div>
+    <div class="field result">
+      <label for="fx-result"><%= t("attrs.result") %></label>
+      <input type="text" id="fx-result" readonly>
+      <button type="button" id="fx-copy-result" title="Copy">
+        <svg class=stroke><use xlink:href="#te_copy"></use></svg>
+      </button>
+      <%= tag.span "", class: "copy-status hidden", data: { copied: t("crud.copied") } %>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" class="button" data-modal-close>
+      <%= t("crud.close") %>
+    </button>
+  </div>
+</dialog>

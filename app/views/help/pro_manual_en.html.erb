@@ -1,0 +1,132 @@
+<% content_for :title, "Pro guide" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>Advanced bookkeeping</h1>
+
+  <p>This guide covers the parts of the app that go beyond the bank entry screens and is an extension to the contents of the <%= link_to "user guide", easy_manual_path %>. It assumes you are comfortable with double-entry bookkeeping and also want to work directly with journal entries.</p>
+  <p>One set of books is an <strong>entity</strong> &thinsp;&mdash;&thinsp; a business, a rental property, a household. Every account belongs to one, through digits 2 and 3 of its code, and that is what decides which entries may sit together.</p>
+
+  <nav class="guide-toc" aria-label="Contents">
+    <ul>
+      <% if current_admin&.sudo? %>
+      <li><a href="#sudo">Sudo</a></li>
+      <% end %>
+      <li><a href="#how-recorded">How the app records transactions</a></li>
+      <li><a href="#je-screen">The journal entries screen</a></li>
+      <li><a href="#creating">Creating a journal entry directly</a></li>
+      <li><a href="#editing">Editing, copying, unposting &amp; deleting an entry</a></li>
+      <li><a href="#cannot-change">What cannot be changed</a></li>
+      <li><a href="#opening-balances">Opening balances</a></li>
+      <li><a href="#adjusting">Adjusting entries</a></li>
+      <li><a href="#year-end">Ending a year</a></li>
+      <li><a href="#families">Families &thinsp;&mdash;&thinsp; consolidating multiple entities</a></li>
+      <li><a href="#cross-entity">Cross-entity entries between separate businesses</a></li>
+      <li><a href="#add-currency">Adding a Currency</a></li>
+      <li><a href="#tax-setup">Tax schemes and categories</a></li>
+    </ul>
+  </nav>
+
+  <% if current_admin&.sudo? %>
+  <h2 id="sudo">Sudo</h2>
+  <p>Sudo is the admin account with control over the installation itself rather than any one set of books. Sudo holds no entities of its own and is not a bookkeeper. What follows is management, not bookkeeping:</p>
+  <ul>
+    <li><strong>Admins</strong> &thinsp;&mdash;&thinsp; see every admin in the installation, create, update and delete admins. Reset an admin's two-factor enrolment, forcing them to set it up again &thinsp;&mdash;&thinsp; useful if they lose their device. Link any admin to any entity: this gives that admin "full access" to writing, updating and deleting entries, changing settings, adding co-admins etc.</li>
+    <li><strong>Entities</strong> &thinsp;&mdash;&thinsp; see every entity in the installation, active and orphaned. Create new entities, and fully edit one: rename it, move it between families. Permanently purge an orphaned entity and all its data.</li>
+    <li><strong>Languages</strong> &thinsp;&mdash;&thinsp; create, edit, release and unrelease a language, including previewing a draft's legal and manual texts before anyone else can see it.</li>
+    <li><strong>Currencies</strong> &thinsp;&mdash;&thinsp; retire (or reactivate) an unused currency for the whole installation: marks it as no longer existing in the world, pulls it from every dropdown, but keeps its symbol on whatever already used it. Edit currency codes; on save, the change cascades to all postings/accounts/rates. Edit the currency symbol.</li>
+    <li><strong>Exchange rates</strong> &thinsp;&mdash;&thinsp; see and correct the shared rate rows every entity's reports draw from, in place, without it silently forking into a private manual row.</li>
+    <li><strong>Installation documents</strong> &thinsp;&mdash;&thinsp; upload documents shown on the Legal page, such as the EU Declaration of Conformity.</li>
+    <li><strong>Receipts</strong> &thinsp;&mdash;&thinsp; browse and upload receipts across every entity.</li>
+    <li><strong>Accounts</strong> &thinsp;&mdash;&thinsp; List shows two extra columns: tax scheme and tax category key.</li>
+    <li>Grant or revoke sudo itself (as long as there is one left).</li>
+  </ul>
+  <% end %>
+
+  <h2 id="how-recorded">How the app records transactions</h2>
+  <p>Every transaction in the app is a journal entry. A journal entry contains two or more posting lines &thinsp;&mdash;&thinsp; each posting hits one account for either a debit or a credit amount. Total debits must equal total credits: the entry must balance. The bank entry form (deposits, withdrawals, transfers) creates journal entries on your behalf.</p>
+
+  <h2 id="je-screen">The journal entries screen</h2>
+  <p>Journal Entries in the menu shows every entry across all accounts, regardless of which bank account they belong to. Each row shows the entry ID, date, the balance-sheet account involved, memo, reference, amount, and status (posted or draft). You can search by description, filter by date range, and download the full list as a CSV.</p>
+
+  <h2 id="creating">Creating a journal entry directly</h2>
+  <p>Click New Entry. Fill in:</p>
+  <ul>
+    <li>Date.</li>
+    <li>Memo &thinsp;&mdash;&thinsp; a short description of the entry as a whole.</li>
+    <li>Reference &thinsp;&mdash;&thinsp; optional free text, e.g. an invoice number or bank reference. Appears in the journal entries list and CSV exports.</li>
+  </ul>
+  <p>Then add posting lines. Each line needs an account, a description, a debit or credit amount, and a currency if the account carries one. Keep adding lines until the entry balances. The app will not let you save an unbalanced entry.</p>
+  <p>Two further rules apply, and neither is negotiable:</p>
+  <ul>
+    <li><strong>Every entry needs at least one balance-sheet line</strong> &thinsp;&mdash;&thinsp; asset, liability or equity. A reclass purely between two expense accounts is refused; move it through the balance-sheet account it came from, or correct the original entry.</li>
+    <li><strong>Once an entry contains any income, expense or personal line, it may contain only ONE balance-sheet account.</strong> &laquo;The bank paid the rent and petty cash paid the stamps&raquo; is two entries, not one.</li>
+  </ul>
+  <p>An entry made only of balance-sheet lines is not subject to the second rule, and may name as many accounts as you like. That is what makes opening balances possible &thinsp;&mdash;&thinsp; see below.</p>
+
+  <h2 id="editing">Editing, copying, unposting &amp; deleting an entry</h2>
+  <p>Editing: Click Edit on any entry &thinsp;&mdash;&thinsp; from the journal list, a ledger, or a long report &thinsp;&mdash;&thinsp; change it, and save.</p>
+  <p>Copying: On the journal entry detail page, click Copy. The app creates a new draft with the same accounts, descriptions, and amounts. Update the date, adjust any figures, and save. Useful for recurring adjustments that follow the same pattern each period.</p>
+  <p>Unposting: An entry posts itself because it balances &thinsp;&mdash;&thinsp; and it cannot be saved unless it does, so every saved entry starts posted. Unpost it to exclude it from your figures &thinsp;&mdash;&thinsp; it becomes a draft, excluded from ledgers and reports, until you post it again.</p>
+  <p>Deleting requires unposting first, as a safety step: Unpost the entry, then the Delete button appears.</p>
+
+  <h2 id="cannot-change">What cannot be changed</h2>
+  <p>Almost everything you enter can be corrected. Three things cannot:</p>
+  <ul>
+    <li>An account&rsquo;s <strong>first three digits</strong> once it has postings &thinsp;&mdash;&thinsp; its type and its entity. Moving it would rewrite history in two sets of books. Digit 4 onwards stays editable, so you can still regroup an account later.</li>
+    <li>A <strong>balance-sheet account&rsquo;s currency</strong> once it has postings. Income, expense and personal accounts have no currency of their own &thinsp;&mdash;&thinsp; they take it from the balance-sheet line in the same entry.</li>
+    <li><strong>Retained Earnings</strong> accounts, which the year-end flow creates and maintains. They cannot be edited or deleted, and they take no bank entries.</li>
+  </ul>
+
+  <h2 id="opening-balances">Opening balances</h2>
+  <p>When you start using the app part-way through a year, enter the balance of every balance-sheet account as it stood on your start date. Create one journal entry dated on that date. Add a posting for each bank account, loan, credit card, and equity account. The balancing line goes to an equity account such as Opening Capital. Post it. From that point on, your figures are complete.</p>
+  <p>This is the one entry that names many balance-sheet accounts at once, and it is allowed precisely because it has no income or expense lines in it.</p>
+  <p>An entry balances <strong>per currency</strong>, not overall. If your books hold more than one, give each currency its own balancing equity line, or make one entry per currency. The single exception is a two-line transfer between two balance-sheet accounts in different currencies, where the amounts are meant to differ.</p>
+
+  <h2 id="adjusting">Adjusting entries</h2>
+  <p>For anything that does not flow through a bank account &thinsp;&mdash;&thinsp; depreciation, accruals, prepayments, provisions &thinsp;&mdash;&thinsp; create a journal entry directly. For example: debit Depreciation expense and credit Accumulated depreciation. These entries keep your P&amp;L and balance sheet accurate without touching a bank account ledger.</p>
+
+  <h2 id="year-end">Ending a year</h2>
+  <p>To close a business year, click &laquo;Close year&raquo; from the dashboard.</p>
+
+  <h3>Automated Flow</h3>
+  <p>Setup (once per entity): Choose your business year.</p>
+  <p>The app calculates the net movement on all income and expense accounts for the period, posts a balanced closing entry per currency, and credits or debits the net result to a locked Retained Earnings account &thinsp;&mdash;&thinsp; one per currency. If the Retained Earnings account does not yet exist, it is created automatically. These accounts are locked: they cannot be edited or deleted.</p>
+  <p>If you subsequently post, edit, or unpost any entry dated within an already closed period, the app recalculates the closing entry for that period automatically. You will see a confirmation notice. This only applies to closing entries generated by &laquo;Close year&raquo;.</p>
+  <p>If you deleted a service-generated closing entry and need to rebuild it: make your corrections, then click &laquo;Close year&raquo; again for that period.</p>
+
+  <h3>Doing it manually</h3>
+  <p>Click &laquo;I will do it myself&raquo;. Run a Trial Balance for the full financial year. For each income and expense account, reverse the balance into a new journal entry dated the last day of the year: income accounts DR, expense accounts CR. The balancing line goes to Retained Earnings &thinsp;&mdash;&thinsp; CR for a net profit, DR for a net loss. Post it.</p>
+  <p>Note: the app does not track manually built closing entries. If you later post, edit, or unpost any entry dated within a closed period, the app will not adjust your closing entry &thinsp;&mdash;&thinsp; regardless of whether the accounts involved are locked. You will need to update the closing entry yourself.</p>
+
+  <h2 id="families">Families &thinsp;&mdash;&thinsp; consolidating multiple entities</h2>
+  <p>Group entities into a family to consolidate their reporting: On your profile page, join entities into a family by giving them the same family name. Profit &amp; Loss, Balance Sheet and Trial Balance span a whole family; any other reports can remain separate. A family also relaxes the one-entity-per-entry rule &thinsp;&mdash;&thinsp; within a family a single journal entry may touch more than one member. For entries across families see below.</p>
+
+  <h2 id="cross-entity">Cross-entity entries between separate businesses</h2>
+  <p>Two entities in different families cannot share a journal entry &thinsp;&mdash;&thinsp; each has to balance on its own, so the app writes two and links them. How to trigger it is in <%= link_to "When one of your businesses pays for another", easy_manual_path(anchor: "cross-business") %>; what follows is what that page does not say.</p>
+  <p>The two balance-sheet accounts involved must be in the same currency.</p>
+  <p>The pair moves together, but not symmetrically. Deleting the paying entry deletes both. Deleting the gift posting also deletes the linked entry. Deleting the linked entry unlinks and removes only that side, leaving the gift as a plain posting. Copying duplicates the whole pair with a fresh link.</p>
+  <p>A balance-account transfer or a loan is not this: book it in each business separately.</p>
+
+  <h2 id="add-currency">Adding a Currency</h2>
+
+	<p>To add currencies, we need a mechanism to decide on exchange rates. The app provides hmrc, ecb, bundesbank and estv rates by default, fetched according to the rules of those tax authorities. This means that in your reports you can translate all you entries into Euro, GBP or CHF and know that the rates are acceptable to the tax authorities of Germany, UK and Switzerland, and any countries of the Eurozone that accept the ecb monthly rates.</p>
+	<p>Adding more authorities is not possible for an admin, it requires the developer who is providing you with this app. The app is set up in a way that should make this task very easy and straight forward for the developer.</p>
+	<p>Adding more currencies on the other hand is something any admin with full access can do. This will allow you to create balance accounts in those currencies, and your entries will show in the reports.</p>
+	<p>Please note: If a currency you added is not carried by one or more of the available authority driven exchange rates, you will be asked to enter your own rates, with evidence. (e.g. ecb does not carry UAH in 2026, should the ecb add it, the app will pick it up automatically, and you will get an email notification.)</p>
+	<p>Adding your own rates is possible, some country allow this, sometimes it is necessary because historical rates were not available to be fetched. Manually entered rates always override fetched rates. These rates will be fixed to your business(es)/entities which you select when you enter the rates. They are also fixed to the period you enter. You should not switch from manually entered rates to fetched rates inside the same tax period, most authorities allow only 1 source per tax period.</p>
+
+  <h2 id="tax-setup">Tax schemes and categories</h2>
+    <p>A tax scheme is one return &thinsp;&mdash;&thinsp; SA105, Anlage V. Ticking it on the tax setup page and saving creates a report group for that return, and the group keeps itself up to date: it holds whichever accounts carry that scheme, so an account you tag later appears without you having to come back and add it.</p>
+    <p>A category is one box on the tax form. Several accounts can point at the same box &thinsp;&mdash;&thinsp; Grundsteuer, Hausversicherung and Hausgeld all belong to Kennzahl 52 &thinsp;&mdash;&thinsp; and the report adds them together into that box. An account, though, belongs to exactly one scheme. That is why an account you have already assigned does not appear in another scheme's list.</p>
+    <p>The category offered for unassigned accounts is a guess made from the account's name, matched against keywords based on the tax form itself. If it is wrong, select the correct one. Nothing is stored until you confirm it.<br />
+Once an account is on the assigned side there is no confirming step: changing its category takes effect at once, because the account is already committed to the scheme.</p>
+    <p>Tagging carries no date. Add an account to a scheme, or change its category, and every report recomputes &thinsp;&mdash;&thinsp; including ones you have already looked at for earlier periods! <br />
+What is already backed up, does not change. Backups are created for:<br />
+- every tax report (category summaries) when you click "email report"<br />
+- every submission exactly as it went.<br /> 
+Under a cumulative regime such as UK MTD corrections reach the authority with the next update, because that update resends the year so far.</p>
+    <p>Downloading gives you one CSV matching what's on screen &thinsp;&mdash;&thinsp; summary or detail. Emailing a report gives you both: a <strong>summary</strong> (category totals, what goes in the boxes) and a <strong>detail</strong> (category totals and their individual entries, with receipt links; unlinked receipts are listed separately). If the entity has an accountant's file format set (DATEV, for instance), that comes along too. Nothing to report for the period gives you a short email saying so instead. The summary CSV is also saved  each time it changes, so you always have a dated backup of what a period's boxes looked like.</p>
+    <p>Setting up a taxpayer, connecting to the tax authority and sending a period &thinsp;&mdash;&thinsp; see <%= link_to "Setting up tax reporting", easy_manual_path(anchor: "tax") %> and <%= link_to "Filing quarterly figures yourself", easy_manual_path(anchor: "filing") %>.</p>
+
+</div>
+<%= render "help/back" %>

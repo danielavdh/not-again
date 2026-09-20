@@ -1,0 +1,23 @@
+<%# The receipt list inside the picker modal. Rendered here and fetched as HTML
+    by receipts.js, the way the add-account modal and the cross-entity rows
+    already work — the markup used to be a template string in the JS, which meant
+    titles and descriptions went into innerHTML unescaped.
+
+    action: "preview-receipt" (look at what is attached) or "pick-receipt"
+    (choose one to link). %>
+<% if receipts.empty? %>
+  <p class="empty"><%= t("receipts.no_receipts_available") %></p>
+<% else %>
+  <% receipts.each do |receipt| %>
+    <div class="receipt-picker-item"
+         data-action="<%= action %>"
+         data-receipt-id="<%= receipt.id %>"
+         data-posting-id="<%= posting_id %>">
+      <img src="<%= receipt.thumbnail_url %>" alt="<%= receipt.title %>" class="receipt-picker-thumb">
+      <div class="receipt-picker-info">
+        <strong><%= receipt.display_filename %></strong>
+        <span><%= receipt.description %></span>
+      </div>
+    </div>
+  <% end %>
+<% end %>

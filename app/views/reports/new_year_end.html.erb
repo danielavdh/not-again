@@ -1,0 +1,81 @@
+<% content_for :title, t("reports.year_end.title") %>
+
+<div id="new_edit_view">
+    <h1><%= t("reports.year_end.title") %></h1>
+
+    <%= render partial: 'shared/flash' %>
+
+    <%# Already closing on some pattern: say what it is, and offer to change it.
+        Changing means the existing closes no longer describe the years wanted,
+        so they are removed and re-closed with the ordinary button. %>
+    <% unless @first_close %>
+	  <div class="change-financial-year">
+      	<p><%= t("reports.year_end.current_pattern",
+               date: l(@closed_periods.first.last, format: :short_date),
+               count: @closed_periods.size) %></p>
+      	<%= clean t("reports.year_end.change_warning") %>
+
+      	<%= button_to t("reports.year_end.change_button",
+                      entity: "#{@entity.code} - #{@entity.name}"),
+            change_year_end_reports_path(entity_id: @entity.id),
+            method: :post,
+            data: { sure: t("reports.year_end.change_confirm", count: @closed_periods.size) },
+            class: "button" %>
+	  </div>
+    <% end %>
+
+    <% if @first_close %>
+
+      <%= form_with url: create_year_end_reports_path, method: :post, class: "form_year_end" do %>
+        <%= hidden_field_tag :entity_id, @entity.id %>
+
+        <div class="field">
+      	  <label class="year-end-choice">
+			  <%= t("reports.year_end.picker_intro", entity: @entity.name) %>
+		  </label>
+          <label class="year-end-choice">
+			  <%= radio_button_tag :pattern, "calendar", true %>
+			  <%= t("reports.year_end.pattern_calendar") %>
+		  </label>
+          <label class="year-end-choice">
+			  <%= radio_button_tag :pattern, "uk" %>
+			  <%= t("reports.year_end.pattern_uk") %>
+		  </label>
+          <label class="year-end-choice">
+			  <%= radio_button_tag :pattern, "uk_fy" %>
+			  <%= t("reports.year_end.pattern_uk_fy") %>
+		  </label>
+          <label class="year-end-choice">
+			  <%= radio_button_tag :pattern, "other" %>
+			  <%= t("reports.year_end.pattern_other") %>
+			  <span id="year-end-custom" class="year-end-custom">
+			    <%= select_tag :year_end_day,
+			          options_for_select((1..31).to_a, params[:year_end_day] || 31) %>
+			    <%= select_tag :year_end_month,
+			          options_for_select((1..12).map { |m| [I18n.t("date.month_names", default: Date::MONTHNAMES)[m], m] }, params[:year_end_month] || 12) %>
+			    <span class="warning"><%= t("reports.year_end.other_warning") %></span>
+			  </span>
+		  </label>
+        </div>
+
+        <div class="actions">
+          <%# The pattern has nowhere else to live — it IS the first closing entry —
+              so saving it and closing that year are one action. True whether this is
+              a first close or a re-choice after changing the year end. %>
+          <%= submit_tag t("reports.year_end.continue"),
+                data: { sure: t("reports.year_end.confirm_pattern") } %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <div class="crud_navigation">
+      <%= link_to t("crud.cancel"), dashboard_path, class: "button" %>
+      <%# Only alongside the picker: it is an escape hatch from setting a pattern
+          at all. Reopening makes @first_close true again, so a pro user who wants
+          to hand-close from now on still meets it at the right moment. %>
+      <% if @first_close && current_admin.full_access_pro? %>
+        <%= link_to t("reports.year_end.do_it_myself"),
+              pro_manual_path(anchor: "year-end"), class: "button" %>
+      <% end %>
+    </div>
+</div>

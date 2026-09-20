@@ -1,0 +1,19 @@
+<div class="otp-container">
+  <h2><%= t("gates.otp_verify.title") %></h2>
+
+  <%= form_with url: verify_otp_path, method: :post, local: true do |f| %>
+    <div>
+	  <label><%= t("gates.otp_verify.enter_code") %></label>
+      <%= text_field_tag :otp_code, nil,
+          class: "otp-input",
+          placeholder: "000000",
+          maxlength: 6,
+          pattern: "[0-9]{6}",
+          inputmode: "numeric",
+          autocomplete: "one-time-code",
+          autofocus: true %>
+    </div>
+
+    <%= submit_tag t("gates.otp_verify.submit"), class: "button green" %>
+  <% end %>
+</div>

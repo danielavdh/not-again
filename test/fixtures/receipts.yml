@@ -1,0 +1,63 @@
+# Receipts fixtures
+# Receipts fixtures
+linked_receipt:
+  title: "Office Supplies Invoice"
+  receipt_date: <%= Date.current %>
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:family_biz) %>
+  posting_id: <%= ActiveRecord::FixtureSet.identify(:deposit_bank) %>
+  scan_data:
+    id: "test_linked.jpg"
+    storage: "store"
+    metadata:
+      filename: "invoice.jpg"
+      size: 12345
+      mime_type: "image/jpeg"
+
+unlinked_receipt:
+  title: "Restaurant Receipt"
+  receipt_date: <%= Date.current - 5.days %>
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:family_biz) %>
+  scan_data:
+    id: "test_unlinked.jpg"
+    storage: "store"
+    metadata:
+      filename: "restaurant.jpg"
+      size: 8000
+      mime_type: "image/jpeg"
+
+second_unlinked_receipt:
+  title: "Train Receipt"
+  receipt_date: <%= Date.current - 3.days %>
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:family_biz) %>
+  scan_data:
+    id: "test_unlinked_2.jpg"
+    storage: "store"
+    metadata:
+      filename: "train.jpg"
+      size: 6000
+      mime_type: "image/jpeg"
+
+personal_receipt:
+  title: "Personal Expense"
+  receipt_date: <%= Date.current - 10.days %>
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:personal) %>
+  scan_data:
+    id: "test_personal.jpg"
+    storage: "store"
+    metadata:
+      filename: "personal.jpg"
+      size: 5000
+      mime_type: "image/jpeg"
+
+uploaded_receipt:
+  title: "Uploaded by co-admin"
+  receipt_date: <%= Date.current - 2.days %>
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:personal) %>
+  uploaded_by_id: <%= ActiveRecord::FixtureSet.identify(:upload_only) %>
+  scan_data:
+    id: "test_uploaded.jpg"
+    storage: "store"
+    metadata:
+      filename: "uploaded.jpg"
+      size: 6000
+      mime_type: "image/jpeg"

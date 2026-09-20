@@ -1,0 +1,131 @@
+<% content_for :title, "Extra handleiding" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>Geavanceerde boekhouding</h1>
+
+  <p>Deze gids behandelt de onderdelen van de app die verder gaan dan de bankboekingsschermen en is een aanvulling op de <%= link_to "gebruikershandleiding", easy_manual_path %>. Hij gaat ervan uit dat je vertrouwd bent met dubbel boekhouden en ook rechtstreeks met journaalboekingen wilt werken.</p>
+  <p>Eén set boeken is een <strong>entiteit</strong> &thinsp;&mdash;&thinsp; een onderneming, een verhuurd pand, een huishouden. Elke rekening hoort via cijfer 2 en 3 van haar nummer bij precies één entiteit, en dat bepaalt welke boekingen samen in één boeking mogen staan.</p>
+
+  <nav class="guide-toc" aria-label="Inhoud">
+    <ul>
+      <% if current_admin&.sudo? %>
+      <li><a href="#sudo">Sudo</a></li>
+      <% end %>
+      <li><a href="#how-recorded">Hoe de app transacties vastlegt</a></li>
+      <li><a href="#je-screen">Het journaalboekingenoverzicht</a></li>
+      <li><a href="#creating">Een journaalboeking direct aanmaken</a></li>
+      <li><a href="#editing">Een boeking bewerken, kopiëren, terugboeken en verwijderen</a></li>
+      <li><a href="#cannot-change">Wat niet te wijzigen is</a></li>
+      <li><a href="#opening-balances">Openingsbalans</a></li>
+      <li><a href="#adjusting">Correctieboekingen</a></li>
+      <li><a href="#year-end">Een jaar afsluiten</a></li>
+      <li><a href="#families">Families &thinsp;&mdash;&thinsp; meerdere entiteiten consolideren</a></li>
+      <li><a href="#cross-entity">Boekingen tussen afzonderlijke bedrijven</a></li>
+      <li><a href="#add-currency">Een valuta toevoegen</a></li>
+      <li><a href="#tax-setup">Belastingschema&rsquo;s en categorieën</a></li>
+    </ul>
+  </nav>
+
+  <% if current_admin&.sudo? %>
+  <h2 id="sudo">Sudo</h2>
+  <p>Sudo is het adminaccount met controle over de installatie zelf, niet over één set boeken. Sudo houdt zelf geen entiteiten aan en is geen boekhouder. Wat volgt is beheer, geen boekhouding:</p>
+  <ul>
+    <li><strong>Admins</strong> &thinsp;&mdash;&thinsp; ziet elke admin in de installatie, maakt admins aan, bewerkt en verwijdert ze. Zet de tweefactorauthenticatie van een admin terug, zodat die opnieuw moet worden ingesteld &thinsp;&mdash;&thinsp; handig als iemand zijn toestel kwijtraakt. Koppelt een willekeurige admin aan een willekeurige entiteit: dat geeft die admin "volledige toegang" tot het vastleggen, wijzigen en verwijderen van boekingen, het wijzigen van instellingen, het toevoegen van co-beheerders enz.</li>
+    <li><strong>Entiteiten</strong> &thinsp;&mdash;&thinsp; ziet elke entiteit in de installatie, actief en verweesd. Maakt nieuwe entiteiten aan en bewerkt er een volledig: hernoemt haar, verplaatst haar tussen families. Verwijdert een verweesde entiteit definitief, met al haar gegevens.</li>
+    <li><strong>Talen</strong> &thinsp;&mdash;&thinsp; maakt een taal aan, bewerkt, publiceert en trekt de publicatie in, inclusief het vooraf bekijken van de juridische en handleidingteksten van een concept voordat iemand anders ze kan zien.</li>
+    <li><strong>Valuta</strong> &thinsp;&mdash;&thinsp; trekt een ongebruikte valuta voor de hele installatie in (of activeert haar opnieuw): ze geldt dan als niet meer bestaand, verdwijnt uit elke keuzelijst, maar behoudt haar symbool bij alles wat er al mee is vastgelegd. Bewerkt valutacodes; bij het opslaan werkt de wijziging door in alle boekingen, rekeningen en koersen. Bewerkt het valutasymbool.</li>
+    <li><strong>Wisselkoersen</strong> &thinsp;&mdash;&thinsp; bekijkt en corrigeert de gedeelde koersregels waaruit de rapporten van elke entiteit putten, rechtstreeks, zonder dat er stilletjes een aparte, handmatige regel van wordt afgesplitst.</li>
+    <li><strong>Installatiedocumenten</strong> &thinsp;&mdash;&thinsp; uploadt documenten die op de Juridisch-pagina verschijnen, zoals de EU-conformiteitsverklaring.</li>
+    <li><strong>Bonnen</strong> &thinsp;&mdash;&thinsp; doorzoekt en uploadt bonnen over alle entiteiten heen.</li>
+    <li><strong>Rekeningen</strong> &thinsp;&mdash;&thinsp; de lijst toont twee extra kolommen: belastingschema en belastingcategorie-sleutel.</li>
+    <li>Sudo zelf toekennen of intrekken (zolang er nog minstens één overblijft).</li>
+  </ul>
+  <% end %>
+
+  <h2 id="how-recorded">Hoe de app transacties vastlegt</h2>
+  <p>Elke transactie in de app is een journaalboeking. Een journaalboeking bevat twee of meer boekingsregels &thinsp;&mdash;&thinsp; elke regel raakt één rekening voor een debet- of creditbedrag. Het totaal van de debetboekingen moet gelijk zijn aan het totaal van de creditboekingen: de boeking moet in evenwicht zijn. Het bankboekingsformulier (stortingen, opnames, overboekingen) maakt journaalboekingen voor je aan.</p>
+
+  <h2 id="je-screen">Het journaalboekingenoverzicht</h2>
+  <p>Journaalboekingen in het menu toont alle boekingen over alle rekeningen heen, ongeacht bij welke bankrekening ze horen. Elke rij toont het boekings-ID, de datum, de betrokken balansrekening, memo, referentie, bedrag en status (geboekt of concept). Je kunt zoeken op omschrijving, filteren op datumbereik en de volledige lijst als CSV downloaden.</p>
+
+  <h2 id="creating">Een journaalboeking direct aanmaken</h2>
+  <p>Klik op Nieuwe boeking. Vul in:</p>
+  <ul>
+    <li>Datum.</li>
+    <li>Memo &thinsp;&mdash;&thinsp; een korte omschrijving van de boeking als geheel.</li>
+    <li>Referentie &thinsp;&mdash;&thinsp; optionele vrije tekst, bijv. een factuurnummer of bankreferentie. Verschijnt in de boekingslijst en CSV-exports.</li>
+  </ul>
+  <p>Voeg daarna boekingsregels toe. Elke regel heeft een rekening, een omschrijving, een debet- of creditbedrag nodig, en een valuta als de rekening er een draagt. Blijf regels toevoegen totdat de boeking in evenwicht is. De app staat het opslaan van een ongebalanceerde boeking niet toe.</p>
+  <p>Er gelden nog twee regels, allebei zonder uitzondering:</p>
+  <ul>
+    <li><strong>Elke boeking heeft minstens één balansregel nodig</strong> &thinsp;&mdash;&thinsp; activa, passiva of eigen vermogen. Een herrubricering puur tussen twee kostenrekeningen wordt geweigerd; ga via de balansrekening waar het bedrag vandaan kwam, of corrigeer de oorspronkelijke boeking.</li>
+    <li><strong>Zodra een boeking een opbrengsten-, kosten- of privéregel bevat, mag er maar ÉÉN balansrekening in staan.</strong> &laquo;De bank betaalde de huur en de kleine kas de postzegels&raquo; zijn twee boekingen, geen één.</li>
+  </ul>
+  <p>Een boeking die alleen uit balansregels bestaat, valt niet onder de tweede regel en mag zoveel rekeningen noemen als je wilt. Juist dat maakt de openingsbalans mogelijk &thinsp;&mdash;&thinsp; zie hieronder.</p>
+
+  <h2 id="editing">Een boeking bewerken, kopiëren, terugboeken en verwijderen</h2>
+  <p>Bewerken: Klik op Bewerken bij een willekeurige boeking &thinsp;&mdash;&thinsp; vanuit de journaallijst, een grootboek of een uitgebreid rapport &thinsp;&mdash;&thinsp; wijzig ze en sla op.</p>
+  <p>Kopiëren: Klik op de detailpagina van de boeking op Kopiëren. De app maakt een nieuw concept aan met dezelfde rekeningen, omschrijvingen en bedragen. Werk de datum bij, pas bedragen aan en sla op. Handig voor terugkerende correcties die elke periode hetzelfde patroon volgen.</p>
+  <p>Terugboeken: Een boeking boekt zichzelf omdat ze in evenwicht is &thinsp;&mdash;&thinsp; en ze kan niet worden opgeslagen als dat niet zo is, dus elke opgeslagen boeking staat om te beginnen geboekt. Boek ze terug om ze uit je cijfers te halen &thinsp;&mdash;&thinsp; ze wordt een concept, uitgesloten van grootboeken en rapporten, totdat je ze opnieuw boekt.</p>
+  <p>Verwijderen vereist eerst terugboeken, als veiligheidsstap: boek de boeking terug, daarna verschijnt de knop Verwijderen.</p>
+
+  <h2 id="cannot-change">Wat niet te wijzigen is</h2>
+  <p>Bijna alles wat je invoert kun je corrigeren. Drie dingen niet:</p>
+  <ul>
+    <li>De <strong>eerste drie cijfers</strong> van een rekening zodra die boekingen heeft &thinsp;&mdash;&thinsp; haar type en haar entiteit. Verplaatsen zou de geschiedenis in twee sets boeken herschrijven. Vanaf cijfer 4 blijft alles wijzigbaar, dus je kunt een rekening later hergroeperen.</li>
+    <li>De <strong>valuta van een balansrekening</strong> zodra die boekingen heeft. Opbrengsten-, kosten- en privérekeningen hebben geen eigen valuta &thinsp;&mdash;&thinsp; ze nemen die over van de balansregel in dezelfde boeking.</li>
+    <li><strong>Ingehouden winst</strong>-rekeningen, die de jaarafsluiting aanmaakt en bijhoudt. Ze kunnen niet worden bewerkt of verwijderd en nemen geen bankboekingen aan.</li>
+  </ul>
+
+  <h2 id="opening-balances">Openingsbalans</h2>
+  <p>Als je de app midden in een jaar begint te gebruiken, voer dan het saldo van elke balansrekening in zoals het op je startdatum stond. Maak één journaalboeking op die datum. Voeg een boekingsregel toe voor elke bankrekening, lening, creditcard en vermogensrekening. De sluitregel gaat naar een vermogensrekening zoals Beginkapitaal. Boek ze. Vanaf dat moment zijn je cijfers volledig.</p>
+  <p>Dit is de enige boeking die veel balansrekeningen tegelijk noemt, en ze mag dat juist omdat er geen opbrengsten- of kostenregel in staat.</p>
+  <p>Een boeking komt <strong>per valuta</strong> in evenwicht, niet in totaal. Houd je meer dan één valuta aan, geef elke valuta dan haar eigen sluitregel in het eigen vermogen, of maak per valuta een aparte boeking. De enige uitzondering is een overboeking van twee regels tussen twee balansrekeningen in verschillende valuta, waar de bedragen juist horen te verschillen.</p>
+
+  <h2 id="adjusting">Correctieboekingen</h2>
+  <p>Voor alles wat niet via een bankrekening loopt &thinsp;&mdash;&thinsp; afschrijvingen, voorzieningen, vooruitbetaalde kosten, overlopende posten &thinsp;&mdash;&thinsp; maak een journaalboeking direct aan. Bijvoorbeeld: debet Afschrijvingskosten en credit Gecumuleerde afschrijvingen. Deze boekingen houden je winst-en-verliesrekening en balans nauwkeurig zonder het bankjournaal aan te raken.</p>
+
+  <h2 id="year-end">Een jaar afsluiten</h2>
+  <p>Om je boekjaar af te sluiten, klik je in het dashboard op &laquo;Jaar afsluiten&raquo;.</p>
+
+  <h3>Automatische afhandeling</h3>
+  <p>Instellen (eenmalig per entiteit): Kies je boekjaar.</p>
+  <p>De app berekent de nettomutatie op alle inkomsten- en kostenrekeningen voor de periode, boekt een sluitende afsluitboeking per valuta en crediteert of debiteert het nettoresultaat op een vergrendelde rekening voor Ingehouden winst &thinsp;&mdash;&thinsp; één per valuta. Als de rekening nog niet bestaat, wordt ze automatisch aangemaakt. Deze rekeningen zijn vergrendeld: ze kunnen niet worden bewerkt of verwijderd.</p>
+  <p>Als je daarna een boeking boekt, storneert of bewerkt met een datum binnen een al afgesloten periode, herberekent de app de afsluitboeking voor die periode automatisch. Je ziet een bevestigingsmelding. Dit geldt alleen voor afsluitboekingen die door &laquo;Jaar afsluiten&raquo; zijn aangemaakt.</p>
+  <p>Als je een automatisch aangemaakte afsluitboeking hebt verwijderd en opnieuw wilt opbouwen: breng je correcties aan en klik opnieuw op &laquo;Jaar afsluiten&raquo;.</p>
+  <h3>Handmatige jaarafsluiting</h3>
+  <p>Klik op &laquo;Ik doe het zelf&raquo;. Maak een proefbalans voor het volledige boekjaar. Keer voor elke inkomsten- en kostenrekening het saldo om in een nieuwe journaalboeking gedateerd op de laatste dag van het jaar: inkomstenrekeningen debet (D), kostenrekeningen credit (C). De sluitregel gaat naar Ingehouden winst &thinsp;&mdash;&thinsp; credit bij winst, debet bij verlies. Boek ze.</p>
+  <p>Opmerking: de app houdt handmatig gemaakte afsluitboekingen niet bij. Als je later een boeking boekt, storneert of bewerkt met een datum binnen een afgesloten periode, past de app jouw afsluitboeking niet aan &thinsp;&mdash;&thinsp; ongeacht of de betrokken rekeningen vergrendeld zijn. Je moet de afsluitboeking zelf bijwerken.</p>
+
+  <h2 id="families">Families &thinsp;&mdash;&thinsp; meerdere entiteiten consolideren</h2>
+  <p>Voeg entiteiten samen tot een familie om hun rapportage te consolideren: op je profielpagina verbind je entiteiten tot een familie door ze dezelfde familienaam te geven. Winst-en-verliesrekening, balans en proefbalans bestrijken dan een hele familie; alle overige rapporten kunnen gescheiden blijven. Een familie versoepelt ook de regel van één entiteit per boeking &thinsp;&mdash;&thinsp; binnen een familie mag één journaalboeking meerdere leden raken. Voor boekingen over families heen, zie hieronder.</p>
+
+  <h2 id="cross-entity">Boekingen tussen afzonderlijke bedrijven</h2>
+  <p>Twee entiteiten in verschillende families kunnen geen journaalboeking delen &thinsp;&mdash;&thinsp; elke moet op zichzelf in evenwicht zijn, dus schrijft de app er twee en koppelt ze. Hoe je dat in gang zet staat in <%= link_to "Wanneer een van je ondernemingen voor een andere betaalt", easy_manual_path(anchor: "cross-business") %>; hier staat wat daar niet staat.</p>
+  <p>De twee betrokken balansrekeningen moeten dezelfde valuta hebben.</p>
+  <p>Het paar beweegt samen, maar niet symmetrisch. Verwijder je de betalende boeking, dan verdwijnen beide. Verwijder je de schenkingsregel, dan verdwijnt de gekoppelde boeking ook. Verwijder je de gekoppelde boeking, dan wordt alleen die kant verwijderd en de koppeling verbroken &thinsp;&mdash;&thinsp; de schenkingsregel blijft als gewone boekingsregel staan. Kopiëren dupliceert het hele paar met een nieuwe koppeling.</p>
+  <p>Een overboeking tussen balansrekeningen of een lening is dit niet: boek die in elke onderneming apart.</p>
+
+  <h2 id="add-currency">Een valuta toevoegen</h2>
+
+	<p>Om valuta toe te voegen is er een manier nodig om wisselkoersen te bepalen. De app levert standaard koersen van HMRC, de ECB, de Bundesbank en de ESTV, opgehaald volgens de regels van die belastingdiensten. Dat betekent dat je in je rapporten alle boekingen kunt omrekenen naar euro, GBP of CHF, in de wetenschap dat die koersen aanvaardbaar zijn voor de belastingdiensten van Duitsland, het Verenigd Koninkrijk en Zwitserland, en voor de landen in de eurozone die de maandkoersen van de ECB aanvaarden.</p>
+	<p>Meer instanties toevoegen kan een beheerder niet; daarvoor is de persoon nodig die jou deze app levert. De app is zo opgezet dat dat vanuit de ontwikkeling eenvoudig en overzichtelijk zou moeten zijn.</p>
+	<p>Meer valuta toevoegen kan wél iedere beheerder met volledige toegang. Daarna kun je balansrekeningen in die valuta aanmaken en verschijnen je boekingen in de rapporten.</p>
+	<p>Let op: wordt een valuta die je toevoegt door geen van de beschikbare officiële koersbronnen gevoerd, dan moet je zelf koersen invoeren, met bewijsstuk. (De ECB voert in 2026 bijvoorbeeld geen UAH; neemt de ECB die alsnog op, dan pikt de app dat automatisch op en krijg je een e-mail.)</p>
+	<p>Eigen koersen invoeren kan &thinsp;&mdash;&thinsp; sommige landen staan dat toe, en soms is het nodig omdat historische koersen niet op te halen waren. Zelf ingevoerde koersen gaan altijd vóór opgehaalde. Ze gelden voor de entiteit(en) die je bij het invoeren kiest, en voor de periode die je opgeeft. Wissel binnen hetzelfde belastingtijdvak niet tussen zelf ingevoerde en opgehaalde koersen: de meeste belastingdiensten staan maar één bron per tijdvak toe.</p>
+
+  <h2 id="tax-setup">Belastingschema&rsquo;s en categorieën</h2>
+    <p>Een belastingschema is één aangifte &thinsp;&mdash;&thinsp; SA105, Anlage V. Vink je het aan op de belastinginstellingenpagina en sla je op, dan ontstaat er een rapportgroep voor die aangifte, en die groep houdt zichzelf bij: hij bevat de rekeningen die dat schema dragen, zodat een rekening die je later toewijst vanzelf verschijnt, zonder dat je terug hoeft te komen.</p>
+    <p>Een categorie is één vak op het belastingformulier. Meerdere rekeningen kunnen naar hetzelfde vak wijzen &thinsp;&mdash;&thinsp; Grundsteuer, Hausversicherung en Hausgeld horen allemaal bij Kennzahl 52 &thinsp;&mdash;&thinsp; en het rapport telt ze in dat vak bij elkaar op. Een rekening hoort echter bij precies één schema. Daarom verschijnt een rekening die je al hebt toegewezen niet in de lijst van een ander schema.</p>
+    <p>De categorie die bij niet-toegewezen rekeningen wordt aangeboden, is een gok op basis van de rekeningnaam, vergeleken met steekwoorden uit het belastingformulier zelf. Klopt hij niet, kies dan de juiste. Er wordt niets opgeslagen tot je die bevestigt.<br />
+    Zodra een rekening aan de toegewezen kant staat, vervalt het bevestigen: een gewijzigde categorie werkt meteen, omdat de rekening al aan het schema is gekoppeld.</p>
+    <p>Een koppeling draagt geen datum. Voeg je een rekening toe aan een schema of wijzig je de categorie, dan rekenen alle rapporten opnieuw &thinsp;&mdash;&thinsp; ook die je al voor eerdere perioden hebt bekeken! <br />
+Wat al in een back-up staat, verandert niet. Er komt een back-up van:<br />
+- elk belastingrapport (categorie-samenvattingen), als je het per e-mail verstuurt<br />
+- elke indiening, precies zoals ze de deur uitging.<br />
+Bij een cumulatief stelsel als UK MTD bereikt de correctie de dienst met de volgende indiening, omdat die het jaar tot dan toe opnieuw verstuurt.</p>
+    <p>Bij downloaden krijg je één CSV, passend bij wat er op het scherm staat &thinsp;&mdash;&thinsp; samenvatting of detail. Een rapport e-mailen geeft je beide: een <strong>samenvatting</strong> (categorietotalen, wat in de vakjes komt) en een <strong>detail</strong> (categorietotalen met hun afzonderlijke boekingen, met linkjes naar bonnen; niet-gekoppelde bonnen staan apart vermeld). Heeft de entiteit een bestandsformaat voor de accountant ingesteld (bijvoorbeeld DATEV), dan zit dat er ook bij. Is er niets te melden voor de periode, dan krijg je in plaats daarvan een kort e-mailtje dat dit meldt. De samenvattings-CSV wordt ook bij elke wijziging als back-up bewaard, zodat je altijd een gedateerde back-up hebt van hoe de vakjes van een periode eruitzagen.</p>
+    <p>Een belastingplichtige instellen, verbinding maken met de belastingdienst en een periode versturen &thinsp;&mdash;&thinsp; zie <%= link_to "Belastingrapportage instellen", easy_manual_path(anchor: "tax") %> en <%= link_to "Zelf je kwartaalcijfers indienen", easy_manual_path(anchor: "filing") %>.</p>
+
+</div>
+<%= render "help/back" %>

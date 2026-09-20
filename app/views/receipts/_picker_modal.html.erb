@@ -1,0 +1,26 @@
+<%# The "view receipts" button the JS adds to a posting widget once that posting
+    has one. Written here rather than as an SVG string in receipts.js, which had
+    three copies of it. Rendered once per page, beside the modal it belongs to. %>
+<template id="view-receipts-button-template">
+  <button type="button"><svg><use xlink:href="#view"></use></svg></button>
+</template>
+
+<dialog id="receipt-picker-modal" class="receipt-modal receipt-picker"
+        data-text-loading="<%= t('receipts.loading') %>"
+        data-text-empty="<%= t('receipts.no_receipts_available') %>"
+        data-text-error-load="<%= t('receipts.error_loading_receipts') %>"
+        data-text-error-link="<%= t('receipts.error_link_receipt') %>"
+        data-text-linked="<%= t('receipts.linked') %>"
+        data-text-view-receipts="<%= t('receipts.view_receipts') %>"
+        data-text-link-existing="<%= t('receipts.link_existing') %>">
+  <div class="receipt-modal-content">
+    <button class="receipt-modal-close" data-modal-close aria-label="<%= t('crud.close', default: 'Close') %>">&times;</button>
+    <h3><%= t("receipts.link_existing") %></h3>
+    <div>
+      <div id="receipt-picker-list" class="receipt-picker-grid">
+        <%# Populated via JS/AJAX %>
+        <p class="loading"><%= t("receipts.loading") %></p>
+      </div>
+    </div>
+  </div>
+</dialog>

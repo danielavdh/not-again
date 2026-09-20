@@ -1,0 +1,115 @@
+@use 'fonts' as *;
+@use 'colors' as *;
+
+// APP uses 300 & 500 for title fonts, and 300 & 400 for block fonts 
+$title_font: "Work Sans", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Armenian", "Noto Sans Georgian", sans-serif;
+$block_font: "Open Sans", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Armenian", "Noto Sans Georgian", sans-serif;
+
+:root { --is-phone: 1; --is-desktop: 0; --dir-start: left; --dir-end: right; }
+  @media (min-width: 500px) { :root { --is-phone: 0; } }
+  @media (min-width: 900px) { :root { --is-desktop: 1; } 
+}
+:root[dir="rtl"] { --dir-start: right; --dir-end: left; }
+
+
+// $base-color is a CSS variable name like "green", "red", etc.
+// Maps to precomputed --btn-{name}-top/mid/bot custom properties
+@mixin button-color($btn-name) {
+  --btn-bg-top: var(--btn-#{$btn-name}-top);
+  --btn-bg-mid: var(--btn-#{$btn-name}-mid);
+  --btn-bg-bottom: var(--btn-#{$btn-name}-bot);
+  @media (hover: hover) {
+    &:hover {
+      --btn-bg-top: var(--btn-#{$btn-name}-h-top);
+      --btn-bg-mid: var(--btn-#{$btn-name}-h-mid);
+      --btn-bg-bottom: var(--btn-#{$btn-name}-h-bot);
+    }
+  }
+}
+@mixin svg-icon{
+	svg{
+	width: var(--svg-width, 3.5vw);
+	height: var(--svg-height, 3.5vw);
+	color: var(--svg-color, var(--be-link));
+	fill: var(--svg-fill, var(--be-link));
+	}
+	svg.small-screen, svg.tiny-screen{
+	width: var(--svg-width, 2.5vw);
+	height: var(--svg-height, 2.5vw);
+	color: var(--svg-color, var(--be-link));
+	fill: var(--svg-fill, var(--be-link));
+	}
+	svg.stroke{
+	fill: none;
+	stroke: var(--svg-stroke, var(--be-link));
+	stroke-width: 20;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	}
+	@for $i from 1 through 20 {
+		svg.s#{$i * 5} {
+		stroke-width: $i * 5;
+		}
+	}
+	@media (hover: hover){
+		&:hover{
+			svg:not(.stroke){
+			color: var(--svg-hover, var(--green));
+			fill: var(--svg-hover, var(--green));
+			}
+			svg.stroke{
+			stroke: var(--svg-hover, var(--green));
+			}
+		}
+	}
+}
+@mixin label-checkbox{
+	label{
+	display: flex;
+	align-items: center;
+	gap: 0.5vw;
+		input[type="checkbox"]{
+		margin-top: 0;
+		margin-inline-end: 1vw;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		appearance: none;
+		-webkit-appearance: none;
+		width: 2vw;
+		height: 2vw;
+		border: 0.1vw solid var(--green);
+		border-radius: 0.25vw;
+		cursor: pointer;
+		background-color: var(--bkgg);
+		}
+		input[type="checkbox"]:checked {
+		background-color: var(--green);
+		border-color: var(--green);
+		}
+		input[type="checkbox"]:checked::after{
+		content: "\2714\FE0E";
+		color: var(--bkgg);
+		}
+	}
+	@media (max-width: 450px){
+		label{
+			input[type="checkbox"]{
+			margin-inline-end: 2vw;
+			width: 4vw;
+			height: 4vw;
+			}
+		}
+	}
+	@media (min-width: 900px){
+		label{
+			input[type="checkbox"]{
+			margin-inline-end: 0.5vw;
+			width: 1.3vw;
+			height: 1.3vw;
+			}
+		}
+	}
+}
+
+

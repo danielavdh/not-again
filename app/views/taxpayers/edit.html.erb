@@ -1,0 +1,10 @@
+<% content_for :title, @taxpayer.display_name %>
+
+<div id="new_edit_view">
+  <h1><%= @taxpayer.display_name %></h1>
+  <%= render "form", form_url: taxpayer_path(@taxpayer), return_to: params[:return_to] %>
+
+  <div class="crud_navigation">
+    <%= link_to t("crud.back"), taxpayers_path(return_to: params[:return_to]), class: "backend_link button green" %>
+  </div>
+</div>

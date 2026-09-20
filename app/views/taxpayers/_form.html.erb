@@ -1,0 +1,64 @@
+<%# The taxpayer's own details. The identifier fields are whatever the
+    connectors at this authority declare, so a new authority adds its own
+    without touching this file.
+
+    `modal` present → opened from the tax setup page, where the authority is
+    already decided by the block you clicked, so it is shown rather than chosen,
+    and submit + cancel sit together. The standalone /taxpayers/new passes no
+    locals and is unaffected. %>
+<% in_modal = local_assigns[:modal].present? %>
+<%= form_with model: @taxpayer, url: form_url, class: "form_entity" do |f| %>
+
+  <%# Carried through so create/update can land back where the flow started —
+      the tax setup page, or the profile. Not in the modal, which never
+      navigates. %>
+  <% if !in_modal && local_assigns[:return_to].present? %>
+    <%= hidden_field_tag :return_to, return_to %>
+  <% end %>
+
+  <% if @taxpayer.errors.any? %>
+    <p class="error_message"><%= @taxpayer.errors.full_messages.to_sentence %></p>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :authority, t("filing.register.authority") %>
+    <% if @taxpayer.persisted? || in_modal %>
+      <p><%= @taxpayer.authority_name %></p>
+      <%= f.hidden_field :authority %>
+    <% else %>
+      <%= f.select :authority, authority_options, { include_blank: true } %>
+    <% end %>
+  </div>
+
+  <div class="field">
+    <%= f.label :label, t("filing.register.name") %>
+    <%= f.text_field :label %>
+    <p class="hint"><%= t("filing.register.name_hint") %></p>
+  </div>
+
+  <% @taxpayer.identifier_keys.each do |key| %>
+    <div class="field">
+      <%= label_tag "taxpayer_identifiers_#{key}",
+                    t("filing.#{@taxpayer.authority}.#{key}_label", default: key.humanize) %>
+      <%= text_field_tag "taxpayer[identifiers][#{key}]",
+                         @taxpayer.identifier(key),
+                         id: "taxpayer_identifiers_#{key}" %>
+      <p class="hint"><%= t("filing.#{@taxpayer.authority}.#{key}_hint", default: "") %></p>
+    </div>
+  <% end %>
+
+  <%# Not crud.save — that one is "Save %{type}", and with no interpolation
+      passed I18n renders the placeholder rather than raising. %>
+  <% if in_modal %>
+    <%# Together in .split-actions, as the add-account modal does: the form's
+        normal .actions would visually merge with the page behind it. %>
+    <div class="split-actions">
+      <%= f.submit t("crud.create"), class: "button" %>
+      <button type="button" class="button add-taxpayer-cancel"><%= t("crud.cancel") %></button>
+    </div>
+  <% else %>
+    <div class="actions">
+      <%= f.submit @taxpayer.persisted? ? t("crud.update") : t("crud.create") %>
+    </div>
+  <% end %>
+<% end %>

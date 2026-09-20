@@ -1,0 +1,69 @@
+<% content_for :head do %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
+<% end %>
+
+<%# app/views/acc/entities/_form.html.erb %>
+<%= form_with model: entity, 
+			url: entity.persisted? ? entity_path(entity) : entities_path,
+			id: "#{action_name}_entity",
+			class: "form_entity"  do |f| %>
+
+	<div class="field">
+	    <%= f.label :code %>
+	    <span class="error_message">
+	    <%= entity&.errors[:code].to_sentence %>
+	    </span><br />
+	    <%= f.text_field :code, 
+	                id: :entity_code,
+					maxlength: 2,
+	                required: true %>
+	</div>
+
+	<div class="field">
+	    <%= f.label :name %>
+	    <span class="error_message">
+	    <%= entity&.errors[:name].to_sentence %>
+	    </span><br />
+	    <%= f.text_field :name, 
+	                id: :entity_name,
+					maxlength: 50,
+	                required: true %>
+	</div>
+
+	<div class="field">
+	    <%= f.label :active %>
+	    <span class="error_message">
+	    <%= entity&.errors[:active].to_sentence %>
+	    </span><br />
+	    <%= f.check_box :active, 
+	                id: :entity_active %>
+	</div>
+
+	<%# No tax schemes here, deliberately. Creating or renaming an entity has
+	    nothing to do with which returns it files, and tax setup has its own page
+	    — reached from the entity's row on the dashboard, or from entities#show.
+	    Two places to tick the same boxes only means two places to keep in step. %>
+
+	<%# Business family (consolidation group). A SELECT, not fields_for: the family
+	    is a shared record — many entities join one — so we pick/create it, we
+	    don't nest-create it. Saved with the entity via update. Edit only. %>
+	<% if entity.persisted? %>
+	<div class="field">
+	    <%= f.label :group_value, t("entities.group.label") %>
+	    <span class="error_message"><%= entity&.errors[:entity_group_id].to_sentence %></span><br />
+	    <select id="entity_group_value" name="entity[group_value]"
+	            data-tomselect="true" data-tomselect-create="true"
+	            data-tomselect-placeholder="<%= t('entities.group.placeholder') %>">
+	        <option value=""><%= t("entities.group.none") %></option>
+	        <% @entity_groups.each do |group| %>
+	            <option value="<%= group.id %>" <%= "selected" if group.id == entity.entity_group_id %>><%= group.name %></option>
+	        <% end %>
+	    </select>
+	</div>
+	<% end %>
+
+  <div class="actions">
+  		<%= f.submit %>
+  </div>
+
+<% end %>

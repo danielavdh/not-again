@@ -1,0 +1,65 @@
+<% content_for :title, t("receipts.upload_receipts") %>
+
+<div class="backend_table receipts upload-standalone">
+  <%= render partial: 'shared/flash' %>
+
+  <h2><%= t("receipts.upload_receipts") %></h2>
+
+  <div class="actions">
+    <button type="button" class="button green"
+            data-action="open-modal"
+            data-modal="receipt-upload-modal"
+            data-standalone="true">
+      <svg><use xlink:href="#te_upload"></use></svg>
+      <%= t("receipts.upload_new") %>
+    </button>
+  </div>
+
+  <% if @my_receipts.any? %>
+    <h2><%= t("receipts.my_unlinked") %></h2>
+    <table>
+      <thead>
+        <tr>
+          <th class="receipt-thumb-col"></th>
+          <th><%= t("receipts.filename") %></th>
+          <th><%= t("attrs.date") %></th>
+          <th><%= t("receipts.description_col") %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @my_receipts.each do |receipt| %>
+          <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+            <td class="receipt-thumb-cell">
+              <% if receipt.thumbnail_url %>
+                <img src="<%= receipt.thumbnail_url %>"
+                     alt="<%= receipt.title %>"
+                     class="receipt-thumbnail"
+                     data-receipt-id="<%= receipt.id %>"
+                     data-action="preview-receipt">
+              <% end %>
+            </td>
+            <td><%= receipt.display_filename %></td>
+            <td><%= format_date(receipt.receipt_date) %></td>
+            <td><%= truncate(receipt.description.to_s, length: 60) %></td>
+            <td class="actions">
+              <%= button_to t("crud.delete"),
+                    delete_own_receipt_path(receipt),
+                    method: :delete,
+                    class: 'button red',
+                    data: { sure: t("crud.sure") } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>
+
+<div id="new_edit_view">
+
+<%= render "receipts/upload_modal" %>
+<%= render "receipts/preview_modal" %>
+
+</div>
+

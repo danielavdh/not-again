@@ -1,0 +1,208 @@
+country_code: gb
+scheme: self_employment
+tax_year: 2026
+# The day the UK tax year ends, as MM-DD. A tax year is named by the year it
+# ENDS in, so tax_year 2026 runs 6 Apr 2025 to 5 Apr 2026 and a posting on
+# 5 Jul 2028 falls in tax_year 2029. Omit this line for a calendar year —
+# the German and Swiss files do, and the default is 12-31.
+tax_year_ends: "04-05"
+authority: HMRC
+position: 10
+# What this scheme is CALLED, in the language of its own form — the name shown
+# in the scheme picker and in every message about it. Never translated: an
+# Anlage V is called Anlage V by everyone who fills one in.
+scheme_label: "Self-Employment (SA103)"
+report_name: "GB-self-employment"
+currency: GBP
+submission_name: "MTD self-employment"   # what is actually SENT — not the annual return
+# The authority's reference for the FORM these figures feed. Names the archived
+# submission document, so a stored file says what it belongs to in HMRC's own
+# terms. Optional — a scheme without one is filed under its slug.
+form_code: SA103
+connector: hmrc_mtd
+# UK Self Assessment SA103F — Self-employment (full).
+#
+# Transcribed box by box from the return named in `source:` below, which covers
+# 6 April 2025 to 5 April 2026. Note the British convention:
+# the form's year is the year it ENDS in, so tax_year 2026 here means April 2025
+# to April 2026, while the German catalogues number by calendar year.
+#
+# label is the box's own wording on the paper form. export_column is the BOX
+# NUMBER — what you quote to find the figure. Neither is what gets submitted:
+# that is api_field, the MTD field name, and it is the only one of the three the
+# submission code reads.
+#
+# export_column used to hold the column headers of HMRC's bridging-software CSV
+# templates ("Sales (Income)", "Travel Costs"). We do not use the bridging
+# route — we submit through the API with api_field — so those strings described
+# a path this app never takes.
+# Provenance, and what TaxFormWatchJob watches monthly: it re-fetches
+# `url`, compares the checksum, and looks on `index_url` for a later edition
+# than `form_year`. A 404 is reported (the address moved); a timeout is not.
+source:
+  form_year: 2026
+  url:       "https://assets.publishing.service.gov.uk/media/69c2635b13101e9908704b36/SA103F_2026.pdf"
+  sha256:    "27e977a855f474c81b86a543442ae2d6acae47610e06a755e9906302f1830e82"
+  index_url: "https://www.gov.uk/government/publications/self-assessment-self-employment-full-sa103f"
+  local:     "docs/SA103F_2026.pdf"
+categories:
+  - key: sales_income
+    label: "Your turnover – the takings, fees, sales or money earned by your business"
+    keywords: ["turnover", "takings", "sales", "revenue", "fees earned"]
+    export_column: "15"
+    api_field: turnover
+    section: income
+    position: 10
+
+  - key: other_income
+    label: "Any other business income not included in box 15"
+    keywords: ["other income", "sundry income", "miscellaneous income"]
+    export_column: "16"
+    api_field: other
+    section: income
+    position: 20
+
+  - key: cost_of_goods_bought
+    label: "Cost of goods bought for resale or goods used"
+    keywords: ["cost of goods", "goods bought", "purchases", "stock", "materials", "resale"]
+    export_column: "17"
+    api_field: costOfGoods
+    section: expenses
+    position: 30
+
+  - key: staff_costs
+    label: "Wages, salaries and other staff costs"
+    keywords: ["wages", "salaries", "staff", "payroll", "employee"]
+    export_column: "19"
+    api_field: wagesAndStaffCosts
+    section: expenses
+    position: 40
+
+  - key: travel_costs
+    label: "Car, van and travel expenses"
+    keywords: ["travel", "mileage", "fuel", "vehicle", "motor", "car", "van"]
+    export_column: "20"
+    api_field: carVanTravelExpenses
+    section: expenses
+    position: 50
+
+  - key: premises_running_costs
+    label: "Rent, rates, power and insurance costs"
+    keywords: ["rates", "power", "electricity", "water", "insurance", "premises", "ground rent", "heating"]
+    export_column: "21"
+    api_field: premisesRunningCosts
+    section: expenses
+    position: 60
+
+  - key: maintenance_costs
+    label: "Repairs and maintenance of property and equipment"
+    keywords: ["repairs", "maintenance", "renewals"]
+    export_column: "22"
+    api_field: maintenanceCosts
+    section: expenses
+    position: 70
+
+  - key: admin_costs
+    label: "Phone, fax, stationery and other office costs"
+    keywords: ["telephone", "phone", "mobile", "stationery", "office", "postage", "printing", "internet"]
+    export_column: "23"
+    api_field: adminCosts
+    section: expenses
+    position: 80
+
+  # Box 24 combines two things the API keeps apart, so this is two categories
+  # sharing a box. Where HMRC is finer-grained than the paper, follow HMRC —
+  # that is what actually gets filed.
+  - key: advertising_costs
+    label: "Advertising costs"
+    keywords: ["advertising", "marketing", "promotion"]
+    export_column: "24"
+    api_field: advertisingCosts
+    section: expenses
+    position: 90
+    notes: "Box 24 covers advertising and business entertainment together; the API wants them separately"
+
+  - key: business_entertainment
+    label: "Business entertainment costs"
+    keywords: ["entertainment", "entertaining", "hospitality"]
+    export_column: "24"
+    api_field: businessEntertainmentCosts
+    section: expenses
+    position: 95
+    notes: "Disallowable for tax, but HMRC still wants the figure — see the SA103F notes"
+
+  - key: interest
+    label: "Interest on bank and other loans"
+    keywords: ["loan interest", "mortgage interest", "interest payable"]
+    export_column: "25"
+    api_field: interestOnBankOtherLoans
+    section: expenses
+    position: 100
+
+  - key: financial_charges
+    label: "Bank, credit card and other financial charges"
+    keywords: ["bank charges", "bank fees", "credit card", "financial charges", "merchant", "paypal"]
+    export_column: "26"
+    api_field: financeCharges
+    section: expenses
+    position: 110
+
+  - key: bad_debt
+    label: "Irrecoverable debts written off"
+    keywords: ["bad debt", "irrecoverable", "written off", "write off"]
+    export_column: "27"
+    api_field: irrecoverableDebts
+    section: expenses
+    position: 120
+
+  - key: professional_fees
+    label: "Accountancy, legal and other professional fees"
+    keywords: ["accountancy", "accountant", "legal", "solicitor", "professional fees", "bookkeeping"]
+    export_column: "28"
+    api_field: professionalFees
+    section: expenses
+    position: 130
+
+  - key: depreciation
+    label: "Depreciation and loss or profit on sale of assets"
+    keywords: ["depreciation", "amortisation"]
+    export_column: "29"
+    api_field: depreciation
+    section: expenses
+    position: 140
+
+  - key: other_expenses
+    label: "Other business expenses"
+    keywords: ["other expenses", "sundries", "sundry", "miscellaneous"]
+    export_column: "30"
+    api_field: otherExpenses
+    section: expenses
+    position: 150
+
+  # Money you pay OUT to subcontractors: an expense, in the expenses column of
+  # the form and in periodExpenses in the API. It used to sit in section "other"
+  # under the name cis_deductions, which reads like the opposite thing — tax
+  # withheld FROM you — and kept it out of the CSV's expense total.
+  - key: payments_to_subcontractors
+    label: "Construction industry – payments to subcontractors"
+    keywords: ["subcontractor", "subcontractors", "cis"]
+    export_column: "18"
+    api_field: paymentsToSubcontractors
+    section: expenses
+    position: 160
+    notes: "Only if registered under the Construction Industry Scheme"
+
+  # section vs api_section: HMRC files this inside periodIncome, but it is not
+  # income — it is money a payer already handed to HMRC on your behalf, and
+  # counting it as turnover would overstate every report touching the account.
+  # So it is reported to HMRC in the income object and excluded from the
+  # report's income total.
+  - key: tax_taken_off
+    label: "Other tax taken off trading income"
+    keywords: ["tax deducted", "tax taken off", "withholding tax"]
+    export_column: "82"
+    api_field: taxTakenOffTradingIncome
+    section: other
+    api_section: income
+    position: 210
+    notes: "CIS deductions taken from YOUR payments by contractors are box 81, a separate figure"

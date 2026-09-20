@@ -1,0 +1,101 @@
+<% content_for :title, t("reports.index.title") %>
+
+<div class="backend_table">
+
+	<h1><%= t(".title") %></h1>
+
+  <%= render partial: 'shared/flash' %>
+
+  <%# No trial balance or P&L here. Everything on this page is a SAVED report
+      belonging to an entity; those two are live reports across everything you
+      can see, so they had no scope in this context. They live on the dashboard,
+      where each entity — or each family, once — has its own set.
+
+      Archives (§8) share this table with saved reports, rather than a page of
+      their own — see Reports::Row and reports_controller#index. %>
+
+  <table>
+    <thead>
+      <tr>
+        <th><%= t("attrs.entity") %></th>
+        <th><%= t("attrs.group") %></th>
+        <th><%= t("attrs.name") %></th>
+        <th><%= t("attrs.period") %></th>
+        <th class="actions no-phone"><%= t("attrs.actions") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @rows.each do |row| %>
+        <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+          <td><%= row.entity_label %>
+		  </td>
+          <td><%= row.report_group ? link_to(row.group_label, report_group_path(row.report_group), class: "backend_link button") : row.group_label %>
+		  </td>
+          <td>
+		  <% if row.archive? %>
+		    <%= link_to row.name, download_archive_reports_path(key: row.archive_key), class: "backend_link button blue" %>
+		  <% else %>
+		    <%= link_to row.name, report_path(row.report), class: "backend_link button blue" %>
+		  <% end %>
+		  </td>
+          <td>
+		  <% if row.archive? %>
+		    <%= t("reports.index.archive_period", date: l(row.period_end, format: :short_date)) %>
+		  <% else %>
+		    <%=l row.period_start, format: :short_date %> - <%=l row.period_end, format: :short_date %>
+		  <% end %>
+		  </td>
+          <%# Matches the <th> above: the actions column is hidden on phones,
+              because the books are not kept on a phone. %>
+          <td class="actions no-phone">
+          <% if row.archive? %>
+            <%# No small-screen icon variant exists for "download" — the text
+                label is shown at every width this column is visible at. %>
+            <%= link_to t("reports.index.download"), download_archive_reports_path(key: row.archive_key),
+                  class: 'backend_link button green' %>
+            <%# A year-end archive is the permanent record of an actual close,
+                not a convenience copy — no delete for those, ever. %>
+            <% unless row.year_end? %>
+              <%= button_to t("reports.index.delete_archive"), destroy_archive_reports_path(key: row.archive_key),
+                    method: :delete, class: 'backend_link button green', data: { sure: t("crud.sure") } %>
+            <% end %>
+          <% else %>
+            <% if row.tax_export_backups.size == 1 %>
+              <% entry = row.tax_export_backups.first %>
+              <%= link_to t("reports.index.get_backup"),
+                    download_tax_export_backup_report_path(row.report, key: File.basename(entry.key)),
+                    class: 'backend_link button green',
+                    title: entry.generated_at.strftime("%Y-%m-%d %H:%M") %>
+            <% elsif row.tax_export_backups.any? %>
+              <select data-navigate-on-change title="<%= t('reports.index.get_backup') %>">
+                <option value=""><%= t("reports.index.get_backup") %></option>
+                <% row.tax_export_backups.each do |entry| %>
+                  <option value="<%= download_tax_export_backup_report_path(row.report, key: File.basename(entry.key)) %>">
+                    <%= entry.generated_at.strftime("%Y-%m-%d %H:%M") %>
+                  </option>
+                <% end %>
+              </select>
+            <% end %>
+            <%= link_to edit_report_path(row.report), class: 'backend_link button green' do %>
+              <span class="big-screen"><%= t("crud.edit") %></span>
+              <svg class="small-screen"><use xlink:href='#edit'></use></svg>
+            <% end %>
+            <%= button_to report_path(row.report), method: :delete, class: 'backend_link button green', data: { sure: t("crud.sure") } do %>
+              <span class="big-screen"><%= t("crud.delete") %></span>
+              <svg class="small-screen stroke s30"><use xlink:href='#trash'></use></svg>
+            <% end %>
+          <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%== @pagy.series_nav if @pagy.pages > 1 %>
+</div>
+
+<div class="crud_navigation">
+  	<%= link_to t("crud.dashboard"),
+  			dashboard_path,
+			class: "backend_link button green" %>
+</div>

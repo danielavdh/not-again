@@ -1,0 +1,128 @@
+# frozen_string_literal: true
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# A TEMPLATE. Copy it, do not edit it in place.
+#
+#   cp app/services/rates/example_parser.rb.template \
+#      app/services/rates/bnr_xml_parser.rb
+#
+# The `.template` extension keeps it out of autoloading; a `.rb` file here that
+# defines nothing Rails expects would be loaded and would fail.
+#
+# Naming is the whole of the wiring. `parser: bnr_xml` in
+# db/exchange_rate_sources.yml resolves to Rates::BnrXmlParser by
+# convention — there is no third place to register anything, and no list to add
+# yourself to. Rename the class to match your key and it is connected.
+# ─────────────────────────────────────────────────────────────────────────────
+
+module Rates
+  # One paragraph on WHOSE feed this is and what the numbers mean — a
+  # month-end spot rate, a monthly average, a daily fixing. Someone reading a
+  # figure years from now needs to know which.
+  #
+  # Then paste a REAL EXCERPT of the response, three or four lines of it. Every
+  # parser here does, and it is the single most useful thing in the file: it
+  # shows the shape without anyone having to fetch the feed to see it.
+  #
+  #   <DataSet xmlns="https://www.bnr.ro/xsd">
+  #     <Body><OrigCurrency>RON</OrigCurrency>
+  #       <Cube date="2026-08-21">
+  #         <Rate currency="EUR">5.2581</Rate>
+  #         <Rate currency="HUF" multiplier="100">1.4467</Rate>
+  #
+  # Record what is ODD about it, and why your code does what it does. Every
+  # parser in this directory has at least one oddity, and every one of them
+  # cost real time to find.
+  class ExampleParser
+    # THE CONTRACT. One class method, three possible answers:
+    #
+    #   { rates: { "EUR" => 5.2581, ... },   valid_from: Date, valid_to: Date }
+    #       Success. `rates` maps a currency code to how many units of it one
+    #       unit of the SOURCE'S BASE currency buys — the base being what
+    #       `base:` declares in exchange_rate_sources.yml.
+    #
+    #   [ {...}, {...} ]
+    #       MANY periods from one response, same shape each. What a DAILY
+    #       source returns: its history arrives as one file holding every
+    #       banking day, and fetching a day at a time is not on offer — a
+    #       daily feed's ordinary url usually holds today alone. See
+    #       Rates::EcbDailyXmlParser.
+    #
+    #   nil
+    #       REFUSE. The response was not usable: wrong shape, no rates, or —
+    #       importantly — it does not say what period it covers.
+    #
+    #   :no_data_yet
+    #       The response was fine and simply does not reach that period. Not a
+    #       failure: a month-average source is empty until its month ends, and
+    #       treating that as an error emails somebody every night for a week.
+    #
+    # `requested_date` is what the caller asked for. Use it to CHOOSE among
+    # what the feed returned — never to label what it returned.
+    def self.parse(body, requested_date: nil)
+      # ── 1. Parse defensively ────────────────────────────────────────────
+      # Nokogiri::XML(body) then `doc.remove_namespaces!` if the feed declares
+      # one, or CSV.parse(body, headers: true). Return nil, do not raise, if it
+      # is not the document you expected.
+
+      # ── 2. Take the PERIOD FROM THE FEED ────────────────────────────────
+      # ⚠️ The rule that has cost the most here. Asking HMRC for July on
+      # 1 August once stored August's rates labelled July, and every sterling
+      # figure for that month was quietly wrong — right numbers, wrong month,
+      # no error.
+      #
+      # If the feed declares its own span (HMRC's CSV has Start date and End
+      # date), read both. If it declares a month, derive the span from that. If
+      # it declares nothing at all, return nil rather than assuming the caller
+      # was right.
+      #
+      # A DAILY feed returns a one-day span: valid_from == valid_to. That is
+      # supported — the lookup asks "which span contains this date" and never
+      # cares how long the span is. Declare `frequency: daily` on the source.
+
+      # ── 3. NORMALISE, so nothing downstream learns your feed is unusual ──
+      # Whatever your central bank does strangely stops HERE. Two real cases,
+      # and a new feed is likely to have one of them:
+      #
+      #   · PER-100 QUOTES. ESTV publishes "100 DKK" costing 12.4792 francs and
+      #     BNR marks HUF with multiplier="100". Divide. Miss it and every
+      #     figure in that currency is out by a factor of a hundred while
+      #     looking entirely plausible.
+      #
+      #   · INVERTED DIRECTION. Some feeds quote "what one unit of the foreign
+      #     currency costs in ours", which is the reverse of what is stored.
+      #     ESTV needs `multiplier / kurs`. Work out which way round yours is
+      #     by checking a rate you know: if 1 EUR is about 5 RON, then a
+      #     RON-based feed showing 5.2581 for EUR is quoting the inverse.
+      #
+      # Also: skip non-positive rates, and dedupe if rows repeat a currency —
+      # HMRC's file has one row per COUNTRY, so every dollar-using country
+      # repeats the same rate.
+
+      # ── 4. Return ───────────────────────────────────────────────────────
+      # { rates: rates, valid_from: from, valid_to: to }
+      raise NotImplementedError
+    end
+  end
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BEFORE YOU BELIEVE IT WORKS
+#
+# ⚠️ HIT THE LIVE FEED. A passing unit test is not evidence. HMRC's parser had a
+# green test and matched nothing against the real response, because Net::HTTP
+# returns ASCII-8BIT whatever the charset header says, and the header
+# `Currency Units per £1` arrived as raw bytes. The test used a Ruby string.
+#
+#   bin/rails runner 'body = Net::HTTP.get(URI("<your url>")); \
+#                     pp Rates::YourParser.parse(body, requested_date: Date.current)'
+#
+# Then check three things a fixture cannot tell you:
+#   · a rate you can verify independently is right, and the right way up
+#   · the span matches the period you actually asked for
+#   · a period the feed does NOT have returns :no_data_yet or nil, not a rate
+#     for some other period
+#
+# Month padding differs between publishers and is a 404 either way: HMRC wants
+# 2026-8, the Bundesbank 2026-06. The url template offers %{month} and %{month2}.
+# ─────────────────────────────────────────────────────────────────────────────

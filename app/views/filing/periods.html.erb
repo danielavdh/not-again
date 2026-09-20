@@ -1,0 +1,60 @@
+<% content_for :title, t("filing.title", authority: @authority, name: @entity.name) %>
+
+<%# Submitting from this page calls the authority, and some of what the call
+    carries can only be read in the browser. The connector says whether it wants
+    anything; scripts/index.js starts the named collector. %>
+<div class="backend_table" data-browser-collector="<%= @browser_collector %>">
+
+  <%= render "shared/flash" %>
+
+  <h1><%= t("filing.title", authority: @authority, name: @entity.name) %></h1>
+  <h2><%= @scheme_label %></h2>
+
+  <% if @error %>
+    <p class="error_message"><%= t("filing.status_error", authority: @authority) %>: <%= @error %></p>
+    <p class="hint">
+      <%= t("filing.status_error_hint", authority: @authority) %>
+      <%= link_to t("filing.reconnect_link", authority: @authority), edit_tax_entity_path(@entity) %>
+    </p>
+
+  <% elsif @obligations.empty? %>
+    <p class="hint"><%= t("filing.no_obligations") %></p>
+
+  <% else %>
+    <% if @preview %>
+      <%= render "filing/preview", ob: @preview[:obligation], period_start: @preview[:period_start], bd: @preview[:breakdown], currency: @preview[:currency], entity: @entity, scheme: @scheme, authority: @authority %>
+    <% end %>
+
+    <%= render "filing/periods", obligations: @obligations, entity: @entity, scheme: @scheme, authority: @authority, report_periods: @report_periods %>
+  <% end %>
+
+  <%# Whatever this authority shows and the others do not. Declared by the
+      connector (Filing::Base#panel_partial), so this page never names one.
+      Outside the branches above because these are statements about the SOFTWARE,
+      not about the data — they show even when no obligations came back. %>
+  <% if @panel_partial %>
+    <%= render partial: @panel_partial,
+               locals: { authority: @authority, business: @business || [], filed: @filed } %>
+  <% end %>
+
+</div>
+
+  <dialog id="filing-submission-modal"
+          data-text-error="<%= t('filing.not_available') %>">
+    <button data-modal-close class="filing-modal-close" aria-label="<%= t('crud.close', default: 'Close') %>">&times;</button>
+    <%# Points at whichever submission the modal is showing — the opening button
+        carries the URL, and index.js copies it here. Without this a past
+        submission could be read on screen but never printed. %>
+    <a data-submission-print href="#" target="_blank" rel="noopener"
+       class="backend_link button green"><%= t("filing.print_link") %></a>
+    <div data-submission-content></div>
+  </dialog>
+
+  <div class="crud_navigation">
+    <% if flash[:submitted_period_id] %>
+      <%= link_to t("filing.print_link"),
+                  filing_view_entity_path(@entity, scheme: @scheme, period_id: flash[:submitted_period_id]),
+                  class: "backend_link button green", target: "_blank", rel: "noopener" %>
+    <% end %>
+    <%= link_to t("crud.back"), edit_tax_entity_path(@entity), class: "backend_link button green" %>
+  </div>

@@ -1,0 +1,29 @@
+<div class="password_form">
+	
+		<%= render partial: "shared/flash" %>
+
+    <%= form_with url: passwords_path, local: true do |f| %>
+        <fieldset>
+
+            <legend><%= t('.title') %></legend>
+
+            <p>
+            <%= f.label :email_address, t(".email") %><br />
+						<%= f.email_field :email_address, 
+								required: true, 
+								autofocus: true, 
+								autocomplete: "email_address", 
+								placeholder: t(".email_placeholder"), 
+								value: params[:email_address],
+								class: 'input_login',
+								id: "loginName" %>
+            </p>
+
+            <div class="p_submit">
+            		<%= f.submit t(".submit"), class: "submit_login" %>
+								<%= render partial: "shared/form_links", locals: {page: "new_password"} %>
+            </div>						
+
+        </fieldset>
+    <% end %>
+</div>

@@ -1,0 +1,41 @@
+#!/bin/sh
+# Runs before Kamal takes the deploy lock, before it connects to anything,
+# before the Docker build even starts — see self-hosting-todo.md §1.
+#
+# config/initializers/00_object_storage.rb already refuses to BOOT in
+# production without S3 credentials configured. This is the same requirement,
+# checked earlier: no point spending minutes building and pushing an image
+# that is guaranteed to fail its own health check the moment it starts,
+# because credentials.yml.enc never had working S3 settings in the first
+# place. And this check is strictly stronger than the boot-time one — that
+# one can only see "is a bucket name present"; this one actually asks
+# Scaleway, so a wrong key, a wrong region, or a bucket that does not exist
+# are caught here too, not just a blank field.
+set -e
+
+CREDS=$(bin/rails runner '
+  puts ObjectStorage::ACCESS_KEY
+  puts ObjectStorage::SECRET_KEY
+  puts ObjectStorage::BUCKET
+  puts ObjectStorage::ENDPOINT
+')
+
+AWS_ACCESS_KEY_ID=$(echo "$CREDS" | sed -n 1p)
+AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | sed -n 2p)
+BUCKET=$(echo "$CREDS" | sed -n 3p)
+ENDPOINT=$(echo "$CREDS" | sed -n 4p)
+
+if [ -z "$BUCKET" ]; then
+  echo "S3 object storage is not configured (credentials.s3 or credentials.scaleway is empty)." >&2
+  echo "Deploying now would build and push an image that fails to boot. See docs/provider-setup.md." >&2
+  exit 1
+fi
+
+if ! AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+     aws s3 ls "s3://$BUCKET" --endpoint-url "$ENDPOINT" >/dev/null 2>&1; then
+  echo "Could not list s3://$BUCKET at $ENDPOINT with the configured credentials." >&2
+  echo "Check the access key, secret key, region and bucket name in credentials.s3." >&2
+  exit 1
+fi
+
+echo "S3 storage reachable: $BUCKET"

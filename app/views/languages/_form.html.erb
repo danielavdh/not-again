@@ -1,0 +1,97 @@
+<%= form_with model: language,
+              url: language.persisted? ? language_path(language) : languages_path,
+              local: true,
+              id: "#{action_name}_language",
+              class: 'form_language' do |f| %>
+
+	<%# Locked once released, same reasoning as Currency's code/symbol: the
+	    routes check (ApplicationController#verify_locale_is_released) already
+	    depends on this code, so changing it out from under a released
+	    language would silently 404 every link pointing at it. %>
+	<% locked = language.persisted? && language.released? %>
+
+	<div class="field flex">
+		<div>
+			<%= f.label :code, t("languages.form.code") %>
+			<span class="error_message"><%= language.errors[:code].to_sentence %></span><br />
+			<%= f.text_field :code,
+							maxlength: 2,
+							required: true,
+							placeholder: "bg",
+							readonly: locked,
+							disabled: locked %>
+		</div>
+		<div>
+			<%= f.label :label, t("languages.form.label") %>
+			<span class="error_message"><%= language.errors[:label].to_sentence %></span><br />
+			<%= f.text_field :label, required: true, placeholder: "Български" %>
+		</div>
+		<div>
+			<%= f.label :rtl, t("languages.form.rtl") %><br />
+			<%= f.check_box :rtl %>
+		</div>
+		<div>
+			<%= f.label :reviewed, t("languages.form.reviewed") %><br />
+			<%= f.check_box :reviewed %>
+		</div>
+	</div>
+
+	<% if locked %>
+		<p class="hint"><%= t("languages.form.locked_hint") %></p>
+	<% end %>
+
+	<div class="field">
+		<%= f.label :yml_content, t("languages.form.yml_content") %>
+		<span class="error_message"><%= language.errors[:yml_content].to_sentence %></span><br />
+		<p class="field-instruction flex">
+			<%= t("languages.form.yml_content_hint") %>
+			<%= render "languages/copy_button", target: "language_yml_content" %>
+		</p>
+		<p class="field-text">
+			<%= t("languages.form.yml_content_ai_instructions_html") %>
+		</p>
+		<p class="field-instruction">
+			<%= t("languages.form.yml_content_format_warning_html") %>
+		</p>
+		<%= f.text_area :yml_content, class: "more_height", spellcheck: false %>
+	</div>
+
+	<div class="field">
+		<%= f.label :easy_manual_textile, t("languages.form.easy_manual_textile") %>
+		<span class="error_message"><%= language.errors[:easy_manual_textile].to_sentence %></span><br />
+		<%= render "languages/textile_instructions",
+				target: "language_easy_manual_textile" %>
+		<%= f.text_area :easy_manual_textile, class: "more_height" %>
+	</div>
+
+	<div class="field">
+		<%= f.label :pro_manual_textile, t("languages.form.pro_manual_textile") %>
+		<span class="error_message"><%= language.errors[:pro_manual_textile].to_sentence %></span><br />
+		<%= render "languages/textile_instructions",
+				target: "language_pro_manual_textile" %>
+		<%= f.text_area :pro_manual_textile, class: "more_height" %>
+	</div>
+
+	<div class="field">
+		<%= f.label :legal_textile, t("languages.form.legal_textile") %>
+		<span class="error_message"><%= language.errors[:legal_textile].to_sentence %></span><br />
+		<p class="field-instruction">
+			<%= t("languages.form.legal_textile_hint") %>
+		</p>
+		<%= render "languages/textile_instructions",
+				target: "language_legal_textile" %>
+		<%= f.text_area :legal_textile, class: "more_height" %>
+	</div>
+
+	<div class="field">
+		<%= f.label :terms_textile, t("languages.form.terms_textile") %>
+		<span class="error_message"><%= language.errors[:terms_textile].to_sentence %></span><br />
+		<%= render "languages/textile_instructions",
+				target: "language_terms_textile" %>
+		<%= f.text_area :terms_textile, class: "more_height" %>
+	</div>
+
+  <div class="actions">
+      <%= f.submit t("languages.save") %>
+  </div>
+<% end %>

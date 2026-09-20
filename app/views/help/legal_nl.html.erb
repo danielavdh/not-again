@@ -1,0 +1,162 @@
+<%= render "help/back" %>
+
+<h1>Privacyverklaring &amp; Gebruiksvoorwaarden</h1>
+
+<p>Deze pagina omvat zowel de privacyverklaring als de gebruiksvoorwaarden voor <%= SERVICE_NAME %>, de online boekhouddienst die beschikbaar is op <%= link_to service_host, "https://#{service_host}" %>. Ze legt uit welke persoonsgegevens wij verwerken, waarom en op welke rechtsgrondslag, en bevat de voorwaarden waaronder de dienst wordt geleverd.</p>
+
+<h2>Wie wij zijn</h2>
+
+<p>De dienst wordt beheerd door <%= CONTACT_TRADING %> (<%= CONTACT_NAME %>), <%= CONTACT_STREET %>, <%= CONTACT_CITY %>, <%= CONTACT_COUNTRY %>. Voor de toepassing van de gegevensbeschermingswetgeving zijn wij de verwerkingsverantwoordelijke voor de hieronder beschreven persoonsgegevens. U kunt ons bereiken op <%= mail_to CONTACT_EMAIL %>. Onze volledige aanbiedergegevens vindt u in het gedeelte <%= link_to "Impressum", "#impressum" %> hieronder.</p>
+
+<h2>Welke persoonsgegevens wij verwerken</h2>
+
+<ul>
+<li><strong>Accountgegevens</strong> — uw naam, e-mailadres en een veilig gehasht wachtwoord.</li>
+<li><strong>Boekhoudkundige gegevens die u invoert</strong> — rekeningen, transacties, journaalposten en bankboekingen, inclusief bedragen, data en omschrijvingen.</li>
+<li><strong>Documenten die u uploadt</strong> — bonnen en bijbehorende bestanden.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Belastinggegevens</strong> — de inkomsten- en uitgavencijfers en aangifteverplichtingen die worden gebruikt om Making Tax Digital-aangiften (MTD) in te dienen bij HM Revenue &amp; Customs (HMRC).</li>
+<li><strong>HMRC-autorisatie</strong> — de OAuth-toegangstokens waarmee wij namens u kunnen indienen zodra u ons bij HMRC hebt geautoriseerd.</li>
+<% end %>
+<li><strong>Technische gegevens</strong> — de hieronder vermelde cookies<% if @authorities_in_use.include?("hmrc") %> en de fraudepreventiegegevens die HMRC ons bij elke indiening vraagt te verzenden<% end %>.</li>
+</ul>
+
+<h2>Waarom wij ze verwerken en onze rechtsgrondslag</h2>
+
+<p>Wij verwerken uw gegevens uitsluitend voor twee doeleinden:</p>
+
+<ul>
+<li><strong>Om de boekhoud- en indieningsdienst te leveren waarvoor u zich hebt aangemeld.</strong> Rechtsgrondslag: uitvoering van een overeenkomst.</li>
+<li><strong>Om te voldoen aan fiscale aangifteverplichtingen en om de wettelijk vereiste belastinggegevens te bewaren.</strong> Rechtsgrondslag: naleving van een wettelijke verplichting.</li>
+</ul>
+
+<p>Wij verwerken uw gegevens niet voor reclame, en wij verkopen ze niet en delen ze niet met derden voor marketing.</p>
+
+<% if @authorities_in_use.any? %>
+<h2>Indienen bij belastingdiensten</h2>
+
+<% @authorities_in_use.each do |authority| %>
+<%= raw t("filing.#{authority}.legal_html") %>
+<% end %>
+<% end %>
+
+<h2>Waar uw gegevens worden opgeslagen</h2>
+
+<p>Al uw gegevens worden binnen de Europese Unie opgeslagen:</p>
+
+<ul>
+<li>De applicatie en de database worden gehost bij Hetzner in Duitsland.</li>
+<li>Geüploade bestanden, bonnen, belastingaangiften en uw boekhoudarchief worden opgeslagen bij Scaleway Object Storage in Parijs, Frankrijk.</li>
+<li>Een nachtelijke kopie van alles, inclusief databaseback-ups, wordt voor redundantie over twee providers bewaard bij OVH Object Storage in Straatsburg, Frankrijk.</li>
+<li>Uitgaande e-mail — inclusief de meldingen van dit beleid zelf — wordt verzonden via Brevo.</li>
+</ul>
+
+<h2>Hoe lang wij ze bewaren</h2>
+
+<p>Wij bewaren uw gegevens zolang uw account actief is, en daarna zolang de toepasselijke wetgeving vereist dat ze worden bewaard. Bewaartermijnen verschillen per land en belastingstelsel, dus wij bewaren uw gegevens gedurende de periode die de op u toepasselijke wet voorschrijft. Wanneer gegevens niet langer nodig zijn en er geen wettelijke verplichting is om ze te bewaren, worden ze verwijderd.</p>
+
+<h2>Uw rechten</h2>
+
+<p>Afhankelijk van waar u gevestigd bent, vloeien uw rechten voort uit de gegevensbeschermingswetgeving die op u van toepassing is — bijvoorbeeld de EU-AVG (inclusief de EER), de Britse AVG (UK GDPR) of de Zwitserse federale wet op de gegevensbescherming (FADP). Deze omvatten doorgaans het recht op inzage in uw persoonsgegevens, op rectificatie van onjuiste gegevens, op wissing (behalve waar wij ze moeten bewaren om aan een wettelijke verplichting te voldoen), op beperking van of bezwaar tegen de verwerking, en op gegevensoverdraagbaarheid. U hebt ook het recht om een klacht in te dienen bij de bevoegde gegevensbeschermingsautoriteit (in Zwitserland de FDPIC). Om een van deze rechten uit te oefenen, neemt u contact met ons op via <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Cookies</h2>
+
+<p>Wij gebruiken uitsluitend de cookies die strikt noodzakelijk zijn om de dienst te laten werken en om door u gemaakte keuzes te onthouden. Wij gebruiken geen analyse-, reclame-, tracking- of cookies van derden, dus er is geen cookiebanner vereist. De cookies die wij plaatsen zijn:</p>
+
+<ul>
+<li><strong>Sessiecookie</strong> — houdt u ingelogd. Essentieel.</li>
+<li><strong>Voorkeur voor hoog contrast</strong> — onthoudt de weergaveoptie voor toegankelijkheid, alleen ingesteld wanneer u die inschakelt.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Fraudepreventiegegevens</strong> — technische details die HMRC ons bij elke Making Tax Digital-indiening vraagt te verzenden. Alleen gebruikt voor het indienen.</li>
+<% end %>
+</ul>
+
+<h2>Beveiliging</h2>
+
+<p>Gegevens worden tijdens de overdracht versleuteld met HTTPS, en inloggegevens worden versleuteld opgeslagen<% if @authorities_in_use.any? %>, samen met de OAuth-autorisatietokens waarmee wij namens u kunnen indienen<% end %>. Als u denkt dat u een beveiligingslek hebt gevonden of een beveiligingsincident wilt melden, stuur dan een e-mail naar <%= mail_to CONTACT_EMAIL %>. Machineleesbare contactgegevens worden ook gepubliceerd op <%= link_to "/.well-known/security.txt", "/.well-known/security.txt" %>.</p>
+
+<h2>Als wij gegevens voor uw onderneming verwerken</h2>
+
+<p>Als u via deze dienst de boekhouding van andere mensen voert, zijn wij voor die gegevens uw verwerker onder artikel 28 AVG:</p>
+
+<ul>
+<li>Wij doen er alleen mee wat de app doet wanneer u haar gebruikt — niets anders.</li>
+<li>Iedereen met toegang tot de server, inclusief wij, is verplicht wat hij ziet vertrouwelijk te houden.</li>
+<li>Beveiligingsmaatregelen staan hierboven onder "Beveiliging".</li>
+<li>Subverwerkers staan hierboven onder "Waar uw gegevens worden opgeslagen"; voor hun deel geldt hun eigen verwerkersovereenkomst.</li>
+<li>U kunt uw eigen gegevens op elk moment inzien, corrigeren en exporteren, via de rapportages en exports die al in de app aanwezig zijn. Ze worden verwijderd zodra de wettelijke bewaartermijn is verstreken.</li>
+<li>Bonnen die u uploadt, worden hier bewaard zolang uw boekhouding bestaat, maar hiervan wordt geen aparte back-up gemaakt — bewaar zelf een kopie van elke bon zolang de wet in uw land dat vereist, net zoals u dat met een papieren bon zou doen.</li>
+<li>Ontdekken de mensen die deze installatie beheren een beveiligingsincident dat uw gegevens raakt, dan nemen zij rechtstreeks contact met u op, via het e-mailadres van uw account.</li>
+<li>Deze dienst is open source — wat wij met uw gegevens doen, is te controleren aan de hand van de broncode, niet alleen op ons woord.</li>
+</ul>
+
+<h2>Gebruiksvoorwaarden</h2>
+
+<p>Door <%= SERVICE_NAME %> te gebruiken, gaat u akkoord met de volgende voorwaarden:</p>
+
+<ul>
+<li>De dienst wordt geleverd om u in staat te stellen uw boekhouding bij te houden<% if @authorities_in_use.any? %> en aangiften in te dienen bij de gekoppelde belastingdiensten<% end %>.</li>
+<% if @authorities_in_use.any? %>
+<li>U bent verantwoordelijk voor de juistheid en volledigheid van de cijfers die u invoert en bij die diensten indient. Wij leveren de software; de aangiften die u indient zijn de uwe.</li>
+<% end %>
+<li>U bent verantwoordelijk voor het vertrouwelijk houden van uw inloggegevens.</li>
+<li>De dienst wordt geleverd op een "as is"-basis, en wij garanderen geen ononderbroken beschikbaarheid.</li>
+<li>Wij kunnen deze voorwaarden en dit beleid van tijd tot tijd bijwerken; de actuele versie is altijd de versie die op deze pagina is gepubliceerd.</li>
+</ul>
+
+<p>Als u vragen hebt over dit beleid of deze voorwaarden, neem dan contact met ons op via <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Wisselkoersen</h2>
+
+<p>Deze dienst maakt gebruik van gepubliceerde wisselkoersen van de Europese Centrale Bank, de Deutsche Bundesbank (tijdreeks BBEX3), HM Revenue &amp; Customs en de Zwitserse federale belastingdienst / het Bundesamt für Zoll und Grenzsicherheit. Gegevens van de Bundesbank en het BMF worden gebruikt onder de Datenlizenz Deutschland – Namensnennung – Version 2.0. De koersen worden ongewijzigd weergegeven zoals ze zijn gepubliceerd.</p>
+
+<% if @eu_declaration %>
+<section id="eu-declaration">
+<h2>EU-conformiteitsverklaring</h2>
+
+<p><%= link_to "EU-conformiteitsverklaring downloaden (PDF)", @eu_declaration.doc_url %></p>
+</section>
+<% end %>
+
+<section id="impressum">
+<h2>Impressum</h2>
+
+<p>Gegevens conform § 5 DDG (Duitse wet inzake digitale diensten).</p>
+
+<h2>Aanbieder</h2>
+
+<div id="logo">
+	<span id="w1">W</span><span id="w2">W</span><span id="w3">W</span>ebsites<span id="dotcom"><span>.</span>com</span>
+</div>
+
+
+<p>
+<%= CONTACT_NAME %><br />
+<%= CONTACT_STREET %><br />
+<%= CONTACT_CITY %><br />
+<%= CONTACT_COUNTRY %>
+</p>
+
+<h2>Contact</h2>
+
+<p>E-mail: <%= mail_to CONTACT_EMAIL %></p>
+
+<h2>Verantwoordelijk voor de inhoud</h2>
+
+<p><%= CONTACT_NAME %>, adres zoals hierboven.</p>
+</section>
+
+<%= render "help/back" %>
+
+
+<% if current_admin&.sudo? %>
+<section id="eu-declaration-upload">
+<h2>EU-conformiteitsverklaring</h2>
+<%= form_with url: documents_path, method: :post, local: true do %>
+<%= hidden_field_tag :kind, "eu_declaration_of_conformity" %>
+<%= file_field_tag :doc, accept: "application/pdf" %>
+<%= submit_tag @eu_declaration ? "Vervangen" : "Uploaden", class: "button green" %>
+<% end %>
+</section>
+<% end %>
+

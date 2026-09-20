@@ -1,0 +1,80 @@
+<%# Sudo-only — see LanguagesController for why this sits at a different bar
+    than currencies. System rows (the pre-packaged languages) are a toggle,
+    nothing to edit — content lives in app/views/help and on disk, never in
+    this table. Custom rows are sudo-authored, full review flow. %>
+<% content_for :title, t("languages.index.title") %>
+
+<div class="backend_table no-print">
+  <h1><%= t("languages.index.title") %></h1>
+
+  <%= render partial: 'shared/flash' %>
+
+  <div class="link_to_new">
+    <%= link_to t("languages.new_language"), new_language_path, class: 'button green' %>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th><%= t("languages.index.code") %></th>
+        <th><%= t("languages.index.label") %></th>
+        <th><%= t("languages.index.status") %></th>
+        <th><%= t("languages.index.reviewed") %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @languages.each do |language| %>
+        <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+          <td><%= language.code %></td>
+          <td><%= language.label %></td>
+          <td>
+            <% if language.superseded? %>
+              <%= t("languages.index.superseded") %>
+            <% else %>
+              <%= t("languages.status.#{language.status}") %>
+            <% end %>
+          </td>
+          <td>
+            <%= language.reviewed? ? t("languages.index.reviewed_human") : t("languages.index.reviewed_ai") %>
+          </td>
+          <td class="actions"><div>
+            <% if language.superseded? %>
+              <%= t("languages.index.superseded_hint") %>
+            <% else %>
+              <%= form_with url: language.released? ? unrelease_language_path(language) : release_language_path(language),
+                            method: :patch do |f| %>
+                <label for="language_show_in_menu_<%= language.id %>">
+                  <%= t("languages.show_in_menu") %>
+                  <%= f.check_box :show_in_menu,
+                        { checked: language.released?,
+                          name: "show_in_menu",
+                          id: "language_show_in_menu_#{language.id}",
+                          data: { action: "toggle-language-menu" } },
+                          "1", "0" %>
+                </label>
+              <% end %>
+            <% end %>
+
+            <% if language.custom? %>
+              <%= link_to edit_language_path(language),
+                          class: 'backend_link button green' do %>
+                <span class="big-screen"><%= t("crud.edit") %></span>
+                <svg class="small-screen"><use xlink:href='#edit'></use></svg>
+              <% end %>
+
+              <%= button_to language_path(language),
+                    method: :delete,
+                    data: { sure: t("crud.sure") },
+                    class: 'backend_link button red' do %>
+                <span class="big-screen"><%= t("crud.delete") %></span>
+                <svg class="small-screen stroke s30"><use xlink:href='#trash'></use></svg>
+              <% end %>
+            <% end %>
+		</div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

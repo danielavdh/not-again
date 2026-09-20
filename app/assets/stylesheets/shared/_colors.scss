@@ -1,0 +1,375 @@
+// ── up to 900px screens defaults (CSS custom properties) ──
+:root{
+	--color: #000000;
+	--dark: #352d22;
+	--light: #eff2f5;
+	--accent: #cc9db0;
+	--bkgg: #e2e8e3;
+	--bkgb: #d2d3dc;
+	--blue: #6e8a9e;
+	--green: #6f8a72;
+	--red: #8f6363;
+	--blue-btn: #637590;
+	--yellow: #ab9670;
+	--link: #dfe6e0;
+	--hover: #eef1ee;
+	--pending: #f3f6b7;
+	--overdue: #eebea8;
+	--booked: #f1bec4;
+	--my-booking: #a6c3a7;
+	--btn-neutral-base: #515558;
+	// derived
+	--link-l-20: #a6b9a9;
+
+	--green-l-30: #2b352c;
+	--green-l-15: #4d604f;
+	--green-l-10: #586e5b;
+	--green-l-8: #5d735f;
+	--green-l3p5: #78937b;
+	--green-l5: #7c967f;
+	--green-l7: #829b85;
+	--green-l7p5: #849c86;
+	--green-l10: #8ba18d;
+	--green-l11: #8da490;
+	--green-l15: #99ad9b;
+	--green-l18: #a1b4a3;
+	--green-l20: #a7b8a9;
+	--green-l22: #adbdae;
+	--green-l25: #b5c3b7;
+	--green-l27p5: #bcc9be;
+	--green-l30: #c3cfc4;
+	--green-l30-rgb: 195 207 196;
+
+	--accent-l-10: #bb7b95;
+	--accent-l15: #e6cfd9;
+	--accent-l20: #efe0e6;
+
+	--blue-l-42: #161c20;
+	--blue-l-32: #2a363f;
+	--blue-l-10: #577082;
+	--blue-l15: #9cafbd;
+	--blue-l20: #abbbc7;
+	--blue-l30: #cad4db;
+	--blue-l40: #e8edf0;
+	--blue-l46: #fbfbfc;
+	--blue-l48: #ffffff;
+	--blue-l50: #ffffff;
+
+	--bkgg-l-15: #b7c6ba;
+	--bkgg-l-10: #c6d1c8;
+	--booked-mix-black-25: #3c3031;
+	--booked-mix-black-80: #c1989d;
+	--booked-l-30-mix-red-80: #de3342;
+	--my-booking-mix-black-25: #2a312a;
+	--my-booking-mix-black-80: #859c86;
+	--pending-mix-black-25: #3d3e2e;
+	--pending-mix-black-80: #c2c592;
+
+	// button variants
+	--btn-neutral-top: #5d6265; 
+	--btn-neutral-mid: #575b5f; 
+	--btn-neutral-bot: #515558;
+	--btn-neutral-h-top: #696f72; 
+	--btn-neutral-h-mid: #63686c; 
+	--btn-neutral-h-bot: #5d6265;
+	--btn-green-top: #7c967f; 
+	--btn-green-mid: #759078; 
+	--btn-green-bot: #6f8a72;
+	--btn-green-h-top: #8aa18d; 
+	--btn-green-h-mid: #839b86; 
+	--btn-green-h-bot: #7c967f;
+	--btn-red-top: #9c7070; 
+	--btn-red-mid: #976868; 
+	--btn-red-bot: #8f6363;
+	--btn-red-h-top: #a67f7f; 
+	--btn-red-h-mid: #a17777; 
+	--btn-red-h-bot: #9c7070;
+	--btn-yellow-top: #b4a280; 
+	--btn-yellow-mid: #b09c78; 
+	--btn-yellow-bot: #ab9670;
+	--btn-yellow-h-top: #bdae90; 
+	--btn-yellow-h-mid: #b9a888; 
+	--btn-yellow-h-bot: #b4a280;
+	--btn-blue-btn-top: #70829d; 
+	--btn-blue-btn-mid: #687b97; 
+	--btn-blue-btn-bot: #637590;
+	--btn-blue-btn-h-top: #7f8fa7; 
+	--btn-blue-btn-h-mid: #7788a1; 
+	--btn-blue-btn-h-bot: #70829d;
+
+	--btn-none-btn-top: transparent;
+	--btn-none-btn-mid: transparent;
+	--btn-none-btn-bot: transparent;
+	--btn-none-btn-h-top: rgb(0 0 0 / 0.06);
+	--btn-none-btn-h-mid: rgb(0 0 0 / 0.06);
+	--btn-none-btn-h-bot: rgb(0 0 0 / 0.06);
+
+	// old backend colours
+	--be-nested: #3c3c5c;
+	--be-nested-l3: #424265;
+	--be-nested-l10: #50507b;
+	--be-nested-l20: #64649a;
+	--be-nested-l60: #e0e0ea;
+	--be-yellow: #ffff99;
+	--be-yellow-l-30: #ffff00;
+	--be-highlight: #99ff99;
+	--be-highlight-l15: #e5ffe5;
+	--be-link: #dce4b5;
+	--be-hover: #ffffff;
+	--be-bkg-mix-green-90: #6f8a76;
+	
+	// errors
+	--error-red: #ff6666;
+	--error-yellow: #ffff99;
+
+	// application colours
+	--ink:#14140f;         /* near-black, warm */
+	--paper:#e9e6dc;       /* muted receipt paper */
+	--paper-2:#b8b5a6;
+	--paper-3: #f1f1ee;     /* lighter paper (manuals) */
+	--line:#c7c1aa;
+	--stamp:#3a5f36;
+	--stamp-2:#56824f;
+	--flag:#bb4234;
+	--muted:#5f5b4d;
+}
+
+// ── Big-screen overrides ──
+@media (min-width: 900px) {
+	:root{
+		--dark: #3e362b;
+		--light: #dfe3e9;
+		--accent: #c5a2ad;
+		--bkgg: #dadfdb;
+		--bkgb: #cacbd1;
+		--blue: #748794;
+		--green: #768578;
+		--red: #8b6b6b;
+		--blue-btn: #6b7b8b;
+		--yellow: #a89a78;
+		--link: #b9c1ba;
+		--hover: #c7cdc8;
+		--pending: #f0f2b3;
+		--overdue: #e9b9a3;
+		--booked: #efbfc2;
+		--my-booking: #a9c1aa;
+		--link-l-20: #839185;
+
+		--green-l-30: #2e342f;
+		--green-l-15: #525c53;
+		--green-l-10: #5e6a60;
+		--green-l-8: #636f64;
+		--green-l3p5: #7f8e81;
+		--green-l5: #839185;
+		--green-l7: #89968a;
+		--green-l7p5: #8a978c;
+		--green-l10: #919d92;
+		--green-l11: #93a095;
+		--green-l15: #9ea9a0;
+		--green-l18: #a6b0a8;
+		--green-l20: #acb5ad;
+		--green-l22: #b1bab2;
+		--green-l25: #b9c1ba;
+		--green-l27p5: #c0c7c1;
+		--green-l30: #c7cdc8;
+		--green-l30-rgb: 199 205 200;
+
+		--accent-l-10: #bb7b95;
+		--accent-l15: #e2d1d7;
+		--accent-l20: #ece1e4;
+
+		--blue-l-42: #161a1c;
+		--blue-l-32: #2c3439;
+		--blue-l-25: #3b464d;
+		--blue-l-10: #5d6d78;
+		--blue-l15: #9facb5;
+		--blue-l20: #aeb9c0;
+		--blue-l30: #cad2d7;
+		--blue-l40: #e7ebed;
+		--blue-l46: #f9f9fa;
+		--blue-l48: #fefefe;
+		--bkgg-l-15: #b1bcb3;
+		--bkgg-l-10: #bfc7c0;
+		--booked-mix-black-25: #3c3030;
+		--booked-mix-black-80: #bf999b;
+		--booked-l-30-mix-red-80: #d9373e;
+		--my-booking-mix-black-25: #2a302a;
+		--my-booking-mix-black-80: #879a88;
+		--pending-mix-black-25: #3c3c2d;
+		--pending-mix-black-80: #c0c28f;
+
+		--btn-green-top: #839185; 
+		--btn-green-mid: #7d8b7e; 
+		--btn-green-bot: #768578;
+		--btn-green-h-top: #919d92; 
+		--btn-green-h-mid: #8a978b; 
+		--btn-green-h-bot: #839185;
+		--btn-red-top: #977878; 
+		--btn-red-mid: #927171; 
+		--btn-red-bot: #8b6b6b;
+		--btn-red-h-top: #a28686; 
+		--btn-red-h-mid: #9d7f7f; 
+		--btn-red-h-bot: #977878;
+		--btn-yellow-top: #b2a688; 
+		--btn-yellow-mid: #ada080; 
+		--btn-yellow-bot: #a89a78;
+		--btn-yellow-h-top: #bcb297; 
+		--btn-yellow-h-mid: #b7ac8f; 
+		--btn-yellow-h-bot: #b2a688;
+		--btn-blue-btn-top: #788897; 
+		--btn-blue-btn-mid: #718192; 
+		--btn-blue-btn-bot: #6b7b8b;
+		--btn-blue-btn-h-top: #8695a2; 
+		--btn-blue-btn-h-mid: #7f8e9d;
+		--btn-blue-btn-h-bot: #788897;
+
+	    --be-link: #dee2b2;
+	    --be-bkg-mix-green-90: #76857b;
+
+		// application colours
+		--stamp:#3d5b3a;       /* bureaucratic green ink */
+		--stamp-2:#5a7d54;
+		--flag:#b5473a;        /* red audit-stamp accent, used once */
+		--muted:#6a6656;
+		--paper-2:#a8a596;
+	}
+}
+
+////////////// HIGH CONTRAST / ACCESSIBILIY  /////////////////
+@mixin palette-high-contrast {
+--color: #000000;
+--dark: #241c11;
+--light: #ffffff;
+--bkgg: #ffffff;
+--bkgb: #eef0f4;
+--hover: #e7eee7;
+--link: #ffffff;
+--link-l-20: #f2f6f2;
+
+--accent: #eee3e9;
+--accent-l-10: #d1468b;
+--accent-l15: #f3eaef;
+--accent-l20: #f4edf1;
+
+--green: #237040;
+--green-l-30: #236d3e;
+--green-l-15: #277c46;
+--green-l-10: #298149;
+--green-l-8:  #29834a;
+--green-l3p5: #2d8e50;                               
+--green-l5:   #2d8f51;
+--green-l7:   #2e9152;
+--green-l7p5: #2e9253;                               
+--green-l10:  #2f9454;
+--green-l11:  #2f9554;
+--green-l15: #e1ece5;
+--green-l18: #e2ede6;
+--green-l20: #e3ede7;
+--green-l22: #e4eee8;
+--green-l25: #e5efe9;                                
+--green-l27p5: #e7efea;
+--green-l30: #e8f0eb;
+--green-l30-rgb: 232 240 235;
+
+--blue: #10567f;
+--blue-l-42: #126392;
+--blue-l-32: #136b9d;
+--blue-l-10: #177cb6;
+--blue-l15: #e0eaef;
+--blue-l20: #e3ebf1;
+--blue-l30: #e8eff3;
+--blue-l40: #edf2f6;
+--blue-l46: #f0f5f7;
+--blue-l48: #ffffff;
+--blue-l50: #ffffff;
+
+--red: #931915;
+--yellow: #856300;
+--blue-btn: #154d75;
+
+--bkgg-l-15: #e9ecea;
+--bkgg-l-10: #ebedec;
+
+--pending: #fdf3a4;
+--overdue: #ffd6bd;
+--booked: #ffc7cf;
+--my-booking: #c2e8c4;
+--booked-mix-black-25: #b92b3e;
+--booked-mix-black-80: #eee2e3;
+--booked-l-30-mix-red-80: #d13c50;
+--my-booking-mix-black-25: #206f2b;
+--my-booking-mix-black-80: #2b9539;
+--pending-mix-black-25: #6c5e09;
+--pending-mix-black-80: #f0eedf;
+
+--btn-neutral-base: #67727e;
+--btn-neutral-top: #2e3338; --btn-neutral-mid: #282d31; --btn-neutral-bot: #22262a;
+--btn-neutral-h-top: #394046; --btn-neutral-h-mid: #34393f; --btn-neutral-h-bot: #2e3338;
+--btn-green-top: #226d3d; --btn-green-mid: #1f6338; --btn-green-bot: #1c5933;
+--btn-green-h-top: #288048; --btn-green-h-mid: #257643; --btn-green-h-bot:#226d3d;
+--btn-red-top: #9c1b16; --btn-red-mid: #911915; --btn-red-bot: #861713;
+--btn-red-h-top: #b31f19; --btn-red-h-mid: #a71d18; --btn-red-h-bot: #9c1b16;
+--btn-yellow-top: #946f00; --btn-yellow-mid: #876500; --btn-yellow-bot: #7a5c00;
+--btn-yellow-h-top: #ad8200; --btn-yellow-h-mid: #a17800; --btn-yellow-h-bot: #946f00;
+--btn-blue-btn-top: #175582; --btn-blue-btn-mid: #154e77; --btn-blue-btn-bot: #13476c;
+--btn-blue-btn-h-top: #1b6498; --btn-blue-btn-h-mid: #195d8d; --btn-blue-btn-h-bot: #175582;
+
+--paper:#f9f6ec;       /* muted receipt paper */
+--paper-2:#c8c5b6;
+--ink:#040400;         /* near-black, warm */
+--muted:#4f4b3d;
+--stamp:#2a4f26;
+--flag:#ab5244;
+
+}
+@media (prefers-contrast: more) { 
+	:root:not(.contrast-normal) { 
+		@include palette-high-contrast; 
+	}
+}
+:root.high-contrast{
+	 @include palette-high-contrast;
+}
+
+
+
+/*************** history, original sass scheme colours ***************************/
+/*************** history, original sass scheme colours ***************************/
+// for small screen, 
+// $light: #eff2f5, 
+// $link: #dfe6e0
+// color.adjust($backend_green, $lightness: 30%): #cad4db  (used for text in backend)
+/*************** small screen ***************************/
+/*************** original colours ***************************/
+//$color: #000;
+//$dark: #352d22;       
+//$light: color.adjust(color.invert($dark, $weight: 100%, $space: null), $lightness: 12%); 
+//$accent: #cc9db0;         
+//$bkgg: #e2e8e3;           
+//$bkgb: #d2d3dc;           
+//$blue: #6e8a9e;           
+//$green: #6f8a72;          
+//$red: #8f6363;            
+//$blue-btn: #637590;       
+//$yellow: #ab9670;         
+//
+//$link: color.adjust($green, $lightness: 40%);
+//$hover: color.adjust($green, $lightness: 45%);
+/*************** big screen ***************************/
+/*************** original colours ***************************/
+//$color: #000;
+//$dark: #3e362b;
+//$light: color.adjust(color.invert($dark, $weight: 100%, $space: null), $lightness: 10%);
+//$accent: #c5a2ad;
+//$bkgg: #dadfdb;
+//$bkgb: #cacbd1;
+//$blue: #748794;
+//$green:#768578;
+//$red: #8b6b6b;
+//$blue-btn: #6b7b8b;
+//$yellow: #a89a78;
+//
+//$link: color.adjust($green, $lightness: 25%);
+//$hover: color.adjust($green, $lightness: 30%);
+
+

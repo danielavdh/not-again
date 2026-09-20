@@ -1,0 +1,148 @@
+# Entity 10 accounts
+bank_gbp:
+  code: "110001"
+  name: "Bank GBP"
+  account_type: 1
+  currency: "GBP"
+  active: true
+
+bank_gbp_two:
+  code: "110002"
+  name: "Bank GBP Secondary"
+  account_type: 1
+  currency: "GBP"
+  active: true
+
+bank_eur:
+  code: "110010"
+  name: "Bank EUR"
+  account_type: 1
+  currency: "EUR"
+  active: true
+
+accounts_payable:
+  code: "210001"
+  name: "Accounts Payable"
+  account_type: 2
+  currency: "GBP"
+  active: true
+
+equity_capital:
+  code: "310001"
+  name: "Capital"
+  account_type: 3
+  currency: "GBP"
+  active: true
+
+income_sales:
+  code: "410001"
+  name: "Sales Income"
+  account_type: 4
+  active: true
+
+income_interest:
+  code: "410002"
+  name: "Interest Income"
+  account_type: 4
+  active: true
+
+expenses_general:
+  code: "510001"
+  name: "General Expenses"
+  account_type: 5
+  active: true
+
+expenses_fees:
+  code: "510002"
+  name: "Bank Fees"
+  account_type: 5
+  active: true
+
+personal_drawings:
+  code: "610001"
+  name: "Personal Drawings"
+  account_type: 6
+  active: true
+
+inactive_account:
+  code: "510099"
+  name: "Inactive Expense"
+  account_type: 5
+  active: false
+
+parent_account:
+  code: "110000"
+  name: "Bank Accounts Parent"
+  account_type: 1
+  currency: "GBP"
+  active: true
+
+# Entity 04 accounts (daughter - same group BB as entity 10)
+daughter_bank:
+  code: "104001"
+  name: "Daughter Bank"
+  account_type: 1
+  currency: "GBP"
+  active: true
+
+# Entity 10 retained earnings (for closed period tests)
+re_parent_entity10:
+  code: "310900"
+  name: "Retained Earnings Parent"
+  account_type: 3
+  active: true
+  locked: true
+
+re_gbp_entity10:
+  code: "310901"
+  name: "Retained Earnings GBP"
+  account_type: 3
+  currency: "GBP"
+  active: true
+  locked: true
+  parent: re_parent_entity10
+
+# Entity 01 accounts
+boss_bank:
+  code: "101001"
+  name: "Boss Bank GBP"
+  account_type: 1
+  currency: "GBP"
+  active: true
+
+# Entity 01 personal — payer's gift/drawings bridge (Build 2 cross-entity)
+boss_drawings:
+  code: "601001"
+  name: "Boss Drawings"
+  account_type: 6
+  active: true
+
+# Entity 04 equity — receiver's capital/clearing bridge (Build 2 cross-entity)
+daughter_capital:
+  code: "304001"
+  name: "Daughter Capital"
+  account_type: 3
+  currency: "GBP"
+  active: true
+
+# Entity 04 expense (Build 2 cross-entity real leg — pay-out)
+daughter_expenses:
+  code: "504001"
+  name: "Daughter Expenses"
+  account_type: 5
+  active: true
+
+# Entity 04 income (Build 2 cross-entity real leg — receipt)
+daughter_income:
+  code: "404001"
+  name: "Daughter Income"
+  account_type: 4
+  active: true
+
+# Entity 05 (standalone) account
+standalone_bank:
+  code: "105001"
+  name: "Standalone Bank"
+  account_type: 1
+  currency: "GBP"
+  active: true

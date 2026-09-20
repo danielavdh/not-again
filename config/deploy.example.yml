@@ -1,0 +1,126 @@
+# ============================================================================
+# THE EXAMPLE. Copy it, then edit the copy:
+#
+#     cp config/deploy.example.yml config/deploy.yml
+#
+# config/deploy.yml is gitignored, so your server address and domain stay out of
+# the repository. It is the file Kamal actually reads.
+#
+# ⚠️ ANYTHING IN ANGLE BRACKETS IS A PLACEHOLDER and must be replaced.
+#    Everything else is a real, working value: leave it alone unless you have a
+#    reason.
+#
+# Secrets are in neither file — they live in .kamal/secrets, also gitignored.
+#
+# ⚠️ When you pull a new version, `git diff` this file to see whether the shared
+#    parts changed (a new environment variable, a newer Postgres). Your own
+#    deploy.yml is untracked, so nothing updates it for you.
+# ============================================================================
+
+service: not-again
+image: <your-registry-user>/not-again
+
+servers:
+  web:
+    # <your server's IP or hostname>. The address below is RFC 5737
+    # documentation space and routes nowhere, so a bare `kamal deploy` with this
+    # file unedited cannot reach anything real.
+    - <203.0.113.10>
+
+proxy:
+  # Correct as-is. Kamal obtains and renews a Let's Encrypt certificate, which
+  # needs the host(s) below to resolve to this server BEFORE the first deploy.
+  ssl: true
+  # ⚠️ Comma-separated, NO SPACE after the comma — a space makes the second name
+  # part of the first and the certificate request fails.
+  host: <accountingapp.eu,www.accountingapp.eu>
+
+registry:
+  # Correct as-is for GitHub's container registry. Change only for another one.
+  server: ghcr.io
+  username: <your-registry-user>
+  password:
+    # Read from .kamal/secrets on the machine you deploy FROM. Never sent to the
+    # server — it is only used to push and pull the image.
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  # Delivered to the server over SSH and injected as container environment
+  # variables. Values come from .kamal/secrets; they never enter the image.
+  secret:
+    - RAILS_MASTER_KEY
+    - POSTGRES_PASSWORD
+
+  clear:
+    # ⚠️ REQUIRED. The hostname this installation answers to. production.rb
+    # raises without it, because mail links and absolute URLs are built from it
+    # and a wrong one is worse than a refusal to start.
+    APP_HOST: <accountingapp.eu>
+
+    # Optional. A CDN in front of the assets; omit it and the app serves its own,
+    # which is a perfectly good way to run it. Hostname only, no scheme.
+    # ASSET_HOST: <cdn.accountingapp.eu>
+
+    # Optional. The From: address on every email the app sends. Defaults to
+    # no-reply@<APP_HOST>; set this only if the address your mail provider
+    # (Brevo) has authorised is different.
+    # MAIL_FROM: <no-reply@accountingapp.eu>
+
+    # ⚠️ REQUIRED. Who runs this installation — shown on the legal pages, in the
+    # terms, and in /.well-known/security.txt. Production refuses to boot without
+    # them: publishing a legal page with an empty Impressum is worse than not
+    # starting. Use a DISPOSABLE alias for the address, never a real mailbox, so
+    # it can be replaced in one line if it drowns in spam.
+    SERVICE_NAME: <Your Bookkeeping Service>
+    CONTACT_EMAIL: <you@example.com>
+    CONTACT_NAME: <Your Name>
+    CONTACT_TRADING: <Your Trading Name>
+    CONTACT_STREET: <1 Example Street>
+    CONTACT_CITY: <00000 Example City>
+    CONTACT_COUNTRY: <Country>
+
+    # Optional. Set it and the landing page shows its GitHub links; leave it out
+    # and they are hidden, so a fork never links to somebody else's repository.
+    # REPO_URL: <https://github.com/you/not-again>
+
+    # Optional, and only if you file with HMRC. These identify the VENDOR in the
+    # fraud-prevention headers and must match what HMRC has registered for YOU.
+    # Defaults are this repo's own, which would report somebody else's identity.
+    # HMRC_PRODUCT_NAME: <Your Service Accounts>
+    # HMRC_VENDOR_KEY: <yourservice>
+
+    # Correct as-is. Solid Queue runs inside Puma rather than as a second
+    # container: the background work here is rate fetches, tax exports and
+    # notification mail, not a queue that needs its own machine.
+    SOLID_QUEUE_IN_PUMA: true
+    WEB_CONCURRENCY: 2
+
+    # Correct as-is: Kamal names the accessory below service-accessory,
+    # so the db accessory of service not-again is reachable as not-again-db.
+    DB_HOST: not-again-db
+
+accessories:
+  db:
+    # Correct as-is.
+    image: postgres:17
+    host: <203.0.113.10>
+    env:
+      clear:
+        # Correct as-is — config/database.yml defaults to these same two names.
+        POSTGRES_USER: not_again_user
+        POSTGRES_DB: not_again_production
+      secret:
+        # ⚠️ Postgres burns this into the superuser the FIRST time it starts on
+        # an empty data directory. Changing it later does not change the
+        # database, and the app then fails to connect for reasons that point
+        # nowhere near the cause. Choose it before the first deploy.
+        - POSTGRES_PASSWORD
+    # Correct as-is. Kamal puts this at /root/not-again-db/data on the host. To
+    # encrypt the database at rest, mount an encrypted volume on that path — the
+    # app and this file never need to know it happened.
+    directories:
+      - data:/var/lib/postgresql/data
+
+builder:
+  # Correct as-is for a typical x86 server. Use arm64 if yours is ARM.
+  arch: amd64

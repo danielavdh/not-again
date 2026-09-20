@@ -1,0 +1,112 @@
+# Postings fixtures
+# entry_type: debit: 0, credit: 1
+
+# Posted deposit: Bank debit 10000, Income credit 10000
+deposit_bank:
+  journal_entry: posted_deposit
+  account: bank_gbp
+  amount: 10000
+  currency: "GBP"
+  entry_type: 0  # debit
+
+deposit_income:
+  journal_entry: posted_deposit
+  account: income_sales
+  amount: 10000
+  currency: "GBP"
+  entry_type: 1  # credit
+
+# Posted withdrawal: Bank credit 5000, Expense debit 5000
+withdrawal_bank:
+  journal_entry: posted_withdrawal
+  account: bank_gbp
+  amount: 5000
+  currency: "GBP"
+  entry_type: 1  # credit
+
+withdrawal_expense:
+  journal_entry: posted_withdrawal
+  account: expenses_general
+  amount: 5000
+  currency: "GBP"
+  entry_type: 0  # debit
+
+# Posted transfer: Bank GBP credit 3000, Daughter Bank debit 3000
+transfer_from:
+  journal_entry: posted_transfer
+  account: bank_gbp
+  amount: 3000
+  currency: "GBP"
+  entry_type: 1  # credit
+
+transfer_to:
+  journal_entry: posted_transfer
+  account: daughter_bank
+  amount: 3000
+  currency: "GBP"
+  entry_type: 0  # debit
+
+# Multi-posting deposit: Bank debit 9500, Income credit 10000, Fees debit 500
+multi_deposit_bank:
+  journal_entry: multi_posting_deposit
+  account: bank_gbp
+  amount: 9500
+  currency: "GBP"
+  entry_type: 0  # debit
+
+multi_deposit_income:
+  journal_entry: multi_posting_deposit
+  account: income_sales
+  amount: 10000
+  currency: "GBP"
+  entry_type: 1  # credit
+
+multi_deposit_fees:
+  journal_entry: multi_posting_deposit
+  account: expenses_fees
+  amount: 500
+  currency: "GBP"
+  entry_type: 0  # debit
+  
+draft_bank:
+  journal_entry: draft_entry
+  account: bank_gbp
+  amount: 5000
+  currency: "GBP"
+  entry_type: 0  # debit
+
+draft_income:
+  journal_entry: draft_entry
+  account: income_sales
+  amount: 5000
+  entry_type: 1  # credit
+
+# Past income entry: Bank debit 20000, Income credit 20000 (dated 2023-10-15, entity 10)
+past_income_bank:
+  journal_entry: past_income_entry
+  account: bank_gbp_two
+  amount: 20000
+  currency: "GBP"
+  entry_type: 0  # debit
+
+past_income_sales:
+  journal_entry: past_income_entry
+  account: income_sales
+  amount: 20000
+  currency: "GBP"
+  entry_type: 1  # credit
+
+# Closing entry FY2024: zeroes out income to retained earnings.
+# The income leg carries no currency — only the retained-earnings leg does.
+closing_fy2024_income:
+  journal_entry: closing_entry_fy2024
+  account: income_sales
+  amount: 20000
+  entry_type: 0  # debit (closes income)
+
+closing_fy2024_re:
+  journal_entry: closing_entry_fy2024
+  account: re_gbp_entity10
+  amount: 20000
+  currency: "GBP"
+  entry_type: 1  # credit (to retained earnings)

@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  pull_request:
+  # Every branch, not a named list. The list said [main, accounts] long after
+  # `accounts` had become the only branch anyone worked on, so `main` was being
+  # tested and nothing else was — and a new feature branch would have run no
+  # tests at all until someone remembered to add it here.
+  push:
+
+jobs:
+  scan_ruby:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      # Brakeman guesses, so it raises false alarms. Run without an ignore file
+      # this step is permanently red, and a step that is always red is a step
+      # nobody reads. config/brakeman.ignore therefore pins the warnings someone
+      # has actually checked and found wrong, each with a dated note saying why
+      # — so this fails on anything NEW, at any confidence.
+      #
+      # Deliberately no count here: the number changes and a stale one in a
+      # comment is worse than none. Read the file.
+      #
+      # To clear a new warning: verify it yourself first, then `brakeman -I` to
+      # add it interactively, and write a note that says what you checked.
+      - name: Scan for common Rails security vulnerabilities using static analysis
+        run: bundle exec brakeman --no-pager -i config/brakeman.ignore
+
+      # Brakeman reads OUR code; this reads the gems under it. Most of a
+      # "gems are outdated" list is noise — this is the part that is not, so it
+      # runs on every push instead of relying on anyone remembering to look.
+      # --update fetches the advisory database first, or it checks against
+      # whatever was current when the runner image was built.
+      - name: Scan gems for known security advisories
+        run: bundle exec bundler-audit check --update
+
+  scan_js:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Scan for security vulnerabilities in JavaScript dependencies
+        run: bin/importmap audit
+
+  # A machine-readable list of everything this app is built from. The three scans
+  # above ask "is anything we depend on known to be broken TODAY"; this one just
+  # records what the dependencies ARE, so that when an advisory lands next year
+  # anyone running an installation can answer "does that affect me" without
+  # cloning the repo and resolving the bundle themselves.
+  #
+  # Required of commercial software in the EU from December 2027 (Cyber
+  # Resilience Act, Annex I Part II) — see docs/self-hosting-legal.md. Free
+  # unmonetised software is out of scope, but the artifact costs nothing and is
+  # what someone downstream would otherwise have to build by hand.
+  #
+  # Defaults do the work: syft scans the checkout, writes SPDX JSON, and uploads
+  # it as a workflow artifact. It reads Gemfile.lock, so the gems and their
+  # transitive dependencies are all there. It does NOT see the JavaScript pinned
+  # in config/importmap.rb (no package.json to read) or the apt packages in the
+  # Dockerfile — the honest scope is "the Ruby side".
+  sbom:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Generate an SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          artifact-name: not-again-sbom.spdx.json
+
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      # redis:
+      #   image: redis
+      #   ports:
+      #     - 6379:6379
+      #   options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      # imagemagick: ImageProcessing::MiniMagick shells out to it, and
+      # ReceiptUploader.compress_image rescues the failure and returns nil — so
+      # without it the tests fail quietly rather than saying what is missing.
+      # ghostscript: compress_pdf runs `gs`. Same shape, same silence.
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 postgresql-client imagemagick ghostscript
+
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Run tests
+        env:
+          RAILS_ENV: test
+          # NOT DATABASE_URL. config/database.yml builds the connection from
+          # these three, and leaves them empty locally so a developer's machine
+          # uses its own socket and user. A URL here would override the lot,
+          # including the database name the test task expects.
+          DB_HOST: localhost
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          # NO master key, deliberately. It decrypts credentials.yml.enc — which
+          # holds the Scaleway keys, and so the receipts bucket and the database
+          # backups. A Dependabot run is triggered by a bot PR that changes the
+          # lockfile, and gems execute code on install; that is not a place to
+          # put it. The only thing the suite needed it for was Active Record
+          # encryption, which now has fixed fake keys in config/environments/test.rb.
+          # REDIS_URL: redis://localhost:6379/0
+        run: bin/rails db:test:prepare test test:system
+
+      - name: Keep screenshots from failed system tests
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: screenshots
+          path: ${{ github.workspace }}/tmp/screenshots
+          if-no-files-found: ignore

@@ -1,0 +1,103 @@
+<% accounts.each do |account| %>
+<% is_leaf = !accounts_with_children.include?(account.id) %>
+<% ledger_href = ledger_account_path(account) if is_leaf %>
+<tr class="<%= cycle('list-line-odd', 'list-line-even') %> <%= 'child-account' if account.parent_id.present? %> <%= 'ledger-row' if is_leaf %>">
+
+	<td class="account-code-name">
+      <% if is_leaf %>
+        <span class="leaf-display">
+          <%= link_to ledger_account_path(account), class: "ledger-link" do %>
+            <% if account.parent_id.present? %>
+              <span class="child-code"><%= account.code %></span>
+            <% else %>
+              <span class="parent-code"><%= account.code %></span>
+            <% end %>
+            <%# title only when there is one — the bookkeeper's own note on what
+                belongs in this account. tag.span drops a nil attribute. %>
+            <%= tag.span account.name, class: "account-name",
+                         title: account.description.presence %>
+          <% end %>
+        </span>
+      <% else %>
+        <span class="parent-display">
+          <span class="parent-code"><%= account.code %></span>
+          <%= tag.span account.name, class: "account-name",
+                       title: account.description.presence %>
+        </span>
+      <% end %>
+    </td>
+
+	<%= tag.td account_type_badge(account.account_type), class: "no-phone", data: { href: ledger_href } %>
+
+    <%= tag.td class: "no-phone", data: { href: ledger_href } do %>
+		<% if account.balance_account? %>
+	    	<%= account.currency %>
+	  	<% end %>
+    <% end %>
+
+    <%= tag.td class: "right amount-col", data: { href: ledger_href } do %>
+		<% if account.balance_account? %>
+			<% if is_leaf %>
+				<%= format_amount_signed(balances[account.id] || 0, account.currency) %>
+			<% else %>
+				<%= format_amount_signed(parent_balances[account.id] || 0, account.currency) %>
+			<% end %>
+		<% end %>
+	<% end %>
+
+    <td class="actions no-phone no-print">
+	<div>
+		<% unless account.locked? %>
+		<%= link_to edit_account_path(account),
+        	class: "backend_link button green" do %>
+			<span class="big-screen"><%= t("crud.edit") %></span>
+  			<svg class="small-screen">
+				<use xlink:href='#edit'></use>
+			</svg>
+		<% end %>
+		<% end %>
+<% if sudo? %>
+		<%= link_to t("crud.show"),
+			account_path(account),
+			class: "backend_link button green small75" %>
+<% end %>
+		<% if account.balance_account? && is_leaf %>
+		<button type="button"
+		        class="backend_link button green reconcile-btn"
+		        data-balance-at-url="<%= balance_at_account_path(account) %>"
+		        data-account-name="<%= account.code %> <%= account.name %>"
+		        data-currency="<%= account.currency %>">R
+		</button>
+		<% end %>
+<% if sudo? %>
+		<%= button_to account_path(account),
+			method: :delete,
+			data: {sure: "#{t('crud.sure')}#{undeletable_ids.include?(account.id) ? ' ' + t('accounts.has_entries_warning') : ''}"},
+			class: "backend_link button green" do %>
+			<span class="big-screen"><%= t("crud.delete") %></span>
+			<svg class="stroke small-screen">
+				<use xlink:href='#trash'></use>
+			</svg>
+		<% end %>
+<% elsif current_admin.full_access? && !undeletable_ids.include?(account.id) %>
+		<%= button_to account_path(account),
+			method: :delete,
+			data: { sure: t('crud.sure') },
+			class: "backend_link button green" do %>
+			<span class="big-screen"><%= t("crud.delete") %></span>
+			<svg class="stroke small-screen">
+				<use xlink:href='#trash'></use>
+			</svg>
+		<% end %>
+<% end %>
+	</div>
+	</td>
+	
+	<% if sudo? %>
+	<td><%= account.tax_scheme %></td>
+	<td><%= account.tax_category_key %></td>
+	<% end %>
+	
+
+</tr>
+<% end %>

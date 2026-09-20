@@ -1,0 +1,241 @@
+h1. How to use this app
+
+This app keeps track of your money  —  what comes in, what goes out, and what is left in each account. You set it up yourself, to suit the way your business is organised.
+
+One set of books is called an *entity*: a business, a rental property, or simply your own household. You can keep several here, side by side, and each keeps its own accounts and its own figures.
+
+Before you start, it is worth sketching a plan: what income streams do you have, what do you spend money on, and which bank accounts and credit cards do you need to track?
+
+h2. Every entry has two sides
+
+Money never simply appears or vanishes: it comes from somewhere and goes somewhere. That is why, every time you record something, the app asks you for a second account. A payment into your bank came from a sale, or a client, or your own pocket  —  and it is that second choice, not the bank line, that tells you later what your business actually earned and spent.
+
+You never have to work out which side is which. Choose the bank account you are working in, say whether money came in or went out, and pick the account that says what it was for. The app writes both sides and keeps them equal.
+
+h2. Starting with what you already have
+
+If your business already existed before you began using this app, your bank account already has money in it. That amount  —  its opening balance  —  has to be recorded once, or every balance the app shows you will be wrong by exactly that amount for ever.
+
+Record it as a transfer, and both sides come out right. First add an account of type Equity, called something like «Opening capital». Then open that account, click New Transfer, choose your bank account as the destination, enter what was in the bank on the day you started, and date it that day.
+
+Do the same for anything else that was already there  —  a credit card balance, a loan. Then start recording as normal.
+
+h2. Your accounts
+
+Accounts are the categories you use to organise your money. You create them yourself under Accounts in the menu. Think of them as labelled buckets: one for your bank account, one for rent, one for travel costs, one for sales, and so on. Balance-sheet accounts (bank accounts, loans, credit cards) carry a currency. Income and expense accounts do not  —  they just collect totals.
+
+Once your accounts are in place, day-to-day bookkeeping is simply a matter of recording what moved and where it went.
+
+h2. Adding an account
+
+Go to Accounts in the menu and click New Account. Fill in:
+
+* Name  —  whatever fits best, e.g. «HSBC CA» or «Fees» or «Travel». You can change it anytime.
+
+* Code  —  a six digit code with meaning. Accounts are ordered on the page according to the code numbers you give them.
+
+		504401: The first digit sets the type of account, and the app fills Type in for you:
+
+		1 asset · 2 liability · 3 equity · 4 income · 5 expense · 6 personal
+
+		504401: The next 2 digits are your business/entity
+
+		504401: Use digit 4 to make categories (e.g. cost of sales; car and travel expenses; rent, rates, power and insurance costs; repairs and maintenance...)
+
+		504401: The last digits are for detail (e.g. electricity, water, insurance, rent, rates...)
+
+* Type of account (with examples of what is typically in them):
+
+		Assets: Bank accounts, cash, property, equipment...
+
+		Liabilities: Credit cards, business loans, bank overdrafts, mortgages, VAT payable...
+
+		Equity: Opening capital, retained earnings, reserves...
+
+		Income: Fees, sales, service income, interest received, grants...
+
+		Expenses: Rent, travel, office costs, staff costs, professional fees (accountant, lawyer), insurance...
+
+		Personal: Drawings, private portion of split expenses, health, food...
+
+* Currency  —  only balance-sheet accounts (Asset, Liability, Equity).
+
+* Parent  —  optional. Assign a parent to group accounts together. Parent accounts never hold postings directly. They show the total of their children.
+
+Save the account and it appears in your list, ready to use.
+
+h2. Recording income  —  a deposit
+
+When money arrives in your bank account, record it as a deposit.
+
+# Go to your bank account in the Accounts list and click New Deposit.
+
+# Enter the date, a description, and the amount.
+
+# Choose the income account that describes what the money was for (e.g. Sales, Consulting fees).
+
+# Click Save.
+
+You can add more than one line if the deposit covered several income types. Each line gets its own account and amount.
+
+h2. Recording an expense  —  a withdrawal
+
+When money leaves your bank account, record it as a withdrawal. Same idea as a deposit, in reverse.
+
+# Go to your bank account and click New Withdrawal.
+
+# Enter the date, description, and amount.
+
+# Choose the expense account (e.g. Office supplies, Travel, Rent).
+
+# Click Save.
+
+You do not need to enter every transaction individually. If you spent €340 on travel over the course of a month, one withdrawal for €340 against the Travel account is perfectly fine. Add them up in a spreadsheet and enter the totals.
+
+h2. Moving money between your own accounts  —  a transfer
+
+If you move money from one bank account to another (for example, sweeping a current account into a savings account), record it as a transfer.
+
+# Go to the account the money is leaving.
+
+# Click New Transfer, choose the destination account, enter the amount, and save.
+
+If the two accounts are in different currencies, enter the amount actually received in the destination account. The app calculates the implied exchange rate on the spot and shows it to you before you save.
+
+h2. Cash basis versus accrual basis
+
+Cash basis is bookkeeping based on when the money actually comes into your account or leaves your account. Accrual basis is bookkeeping based on when you deliver or receive something, not when the money arrives or departs.
+
+	  If you are not sure which you should use, your tax office, your accountant or tax advisor can tell you.
+
+h3. Cash basis
+
+It follows the money: you record income when the money arrives, and a cost when you pay it. Nothing is entered until it reaches your bank account or wallet, so every entry is an ordinary deposit or withdrawal. A workshop run in December and paid in February shows its profit in February.
+
+h3. Accrual basis
+
+If you use accrual basis, you book income when you invoice it, against a Debtors account (asset). When the money arrives you clear that by a transfer: Debtor => Bank account. A cost goes against Creditors (liability), when the supplier invoices you. When you pay you also clear it with a transfer: Bank Account => Creditor. A workshop run in December and paid in February shows its profit in December, and your year-end balance sheet shows what is still outstanding each way.
+
+h2. Splitting a bill between business and personal use
+
+Some expenses are only partly for business. Your home broadband may be used 60% for work; your car 40% for client visits. When you record these, you can split the amount on the spot.
+
+Click the % button next to the amount. A small window opens where you:
+
+* Confirm or adjust the business-use percentage.
+
+* See the two amounts calculated automatically.
+
+* Choose the second account  —  usually a personal or owner’s drawings account.
+
+* Click Apply.
+
+The form now has two lines: the business portion on the expense account, the private portion on the personal account. Both are saved together and the books stay balanced.
+
+To change a split later, click % on either line. The window reopens with the current split filled in; make your adjustments and click Apply.
+
+h2. Attaching receipts
+
+On any deposit or withdrawal, click the + button next to a line to attach a photo or file (JPEG, PNG, PDF). If you have already uploaded a receipt separately, use the link icon to connect it instead. One line can have multiple receipts attached.
+
+h2. Repeating a previous entry
+
+For anything that recurs  —  monthly rent, a standing subscription  —  use the Copy button on an existing entry. It opens a pre-filled form. Update the date and any other changes (like amount or description) and save. Much faster than starting from scratch.
+
+h2. Correcting a mistake
+
+You can change or remove anything you entered yourself. The only accounts you cannot touch are the ones the app creates and maintains on its own, such as Retained Earnings.
+
+To edit, go to your bank account, find the entry in the ledger, and click Edit. Make your changes and save.
+
+To delete an entry, click View JE to open the journal entry behind it  —  the two-sided record the app wrote for you. Deleting takes two steps because a posted entry is part of your figures, so it has to come out of them first: click Unpost/Delete to unpost it, which turns it into a draft, hidden from your figures but not yet gone. Click delete on the unposted entry (the draft) to remove it completely.
+
+h2. Viewing your figures
+
+On the dashboard, each of your businesses has its own set of report buttons. The main ones are:
+
+* Profit & Loss  —  income minus expenses for any period you choose. This is the number your accountant or tax return will ask for.
+
+* Balance Sheet  —  a snapshot of what you own (bank balances, what you are owed) and what you owe (loans, unpaid bills) at a given date.
+
+* Trial Balance  —  every account with its running total. Useful for checking that nothing has gone in the wrong place.
+
+* Custom Reports  —  On the dashboard, create a report group and give it a name (e.g. MTD, Children, Scouts, Association)
+
+		Click the report group to select which accounts appear in it and in what order. Drag them up or down to arrange them. Save. Every report in the group follows this layout.
+
+		Add individual reports to the group (Q1, Q2 or 2026, 2027) — each one is simply a date range (from / to). Run any report to see the figures for that period, laid out exactly as you arranged them.
+
+The Reports page in the menu is a different thing: a list of every report you have saved, newest first, so you can find one again without going through the dashboard.
+
+Custom Reports have a long and a short version. The short version shows account totals only; the long version lists every individual entry beneath each account — and lets you click an entry to correct it without leaving the report.
+
+h2. Closing a financial year
+
+When your financial year is over, open the dashboard and click «Close year» in the title row of your business. The app adds up all your income and expenses for the year and moves the result into your Retained Earnings (the running total of what your business has earned over its lifetime).
+
+The first time, the app asks how your financial year runs: the calendar year (1 January to 31 December), the UK tax year (6 April to 5 April), or another year-end date you choose. Pick the one that matches your business  —  this is set once.
+
+You can only close a year once it has finished  —  if the current one is still running, the app tells you when you can close it.
+
+If you have fallen behind and more than one year is waiting, the app closes them one at a time, oldest first  —  just click «Close year» again for the next.
+
+If you later correct something dated inside a year you have already closed, the app updates that year's closing for you automatically and shows a note confirming it.
+
+h2. Checking your balance against the bank
+
+Once in a while it is worth confirming that what the app shows matches what your bank statement says. Go to your bank account and click the R button. Enter the statement date and the balance from the statement. The app shows you its own figure and the difference. Nothing is saved  —  it is just a quick sanity check. If there is a gap, an entry is probably missing or has the wrong amount.
+
+h2. Giving others access
+
+As an admin, you can give other people limited access to your books. A read-only admin can view all accounts and reports but cannot add or change anything. An upload-only admin can upload receipts from their phones. Both are created and managed from your profile page.
+
+h2. Setting up tax reporting
+
+On the dashboard, find your business and click «Set up» in the Tax row. Tick a return you want to file.
+
+If it can be sent straight from the app, you are asked whether you want to submit from here.
+
+  Say yes, and choose whose return it is, or add a new taxpayer (tax number and a name).
+
+  Say no, if you submit your figures from somewhere else (e.g. through your accountant).
+
+Save.
+
+You land on the report group of the return you ticked. Your available income and expense accounts are on the right. For each account that is relevant for this scheme, pick the correct tax category (the app tries to guess one for you), then «+» to add the account to the scheme.
+
+«Add Report» to pick a period. Your figures appear sorted as the tax form asks for them. Download as a tax CSV or have it emailed to you (including receipt links).
+
+*Repeat* to add more tax schemes.
+
+h2. Filing quarterly figures yourself
+
+Some returns can be sent straight from the app  —  UK Making Tax Digital (MTD), VAT soon  —  but not your annual tax return.
+
+# Say yes when the tax setup asks about submitting from the app, and choose or add the taxpayer. Save and assign your accounts (see «Setting up tax reporting»).
+
+# To connect to your tax authority, click Connect  —  on the dashboard or the tax setup page. Log in at the tax office.
+
+# Once connected, go to submissions, either from the dashboard or the tax setup page.
+
+# Submit the current period.
+
+The submissions page lists the periods the tax office expects, each with a button to add a report for it  —  the dates are theirs, you only name it. Useful for checking figures before you send them.
+
+Under UK MTD each update covers the tax year so far and replaces the one before (cumulative). An empty period must still be filed. Afterwards you get an email with a copy of what was sent  —  that is your record.
+
+h2. Keeping several businesses together  —  families
+
+If you keep more than one set of books here  —  a business and a household, or two small businesses  —  you can group them into a family. Your Profit & Loss, Balance Sheet and Trial Balance then cover the whole family at once, while each business still keeps its own accounts and other reports. To set it up, go to your profile page and give each business the same family name.
+
+h2. When one of your entities pays for another
+
+For this you need access to both sets of books, and they must not be in the same family  —  inside a family the reports already cover both, so nothing special is needed.
+
+Sometimes the bank account of one business (or a private one) pays a cost that really belongs to another, and both need to show it in their own books. Record it as a normal withdrawal from the account that paid  —  but for the expense, choose the account of the OTHER business. The app notices, and opens a short form asking for a gift account in the paying business and a capital account in the receiving business. Enter the amount and confirm.
+
+The app writes both sides for you  —  one entry in each business, each balanced on its own  —  and shows the other business’s lines underneath. If the gift or capital account does not exist yet, you can create it on the fly. Deleting and copying works as always, to edit click on any amount of the connected pair. This opens the form and you can make your changes.
+
+h2. Downloading your complete data
+
+For a full export, go to the dashboard and download every year-end archive, plus click to generate an on-demand one for the current items up to today — together they're the complete history, nothing missing, nothing duplicated. The complete list can also be found on the reports page.

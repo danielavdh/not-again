@@ -1,0 +1,30 @@
+<% content_for :title, @journal_entry.persisted? ? t("accounts.ledger.edit_transfer") : t("accounts.ledger.new_transfer") %>
+<% content_for :head do %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
+<% end %>
+
+<div id="new_edit_view">
+
+    <h2><%= t("accounts.entries.#{@journal_entry.persisted? ? 'edit' : 'new'}_transfer_entry") %><span class="sub-heading"><%= "#{@account.code} - #{@account.name} (#{@account.currency})" %></span></h2>
+	
+	<%= render partial: 'shared/flash' %>
+
+    <% if @journal_entry.errors.any? %>
+      <p class="error_message"><%= t("crud.errors_on_page") %></p>
+      <% @journal_entry.errors[:base].each do |msg| %>
+        <p class="error_message"><%= msg %></p>
+      <% end %>
+    <% end %>
+
+    <%= render 'accounts/transfer_entry_form', journal_entry: @journal_entry, account: @account %>
+
+    <div class="crud_navigation">
+    <%= link_to t("crud.ledger"), 
+                ledger_account_path(@account), 
+                class: "backend_link button green"  %>
+    <%= link_to t("crud.cancel"), 
+                ledger_account_path(@account), 
+                class: 'button green' %>
+    </div>
+
+</div>

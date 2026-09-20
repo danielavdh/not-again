@@ -1,0 +1,32 @@
+# One database. Solid Queue's tables live in it alongside everything else — its
+# eleven tables are in db/schema.rb, and no `connects_to` sends them anywhere
+# else. The primary/cache/queue split Rails generates by default is not used:
+# Solid Cache is not installed (cache_store is :memory_store), and a separate
+# queue database would buy load isolation this app will never need.
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 7 } %>
+
+development:
+  <<: *default
+  database: not_again_development
+
+# Host, username and password come from the environment and are EMPTY locally —
+# a Mac connects over the local socket as the OS user. CI sets all three.
+test:
+  <<: *default
+  database: <%= ENV.fetch("DB_NAME", "not_again_test") %>
+  host:     <%= ENV["DB_HOST"] %>
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_PASSWORD"] %>
+
+# DATABASE_URL wins when it is set (Scalingo, Coolify inject it); Rails ignores
+# the blank `url:` line and uses the DB_* keys when it is not (Kamal).
+production:
+  <<: *default
+  url:      <%= ENV["DATABASE_URL"] %>
+  host:     <%= ENV.fetch("DB_HOST", "localhost") %>
+  username: <%= ENV.fetch("DB_USER", "not_again_user") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "dummy_password") %>
+  database: <%= ENV.fetch("DB_NAME", "not_again_production") %>

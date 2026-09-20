@@ -1,0 +1,259 @@
+<%# app/views/acc/reports/balance_sheet.html.erb %>
+<% content_for :title, t("page.balance_sheet") %>
+
+<div class="backend_table report balance_sheet">
+	<h2>
+		<%= t("page.balance_sheet") %>
+		(<%= t(".as_of") %> <%=l @end_date, format: :short_date %>)
+		- <%= report_scope_label(@selected_entity_codes) %>
+	</h2>
+
+  <%= render partial: 'shared/flash' %>
+
+
+	<div class="controls">
+		<%= form_with url: balance_sheet_reports_path, 
+				method: :get, 
+				local: true, 
+				class: 'form_balance_sheet' do %>
+			<%= label_tag :end_date, t("crud.as_of") %>
+			<%= date_field_tag :end_date, @end_date %>
+			<%= submit_tag t("crud.generate"), class: 'button green' %>
+		<% end %>
+  </div>
+
+	<% any_data = @asset_accounts.any? || @liability_accounts.any? || @equity_accounts.any? %>
+	<% if any_data %>
+	<table>
+		<thead>
+			<tr>
+				<th><%= t("jargon.account") %></th>
+				<% @currencies_with_data.each do |curr| %>
+				<th class="right"><%= curr %></th>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<th class="right">
+				  <% if currency_selectable?(@currencies_with_data) %>
+					<%= form_with url: balance_sheet_reports_path, 
+							method: :get, 
+							local: true, 
+							style: 'display:inline' do %>
+						<%= hidden_field_tag :end_date, 
+							@end_date %>
+						<%= hidden_field_tag :entities,
+							@selected_entity_codes&.join(',') %>
+						<%= select_tag :currency,
+							currency_select_options(@currency_options, @display_selection),
+							id: 'report-currency-select', 
+							aria: { label: t("jargon.currency") } %>
+					<% end %>
+				  <% else %>
+					<%= @display_currency %>
+				  <% end %>
+					<%= render "reports/rate_source", sources: rate_sources, selectable: currency_selectable?(@currencies_with_data) %>
+				</th>
+			  <% end %>
+			</tr>
+		</thead>
+
+		<tbody>
+		<%# ASSETS %>
+		<% if @asset_accounts.any? %>
+			<tr class="list-header">
+				<td colspan="<%= report_colspan(@currencies_with_data, @display_currency) %>">
+					<%= t(".assets") %>
+				</td>
+			</tr>
+		  <% @asset_accounts.each do |account| %>
+			<% balances = @balances_by_currency[account.id] || {} %>
+			<% translated = @account_translated[account.id] || 0 %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even', name: 'assets') %>">
+				<td>
+					<%= link_to "#{account.code} - #{account.name}",
+						ledger_account_path(account), 
+						class: 'report-account-link' %>
+				</td>
+				<% @currencies_with_data.each do |curr| %>
+				<td class="right">
+					<%= (amt = balances[curr]) ? format_cents_with_currency(amt, curr) : '' %>
+				</td>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<td class="right">
+					<%= format_cents_with_currency(translated, @display_currency) %>
+				</td>
+			  <% end %>
+			</tr>
+		  <% end %>
+			<tr class="list-header">
+				<th><%= t(".total_assets") %></th>
+				<% @currencies_with_data.each do |curr| %>
+				<th class="right">
+					<%= format_cents_with_currency(@totals[:asset_by_currency][curr], curr) %>
+				</th>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<th class="right">
+					<%= format_cents_with_currency(@totals[:translated_assets], @display_currency) %>
+				</th>
+			  <% end %>
+			</tr>
+		<% end %>
+
+		<%# LIABILITIES %>
+		<% if @liability_accounts.any? %>
+			<tr class="list-header">
+				<td colspan="<%= report_colspan(@currencies_with_data, @display_currency) %>">
+					<%= t(".liabilities") %>
+				</td>
+			</tr>
+		  <% @liability_accounts.each do |account| %>
+			<% balances = @balances_by_currency[account.id] || {} %>
+			<% translated = @account_translated[account.id] || 0 %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even', name: 'liabilities') %>">
+				<td>
+					<%= link_to "#{account.code} - #{account.name}",
+						ledger_account_path(account), 
+						class: 'report-account-link' %>
+				</td>
+				<% @currencies_with_data.each do |curr| %>
+				<td class="right">
+					<%= (amt = balances[curr]) ? format_cents_with_currency(amt, curr) : '' %>
+				</td>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<td class="right">
+					<%= format_cents_with_currency(translated, @display_currency) %>
+				</td>
+			  <% end %>
+			</tr>
+		  <% end %>
+			<tr class="parent-row">
+				<td><%= t(".total_liabilities") %></td>
+				<% @currencies_with_data.each do |curr| %>
+				<td class="right">
+					<%= format_cents_with_currency(@totals[:liability_by_currency][curr], curr) %>
+				</td>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<td class="right">
+					<%= format_cents_with_currency(@totals[:translated_liabilities], @display_currency) %>
+				</td>
+			  <% end %>
+			</tr>
+		  <% end %>
+
+		<%# EQUITY %>
+		<% if @equity_accounts.any? %>
+			<tr class="list-header">
+				<td colspan="<%= report_colspan(@currencies_with_data, @display_currency) %>">
+					<%= t(".equity") %>
+				</td>
+			</tr>
+		  <% @equity_accounts.each do |account| %>
+			<% balances = @balances_by_currency[account.id] || {} %>
+			<% translated = @account_translated[account.id] || 0 %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even', name: 'equity') %>">
+				<td>
+					<%= link_to "#{account.code} - #{account.name}",
+						ledger_account_path(account), 
+						class: 'report-account-link' %>
+				</td>
+				<% @currencies_with_data.each do |curr| %>
+				<td class="right">
+					<%= (amt = balances[curr]) ? format_cents_with_currency(amt, curr) : '' %>
+				</td>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<td class="right">
+					<%= format_cents_with_currency(translated, @display_currency) %>
+				</td>
+			  <% end %>
+			</tr>
+		  <% end %>
+			<tr class="parent-row">
+				<td><%= t(".total_equity") %></td>
+				<% @currencies_with_data.each do |curr| %>
+				<td class="right">
+					<%= format_cents_with_currency(@totals[:equity_by_currency][curr], curr) %>
+				</td>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<td class="right">
+					<%= format_cents_with_currency(@totals[:translated_equity], @display_currency) %>
+				</td>
+			  <% end %>
+			</tr>
+		<% end %>
+		</tbody>
+
+		<tfoot>
+			<tr class="list-header">
+				<th><%= t(".total_liabilities_equity") %></th>
+				<% @currencies_with_data.each do |curr| %>
+				<th class="right">
+					<%= format_cents_with_currency(@totals[:liability_equity_by_currency][curr], curr) %>
+				</th>
+				<% end %>
+			  <% if translated_column?(@currencies_with_data, @display_currency) %>
+				<th class="right">
+					<%= format_cents_with_currency(@totals[:translated_liability_equity], @display_currency) %>
+				</th>
+			  <% end %>
+			</tr>
+			<%# The residual (assets − liabilities − equity). It is a translated total, so with more than one currency it sits in the translating column and the currency columns show a dash; with one currency there is no translating column and it belongs there. %>
+			<% show_translating = translated_column?(@currencies_with_data, @display_currency) %>
+			<tr class="list-header">
+				<th><%= t(".net_profit_loss") %></th>
+			  <% if show_translating %>
+				<% @currencies_with_data.each do |_| %>
+				<th class="right">—</th>
+				<% end %>
+			  <% end %>
+				<th class="right">
+					<%= format_cents_with_currency(@totals[:net_profit], @display_currency, show_zero: true) %>
+				</th>
+			</tr>
+
+			<%# That residual is really unclosed profit PLUS the FX translation	variance from cross-currency transfers. Split it so the profit	figure means what it says; the variance links to the transfers	behind it. %>
+		  <% if @fx_variance && @fx_variance != 0 %>
+			<tr class="fx-variance">
+				<td>
+					<%= fx_variance_label_link(end_date: @end_date, entities: @selected_entity_codes, currency: @display_param) %>
+				</td>
+			  <% if show_translating %>
+				<% @currencies_with_data.each do |_| %>
+				<td class="right">—</td>
+				<% end %>
+			  <% end %>
+				<td class="right">
+					<%= format_cents_with_currency(@fx_variance, @display_currency, show_zero: true) %>
+				</td>
+			</tr>
+			<tr class="list-header">
+				<th><%= t(".net_profit_loss_excl_fx") %></th>
+			  <% if show_translating %>
+				<% @currencies_with_data.each do |_| %>
+				<th class="right">—</th>
+				<% end %>
+			  <% end %>
+				<th class="right">
+					<%= format_cents_with_currency(@totals[:net_profit] - @fx_variance, @display_currency, show_zero: true) %>
+				</th>
+			</tr>
+		  <% end %>
+		</tfoot>
+	</table>
+	<% else %>
+	<p class="empty-state"><%= t(".no_entries") %></p>
+	<% end %>
+</div>
+
+<div class="crud_navigation">
+	<%= link_to t("crud.dashboard"), dashboard_path, class: 'button green' %>
+	<%= link_to t("crud.csv"),
+		balance_sheet_reports_path(format: :csv, end_date: @end_date, currency: @display_param, entities: @selected_entity_codes&.join(',')),
+		class: 'button green',
+		data: { sure: t("crud.csv_confirm") } %>
+	<button id="print-button" class="button green"><%= t("crud.print") %></button>
+</div>

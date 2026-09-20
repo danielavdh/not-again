@@ -1,0 +1,77 @@
+<%# The custom report group's account picker: a curated list, chosen and
+    ordered by hand. A TAX report has no such list — its accounts are whatever
+    carries its scheme — so it renders _tax_assignment instead. %>
+<h2><%= t("report_groups.show.template", name: @report_group.display_name) %></h2>
+
+  <div class="account-selector-container">
+    <div class="account-lists">
+      <div class="selected-accounts">
+        <h4><%= t("report_groups.show.selected_accounts") %> <span class="count">(<%= @selected_accounts.size %>)</span></h4>
+        <%= content_tag :ul, 
+  			class: "sortable-list", 
+  			data: { report_group_id: @report_group.id } do %>
+          <% @selected_accounts.each do |account| %>
+            <%= content_tag :li, 
+  				data: { account_id: account.id }, 
+  				draggable: true do %>
+              <span class="drag-handle">⋮⋮</span>
+              <span class="account-code"><%= account.code %></span>
+              <span class="account-name"><%= account.name %></span>
+              <%= content_tag :button, "×", 
+  			  	  type: "button", 
+  				  class: "remove-account", 
+  				  data: { account_id: account.id } %>
+            <% end %>
+          <% end %>
+        <% end %>
+
+        <%# The row cloned by accounts-drag-drop.js when an account is added.
+            Same markup as the ones above, written once, here — it used to be a
+            template string in the JS with the account name interpolated into
+            innerHTML. %>
+        <template id="selected-account-template">
+          <li draggable="true">
+            <span class="drag-handle">⋮⋮</span>
+            <span class="account-code"></span>
+            <span class="account-name"></span>
+            <button type="button" class="remove-account">×</button>
+          </li>
+        </template>
+      </div>
+
+      <div class="available-accounts">
+        <h4><%= t("report_groups.show.available_accounts") %></h4>
+        <input type="text" class="filter-input" aria-label="<%= t('report_groups.show.filter_placeholder') %>" placeholder="<%= t('report_groups.show.filter_placeholder') %>">
+        <div class="accounts-tree">
+          <% @accounts_by_parent.sort.each do |parent_code, accounts| %>
+            <% parent = @parent_accounts[parent_code] %>
+            <details open>
+              <summary><%= parent_code %> - <%= parent&.name || t("report_groups.show.unknown") %></summary>
+              <ul>
+                <% accounts.each do |account| %>
+                  <% selected = @selected_account_ids.include?(account.id) %>
+                  <%= content_tag :li, 
+                      data: { 
+  						  account_id: account.id, 
+  						  code: account.code, 
+  						  name: account.name.downcase },
+                      	  class: (selected ? 'already-selected' : nil) do %>
+                    <%= content_tag :button, (selected ? '✓' : '+'),
+                        type: "button",
+                        class: "add-account",
+                        disabled: selected,
+                        data: { 
+  							account_id: account.id, 
+  							account_code: account.code, 
+  							account_name: account.name } %>
+                    <span class="account-code"><%= account.code %></span>
+                    <span class="account-name"><%= account.name %></span>
+                  <% end %>
+                <% end %>
+              </ul>
+            </details>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>

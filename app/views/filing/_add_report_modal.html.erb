@@ -1,0 +1,35 @@
+<%# locals: (entity:, scheme:, ob:, period_start:) %>
+
+<%# Same shape as the report modal on the dashboard, with one difference: the
+    dates are the AUTHORITY's, so they are shown rather than chosen. A report
+    meant to mirror an obligation has to match it.
+
+    Only the name is yours. Nothing is created until this is submitted — the
+    link that used to sit here created a record just by being followed. %>
+
+<dialog id="filingReportModal-<%= ob[:period_id] %>" class="report-modal">
+  <%= form_with url: filing_report_entity_path(entity), method: :post do |f| %>
+    <%= hidden_field_tag :scheme, scheme %>
+    <%= hidden_field_tag :period_id, ob[:period_id] %>
+
+    <h4 class="modal-title"><%= t("filing.report.title") %></h4>
+
+    <div class="modal-body">
+      <div class="field">
+        <%= label_tag "filing_report_name_#{ob[:period_id]}", t("filing.report.name") %>
+        <%= text_field_tag :name, nil, id: "filing_report_name_#{ob[:period_id]}",
+                           placeholder: t("filing.report.name_placeholder"), required: true %>
+      </div>
+      <p class="hint">
+        <%= t("filing.report.period",
+              start_date: l(period_start, format: :short_date),
+              end_date:   l(ob[:end_date], format: :short_date)) %>
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="button" data-modal-close><%= t("crud.cancel") %></button>
+      <%= submit_tag t("crud.create"), class: "button green" %>
+    </div>
+  <% end %>
+</dialog>

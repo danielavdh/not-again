@@ -1,0 +1,9 @@
+<p><%= t('.greeting', name: @admin.username) %></p>
+<p><%= t('.body', entity: @entity.name, start_date: @start_date, end_date: @end_date) %></p>
+<p><%= t('.attached') %></p>
+<ul>
+  <% @file_list.each do |filename| %>
+    <li><strong><%= filename %></strong></li>
+  <% end %>
+</ul>
+<p><%= t('.url_expiry', filename: @receipt_filename) %></p>

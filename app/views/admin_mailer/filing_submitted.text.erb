@@ -1,0 +1,4 @@
+<%= t('.greeting', name: @admin.username) %>
+
+<%= t('.body', authority: @authority, entity: @entity.name, scheme: @scheme_label, period: "#{l(@start_d, format: :short_date)} – #{l(@end_d, format: :short_date)}") %>
+<%= t('.view_link') %>: <%= @view_url %>

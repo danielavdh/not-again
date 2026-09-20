@@ -1,0 +1,10 @@
+<%= t('.greeting', name: @admin.username) %>
+
+<%= t('.body', entity: @entity.name, start_date: @start_date, end_date: @end_date) %>
+
+<%= t('.attached') %>
+<% @file_list.each do |filename| %>
+- <%= filename %>
+<% end %>
+
+<%= t('.url_expiry', filename: @receipt_filename) %>

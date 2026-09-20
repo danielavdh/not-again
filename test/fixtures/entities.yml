@@ -1,0 +1,25 @@
+# Entities fixtures
+personal:
+  name: "Boss"
+  code: "01"
+  active: true
+
+spouse:
+  name: "Spouse"
+  code: "03"
+  active: true
+
+daughter:
+  name: "Daughter"
+  code: "04"
+  active: true
+
+family_biz:
+  name: "Family Business"
+  code: "10"
+  active: true
+
+standalone:
+  name: "Standalone Corp"
+  code: "05"
+  active: true

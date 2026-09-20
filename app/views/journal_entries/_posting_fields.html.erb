@@ -1,0 +1,65 @@
+<tr class="posting-row <%= cycle('list-line-odd', 'list-line-even') %>">
+  <%= pf.hidden_field :id %>
+  <%= pf.hidden_field :deduction_pair_id, class: 'posting-deduction-pair-id' %>
+  <%= pf.hidden_field :cross_entity_link_id, class: 'posting-cross-entity-link-id' %>
+  <%= pf.hidden_field :deduction_percentage, class: 'posting-deduction-pct-field' %>
+
+  <td class="account_id">
+    <%= pf.select :account_id,
+                  options_for_select(@account_options, pf.object.account_id),
+                  { include_blank: t("attrs.account_blank") },
+                  class: 'form-select posting-account',
+                  aria: { label: t("jargon.account") },
+                  data: { tomselect: true, tomselect_placeholder: t("attrs.tom_blank") } %>
+    <span class="error_message"><%= pf.object.errors[:account_id].to_sentence %></span>
+  </td>
+
+  <td class="posting-currency-display">
+	<% if pf.object.account&.balance_account? %>
+	  <%= pf.object.currency %>
+	<% elsif pf.object.cross_entity_link_id.blank? %>
+	  <%# A 601 gift bridge is not splittable — no % button. %>
+	  <button type="button"
+	  		  class="split-btn"
+			  title='<%= t("accounts.split.title") %>'
+			  data-action="open-split-modal"
+	          data-deduction-pct="<%= pf.object.deduction_percentage || pf.object.account&.deduction_percentage %>"><%= pf.object.deduction_percentage ? "#{pf.object.deduction_percentage}%" : "%" %>
+	  </button>
+	<% end %>
+  </td>
+
+  <td class="input-cell entry_type">
+    <%= pf.select :entry_type, [[t("jargon.debit"), 'debit'], [t("jargon.credit"), 'credit']], {}, aria: { label: t("attrs.type") } %>
+  </td>
+
+  <td class="input-cell right">
+    <%# A 601 gift bridge amount is set only via the modal — locked here. %>
+    <%= pf.text_field :amount_display,
+                  value: pf.object.amount_display_formatted,
+                  class: 'posting-amount',
+				  inputmode: 'decimal',
+				  readonly: pf.object.cross_entity_link_id.present?,
+				  aria: { label: t("attrs.amount") },
+				  placeholder: pf.object.errors[:amount_display].first %>
+	<span class="error_message">
+		<%= pf.object.errors[:amount_display].to_sentence %>
+	</span>
+  </td>
+
+  <td class="input-cell no-phone">
+    <%= pf.text_field :description, aria: { label: t("attrs.description") } %>
+  </td>
+
+  <td class="input-cell no-phone">
+    <%= pf.text_field :reference, aria: { label: t("attrs.reference") }, placeholder: t("attrs.posting_placeholder") %>
+  </td>
+
+  <td class="posting-receipt no-phone">
+	<%= render partial: 'receipts/posting_receipt_widget',
+	           locals: { pf: pf } %>
+  </td>
+
+  <td class="input-cell">
+    <%= pf.check_box :_destroy, class: 'posting-destroy', aria: { label: t("crud.remove_posting") } %>
+  </td>
+</tr>

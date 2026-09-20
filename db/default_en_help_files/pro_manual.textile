@@ -1,0 +1,125 @@
+h1. Advanced bookkeeping
+
+This guide covers the parts of the app that go beyond the bank entry screens and is an extension to the contents of the "user guide":/easy_manual. It assumes you are comfortable with double-entry bookkeeping and also want to work directly with journal entries.
+
+One set of books is an *entity*  —  a business, a rental property, a household. Every account belongs to one, through digits 2 and 3 of its code, and that is what decides which entries may sit together.
+
+h2. How the app records transactions
+
+Every transaction in the app is a journal entry. A journal entry contains two or more posting lines  —  each posting hits one account for either a debit or a credit amount. Total debits must equal total credits: the entry must balance. The bank entry form (deposits, withdrawals, transfers) creates journal entries on your behalf.
+
+h2. The journal entries screen
+
+Journal Entries in the menu shows every entry across all accounts, regardless of which bank account they belong to. Each row shows the entry ID, date, the balance-sheet account involved, memo, reference, amount, and status (posted or draft). You can search by description, filter by date range, and download the full list as a CSV.
+
+h2. Creating a journal entry directly
+
+Click New Entry. Fill in:
+
+* Date.
+
+* Memo  —  a short description of the entry as a whole.
+
+* Reference  —  optional free text, e.g. an invoice number or bank reference. Appears in the journal entries list and CSV exports.
+
+Then add posting lines. Each line needs an account, a description, a debit or credit amount, and a currency if the account carries one. Keep adding lines until the entry balances. The app will not let you save an unbalanced entry.
+
+Two further rules apply, and neither is negotiable:
+
+* *Every entry needs at least one balance-sheet line*  —  asset, liability or equity. A reclass purely between two expense accounts is refused; move it through the balance-sheet account it came from, or correct the original entry.
+
+* *Once an entry contains any income, expense or personal line, it may contain only ONE balance-sheet account.* «The bank paid the rent and petty cash paid the stamps» is two entries, not one.
+
+An entry made only of balance-sheet lines is not subject to the second rule, and may name as many accounts as you like. That is what makes opening balances possible  —  see below.
+
+h2. Editing, copying, unposting & deleting an entry
+
+Editing: Click Edit on any entry  —  from the journal list, a ledger, or a long report  —  change it, and save.
+
+Copying: On the journal entry detail page, click Copy. The app creates a new draft with the same accounts, descriptions, and amounts. Update the date, adjust any figures, and save. Useful for recurring adjustments that follow the same pattern each period.
+
+Unposting: An entry posts itself because it balances  —  and it cannot be saved unless it does, so every saved entry starts posted. Unpost it to exclude it from your figures  —  it becomes a draft, excluded from ledgers and reports, until you post it again.
+
+Deleting requires unposting first, as a safety step: Unpost the entry, then the Delete button appears.
+
+h2. What cannot be changed
+
+Almost everything you enter can be corrected. Three things cannot:
+
+* An account’s *first three digits* once it has postings  —  its type and its entity. Moving it would rewrite history in two sets of books. Digit 4 onwards stays editable, so you can still regroup an account later.
+
+* A *balance-sheet account’s currency* once it has postings. Income, expense and personal accounts have no currency of their own  —  they take it from the balance-sheet line in the same entry.
+
+* *Retained Earnings* accounts, which the year-end flow creates and maintains. They cannot be edited or deleted, and they take no bank entries.
+
+h2. Opening balances
+
+When you start using the app part-way through a year, enter the balance of every balance-sheet account as it stood on your start date. Create one journal entry dated on that date. Add a posting for each bank account, loan, credit card, and equity account. The balancing line goes to an equity account such as Opening Capital. Post it. From that point on, your figures are complete.
+
+This is the one entry that names many balance-sheet accounts at once, and it is allowed precisely because it has no income or expense lines in it.
+
+An entry balances *per currency*, not overall. If your books hold more than one, give each currency its own balancing equity line, or make one entry per currency. The single exception is a two-line transfer between two balance-sheet accounts in different currencies, where the amounts are meant to differ.
+
+h2. Adjusting entries
+
+For anything that does not flow through a bank account  —  depreciation, accruals, prepayments, provisions  —  create a journal entry directly. For example: debit Depreciation expense and credit Accumulated depreciation. These entries keep your P&L and balance sheet accurate without touching a bank account ledger.
+
+h2. Ending a year
+
+To close a business year, click «Close year» from the dashboard.
+
+h3. Automated Flow
+
+Setup (once per entity): Choose your business year.
+
+The app calculates the net movement on all income and expense accounts for the period, posts a balanced closing entry per currency, and credits or debits the net result to a locked Retained Earnings account  —  one per currency. If the Retained Earnings account does not yet exist, it is created automatically. These accounts are locked: they cannot be edited or deleted.
+
+If you subsequently post, edit, or unpost any entry dated within an already closed period, the app recalculates the closing entry for that period automatically. You will see a confirmation notice. This only applies to closing entries generated by «Close year».
+
+If you deleted a service-generated closing entry and need to rebuild it: make your corrections, then click «Close year» again for that period.
+
+h3. Doing it manually
+
+Click «I will do it myself». Run a Trial Balance for the full financial year. For each income and expense account, reverse the balance into a new journal entry dated the last day of the year: income accounts DR, expense accounts CR. The balancing line goes to Retained Earnings  —  CR for a net profit, DR for a net loss. Post it.
+
+Note: the app does not track manually built closing entries. If you later post, edit, or unpost any entry dated within a closed period, the app will not adjust your closing entry  —  regardless of whether the accounts involved are locked. You will need to update the closing entry yourself.
+
+h2. Families  —  consolidating multiple entities
+
+Group entities into a family to consolidate their reporting: On your profile page, join entities into a family by giving them the same family name. Profit & Loss, Balance Sheet and Trial Balance span a whole family; any other reports can remain separate. A family also relaxes the one-entity-per-entry rule  —  within a family a single journal entry may touch more than one member. For entries across families see below.
+
+h2. Cross-entity entries between separate businesses
+
+Two entities in different families cannot share a journal entry  —  each has to balance on its own, so the app writes two and links them. How to trigger it is in "When one of your businesses pays for another":/easy_manual; what follows is what that page does not say.
+
+The two balance-sheet accounts involved must be in the same currency.
+
+The pair moves together, but not symmetrically. Deleting the paying entry deletes both. Deleting the gift posting also deletes the linked entry. Deleting the linked entry unlinks and removes only that side, leaving the gift as a plain posting. Copying duplicates the whole pair with a fresh link.
+
+A balance-account transfer or a loan is not this: book it in each business separately.
+
+h2. Adding a Currency
+
+To add currencies, we need a mechanism to decide on exchange rates. The app provides hmrc, ecb, bundesbank and estv rates by default, fetched according to the rules of those tax authorities. This means that in your reports you can translate all you entries into Euro, GBP or CHF and know that the rates are acceptable to the tax authorities of Germany, UK and Switzerland, and any countries of the Eurozone that accept the ecb monthly rates.
+
+Adding more authorities is not possible for an admin, it requires the developer who is providing you with this app. The app is set up in a way that should make this task very easy and straight forward for the developer.
+
+Adding more currencies on the other hand is something any admin with full access can do. This will allow you to create balance accounts in those currencies, and your entries will show in the reports.
+
+Please note: If a currency you added is not carried by one or more of the available authority driven exchange rates, you will be asked to enter your own rates, with evidence. (e.g. ecb does not carry UAH in 2026, should the ecb add it, the app will pick it up automatically, and you will get an email notification.)
+
+Adding your own rates is possible, some country allow this, sometimes it is necessary because historical rates were not available to be fetched. Manually entered rates always override fetched rates. These rates will be fixed to your business(es)/entities which you select when you enter the rates. They are also fixed to the period you enter. You should not switch from manually entered rates to fetched rates inside the same tax period, most authorities allow only 1 source per tax period.
+
+h2. Tax schemes and categories
+
+A tax scheme is one return  —  SA105, Anlage V. Ticking it on the tax setup page and saving creates a report group for that return, and the group keeps itself up to date: it holds whichever accounts carry that scheme, so an account you tag later appears without you having to come back and add it.
+
+A category is one box on the tax form. Several accounts can point at the same box  —  Grundsteuer, Hausversicherung and Hausgeld all belong to Kennzahl 52  —  and the report adds them together into that box. An account, though, belongs to exactly one scheme. That is why an account you have already assigned does not appear in another scheme's list.
+
+The category offered for unassigned accounts is a guess made from the account's name, matched against keywords based on the tax form itself. If it is wrong, select the correct one. Nothing is stored until you confirm it.
+
+Once an account is on the assigned side there is no confirming step: changing its category takes effect at once, because the account is already committed to the scheme.
+
+Tagging carries no date. Add an account to a scheme, or change its category, and every report recomputes  —  including ones you have already looked at for earlier periods. What you have already SENT does not change: each submission is archived exactly as it went. Under a cumulative regime such as UK MTD the correction reaches the authority with the next update, because that update resends the year so far.
+
+Setting up a taxpayer, connecting to the tax authority and sending a period  —  see "Setting up tax reporting":/easy_manual and "Filing quarterly figures yourself":/easy_manual.

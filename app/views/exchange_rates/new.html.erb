@@ -1,0 +1,20 @@
+<% content_for :title, t("exchange_rates.new_title") %>
+
+  <%= render partial: 'shared/flash' %>
+
+
+<div id="new_edit_view">
+
+    <% if @exchange_rate.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <h1><%= t("exchange_rates.new_title") %></h1>
+
+    <%= render 'form', exchange_rate: @exchange_rate %>
+
+    <div class="crud_navigation">
+    <%= link_to t("crud.back"), exchange_rates_path, class: "backend_link button green"  %>
+    </div>
+
+</div>

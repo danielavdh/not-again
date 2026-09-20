@@ -1,0 +1,19 @@
+<% content_for :title, t(".edit_account") %>
+
+<div id="new_edit_view">
+
+    <h1><%= t(".edit_account") %>: <%= @account.code %></h1>
+
+    <% if @account.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <%= render 'form', account: @account %>
+
+</div>
+<div class="crud_navigation">
+	<%= link_to t("crud.accounts"), accounts_path, class: "backend_link button green"  %>
+	<%= link_to t("crud.show"), account_path(@account), class: "backend_link button green"  %>
+</div>
+
+

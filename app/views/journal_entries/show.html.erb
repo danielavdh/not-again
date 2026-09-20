@@ -1,0 +1,223 @@
+<%# Journal Entry Detail %>
+<% content_for :title, t("jargon.journal_entry") %>
+
+
+<div class="backend_table journal_entries show">
+
+	<%= render partial: 'shared/flash' %>
+
+	<h2><%= t("jargon.journal_entry") %> #<%= @journal_entry.id %></h2>
+
+	<div class="controls je-show">
+		<div>
+			<span><%= t("attrs.date") %>:</span> 
+			<%= format_date(@journal_entry.entry_date) %>
+		</div>
+		<% if @journal_entry.closing_entry? %>
+			<div>
+				<span><%= t("attrs.closing_entry") %>:</span>
+				<% if @journal_entry.period_start && @journal_entry.period_end %>
+					<%= format_date(@journal_entry.period_start) %>
+					&thinsp;&mdash;&thinsp;
+					<%= format_date(@journal_entry.period_end) %>
+				<% end %>
+			</div>
+		<% end %>
+		<div class="status-actions">
+			<span><%= t("attrs.status") %>:</span>
+		    <% if @journal_entry.posted? %>
+		      <span class="status-pill success">
+				  <%= t("attrs.posted") %>
+			  </span>
+		    <% else %>
+		      <span class="status-pill draft">
+				  <%= t("attrs.draft") %>
+			  </span>
+		      <% if @journal_entry.balanced? %>
+		        <%= button_to t("attrs.post_entry"),
+						post_journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]),
+						method: :patch,
+						class: 'button green no-print' %>
+		      <% else %>
+		        <span class="error-text">
+					<%= t("attrs.not_balanced") %>
+				</span>
+		      <% end %>
+		    <% end %>
+		</div>
+		<% if @journal_entry.memo.present? %>
+			<div>
+				<span><%= t("attrs.memo") %>:</span> 
+				<%= @journal_entry.memo %>
+			</div>
+		<% end %>
+		<% if @journal_entry.journal_reference.present? %>
+			<div>
+				<span><%= t("attrs.je_ref") %>:</span> 
+				<%= @journal_entry.journal_reference %>
+			</div>
+		<% end %>
+	</div>
+
+
+
+
+
+  <h2><%= t("page.postings") %></h2>
+  <table class="table" id="postings-table">
+    <thead>
+      <tr>
+      	<th><%= t("jargon.account") %></th>
+      	<th><%= t("attrs.type") %></th>
+      	<th><%= t("attrs.description") %></th>
+      	<th class="big-screen"><%= t("attrs.reference") %></th>
+      	<!-- <th class="right"><%#= t("attrs.amount") %></th> -->
+      	<th class="right"><%= t("jargon.debit") %></th>
+      	<th class="right"><%= t("jargon.credit") %></th>
+      	<th><%= t("jargon.currency") %></th>
+		<th><%= t("receipts.receipts") %></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% @sorted_postings.each do |p| %>
+      <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+
+        <td><%= p.account&.code %> - <%= p.account&.name %></td>
+
+        <td><%= posting_type_badge(p.entry_type) %></td>
+
+        <td><%= p.description %></td>
+
+        <td class="big-screen"><%= p.reference %></td>
+
+        <td class="right">
+			<%= p.debit? ? format_amount_signed(p.amount, (p.currency || @display_currency)) : '' %>
+		</td>
+
+        <td class="right">
+			<%= p.credit? ? format_amount_signed(p.amount, (p.currency || @display_currency)) : '' %>
+		</td>
+
+        <td><%= p.currency %></td>
+
+		<td class="posting-receipts-show">
+		  <% if p.receipts.any? %>
+		    <% p.receipts.each do |receipt| %>
+		      <img src="<%= receipt.thumbnail_url %>"
+		           alt="<%= receipt.title %>"
+		           class="receipt-mini-thumb"
+		           data-receipt-id="<%= receipt.id %>"
+		           data-action="preview-receipt"
+		           title="<%= receipt.display_filename %>">
+		    <% end %>
+		  <% end %>
+		</td>
+
+      </tr>
+    <% end %>
+    </tbody>
+
+  	<tfoot>
+  	  <tr>
+  	    <th colspan="4"><%= t("jargon.total") %></th>
+  	    <th class="right">
+			<%= @display_currency ? format_amount_signed(@journal_entry.total_debits, @display_currency) : '—' %>
+		</th>
+  	    <th class="right">
+			<%= @display_currency ? format_amount_signed(@journal_entry.total_credits, @display_currency) : '—' %>
+		</th>
+  	    <th></th>
+  	    <th></th>
+  	  </tr>
+  	</tfoot>
+  </table>
+
+  <%# the linked entry/entries on the other business's side, read-only mirror. %>
+  <% if @cross_entity_linked.present? %>
+      <% @cross_entity_linked.each do |linked| %>
+        <h2>
+		  <%= t("entities.cross_entity.linked_entry") %>
+          <% if @linked_entity_label[linked.id] %> &mdash; <%= @linked_entity_label[linked.id] %><% end %>
+          <%= link_to journal_entry_path(linked), class: "backend_link" do %>
+            (<%= t("jargon.journal_entry") %> #<%= linked.id %>)
+          <% end %>
+        </h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th><%= t("jargon.account") %></th>
+              <th><%= t("attrs.type") %></th>
+              <th><%= t("attrs.description") %></th>
+              <th class="right"><%= t("jargon.debit") %></th>
+              <th class="right"><%= t("jargon.credit") %></th>
+              <th><%= t("jargon.currency") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% linked.postings.sort_by { |p| p.account&.code.to_s }.each do |p| %>
+              <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+                <td><%= p.account&.code %> - <%= p.account&.name %></td>
+                <td><%= posting_type_badge(p.entry_type) %></td>
+                <td><%= p.description %></td>
+                <td class="right"><%= p.debit? ? format_amount_signed(p.amount, (p.currency || linked.display_currency)) : '' %></td>
+                <td class="right"><%= p.credit? ? format_amount_signed(p.amount, (p.currency || linked.display_currency)) : '' %></td>
+                <td><%= p.currency %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+  <% end %>
+
+</div>
+
+
+<div class="crud_navigation no-print">
+  <% if params[:from] == 'ledger' && params[:account_id].present? %>
+	<%= link_to t("crud.ledger"), ledger_account_path(params[:account_id]), class: 'button green' %>
+  <% else %>
+	<%= link_to t("crud.je"), journal_entries_path, class: 'button green' %>
+  <% end %>
+  	<button id="print-button"
+			class="button green"><%= t("crud.print") %></button>
+  <%# A closing entry the year-end flow generated is maintained by it: rebuilt on
+      every change inside its period. Nothing here is a user action — the way back
+      is reopening the year, which takes all currencies of the period together. %>
+  <% unless @journal_entry.posts_to_locked_retained_earnings? %>
+  <% if current_admin.full_access_pro? %>
+	<%= link_to t("crud.copy"),
+			duplicate_journal_entry_path(@journal_entry),
+			class: 'button green' %>
+  <% end %>
+  <% if @journal_entry.posted? %>
+    <% if current_admin.full_access_pro? %>
+	<%= link_to t("crud.edit"),
+			edit_journal_entry_path(@journal_entry),
+			class: 'button green' %>
+    <% end %>
+	<%= button_to t("crud.unpost"),
+			unpost_journal_entry_path(@journal_entry,
+										 from: params[:from],
+										 account_id: params[:account_id]),
+		    method: :patch,
+			class: 'button green' %>
+  <% else %>
+	<%# A draft entry exists only pre-delete. %>
+	<%= button_to t("crud.post"),
+			post_journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]),
+		    method: :patch,
+			class: 'button green' %>
+    <%= button_to t("crud.delete"),
+			journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]),
+			method: :delete,
+			data: { sure: t("crud.sure") },
+			class: 'button red' %>
+  <% end %>
+  <% end %>
+</div>
+
+<%= render partial: 'receipts/preview_modal' %>
+
+
+
+

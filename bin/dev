@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+if ! gem list foreman -i --silent; then
+  echo "Installing foreman..."
+  gem install foreman
+fi
+
+# This runs the processes defined in Procfile.dev
+# Port 3000 by default, which is what a stranger expects. Override it locally
+# with PORT — origin is scheme+host+PORT, so a different port is a different
+# origin, and nothing (service workers, cookies, localStorage) bleeds between
+# apps sharing localhost.
+exec foreman start -f Procfile.dev -p "${PORT:-3000}"

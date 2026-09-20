@@ -1,0 +1,7 @@
+<%= t('.greeting', name: @admin.username) %>
+
+<%= t('.body', entity: @entity.name, years: @retention_years) %>
+
+<%= t('.deadline', date: l(@deletion_due_on, format: :long)) %>
+
+<%= t('.closing') %>

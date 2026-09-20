@@ -1,0 +1,4 @@
+<p><%= t('.greeting', name: @parent_admin.username) %></p>
+<p><%= t('.body', coadmin: @coadmin.email_address, entity: @entity.name, start: l(@start_date, format: :short_date), end: l(@end_date, format: :short_date)) %></p>
+<p><%= t('.sent_to', email: @coadmin.email_address) %></p>
+<p><%= t('.warning') %></p>

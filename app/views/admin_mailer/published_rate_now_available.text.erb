@@ -1,0 +1,7 @@
+<%= t(".greeting", name: @admin.username) %>
+
+<%= t(".body", code: @code, source: RateSourceConfig.label_for(@source)) %>
+
+<%= t(".your_own", entities: @entities.join(", ")) %>
+
+<%= t(".your_choice") %>

@@ -1,0 +1,13 @@
+<%# entities: a comma-joined entity-code string. Reports auto-expand any member
+    to its whole consolidation family, so one member or the whole set both work. %>
+<span>
+  <%= link_to t("reports.overview.trial_balance"),
+        trial_balance_reports_path(entities: entities),
+        class: "backend_link button blue" %>
+  <%= link_to t("reports.overview.profit_loss"),
+        profit_loss_reports_path(entities: entities),
+        class: "backend_link button blue" %>
+  <%= link_to t("reports.overview.balance_sheet"),
+        balance_sheet_reports_path(entities: entities),
+        class: "backend_link button blue" %>
+</span>

@@ -1,0 +1,18 @@
+<% content_for :title, t(".title") %>
+
+<div id="new_edit_view">
+
+    <% if @entity.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <h1><%= t(".title") %></h1>
+
+    <%= render 'form', entity: @entity %>
+
+    <div class="crud_navigation">
+    <%= link_to "← Back", entities_path, class: "backend_link"  %> |
+    <%= link_to "Show", edit_entity_path(@entity), class: "backend_link"  %>
+    </div>
+
+</div>

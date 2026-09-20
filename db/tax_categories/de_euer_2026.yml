@@ -1,0 +1,422 @@
+country_code: de
+scheme: euer
+tax_year: 2026
+authority: ELSTER
+position: 10
+# What this scheme is CALLED, in the language of its own form — the name shown
+# in the scheme picker and in every message about it. Never translated: an
+# Anlage V is called Anlage V by everyone who fills one in.
+scheme_label: "EÜR"
+report_name: "DE-EÜR"
+currency: EUR
+# Anlage EÜR — Einnahmenüberschussrechnung nach § 4 Abs. 3 EStG.
+#
+# Transcribed box by box from the Vordruck named in `source:` below — that block
+# is the record of which edition, and its checksum. The BMF publishes each year's
+# Vordruck in the August or September of that year.
+#
+# export_column is the KENNZAHL — what ELSTER transmits, and stable from year to
+# year. Zeile numbers move and live in notes.
+#
+# Two keys that used to be here have been removed because the boxes do not
+# exist:
+#   * "betriebseinnahmen_ermaessigt" (ermäßigt besteuert, 7 %). The Vordruck
+#     splits income by Kleinunternehmer (111), land- und forstwirtschaftlicher
+#     Durchschnittssatz (104), umsatzsteuerpflichtig (112) and steuerfrei bzw.
+#     nicht steuerbar (103). 19 % and 7 % both go to Kennzahl 112.
+#   * "sonstige_einnahmen". Every income box on the Vordruck is specific; there
+#     is no catch-all.
+# "umsatzsteuer" was one key trying to be two boxes and is now
+# vereinnahmte_umsatzsteuer (140, Einnahme) and gezahlte_umsatzsteuer (186,
+# Ausgabe).
+#
+# Not included: the Land- und Forstwirtschaft boxes (104, and the Überträge from
+# Anlage LuF), the Investitionsabzugs- and Rücklagen machinery, and the
+# pauschalierte Fahrten zwischen Wohnung und Betriebsstätte (142/176). Those are
+# computations or regimes, not things you book to an account.
+#
+# One caveat on the "beschränkt abziehbar" boxes (Zeilen 62 bis 67): the form
+# has two columns there, nicht abziehbar and abziehbar, and a category carries
+# one figure. The Kennzahl below is the ABZIEHBARE column, so an account mapped
+# to Bewirtungsaufwendungen should hold the deductible share (70 %) — or the
+# split belongs in two accounts.
+# No index_url: the BMF publishes each year's Vordruck at a fresh DATED url
+# (2025-08-29-anlage-EUER-2025.pdf) and formulare-bfinv.de is a JavaScript app
+# that cannot be read. So the file check runs and the new-year check does not —
+# declared honestly rather than pointed at a page that would never fire.
+# Provenance, and what TaxFormWatchJob watches monthly: it re-fetches
+# `url`, compares the checksum, and looks on `index_url` for a later edition
+# than `form_year`. A 404 is reported (the address moved); a timeout is not.
+source:
+  form_year: 2025
+  url:       "https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Einkommensteuer/2025-08-29-anlage-EUER-2025.pdf?__blob=publicationFile&v=3"
+  sha256:    "b69b5cf0a982d28cbce20644e67677a36be0bc494bed4fae2310dc08230a1599"
+  local:     "docs/anlage-euer-2025.pdf"
+categories:
+  - key: betriebseinnahmen_kleinunternehmer
+    label: "Betriebseinnahmen als umsatzsteuerlicher Kleinunternehmer"
+    keywords: ["kleinunternehmer"]
+    export_column: "111"
+    section: income
+    position: 10
+    notes: "Nach § 19 Abs. 1 UStG, ohne Beträge laut Zeilen 18 bis 22 — Zeile 12 (Vordruck 2025)"
+
+  - key: betriebseinnahmen_umsatzsteuerpflichtig
+    label: "Umsatzsteuerpflichtige Betriebseinnahmen"
+    keywords: ["umsatzsteuerpflichtige", "umsatzerlöse", "erlöse", "honorare"]
+    export_column: "112"
+    section: income
+    position: 20
+    notes: "Regelsatz und ermäßigter Satz gemeinsam; ohne solche zum ermäßigten Steuersatz von 0 % — Zeile 15"
+
+  - key: betriebseinnahmen_umsatzsteuerfrei
+    label: "Umsatzsteuerfreie oder nicht umsatzsteuerbare Betriebseinnahmen"
+    keywords: ["umsatzsteuerfreie", "steuerfreie einnahmen"]
+    export_column: "103"
+    section: income
+    position: 30
+    notes: "§ 4 UStG, nicht steuerbar, ermäßigter Steuersatz von 0 % nach § 12 Abs. 3 UStG, oder Steuerschuld des Leistungsempfängers nach § 13b UStG — Zeile 16"
+
+  - key: vereinnahmte_umsatzsteuer
+    label: "Vereinnahmte Umsatzsteuer"
+    keywords: ["vereinnahmte umsatzsteuer"]
+    export_column: "140"
+    section: income
+    position: 40
+    notes: "Sowie Umsatzsteuer auf unentgeltliche Wertabgaben — Zeile 17"
+
+  - key: erstattete_umsatzsteuer
+    label: "Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer"
+    keywords: ["erstattete umsatzsteuer", "umsatzsteuererstattung"]
+    export_column: "141"
+    section: income
+    position: 50
+    notes: "Die Regelung zum 10-Tageszeitraum, § 11 Abs. 1 Satz 2 EStG, ist zu beachten — Zeile 18"
+
+  - key: veraeusserung_anlagevermoegen
+    label: "Veräußerung oder Entnahme von Anlagevermögen"
+    keywords: ["anlagenverkauf", "veräußerung", "anlagenabgang"]
+    export_column: "102"
+    section: income
+    position: 60
+    notes: "Zeile 19"
+
+  - key: private_kfz_nutzung
+    label: "Private Kfz-Nutzung"
+    keywords: ["private kfz-nutzung", "privatnutzung kfz"]
+    export_column: "106"
+    section: income
+    position: 70
+    notes: "Zeile 20"
+
+  - key: sonstige_entnahmen
+    label: "Sonstige Sach-, Nutzungs- und Leistungsentnahmen"
+    keywords: ["entnahmen", "sachentnahmen", "eigenverbrauch"]
+    export_column: "108"
+    section: income
+    position: 80
+    notes: "Zeile 21"
+
+  - key: betriebsausgabenpauschale
+    label: "Betriebsausgabenpauschale für bestimmte Berufsgruppen"
+    keywords: ["betriebsausgabenpauschale"]
+    export_column: "195"
+    section: expenses
+    position: 100
+    notes: "Zeile 24"
+
+  - key: waren_rohstoffe
+    label: "Waren, Rohstoffe und Hilfsstoffe"
+    keywords: ["wareneingang", "rohstoffe", "hilfsstoffe", "material"]
+    export_column: "100"
+    section: expenses
+    position: 110
+    notes: "Einschließlich der Nebenkosten — Zeile 27"
+
+  - key: fremdleistungen
+    label: "Bezogene Fremdleistungen"
+    keywords: ["fremdleistungen", "subunternehmer"]
+    export_column: "110"
+    section: expenses
+    position: 120
+    notes: "Zeile 29"
+
+  - key: personalkosten
+    label: "Ausgaben für eigenes Personal"
+    keywords: ["personalkosten", "löhne", "gehälter", "lohnkosten"]
+    export_column: "120"
+    section: expenses
+    position: 130
+    notes: "Z. B. Gehälter, Löhne und Versicherungsbeiträge — Zeile 30"
+
+  - key: afa_grundstuecke
+    label: "Absetzung für Abnutzung auf Grundstücke und grundstücksgleiche Rechte"
+    keywords: ["afa grundstücke", "abschreibung grundstücke"]
+    export_column: "136"
+    section: expenses
+    position: 140
+    notes: "Übertrag aus Zeile 22 der Anlage AVEÜR — Zeile 31"
+
+  - key: afa_immaterielle_wirtschaftsgueter
+    label: "Absetzung für Abnutzung auf immaterielle Wirtschaftsgüter"
+    keywords: ["afa immaterielle", "immaterielle wirtschaftsgüter"]
+    export_column: "131"
+    section: expenses
+    position: 150
+    notes: "Übertrag aus Zeile 37 der Anlage AVEÜR — Zeile 32"
+
+  - key: afa_bewegliche_wirtschaftsgueter
+    label: "Absetzung für Abnutzung auf bewegliche Wirtschaftsgüter"
+    keywords: ["afa bewegliche", "abschreibung bewegliche"]
+    export_column: "130"
+    section: expenses
+    position: 160
+    notes: "Übertrag aus Zeile 63 der Anlage AVEÜR — Zeile 33"
+
+  - key: geringwertige_wirtschaftsgueter
+    label: "Aufwendungen für geringwertige Wirtschaftsgüter"
+    keywords: ["geringwertige", "gwg"]
+    export_column: "132"
+    section: expenses
+    position: 170
+    notes: "Nach § 6 Abs. 2 EStG — Zeile 36"
+
+  - key: miete_geschaeftsraeume
+    label: "Miete und Pacht für Geschäftsräume und betrieblich genutzte Grundstücke"
+    keywords: ["büromiete", "geschäftsraum", "raumkosten", "pacht"]
+    export_column: "150"
+    section: expenses
+    position: 180
+    notes: "Ohne häusliches Arbeitszimmer — Zeile 39"
+
+  - key: doppelte_haushaltsfuehrung
+    label: "Aufwendungen für doppelte Haushaltsführung"
+    keywords: ["doppelte haushaltsführung"]
+    export_column: "152"
+    section: expenses
+    position: 190
+    notes: "Z. B. Miete — Zeile 40"
+
+  - key: sonstige_grundstuecksaufwendungen
+    label: "Sonstige Aufwendungen für betrieblich genutzte Grundstücke"
+    keywords: ["grundstücksaufwendungen", "grundstückskosten"]
+    export_column: "151"
+    section: expenses
+    position: 200
+    notes: "Ohne Schuldzinsen und AfA — Zeile 41"
+
+  - key: telekommunikation
+    label: "Aufwendungen für Telekommunikation"
+    keywords: ["telefon", "telekommunikation", "internet", "mobilfunk"]
+    export_column: "280"
+    section: expenses
+    position: 210
+    notes: "Z. B. Telefon, Internet — Zeile 43"
+
+  - key: reisekosten
+    label: "Übernachtungs- und Reisenebenkosten bei Geschäftsreisen"
+    keywords: ["reisekosten", "übernachtung", "reisenebenkosten"]
+    export_column: "221"
+    section: expenses
+    position: 220
+    notes: "Geschäftsreisen des Steuerpflichtigen — Zeile 44"
+
+  - key: fortbildung
+    label: "Fortbildungskosten"
+    keywords: ["fortbildung", "schulung", "seminar", "weiterbildung"]
+    export_column: "281"
+    section: expenses
+    position: 230
+    notes: "Ohne Reisekosten — Zeile 45"
+
+  - key: rechts_steuerberatung
+    label: "Kosten für Rechts- und Steuerberatung, Buchführung"
+    keywords: ["steuerberatung", "rechtsberatung", "buchführung", "anwalt"]
+    export_column: "194"
+    section: expenses
+    position: 240
+    notes: "Zeile 46"
+
+  - key: miete_leasing_bewegliche
+    label: "Miete und Leasing für bewegliche Wirtschaftsgüter"
+    keywords: ["leasing", "mietkosten bewegliche"]
+    export_column: "222"
+    section: expenses
+    position: 250
+    notes: "Ohne Kfz — Zeile 47"
+
+  - key: erhaltungsaufwendungen
+    label: "Erhaltungsaufwendungen"
+    keywords: ["erhaltungsaufwand", "instandhaltung", "reparatur"]
+    export_column: "225"
+    section: expenses
+    position: 260
+    notes: "Z. B. Instandhaltung, Wartung, Reparatur; ohne solche für Gebäude und Kfz — Zeile 48"
+
+  - key: beitraege_versicherungen
+    label: "Beiträge, Gebühren, Abgaben und Versicherungen"
+    keywords: ["versicherung", "beiträge", "gebühren", "abgaben"]
+    export_column: "223"
+    section: expenses
+    position: 270
+    notes: "Ohne solche für Gebäude und Kfz — Zeile 49"
+
+  - key: edv_kosten
+    label: "Laufende EDV-Kosten"
+    keywords: ["edv", "software", "hosting", "it kosten"]
+    export_column: "228"
+    section: expenses
+    position: 280
+    notes: "Z. B. Beratung, Wartung, Reparatur — Zeile 50"
+
+  - key: arbeitsmittel
+    label: "Arbeitsmittel"
+    keywords: ["arbeitsmittel", "werkzeug"]
+    export_column: "229"
+    section: expenses
+    position: 290
+    notes: "Z. B. Bürobedarf, Porto, Fachliteratur — Zeile 51"
+
+  - key: abfallbeseitigung
+    label: "Kosten für Abfallbeseitigung und Entsorgung"
+    keywords: ["abfall", "entsorgung", "müll"]
+    export_column: "226"
+    section: expenses
+    position: 300
+    notes: "Zeile 52"
+
+  - key: verpackung_transport
+    label: "Kosten für Verpackung und Transport"
+    keywords: ["verpackung", "transport", "fracht", "porto"]
+    export_column: "227"
+    section: expenses
+    position: 310
+    notes: "Zeile 53"
+
+  - key: werbekosten
+    label: "Werbekosten"
+    keywords: ["werbung", "werbekosten", "marketing"]
+    export_column: "224"
+    section: expenses
+    position: 320
+    notes: "Z. B. Inserate, Werbespots, Plakate — Zeile 54"
+
+  - key: schuldzinsen_anlagevermoegen
+    label: "Schuldzinsen zur Finanzierung von Anlagevermögen"
+    keywords: ["schuldzinsen anlagevermögen", "investitionsdarlehen"]
+    export_column: "232"
+    section: expenses
+    position: 330
+    notes: "Anschaffungs- und Herstellungskosten von Wirtschaftsgütern des Anlagevermögens, ohne häusliches Arbeitszimmer — Zeile 55"
+
+  - key: uebrige_schuldzinsen
+    label: "Übrige Schuldzinsen"
+    keywords: ["schuldzinsen", "kontokorrentzinsen", "zinsaufwand"]
+    export_column: "234"
+    section: expenses
+    position: 340
+    notes: "Zeile 56"
+
+  - key: vorsteuer
+    label: "Gezahlte und nach § 15 UStG abziehbare Vorsteuerbeträge"
+    keywords: ["vorsteuer"]
+    export_column: "185"
+    section: expenses
+    position: 350
+    notes: "Zeile 57"
+
+  - key: gezahlte_umsatzsteuer
+    label: "An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer"
+    keywords: ["gezahlte umsatzsteuer", "umsatzsteuerzahlung"]
+    export_column: "186"
+    section: expenses
+    position: 360
+    notes: "Die Regelung zum 10-Tageszeitraum, § 11 Abs. 2 Satz 2 EStG, ist zu beachten — Zeile 58"
+
+  - key: uebrige_betriebsausgaben
+    label: "Übrige unbeschränkt abziehbare Betriebsausgaben"
+    keywords: ["sonstige betriebsausgaben", "übrige betriebsausgaben"]
+    export_column: "183"
+    section: expenses
+    position: 370
+    notes: "Auch zurückgezahlte Hilfen und Zuschüsse aufgrund der Corona-Pandemie — Zeile 60"
+
+  - key: geschenke
+    label: "Geschenke"
+    keywords: ["geschenke"]
+    export_column: "174"
+    section: expenses
+    position: 400
+    notes: "Abziehbarer Anteil; beschränkt abziehbare Betriebsausgabe — Zeile 62"
+
+  - key: bewirtung
+    label: "Bewirtungsaufwendungen"
+    keywords: ["bewirtung"]
+    export_column: "175"
+    section: expenses
+    position: 410
+    notes: "Abziehbarer Anteil (70 %); beschränkt abziehbare Betriebsausgabe — Zeile 63"
+
+  - key: verpflegungsmehraufwand
+    label: "Verpflegungsmehraufwendungen"
+    keywords: ["verpflegungsmehraufwand", "verpflegung", "spesen"]
+    export_column: "171"
+    section: expenses
+    position: 420
+    notes: "Abziehbarer Anteil; beschränkt abziehbare Betriebsausgabe — Zeile 64"
+
+  - key: haeusliches_arbeitszimmer
+    label: "Aufwendungen für ein häusliches Arbeitszimmer"
+    keywords: ["arbeitszimmer"]
+    export_column: "172"
+    section: expenses
+    position: 430
+    notes: "Abziehbarer Anteil; beschränkt abziehbare Betriebsausgabe — Zeile 65"
+
+  - key: tagespauschale_homeoffice
+    label: "Tagespauschale für die Tätigkeit in der häuslichen Wohnung"
+    keywords: ["homeoffice", "tagespauschale", "home office"]
+    export_column: "163"
+    section: expenses
+    position: 440
+    notes: "Zeile 66"
+
+  - key: sonstige_beschraenkt_abziehbar
+    label: "Sonstige beschränkt abziehbare Betriebsausgaben"
+    keywords: ["beschränkt abziehbar"]
+    export_column: "177"
+    section: expenses
+    position: 450
+    notes: "Abziehbarer Anteil — Zeile 67"
+
+  - key: kfz_leasing
+    label: "Leasingkosten für Kraftfahrzeuge"
+    keywords: ["kfz-leasing", "fahrzeugleasing"]
+    export_column: "144"
+    section: expenses
+    position: 500
+    notes: "Zeile 68"
+
+  - key: kfz_steuern_versicherungen
+    label: "Steuern, Versicherungen und Maut"
+    keywords: ["kfz-steuer", "kfz-versicherung", "maut"]
+    export_column: "145"
+    section: expenses
+    position: 510
+    notes: "Zeile 69"
+
+  - key: kfz_sonstige_fahrtkosten
+    label: "Sonstige tatsächliche Fahrtkosten"
+    keywords: ["fahrtkosten", "tankstelle", "kraftstoff", "benzin"]
+    export_column: "146"
+    section: expenses
+    position: 520
+    notes: "Ohne AfA und Zinsen, z. B. Reparaturen, Wartungen, Treibstoff, Flugstrecken, öffentliche Verkehrsmittel — Zeile 70"
+
+  - key: kfz_nutzungseinlage
+    label: "Fahrtkosten für nicht zum Betriebsvermögen gehörende Fahrzeuge"
+    keywords: ["nutzungseinlage", "privatfahrzeug"]
+    export_column: "147"
+    section: expenses
+    position: 530
+    notes: "Nutzungseinlage — Zeile 71"

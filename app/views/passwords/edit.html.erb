@@ -1,0 +1,39 @@
+<div class="password_form">
+	
+		<%= render partial: "shared/flash" %>
+
+    <%= form_with url: password_path(params[:token]), method: :put, local: true do |f| %>
+        <fieldset>
+
+            <legend><%= t('.title') %></legend>
+
+            <p>
+            <%= f.label :password, t(".new_password") %>
+						<%= f.password_field :password, 
+								required: true, 
+								autocomplete: "new-password", 
+								placeholder: t('.new_password'), 
+								maxlength: 72, 
+								class: 'input_login',
+								id: "loginName" %>
+            </p>
+            <p>
+            <%= f.label :password_confirmation, t(".confirm_password") %><br />
+						<%= f.password_field :password_confirmation, 
+								required: true, 
+								autocomplete: "new-password", 
+								placeholder: t('.confirm_password'), 
+								maxlength: 72, 
+								class: 'input_login' %>
+            </p>
+
+            <div class="p_submit">
+            		<%= f.submit t(".submit"), class: "submit_login" %>
+            </div>						
+
+        </fieldset>
+    <% end %>
+</div>
+
+
+

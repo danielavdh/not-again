@@ -1,0 +1,179 @@
+country_code: de
+scheme: vermietung
+tax_year: 2026
+authority: ELSTER
+position: 20
+# What this scheme is CALLED, in the language of its own form — the name shown
+# in the scheme picker and in every message about it. Never translated: an
+# Anlage V is called Anlage V by everyone who fills one in.
+scheme_label: "Vermietung und Verpachtung (Anlage V)"
+report_name: "DE-Vermietung"
+currency: EUR
+# Anlage V — Einkünfte aus Vermietung/Verpachtung bebauter Grundstücke.
+#
+# Transcribed box by box from the Vordruck named in `source:` below — that block
+# is the record of which edition, and its checksum. The BMF publishes each year's
+# Vordruck in the August or September of that year, so the newest in existence is
+# usually the previous calendar year's.
+#
+# export_column is the KENNZAHL — the small green number printed in the box.
+# Kennzahlen are what ELSTER transmits and they survive from year to year; the
+# Zeile numbers shift whenever the head of the form grows, so those live in
+# notes, where being a year out is harmless.
+#
+# One key per box, deliberately. Where the form puts several kinds of cost in
+# one box — Grundsteuer, Hausversicherung and Hausgeld are all "Umgelegte
+# Kosten", Kennzahl 52 — that is ONE category with several accounts pointing at
+# it, which is exactly what the mapping is for. Three keys would put the same
+# box in the dropdown three times under three names.
+#
+# Not included: the multi-year distribution of Erhaltungsaufwendungen (Kz 38–42)
+# and the special depreciation regimes (§ 7b, Kz 70; §§ 7h/7i, Kz 31). Those are
+# carried-forward computations, not something you book to an account.
+# Neither url nor index_url: the copy in docs/ came from Daniela, and the BMF's
+# canonical address for it is not known. Only the local checksum is recorded, so
+# nothing is watched automatically — see the README. Supply a url when one is
+# found and the watch starts working with no other change.
+# Provenance, and what TaxFormWatchJob watches monthly: it re-fetches
+# `url`, compares the checksum, and looks on `index_url` for a later edition
+# than `form_year`. A 404 is reported (the address moved); a timeout is not.
+source:
+  form_year: 2025
+  sha256:    "b01fd59b98ea6193d789a689e43fbd93f48ae576633de61c5c7e1665f1d0deb7"
+  local:     "docs/anlage-v-einkuenfte-aus-vermietungverpachtung-bebauter-grundstuecke-2025.pdf"
+categories:
+  - key: mieteinnahmen
+    label: "Mieteinnahmen für Wohnungen"
+    keywords: ["kaltmiete", "wohnungsmiete", "mieteinnahmen wohnungen"]
+    export_column: "01"
+    section: income
+    position: 10
+    notes: "Ohne Umlagen, ohne Umsatzsteuer — Zeilen 13 bis 15 (Vordruck 2025)"
+
+  - key: einnahmen_andere_raeume
+    label: "Einnahmen für andere Räume"
+    keywords: ["andere räume", "gewerbliche vermietung"]
+    export_column: "02"
+    section: income
+    position: 20
+    notes: "Gewerbe, Praxis, Lager; ohne Umlagen, ohne Umsatzsteuer — Zeilen 16 bis 18"
+
+  - key: mieteinnahmen_angehoerige
+    label: "Einnahmen für an Angehörige vermietete Wohnungen"
+    keywords: ["angehörige", "verbilligte vermietung"]
+    export_column: "03"
+    section: income
+    position: 30
+    notes: "Verbilligte Vermietung; ohne Umlagen, ohne Umsatzsteuer — Zeile 19"
+
+  - key: umlagen_nebenkosten
+    label: "Einnahmen aus umgelegten Neben- und Betriebskosten"
+    keywords: ["nebenkosten", "umlagen", "betriebskosten"]
+    export_column: "04"
+    section: income
+    position: 40
+    notes: "Laufende Kosten, die auf die Zeilen 15 und 18 entfallen, z. B. Wasser, Allgemeinstrom, Müllabfuhr, Zentralheizung — Zeile 20"
+
+  - key: mieteinnahmen_frueherer_jahre
+    label: "Vereinnahmte Mieten für frühere Jahre und verrechnete Mietkautionen"
+    keywords: ["mietkaution", "frühere jahre", "mietnachzahlung"]
+    export_column: "06"
+    section: income
+    position: 50
+    notes: "Einschließlich der auf das Kalenderjahr entfallenden Mietvorauszahlungen aus Baukostenzuschüssen — Zeile 25"
+
+  - key: einnahmen_garagen_werbeflaechen
+    label: "Einnahmen aus Vermietung von Garagen, Werbeflächen, Grund und Boden"
+    keywords: ["garage", "stellplatz", "werbefläche"]
+    export_column: "07"
+    section: income
+    position: 60
+    notes: "Auch Grund und Boden für Kioske und dergleichen — Zeile 26"
+
+  - key: vereinnahmte_umsatzsteuer
+    label: "Vereinnahmte Umsatzsteuer"
+    keywords: ["vereinnahmte umsatzsteuer"]
+    export_column: "09"
+    section: income
+    position: 70
+    notes: "Nur bei umsatzsteuerpflichtiger Vermietung — Zeile 27"
+
+  - key: erstattete_umsatzsteuer
+    label: "Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer"
+    keywords: ["erstattete umsatzsteuer"]
+    export_column: "10"
+    section: income
+    position: 80
+    notes: "Nur bei umsatzsteuerpflichtiger Vermietung — Zeile 28"
+
+  - key: afa_gebaeude
+    label: "Absetzung für Abnutzung für Gebäude"
+    keywords: ["gebäudeabschreibung", "afa gebäude", "abschreibung gebäude"]
+    export_column: "30"
+    section: expenses
+    position: 100
+    notes: "Lineare oder degressive Gebäude-AfA — Zeilen 33 bis 35"
+
+  - key: afa_bewegliche_wirtschaftsgueter
+    label: "Absetzung für Abnutzung für Wirtschaftsgüter, die keine Gebäude sind"
+    keywords: ["afa einrichtung", "abschreibung einrichtung"]
+    export_column: "60"
+    section: expenses
+    position: 110
+    notes: "Bewegliche Wirtschaftsgüter, z. B. Einbauküche, Waschmaschine — Zeilen 42 bis 45"
+
+  - key: schuldzinsen
+    label: "Schuldzinsen"
+    keywords: ["schuldzinsen", "darlehenszinsen", "hypothek"]
+    export_column: "33"
+    section: expenses
+    position: 120
+    notes: "Ohne Tilgungsbeträge — Zeilen 46 bis 48"
+
+  - key: geldbeschaffungskosten
+    label: "Geldbeschaffungskosten"
+    keywords: ["geldbeschaffung", "damnum", "disagio"]
+    export_column: "34"
+    section: expenses
+    position: 130
+    notes: "Z. B. Schätz-, Notar- und Grundbuchgebühren — Zeilen 49 bis 51"
+
+  - key: erhaltungsaufwand
+    label: "Voll abzuziehende Erhaltungsaufwendungen"
+    keywords: ["erhaltungsaufwand", "reparatur", "instandhaltung", "renovierung"]
+    export_column: "36"
+    section: expenses
+    position: 140
+    notes: "Reparatur und Instandhaltung, einschließlich Entnahmen aus der Erhaltungsrücklage — Zeile 55"
+
+  - key: umgelegte_kosten
+    label: "Umgelegte Kosten"
+    keywords: ["umgelegte kosten"]
+    export_column: "52"
+    section: expenses
+    position: 150
+    notes: "Z. B. Grundsteuer, Straßenreinigung, Müllabfuhr, Wasserversorgung, Entwässerung, Hausbeleuchtung, Heizung, Warmwasser, Schornsteinreinigung, Hausversicherungen, Hauswart, Treppenhausreinigung, Fahrstuhl — Zeilen 73 bis 75"
+
+  - key: nicht_umgelegte_kosten
+    label: "Nicht umgelegte Kosten"
+    keywords: ["nicht umgelegte", "hausgeld"]
+    export_column: "48"
+    section: expenses
+    position: 160
+    notes: "Z. B. Verwaltungskosten, Bank- und Kontoführungsgebühren; ohne Erhaltungsrücklage — Zeilen 76 bis 78"
+
+  - key: gezahlte_umsatzsteuer
+    label: "An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer"
+    keywords: ["gezahlte umsatzsteuer"]
+    export_column: "58"
+    section: expenses
+    position: 170
+    notes: "Nur bei umsatzsteuerpflichtiger Vermietung — Zeile 79"
+
+  - key: sonstige_kosten
+    label: "Sonstige Kosten"
+    keywords: ["sonstige kosten", "verwaltungskosten", "grundsteuer"]
+    export_column: "49"
+    section: expenses
+    position: 180
+    notes: "Alles Übrige, z. B. Rechts- und Steuerberatung, Fahrtkosten zum Objekt — Zeilen 80 bis 82"

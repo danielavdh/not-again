@@ -1,0 +1,131 @@
+<% content_for :title, "Kennerhandbuch" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>Fortgeschrittene Buchhaltung</h1>
+
+  <p>Dieses Handbuch behandelt die Teile der App, die über die Bankbuchungsmaske hinausgehen, und ergänzt den Inhalt des <%= link_to "Benutzerhandbuchs", easy_manual_path %>. Es setzt voraus, dass du mit der doppelten Buchführung vertraut bist und auch direkt mit Journalbuchungen arbeiten möchtest.</p>
+  <p>Ein Satz Bücher ist eine <strong>Einheit</strong> &thinsp;&mdash;&thinsp; ein Unternehmen, eine vermietete Immobilie, ein Haushalt. Jedes Konto gehört über die Ziffern 2 und 3 seiner Nummer zu genau einer, und das entscheidet, welche Buchungen zusammen in einer Buchung stehen dürfen.</p>
+
+  <nav class="guide-toc" aria-label="Inhalt">
+    <ul>
+      <% if current_admin&.sudo? %>
+      <li><a href="#sudo">Sudo</a></li>
+      <% end %>
+      <li><a href="#how-recorded">Wie die App Transaktionen erfasst</a></li>
+      <li><a href="#je-screen">Die Journalbuchungsübersicht</a></li>
+      <li><a href="#creating">Eine Journalbuchung direkt erstellen</a></li>
+      <li><a href="#editing">Bearbeiten, Kopieren, Entbuchen und Löschen einer Buchung</a></li>
+      <li><a href="#cannot-change">Was sich nicht ändern lässt</a></li>
+      <li><a href="#opening-balances">Eröffnungsbilanz</a></li>
+      <li><a href="#adjusting">Korrekturbuchungen</a></li>
+      <li><a href="#year-end">Ein Jahr abschließen</a></li>
+      <li><a href="#families">Familien &thinsp;&mdash;&thinsp; mehrere Einheiten konsolidieren</a></li>
+      <li><a href="#cross-entity">Buchungen zwischen getrennten Unternehmen</a></li>
+      <li><a href="#add-currency">Eine Währung hinzufügen</a></li>
+      <li><a href="#tax-setup">Steuerschemata und Kategorien</a></li>
+    </ul>
+  </nav>
+
+  <% if current_admin&.sudo? %>
+  <h2 id="sudo">Sudo</h2>
+  <p>Sudo ist das Admin-Konto mit Kontrolle über die Installation selbst, nicht über einen einzelnen Satz Bücher. Sudo hält keine eigenen Einheiten und ist kein Buchhalter. Was folgt, ist Verwaltung, keine Buchhaltung:</p>
+  <ul>
+    <li><strong>Admins</strong> &thinsp;&mdash;&thinsp; sieht jeden Admin der Installation, legt Admins an, bearbeitet und löscht sie. Setzt die Zwei-Faktor-Authentifizierung eines Admins zurück und zwingt ihn, sie neu einzurichten &thinsp;&mdash;&thinsp; nützlich, wenn er sein Gerät verliert. Verknüpft einen beliebigen Admin mit einer beliebigen Einheit: Das gibt diesem Admin "Vollzugriff" auf das Erfassen, Ändern und Löschen von Buchungen, das Ändern von Einstellungen, das Hinzufügen von Co-Admins usw.</li>
+    <li><strong>Einheiten</strong> &thinsp;&mdash;&thinsp; sieht jede Einheit der Installation, aktive und verwaiste. Legt neue Einheiten an und bearbeitet eine vollständig: benennt sie um, verschiebt sie zwischen Familien. Löscht eine verwaiste Einheit endgültig, mit allen ihren Daten.</li>
+    <li><strong>Sprachen</strong> &thinsp;&mdash;&thinsp; legt eine Sprache an, bearbeitet, veröffentlicht sie und macht die Veröffentlichung rückgängig, einschließlich der Vorschau der Rechts- und Handbuchtexte eines Entwurfs, bevor sie sonst jemand sehen kann.</li>
+    <li><strong>Währungen</strong> &thinsp;&mdash;&thinsp; legt eine ungenutzte Währung für die ganze Installation still (oder reaktiviert sie): Sie gilt dann als nicht mehr existierend, verschwindet aus jeder Dropdown-Liste, behält aber ihr Symbol bei allem, was sie bereits verwendet hat. Bearbeitet Währungscodes; beim Speichern zieht sich die Änderung durch alle Buchungen, Konten und Kurse. Bearbeitet das Währungssymbol.</li>
+    <li><strong>Wechselkurse</strong> &thinsp;&mdash;&thinsp; sieht und korrigiert die gemeinsamen Kurszeilen, aus denen die Berichte jeder Einheit schöpfen, direkt an Ort und Stelle, ohne dass sich still und leise eine private, manuelle Zeile davon abspaltet.</li>
+    <li><strong>Installationsdokumente</strong> &thinsp;&mdash;&thinsp; lädt Dokumente hoch, die auf der Rechtliches-Seite erscheinen, etwa die EU-Konformitätserklärung.</li>
+    <li><strong>Belege</strong> &thinsp;&mdash;&thinsp; durchsucht und lädt Belege über alle Einheiten hinweg hoch.</li>
+    <li><strong>Konten</strong> &thinsp;&mdash;&thinsp; Die Liste zeigt zwei zusätzliche Spalten: Steuerschema und Steuerkategorie-Schlüssel.</li>
+    <li>Sudo selbst vergeben oder entziehen (solange noch mindestens einer übrig bleibt).</li>
+  </ul>
+  <% end %>
+
+  <h2 id="how-recorded">Wie die App Transaktionen erfasst</h2>
+  <p>Jede Transaktion in der App ist eine Journalbuchung. Eine Journalbuchung enthält zwei oder mehr Buchungszeilen &thinsp;&mdash;&thinsp; jede Zeile trifft ein Konto entweder auf der Soll- oder der Habenseite. Die Summe der Sollbuchungen muss der Summe der Habenbuchungen entsprechen: die Buchung muss ausgeglichen sein. Die Bankbuchungsmaske (Einzahlungen, Auszahlungen, Überweisungen) erstellt Journalbuchungen automatisch.</p>
+
+  <h2 id="je-screen">Die Journalbuchungsübersicht</h2>
+  <p>Journalbuchungen im Menü zeigt alle Buchungen über alle Konten hinweg, unabhängig davon, zu welchem Bankkonto sie gehören. Jede Zeile enthält die Buchungs-ID, das Datum, das betroffene Bilanzkonto, Memo, Referenz, Betrag und Status (gebucht oder Entwurf). Du kannst nach Beschreibung suchen, nach Datumsbereich filtern und die vollständige Liste als CSV herunterladen.</p>
+
+  <h2 id="creating">Eine Journalbuchung direkt erstellen</h2>
+  <p>Klicke auf Neue Buchung. Fülle aus:</p>
+  <ul>
+    <li>Datum.</li>
+    <li>Memo &thinsp;&mdash;&thinsp; eine kurze Beschreibung der Buchung als Ganzes.</li>
+    <li>Referenz &thinsp;&mdash;&thinsp; optionaler Freitext, z.&thinsp;B. eine Rechnungsnummer oder Bankreferenz. Erscheint in der Buchungsliste und in CSV-Exporten.</li>
+  </ul>
+  <p>Füge dann Buchungszeilen hinzu. Jede Zeile braucht ein Konto, eine Beschreibung, einen Soll- oder Habenbetrag und eine Währung, sofern das Konto eine trägt. Füge Zeilen hinzu, bis die Buchung ausgeglichen ist. Die App lässt das Speichern einer nicht ausgeglichenen Buchung nicht zu.</p>
+  <p>Zwei weitere Regeln gelten, beide ohne Ausnahme:</p>
+  <ul>
+    <li><strong>Jede Buchung braucht mindestens eine Bilanzzeile</strong> &thinsp;&mdash;&thinsp; Aktiva, Passiva oder Eigenkapital. Eine reine Umbuchung zwischen zwei Aufwandskonten wird abgelehnt; nimm den Weg über das Bilanzkonto, von dem der Betrag kam, oder korrigiere die ursprüngliche Buchung.</li>
+    <li><strong>Sobald eine Buchung eine Ertrags-, Aufwands- oder Privatzeile enthält, darf sie nur EIN Bilanzkonto enthalten.</strong> &laquo;Die Bank zahlte die Miete und die Portokasse die Briefmarken&raquo; sind zwei Buchungen, nicht eine.</li>
+  </ul>
+  <p>Eine Buchung, die nur aus Bilanzzeilen besteht, fällt nicht unter die zweite Regel und darf beliebig viele Konten nennen. Genau das macht die Eröffnungsbilanz möglich &thinsp;&mdash;&thinsp; siehe unten.</p>
+
+  <h2 id="editing">Bearbeiten, Kopieren, Entbuchen und Löschen einer Buchung</h2>
+  <p>Bearbeiten: Klicke bei einer beliebigen Buchung auf Bearbeiten &thinsp;&mdash;&thinsp; aus der Journalliste, einem Konto oder einem ausführlichen Bericht &thinsp;&mdash;&thinsp; ändere sie und speichere.</p>
+  <p>Kopieren: Klicke auf der Detailseite der Buchung auf Kopieren. Die App erstellt einen neuen Entwurf mit denselben Konten, Beschreibungen und Beträgen. Aktualisiere das Datum, passe Beträge an und speichere. Nützlich für wiederkehrende Anpassungen, die jede Periode demselben Muster folgen.</p>
+  <p>Entbuchen: Eine Buchung bucht sich selbst, weil sie ausgeglichen ist &thinsp;&mdash;&thinsp; und sie lässt sich gar nicht speichern, wenn sie es nicht ist, also ist jede gespeicherte Buchung zunächst gebucht. Entbuche sie, um sie aus deinen Zahlen auszuschließen &thinsp;&mdash;&thinsp; sie wird zu einem Entwurf, ausgeschlossen von deinen Konten und Berichten, bis du sie wieder buchst.</p>
+  <p>Löschen erfordert zunächst das Entbuchen, als Sicherheitsschritt: Entbuche die Buchung, dann erscheint der Löschen-Button.</p>
+
+  <h2 id="cannot-change">Was sich nicht ändern lässt</h2>
+  <p>Fast alles, was du erfasst, lässt sich korrigieren. Drei Dinge nicht:</p>
+  <ul>
+    <li>Die <strong>ersten drei Ziffern</strong> eines Kontos, sobald es Buchungen hat &thinsp;&mdash;&thinsp; sein Typ und seine Einheit. Ein Verschieben würde die Geschichte in zwei Büchern umschreiben. Ab Ziffer 4 bleibt alles änderbar, du kannst ein Konto also später umgruppieren.</li>
+    <li>Die <strong>Währung eines Bilanzkontos</strong>, sobald es Buchungen hat. Ertrags-, Aufwands- und Privatkonten haben keine eigene Währung &thinsp;&mdash;&thinsp; sie übernehmen sie von der Bilanzzeile derselben Buchung.</li>
+    <li><strong>Gewinnrücklagen</strong>-Konten, die der Jahresabschluss anlegt und pflegt. Sie lassen sich weder bearbeiten noch löschen und nehmen keine Bankbuchungen an.</li>
+  </ul>
+
+  <h2 id="opening-balances">Eröffnungsbilanz</h2>
+  <p>Wenn du die App mitten im Jahr zu nutzen beginnst, gib den Saldo jedes Bilanzkontos so ein, wie er an deinem Startdatum war. Erstelle eine Journalbuchung mit diesem Datum. Füge eine Buchungszeile für jedes Bankkonto, Darlehen, jede Kreditkarte und jedes Eigenkapitalkonto hinzu. Die Ausgleichszeile geht auf ein Eigenkapitalkonto wie Anfangskapital. Buche sie. Ab diesem Zeitpunkt sind deine Zahlen vollständig.</p>
+  <p>Das ist die eine Buchung, die viele Bilanzkonten auf einmal nennt, und sie ist genau deshalb erlaubt, weil keine Ertrags- oder Aufwandszeile darin steht.</p>
+  <p>Eine Buchung gleicht sich <strong>je Währung</strong> aus, nicht insgesamt. Führst du mehrere Währungen, gib jeder ihre eigene Ausgleichszeile im Eigenkapital, oder mach je Währung eine eigene Buchung. Die einzige Ausnahme ist eine zweizeilige Umbuchung zwischen zwei Bilanzkonten in verschiedenen Währungen, bei der die Beträge absichtlich abweichen.</p>
+
+  <h2 id="adjusting">Korrekturbuchungen</h2>
+  <p>Für alles, was nicht über ein Bankkonto läuft &thinsp;&mdash;&thinsp; Abschreibungen, Rückstellungen, aktive und passive Rechnungsabgrenzungsposten &thinsp;&mdash;&thinsp; erstelle eine Journalbuchung direkt. Zum Beispiel: Soll Abschreibungsaufwand, Haben Kumulierte Abschreibungen. Diese Buchungen halten deine GuV und Bilanz korrekt, ohne das Bankkontenjournal zu berühren.</p>
+
+  <h2 id="year-end">Ein Jahr abschließen</h2>
+  <p>Um dein Geschäftsjahr abzuschließen, klicke im Dashboard auf &laquo;Jahr abschließen&raquo;.</p>
+
+  <h3>Automatischer Ablauf</h3>
+  <p>Einrichtung (einmal pro Einheit): Wähle dein Geschäftsjahr.</p>
+  <p>Die App berechnet die Nettobewegung aller Ertrags- und Aufwandskonten für den Zeitraum, bucht eine ausgeglichene Abschlussbuchung pro Währung und schreibt das Nettoresultat einem gesperrten Konto für Gewinnrücklagen gut oder belastet es &thinsp;&mdash;&thinsp; eines pro Währung. Falls das Konto noch nicht vorhanden ist, wird es automatisch erstellt. Diese Konten sind gesperrt: sie können weder bearbeitet noch gelöscht werden.</p>
+  <p>Wenn du danach eine Buchung mit einem Datum innerhalb eines bereits abgeschlossenen Zeitraums buchst, stornierst oder bearbeitest, berechnet die App die Abschlussbuchung für diesen Zeitraum automatisch neu. Du erhältst eine Bestätigungsmeldung. Dies gilt nur für Abschlussbuchungen, die von &laquo;Jahr abschließen&raquo; erstellt wurden.</p>
+  <p>Wenn du eine automatisch erstellte Abschlussbuchung gelöscht hast und sie neu aufbauen musst: nimm deine Korrekturen vor und klicke erneut auf &laquo;Jahr abschließen&raquo;.</p>
+  <h3>Manueller Jahresabschluss</h3>
+  <p>Klicke auf &laquo;Ich mache es selbst&raquo;. Erstelle eine Probebilanz für das vollständige Geschäftsjahr. Kehre für jedes Ertrags- und Aufwandskonto den Saldo in eine neue Journalbuchung mit dem letzten Tag des Jahres um: Ertragskonten Soll (S), Aufwandskonten Haben (H). Die Ausgleichszeile geht auf Gewinnrücklagen &thinsp;&mdash;&thinsp; Haben bei Gewinn, Soll bei Verlust. Buche sie.</p>
+  <p>Hinweis: Die App verfolgt manuell erstellte Abschlussbuchungen nicht. Wenn du später eine Buchung mit einem Datum innerhalb eines abgeschlossenen Zeitraums buchst, stornierst oder bearbeitest, passt die App deine manuelle Abschlussbuchung nicht an &thinsp;&mdash;&thinsp; unabhängig davon, ob die betroffenen Konten gesperrt sind. Du musst die Abschlussbuchung selbst aktualisieren.</p>
+
+  <h2 id="families">Familien &thinsp;&mdash;&thinsp; mehrere Einheiten konsolidieren</h2>
+  <p>Fasse Einheiten zu einer Familie zusammen, um ihre Berichte zu konsolidieren: Auf deiner Profilseite verbindest du Einheiten zu einer Familie, indem du ihnen denselben Familiennamen gibst. Gewinn- und Verlustrechnung, Bilanz und Probebilanz umfassen dann die ganze Familie; alle übrigen Berichte können getrennt bleiben. Eine Familie lockert außerdem die Regel &laquo;eine Einheit pro Buchung&raquo; &thinsp;&mdash;&thinsp; innerhalb einer Familie darf eine einzelne Journalbuchung mehrere Mitglieder berühren. Für Buchungen über Familien hinweg siehe unten.</p>
+
+  <h2 id="cross-entity">Buchungen zwischen getrennten Unternehmen</h2>
+  <p>Zwei Einheiten in verschiedenen Familien können sich keine Journalbuchung teilen &thinsp;&mdash;&thinsp; jede muss für sich ausgeglichen sein, also schreibt die App zwei und verknüpft sie. Wie du das auslöst, steht in <%= link_to "Wenn eines deiner Unternehmen für ein anderes bezahlt", easy_manual_path(anchor: "cross-business") %>; hier steht, was dort nicht steht.</p>
+  <p>Die beiden beteiligten Bilanzkonten müssen dieselbe Währung haben.</p>
+  <p>Das Paar bewegt sich gemeinsam, aber nicht symmetrisch. Löschst du die zahlende Buchung, werden beide gelöscht. Löschst du die Geschenkzeile, wird die verknüpfte Buchung ebenfalls gelöscht. Löschst du die verknüpfte Buchung, wird nur diese Seite entfernt und die Verknüpfung gelöst &thinsp;&mdash;&thinsp; die Geschenkzeile bleibt als normale Buchungszeile stehen. Kopieren dupliziert das ganze Paar mit einer neuen Verknüpfung.</p>
+  <p>Eine Umbuchung zwischen Bilanzkonten oder ein Darlehen ist das nicht: buche es in jedem Unternehmen einzeln.</p>
+
+  <h2 id="add-currency">Eine Währung hinzufügen</h2>
+
+	<p>Um Währungen hinzuzufügen, braucht es eine Methode, die Wechselkurse zu bestimmen. Die App liefert standardmäßig Kurse von HMRC, EZB, Bundesbank und ESTV, abgerufen nach den Regeln dieser Steuerbehörden. Das heißt: In deinen Berichten kannst du alle Buchungen in Euro, GBP oder CHF umrechnen und weißt, dass die Kurse für die Steuerbehörden in Deutschland, Großbritannien und der Schweiz akzeptabel sind &thinsp;&mdash;&thinsp; und für die Länder der Eurozone, die die EZB-Monatskurse anerkennen.</p>
+	<p>Weitere Behörden kann ein Administrator nicht hinzufügen; dafür braucht es die Person, die dir diese App bereitstellt. Die App ist so aufgebaut, dass diese Aufgabe für die Entwicklung einfach und unkompliziert sein sollte.</p>
+	<p>Weitere Währungen hinzuzufügen kann dagegen jeder Administrator mit vollem Zugriff. Danach kannst du Bilanzkonten in diesen Währungen anlegen, und deine Buchungen erscheinen in den Berichten.</p>
+	<p>Bitte beachte: Wird eine von dir hinzugefügte Währung von keiner der verfügbaren behördlichen Kursquellen geführt, musst du eigene Kurse mit Nachweis erfassen. (Die EZB führt 2026 zum Beispiel keine UAH; sollte sie sie aufnehmen, übernimmt die App das automatisch und du bekommst eine E-Mail.)</p>
+	<p>Eigene Kurse zu erfassen ist möglich &thinsp;&mdash;&thinsp; manche Länder erlauben das, und manchmal ist es nötig, weil historische Kurse nicht abrufbar waren. Selbst erfasste Kurse haben immer Vorrang vor abgerufenen. Sie gelten für die Einheit(en), die du beim Erfassen auswählst, und für den Zeitraum, den du angibst. Innerhalb desselben Besteuerungszeitraums solltest du nicht zwischen selbst erfassten und abgerufenen Kursen wechseln: Die meisten Behörden erlauben nur eine Quelle je Besteuerungszeitraum.</p>
+
+  <h2 id="tax-setup">Steuerschemata und Kategorien</h2>
+    <p>Ein Steuerschema ist eine Erklärung &thinsp;&mdash;&thinsp; SA105, Anlage V. Kreuzt du es auf der Steuer-Setup-Seite an und speicherst, entsteht eine Berichtsgruppe für diese Erklärung, und die Gruppe hält sich selbst aktuell: Sie enthält jeweils die Konten, die dieses Schema tragen, sodass ein später zugeordnetes Konto von selbst erscheint, ohne dass du es nachtragen musst.</p>
+    <p>Eine Kategorie ist ein Feld auf dem Steuerformular. Mehrere Konten können auf dasselbe Feld zeigen &thinsp;&mdash;&thinsp; Grundsteuer, Hausversicherung und Hausgeld gehören alle zu Kennzahl 52 &thinsp;&mdash;&thinsp; und der Bericht zählt sie in diesem Feld zusammen. Ein Konto gehört jedoch zu genau einem Schema. Deshalb erscheint ein bereits zugeordnetes Konto nicht in der Liste eines anderen Schemas.</p>
+    <p>Die Kategorie, die für nicht zugeordnete Konten vorgeschlagen wird, ist eine Vermutung anhand des Kontonamens, abgeglichen mit Stichworten aus dem Steuerformular selbst. Stimmt sie nicht, wähle die richtige. Gespeichert wird nichts, bis du sie bestätigst.<br />
+    Steht ein Konto einmal auf der zugeordneten Seite, entfällt das Bestätigen: Eine Änderung der Kategorie wirkt sofort, weil das Konto dem Schema bereits zugeordnet ist.</p>
+    <p>Die Zuordnung trägt kein Datum. Nimmst du ein Konto in ein Schema auf oder änderst du seine Kategorie, rechnen sich alle Berichte neu &thinsp;&mdash;&thinsp; auch die, die du für frühere Zeiträume schon angesehen hast! <br />
+Was bereits als Backup gesichert ist, ändert sich nicht. Ein Backup entsteht für:<br />
+- jeden Steuerbericht (Kategorie-Zusammenfassungen), wenn du ihn per E-Mail verschickst<br />
+- jede Übermittlung, genau so, wie sie hinausging.<br />
+Bei einem kumulativen Verfahren wie UK MTD erreicht die Korrektur die Behörde mit der nächsten Übermittlung, weil diese das Jahr bis dahin erneut sendet.</p>
+    <p>Beim Herunterladen bekommst du eine CSV, passend zu dem, was gerade auf dem Bildschirm steht &thinsp;&mdash;&thinsp; Zusammenfassung oder Detail. Der Versand per E-Mail bringt dir beide: eine <strong>Zusammenfassung</strong> (Kategoriesummen, das, was in die Felder kommt) und ein <strong>Detail</strong> (Kategoriesummen und ihre einzelnen Buchungen, mit Beleglinks; nicht zugeordnete Belege werden gesondert aufgeführt). Hat die Einheit ein Dateiformat für die Steuerberatung eingestellt (zum Beispiel DATEV), kommt das ebenfalls mit. Gibt es für den Zeitraum nichts zu melden, bekommst du stattdessen eine kurze E-Mail, die das mitteilt. Die Zusammenfassungs-CSV wird außerdem bei jeder Änderung als Backup gesichert, sodass du immer ein datiertes Backup davon hast, wie die Felder eines Zeitraums aussahen.</p>
+    <p>Einen Steuerpflichtigen einrichten, sich mit der Steuerbehörde verbinden und einen Zeitraum senden &thinsp;&mdash;&thinsp; siehe <%= link_to "Steuerberichte einrichten", easy_manual_path(anchor: "tax") %> und <%= link_to "Vierteljährliche Zahlen selbst einreichen", easy_manual_path(anchor: "filing") %>.</p>
+
+</div>
+<%= render "help/back" %>

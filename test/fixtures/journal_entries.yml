@@ -1,0 +1,40 @@
+# Journal entries fixtures
+
+posted_deposit:
+  entry_date: <%= Date.current %>
+  memo: "Test deposit"
+  posted: true
+
+posted_withdrawal:
+  entry_date: <%= Date.current %>
+  memo: "Test withdrawal"
+  posted: true
+
+posted_transfer:
+  entry_date: <%= Date.current %>
+  memo: "Test transfer"
+  posted: true
+
+draft_entry:
+  entry_date: <%= Date.current %>
+  memo: "Draft entry"
+  posted: false
+
+multi_posting_deposit:
+  entry_date: <%= Date.current %>
+  memo: "Deposit with fees"
+  posted: true
+
+# Past period entries for closed period tests (entity 10, FY2024: 2023-04-01..2024-03-31)
+past_income_entry:
+  entry_date: "2023-10-15"
+  memo: "Past income"
+  posted: true
+
+closing_entry_fy2024:
+  entry_date: "2024-03-31"
+  memo: "Year end close 2024 GBP"
+  posted: true
+  closing_entry: true
+  period_start: "2023-04-01"
+  period_end: "2024-03-31"

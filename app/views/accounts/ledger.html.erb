@@ -1,0 +1,238 @@
+<% content_for :title, t("page.ledger", code: @account.code) %>
+
+<div class="backend_table accounts ledger">
+
+	<%= render partial: 'shared/flash' %>
+
+	<h1><%= t("page.ledger", code: @account.code) %> - <%= @account.name %></h1>
+
+	<div class="controls">
+	<%# A locked account (the reserved 3EE9xx retained-earnings range) is written
+	only by the year-end flow, so it offers no way to book into it by hand. %>
+		<% if @account.balance_account? && !@account.locked? %>
+			<%= link_to @account.equity? ? t(".new_drawing") : t(".new_deposit"),
+					new_deposit_account_path(@account),
+					class: 'backend_link button green' %>
+			<%= link_to @account.equity? ? t(".new_contribution") : t(".new_withdrawal"),
+					new_withdrawal_account_path(@account),
+					class: 'backend_link button green' %>
+			<%= link_to t(".new_transfer"),
+					new_transfer_account_path(@account),
+					class: 'backend_link button green' %>
+		<% end %>
+		<div class="controls-filter">
+			<%= form_with url: ledger_account_path(@account), 
+						  method: :get, 
+						  local: true do |f| %>
+				<%= label_tag :start_date, t("crud.from") %>
+				<%= date_field_tag :start_date, @start_date %>
+				<%= label_tag :end_date, t("crud.to") %>
+				<%= date_field_tag :end_date, @end_date %>
+				<%= submit_tag t("crud.filter"), class: 'button green' %>
+			<% end %>
+		</div>
+	</div>
+
+
+	<table>
+		<thead>
+			<tr>
+				<th><%= t("attrs.date") %></th>
+			  <% if @account.asset? || @account.liability? %>
+				<th class="no-phone"><%= t("attrs.type") %></th>
+			  <% end %>
+				<th><%= t("attrs.counter") %></th>
+				<th class="no-phone no-halfpad"><%= @account.balance_account? ? t("attrs.memo") : t("attrs.description") %></th>
+				<th class="right">
+					<%= debit_header_name(@account.account_type) %> (DR)
+				</th>
+				<th class="right">
+					<%= credit_header_name(@account.account_type) %> (CR)
+				</th>
+				<%# ADD: Balance column for balance sheet accounts %>
+			  <% if @show_balance %>
+				<th class="right"><%= t("jargon.balance") %></th>
+			  <% end %>
+				<th class="actions no-phone"><%= t("attrs.actions") %></th>
+			</tr>
+		</thead>
+		<tbody>
+		<% @ledger_data.each_with_index do |row, idx| %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+
+				<%# date %>
+				<td><%= format_date(row.date) %></td>
+
+				<%# type %>
+			  <% if @account.asset? || @account.liability? %>
+				<td class="no-phone"><%= row.transaction_type %></td>
+			  <% end %>
+
+				<%# counter account %>
+				<td>
+				<% if row.counter_accounts.size == 1 %>
+					<%= row.counter_accounts.first[2] %> - 
+					<%= row.counter_accounts.first[3] %>
+				<% elsif row.counter_accounts.size > 1 %>
+					<span class="transaction-type-split" 
+						  data-je-id="<%= row.journal_entry_id %>">
+						  Split (<%= row.counter_accounts.size %>)
+						<span id="split-<%= row.journal_entry_id %>" 
+							  class="split-details hidden">
+							<% row.counter_accounts.each do |ca| %>
+							<span class="split-line">
+								<span>
+									<%= ca[2] %> - <%= ca[3] %>
+									<% if ca[8].present? %> 
+										&mdash; <%= ca[8] %>
+									<% end %>
+								</span>
+								<span><%= format_amount(ca[6]) %></span>
+							</span>
+							<% end %>
+						</span>
+					</span>
+				<% end %>
+				</td>
+
+				<%# memo / description %>
+				<td class="no-phone no-halfpad">
+					<%= row.description.presence || row.memo %>
+				</td>
+
+				<%# amount debit %>
+				<td class="right">
+					<%= row.debit? ? format_amount_signed(row.amount, row.display_currency) : '' %>
+				</td>
+
+				<%# amount credit %>
+				<td class="right">
+					<%= row.debit? ? '' : format_amount_signed(row.amount, row.display_currency) %>
+				</td>
+
+				<%# if balance account: balance %>
+			  <% if @show_balance %>
+				<td class="right">
+					<%= format_amount_signed(@running_balances[idx], @account.currency) %>
+				</td>
+			  <% end %>
+
+			<%# actions — none on a locked account: the year-end flow writes it, users don't %>
+			  <% if @account.balance_account? %>
+				<td class="actions no-phone">
+					<% case @account.locked? ? nil : row.transaction_type %>
+					<% when 'Deposit' %>
+						<%= link_to edit_deposit_account_path(@account,
+							 	journal_entry_id: row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.edit") %></span>
+							<svg class="small-screen">
+								<use xlink:href='#edit'></use>
+							</svg>
+						<% end %>
+						<% unless @account.locked? %>
+						<%= link_to copy_deposit_account_path(@account,
+							 	journal_entry_id: row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.copy") %></span>
+							<svg class="stroke small-screen">
+								<use xlink:href='#copy'></use>
+							</svg>
+						<% end %>
+						<% end %>
+					<% when 'Withdrawal' %>
+						<%= link_to edit_withdrawal_account_path(@account,
+							 	journal_entry_id: row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.edit") %></span>
+							<svg class="small-screen">
+								<use xlink:href='#edit'></use>
+							</svg>
+						<% end %>
+						<% unless @account.locked? %>
+						<%= link_to copy_withdrawal_account_path(@account,
+							 	journal_entry_id: row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.copy") %></span>
+							<svg class="stroke small-screen">
+								<use xlink:href='#copy'></use></svg>
+						<% end %>
+						<% end %>
+					<% when 'Transfer' %>
+						<%= link_to edit_transfer_account_path(@account,
+						 		journal_entry_id: row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.edit") %></span>
+							<svg class="small-screen">
+								<use xlink:href='#edit'></use>
+							</svg>
+						<% end %>
+						<% unless @account.locked? %>
+						<%= link_to copy_transfer_account_path(@account,
+						 		journal_entry_id: row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.copy") %></span>
+							<svg class="stroke small-screen">
+								<use xlink:href='#copy'></use></svg>
+						<% end %>
+						<% end %>
+					<% when 'Journal Entry' %>
+						<%= link_to edit_journal_entry_path(row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.edit") %></span>
+							<svg class="small-screen">
+								<use xlink:href='#edit'></use>
+							</svg>
+						<% end %>
+						<% unless @account.locked? %>
+						<%= link_to duplicate_journal_entry_path(row.journal_entry_id),
+								class: "backend_link button green" do %>
+							<span class="big-screen"><%= t("crud.copy") %></span>
+							<svg class="stroke small-screen">
+								<use xlink:href='#copy'></use>
+							</svg>
+						<% end %>
+						<% end %>
+					<% end %>
+				  <%= link_to journal_entry_path(row.journal_entry_id, 
+						from: 'ledger', 
+						account_id: @account.id),
+						class: "backend_link button green" do %>
+					  <span class="big-screen"><%= t("crud.view_je") %></span>
+					  <svg class="small-screen"><use xlink:href='#view'></use></svg>
+				  <% end %>
+				</td>
+			  <% else %>
+				<%# no-phone has to match the <th> and the other branch of this same column — hide the header without hiding the cell and the row runs one column wider than its heading. %>
+				<td class="actions no-phone">
+					<%= link_to t("crud.edit"), ledger_edit_path(row), class: 'backend_link button green' if ledger_edit_path(row) %>
+				</td>
+			  <% end %>
+			</tr>
+			<% end %>
+		</tbody>
+	</table>
+</div>
+
+<div class="crud_navigation">
+	<%= link_to accounts_path, 
+			class: 'backend_link button green' do %>
+		<span class="bigger-screen"><%= t("crud.accounts")%></span>
+		<svg class="tiny-screen stroke s40">
+			<use xlink:href='#arrow_left'></use>
+		</svg>
+	<% end %>
+	<%= link_to t("crud.csv"),
+			ledger_account_path(@account,
+			format: :csv, start_date: @start_date, end_date: @end_date),
+			class: 'backend_link button green',
+			data: { sure: t("crud.csv_confirm") } %>
+	<button id="print-button" 
+			class="backend_link button green"><%= t("crud.print") %>
+	</button>
+  <% if @pagy %>
+	<%== @pagy.series_nav %>
+  <% end %>
+</div>
+
+<%= render "receipts/preview_modal" %>

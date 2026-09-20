@@ -1,0 +1,37 @@
+	<table class="backend_show speed-links">
+		<thead>
+			<tr>
+				<th colspan=3>
+					<div>
+						<%= t(".quick_links") %>
+
+						<button type="button" class="button yellow"
+            	    	  data-action="open-modal"
+            	    	  data-modal="receipt-upload-modal">
+            	  			<svg class="stroke"><use xlink:href="#te_upload"></use></svg>
+            	  		  	<%= t("receipts.upload_receipt") %>
+          		  		</button>
+					</div>
+	  			</th>
+			</tr>
+		</thead>
+		<% @common_asset_accounts.each do |account| %>
+		<tr class="<%= cycle('list-line-odd', 'list-line-even') %>"> 
+
+			<td class="account-code-name">
+		        <%= link_to ledger_account_path(account) do %>
+		          <span class="child-code"><%= account.code %></span>
+		          <span class="account-name"><%= account.name %></span>
+		        <% end %>
+		    </td>
+
+		    <td><%= account.currency %></td>
+
+		    <td class="right">
+				<%= format_amount_signed(@balances[account.id] || 0, account.currency) %>
+			</td>
+
+		</tr>
+		<% end %>
+	</table>	
+

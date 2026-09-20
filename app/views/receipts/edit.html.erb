@@ -1,0 +1,29 @@
+<% content_for :title, t("receipts.edit_title") %>
+
+<div id="new_edit_view">
+
+    <% if @receipt.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <h1><%= t("receipts.edit_title") %></h1>
+
+    <%= render 'form', {receipt: @receipt, entities: @entities} %>
+
+</div>
+<div class="crud_navigation">
+ 	<%= link_to receipts_path, 
+			class: 'backend_link button green' do %>
+			<span class="bigger-screen"><%= t("crud.receipts")%></span>
+	  		<svg class="tiny-screen stroke s40">
+				<use xlink:href='#arrow_left'></use>
+			</svg>
+	<% end %>
+	<%= link_to t("crud.show"), 
+			receipt_path(@receipt), 
+			class: "backend_link button green"  %>
+</div>
+
+
+
+

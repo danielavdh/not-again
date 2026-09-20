@@ -1,0 +1,81 @@
+<% content_for :title, @report_group.display_name %>
+
+<div class="backend_table report_group show">
+	
+	<h2><%= @report_group.display_name %><%= t(".existing") if @reports.any? %>
+		<span><%= @report_group.description %></span>
+	</h2>
+
+	<%= render partial: 'shared/flash' %>
+	
+	<ul class="report-list">
+		<% if @reports.any? %>
+        	<% @reports.each do |report| %>
+				<li>
+					<span class="flex">
+		            <%= link_to report.name, 
+						report_path(report), 
+						class: "backend_link button green" %>
+						<span>
+		            		<%=l report.start_date, :format => :short_date %> - 
+					 	   	<%=l report.end_date, :format => :short_date %>
+						</span>
+					</span>
+				</li>
+			<% end %>
+	    <% else %>
+			<li><%= t(".empty", model: "reports") %></li>
+	    <% end %>
+		<%# Outside the branch above: it used to sit inside it, so a group with no
+		    reports offered no way to make one. Tax groups are always created
+		    empty, which made it look like a rule about them — it was not, an
+		    empty custom group had the same problem. %>
+		<li>
+			<span class="flex">
+				<span></span>
+				<%= button_tag t(".add_report"), 
+	     			type: "button", 
+	     			data: { action: "open-modal", 
+							modal: "reportModal-#{@report_group.id}" }, 
+	     			class: "button green" %>
+			</span>
+		</li>
+	</ul>
+	
+	<%= render partial: "reports/report-modal", locals: {group: @report_group} %>
+	
+
+	<% if @report_group.tax_report? %>
+		<%= render "tax_assignment" %>
+	<% else %>
+		<%= render "custom_assignment" %>
+	<% end %>
+
+</div>
+
+<div class="crud_navigation">
+ 	<%= link_to dashboard_path,
+			class: 'backend_link button green' do %>
+			<span class="bigger-screen"><%= t("crud.dashboard")%></span>
+	  		<svg class="tiny-screen stroke s40">
+				<use xlink:href='#arrow_left'></use>
+			</svg>
+	<% end %>
+	<%# Both assignment screens save as you go now. The tax one always did — its
+	    accounts follow the tagging — while this one waited for a Save button, so
+	    a long selection was lost by walking away from it. The two looked the
+	    same and behaved differently, with nothing to say which was which.
+
+	    The status element carries its own words as data attributes: the script
+	    must not hold English, or the message stays English in every language. %>
+	<% unless @report_group.tax_report? %>
+  	<%= link_to t("crud.edit"),
+		edit_report_group_path(@report_group),
+		class: "backend_link button green" %>
+	<%= tag.span "",
+	    class: "save-status hidden",
+	    data: { url:     update_accounts_report_group_path(@report_group),
+	            saving:  t("report_groups.show.saving"),
+	            saved:   t("report_groups.show.saved"),
+	            failed:  t("report_groups.show.save_failed") } %>
+	<% end %>

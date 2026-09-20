@@ -1,0 +1,43 @@
+<% content_for :title, t("crud.edit") + " " + t("jargon.report_group") %>
+
+<div id="new_edit_view">
+    <% if @report_group.errors.any? %>
+    <p class="error_message"><%= t("crud.errors_on_page") %></p>
+    <% end %>
+
+    <h2><%= t("crud.edit_model", model: @report_group.display_name) %></h2>
+
+  	<%= render partial: 'shared/flash' %>
+
+  	<%= form_with model: @report_group, 
+                url: report_group_path(@report_group), 
+                method: :patch,
+                class: "form_entity" do |f| %>
+
+    <div class="field">
+      <%= f.label :name, t("attrs.name") %>
+      <span class="error_message">
+        <%= @report_group&.errors[:name].to_sentence %>
+      </span><br />
+      <%= f.text_field :name, id: :report_group_name, required: true %>
+    </div>
+	
+    <div class="field">
+      <%= f.label :description, t("attrs.description") %>
+      <span class="error_message">
+        <%= @report_group&.errors[:description].to_sentence %>
+      </span><br />
+      <%= f.text_area :description, id: :report_group_description, class: "less_height" %>
+    </div>
+
+    <div class="actions">
+      <%= f.submit (@report_group.persisted? ? t("crud.update") : t("crud.create")) + " " + t("jargon.report_group") %>
+    </div>
+  <% end %>
+</div>
+
+<div class="crud_navigation">
+  	<%= link_to t("crud.cancel"), 
+  		report_group_path(@report_group), 
+		class: "backend_link button green" %>
+</div>

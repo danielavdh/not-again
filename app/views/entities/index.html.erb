@@ -1,0 +1,68 @@
+<% content_for :title, "Entities" %>
+
+<div class="backend_table">
+    <h1>Entities</h1>
+
+		<%= render partial: 'shared/flash' %>
+
+    <p>
+        <%= link_to "New Entity",
+          new_entity_path,
+          class: "backend_link button green"  %>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th colspan="2"></th>
+                <th>Code:</th>
+                <th>Name:</th>
+                <th>Family:</th>
+                <th>Tax Schemes:</th>
+                <th>Active:</th>
+                <th>Status:</th>
+				<th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <% @entities.each do |entity| %>
+            <tr class="<%= cycle('list-line-odd', 'list-line-even') %><%= ' orphaned' if entity.orphaned? %>">
+                <td><%= link_to "Edit",
+                        edit_entity_path(entity),
+                        class: "backend_link" %></td>
+                <td><%= link_to "Show",
+						entity_path(entity),
+						class: "backend_link" %></td>
+                <td class="center"><%= entity.code %></td>
+                <td><%= entity.name %></td>
+                <td><%= entity.entity_group&.name %></td>
+				<td><%= entity.tax_schemes&.to_sentence %></td>
+                <td class="center"><%= entity.active? ? "✓" : "–" %></td>
+                <td>
+                    <% if entity.orphaned? %>
+                        <span class="orphaned_note">
+                            No admins since <%= entity.orphaned_at.to_date %> —
+                            <% if entity.due_for_deletion? %>
+                                <strong>deletion due (since <%= entity.deletion_due_on %>)</strong>
+                            <% else %>
+                                retained until <%= entity.deletion_due_on %>
+                            <% end %>
+                        </span>
+                    <% end %>
+                </td>
+                <td>
+                    <% if entity.orphaned? %>
+                        <%= button_to "Purge",
+                                entity_path(entity),
+                                method: :delete,
+                                data: { sure: entity.due_for_deletion? ?
+                                    "Permanently delete entity #{entity.code} and ALL its data? This cannot be undone." : "Entity #{entity.code} is retained until #{entity.deletion_due_on}. Deleting now may breach retention obligations. Permanently delete anyway?" },
+                                class: "backend_link" %>
+                    <% end %>
+                </td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>

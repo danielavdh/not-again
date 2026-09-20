@@ -1,0 +1,58 @@
+<div class="backend_table">
+    <h1><%= t(".list_h1") %></h1>
+		
+		<%= render partial: 'shared/flash' %>
+
+    <p>
+        <%= link_to t(".new"),
+          new_admin_path,
+          class: "backend_link"  %>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th colspan="2"></th>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Owner</th>
+                <th>Email</th>
+                <th>Last seen</th>
+                <th>Agreed to terms</th>
+                <th>Entities &amp; Access</th>
+                <th>OTP?</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <% access_words = { "full_access" => "Write", "read_only" => "Read", "upload_receipts" => "Receipts" } %>
+            <% @admins.each do |admin| %>
+            <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+                <td><%= link_to t(".show"), admin, class: "backend_link" %></td>
+                <td><%= link_to t(".edit"), 
+                        edit_admin_path(admin),
+                        class: "backend_link" %></td>
+                <td><%= admin.id %></td>
+                <td><%= admin.username %></td>
+                <td><%= "✓" if admin.sudo? %></td>
+                <td><%= admin.email_address %></td>
+                <td><%=l admin.last_seen, format: :with_time %></td>
+                <td><%=l admin.terms_agreed_at, format: :with_time if admin.terms_agreed_at %></td>
+<%# no .includes here: the controller already preloads admin_entities: :entity, and
+    calling includes on the association throws that preload away and re-queries per row %>
+                <td><%= safe_join(admin.admin_entities.sort_by { |ae| ae.entity.code }.map { |ae|
+                        "#{ae.entity.code} #{access_words[ae.access_level]}"
+                      }, tag.br) %></td>
+                <td><%= admin.otp_enabled %></td>
+                <td><%= button_to t(".destroy"),
+						admin, 
+						method: :delete,
+						data: {sure: t(".sure")},
+		        		class: "backend_link" %>
+				</td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>

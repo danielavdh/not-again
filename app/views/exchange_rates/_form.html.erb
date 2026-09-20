@@ -1,0 +1,104 @@
+<%= form_with model: exchange_rate,
+			  url: exchange_rate.persisted? ? exchange_rate_path(exchange_rate) : exchange_rates_path,
+			  local: true,
+  			  id: "#{action_name}_exchange_rate",
+			  class: 'form_exchange_rate' do |f| %>
+
+	<%# A rate is valid over a PERIOD, not on a date. A daily rate has the same
+	    day in both fields; a monthly one runs the 1st to the last. The old form
+	    asked for a single effective_date, which could not say which of those it
+	    meant — and the two are different numbers. %>
+	<div class="field flex">
+		<div>
+	    	<%= f.label :valid_from, t("exchange_rates.form.valid_from") %>
+	    	<span class="error_message">
+	    	<%= exchange_rate&.errors[:valid_from].to_sentence %>
+	    	</span><br />
+	    	<%= f.date_field :valid_from,
+	    	            id: :exchange_rate_valid_from,
+	    	            required: true %>
+		</div>
+		<div>
+	    	<%= f.label :valid_to, t("exchange_rates.form.valid_to") %>
+	    	<span class="error_message">
+	    	<%= exchange_rate&.errors[:valid_to].to_sentence %>
+	    	</span><br />
+	    	<%= f.date_field :valid_to,
+	    	            id: :exchange_rate_valid_to,
+	    	            required: true %>
+		</div>
+		<div>
+		    <%= f.label :rate, t("exchange_rates.form.rate") %>
+		    <span class="error_message">
+		    <%= exchange_rate&.errors[:rate].to_sentence %>
+		    </span><br />
+		    <%= f.number_field :rate,
+				 		step: 0.000001,
+		                id: :exchange_rate_rate,
+		                required: true %>
+
+		</div>
+		<div>
+	    	<%= f.label :from_currency, t("exchange_rates.form.from_currency") %>
+	    	<span class="error_message">
+	    	<%= exchange_rate&.errors[:from_currency].to_sentence %>
+	    	</span><br />
+	    	<%# Which way round the rate goes lives in the LABEL — "From (1 unit)" —
+	    	    rather than in every option. The selected value reads better as CHF
+	    	    than as 1 CHF, and 1.25 CHF -> GBP is otherwise ambiguous: one franc
+	    	    costs about 0.80 pounds, so typing 1.25 records the inverse,
+	    	    silently and plausibly. %>
+	    	<%= f.select :from_currency,
+						 available_currencies,
+						 {},
+	    	             id: :exchange_rate_from_currency %>
+		</div>
+		<div>
+	    	<%= f.label :to_currency, t("exchange_rates.form.to_currency") %>
+	    	<span class="error_message">
+	    	<%= exchange_rate&.errors[:to_currency].to_sentence %>
+	    	</span><br />
+	    	<%= f.select :to_currency,
+					 available_currencies,
+					 {},
+	                 id: :exchange_rate_to_currency %>
+		</div>
+		<%# No source field. A typed rate is always `manual` — nobody publishes
+		    it, which is what entering your own rate means. Offering a choice
+		    would invite filing a private figure under a publisher that never
+		    issued it. Where the figure IS a publisher's, a transcribed 2018 HMRC
+		    rate say, that belongs in the evidence note. %>
+
+		<div>
+		<%# Whose rate this is. A typed rate is NEVER global: leaving this blank means every entity you have access to, and writes one row each — a convenience so four businesses need not be typed four times, not a shared row wearing a different hat. %>
+		   <%= f.label :entity_id, t("exchange_rates.form.entity_id") %>
+		   <span class="error_message">
+		   <%= exchange_rate&.errors[:entity_id].to_sentence %>
+		   </span><br />
+		   <%# No explicit id: Rails generates exchange_rate_entity_id, which is what
+		       f.label above points `for` at. A hardcoded one silently stops matching
+		       the moment the attribute is renamed. %>
+		   <%= f.select :entity_id,
+						 @entity_options,
+						 { include_blank: t("exchange_rates.all_my_entities") } %>
+		</div>
+	</div>
+
+
+	<div class="field">
+	<%# Where a rate is a documented daily rate rather than a published one,
+	    this IS the documentation — the Kurszettel or Bankmitteilung the law
+	    asks for. Not prose: something checkable in two years. %>
+		<%= f.label :note, t("exchange_rates.form.note") %>
+		<span class="error_message">
+		<%= exchange_rate&.errors[:note].to_sentence %>
+		</span><br />
+		<%= f.text_field :note,
+		            id: :exchange_rate_note,
+		            placeholder: t("exchange_rates.note_placeholder") %>
+	</div>
+
+  <div class="actions">
+    <%= f.submit t("exchange_rates.save_rate") %>
+  </div>
+<% end %>

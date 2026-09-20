@@ -1,0 +1,83 @@
+<%# Assigning accounts to a tax scheme.
+    Assigned on the left, unassigned on the right — the same shape as the custom
+    report's account picker, except that what moves an account across is choosing
+    its CATEGORY. Both sides write tax_scheme + tax_category_key onto the account
+    itself; membership is never stored, so this page and a submission cannot
+    disagree. An account belongs to exactly one scheme, so anything another
+    scheme has claimed is not offered here. %>
+
+<h2><%= t("report_groups.show.assign_title", name: @report_group.display_name) %></h2>
+<p class="hint"><%= t("report_groups.show.assign_hint") %></p>
+
+<div class="account-selector-container" data-tax-mapping>
+  <div class="account-lists">
+
+    <div class="selected-accounts">
+      <h4><%= t("report_groups.show.assigned_accounts") %>
+        <span class="count">(<span data-tax-assigned-count><%= @assigned.size %></span>)</span>
+      </h4>
+      <% if @assigned.any? %>
+        <ul class="tax-assigned">
+          <% @assigned.each do |account| %>
+            <li data-account-row="<%= account.id %>">
+              <span class="account-code"><%= account.code %></span>
+              <span class="account-name"><%= account.name %></span>
+              <button type="button"
+			  		  class="remove-account"
+                      data-tax-unassign
+                      data-url="<%= quick_map_tax_account_path(account) %>"
+                      aria-label="<%= t("report_groups.show.unassign") %>">×</button>
+              <%= select_tag "tax_category_assigned_#{account.id}",
+                    grouped_options_for_select(@tax_category_options,
+                                               "#{account.tax_scheme}::#{account.tax_category_key}"),
+                    id: "tax_assigned_select_#{account.id}",
+                    data: { tax_reassign: true, tax_note: true,
+                            url: quick_map_tax_account_path(account) },
+                    aria: { label: t("tax.category_field") } %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="hint"><%= t("report_groups.show.none_assigned") %></p>
+      <% end %>
+    </div>
+
+    <div class="available-accounts">
+      <h4><%= t("report_groups.show.unassigned_accounts") %>
+        <span class="count">(<span data-tax-remaining><%= @unassigned.size %></span>)</span>
+      </h4>
+      <% if @tax_category_options.blank? %>
+        <p class="hint">
+			<%= t("report_groups.show.no_options") %>
+		</p>
+      <% elsif @unassigned.any? %>
+        <p class="hint"><%= t("report_groups.show.unassigned_hint") %></p>
+        <ul class="tax-unassigned">
+          <% @unassigned.each do |account| %>
+            <li data-account-row="<%= account.id %>">
+              <%= content_tag :button, "+",
+                    type: "button",
+                    class: "add-account",
+                    data: { tax_confirm: true,
+                            url: quick_map_tax_account_path(account),
+                            select_id: "tax_unassigned_select_#{account.id}" },
+                    aria: { label: t("report_groups.show.confirm") } %>
+              <span class="account-code"><%= account.code %></span>
+              <span class="account-name"><%= account.name %></span>
+              <%# The auto-assigner's guess is pre-selected, never saved until confirmed. %>
+              <%= select_tag "tax_category_unassigned_#{account.id}",
+                    grouped_options_for_select(@tax_category_options, @tax_suggestions[account.id]),
+                    include_blank: t("tax.category_none"),
+                    id: "tax_unassigned_select_#{account.id}",
+                    data: { tax_note: true },
+                    aria: { label: t("tax.category_field") } %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="hint"><%= t("report_groups.show.all_assigned") %></p>
+      <% end %>
+    </div>
+
+  </div>
+</div>

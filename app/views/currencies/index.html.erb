@@ -1,0 +1,88 @@
+<%# The currencies this installation supports. Adding one is data, not a deploy. %>
+<% content_for :title, t("currencies.index.title") %>
+
+<div class="backend_table no-print">
+  <h1><%= t("currencies.index.title") %></h1>
+
+  <%= render partial: 'shared/flash' %>
+
+  <div class="link_to_new">
+    <%= link_to t("currencies.new_currency"), new_currency_path, class: 'button green' %>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th><%= t("currencies.index.code") %></th>
+        <th><%= t("currencies.index.symbol") %></th>
+        <th><%= t("currencies.index.example") %></th>
+        <%# Which publishers we already hold rates from. A currency with none is
+            the case worth seeing: its rates have to be entered by hand. %>
+        <th><%= t("currencies.index.published_by") %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @currencies.each do |currency| %>
+        <tr class="<%= cycle('list-line-odd', 'list-line-even') %><%= ' inactive' unless currency.active? %>">
+          <td><%= currency.code %></td>
+          <td><%= currency.symbol %></td>
+          <td><%= CurrencyConfig.format_cents(123_456, currency.code) %></td>
+          <%# Which sources we hold rates from — a stored rate IS the proof of
+              publication. Empty needs two different sentences: a currency added
+              since the last fetch has not had its turn, and saying "no source"
+              there is what made a freshly added UAH read as unsupported. %>
+          <td>
+            <% sources = @held[currency.code].to_a %>
+            <% if sources.any? %>
+              <%= sources.map { |s| RateSourceConfig.short_label_for(s) }.sort.join(", ") %>
+            <% elsif @fetched_since[currency] %>
+              <%= t("currencies.index.no_source") %>
+            <% else %>
+              <%= t("currencies.index.not_checked") %>
+            <% end %>
+          </td>
+          <%# Three different acts, and they are not interchangeable:
+                edit        — full access, until anything rests on the currency
+                delete      — full access, only while NOTHING rests on it
+                deactivate  — SUDO, and it means the currency has ceased to exist
+              Deactivate used to be what Delete silently became once a currency
+              was in use, which let a full-access admin retire a currency for
+              every other admin from a button labelled Delete. %>
+          <td class="actions">
+            <%= link_to edit_currency_path(currency), 
+					  class: 'backend_link button green' do %>
+              <span class="big-screen"><%= t("crud.edit") %></span>
+              <svg class="small-screen"><use xlink:href='#edit'></use></svg>
+            <% end %>
+
+            <% unless currency.in_use? %>
+            	<%= button_to currency_path(currency),
+            	      method: :delete,
+            	      data: { sure: t("crud.sure") },
+            	      class: 'backend_link button red' do %>
+            	  <span class="big-screen"><%= t("crud.delete") %></span>
+            	  <svg class="small-screen stroke s30"><use xlink:href='#trash'></use></svg>
+            	<% end %>
+            <% end %>
+
+            <% if sudo? %>
+              <% if currency.active? %>
+                <%# Warned even when the check passes: it is global, it is for
+                    every admin, and it stops rates being fetched. %>
+                <%= button_to t("currencies.deactivate"), deactivate_currency_path(currency),
+                      method: :patch,
+                      data: { sure: t("currencies.deactivate_confirm", code: currency.code) },
+                      class: "button red small75" %>
+              <% else %>
+                <%= button_to t("currencies.reactivate"), reactivate_currency_path(currency),
+                      method: :patch,
+                      class: "button green small75" %>
+              <% end %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

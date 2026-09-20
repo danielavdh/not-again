@@ -1,0 +1,28 @@
+<% content_for :title, t("journal_entries.new") %>
+<% content_for :head do %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
+<% end %>
+
+<div id="new_edit_view">
+
+    <h2><%= t("journal_entries.new") %></h2>
+	
+	<%= render partial: 'shared/flash' %>
+
+    <% if @journal_entry.errors.any? %>
+    <p class="error_message"><%= @journal_entry.errors[:base].to_sentence %></p>
+    <% end %>
+
+    <%= render 'journal_entries/form', journal_entry: @journal_entry %>
+
+    <div class="crud_navigation">
+    <%= link_to t("crud.je"), 
+			journal_entries_path, 
+			class: "backend_link button green"  %>
+    <%= link_to t("crud.cancel"), 
+			journal_entries_path, 
+			class: 'backend_link button green' %>
+		
+    </div>
+
+</div>

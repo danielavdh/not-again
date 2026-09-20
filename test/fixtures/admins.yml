@@ -1,0 +1,78 @@
+<% password_digest = BCrypt::Password.create("password") %>
+<% terms_agreed_version = Admin::TERMS_VERSION %>
+<% terms_agreed_at = "2026-01-01 00:00:00" %>
+<% claimed_at = "2026-01-01 00:00:00" %>
+
+one:
+  username: admin_one
+  email_address: one@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>
+  entity_code: "01"
+
+two:
+  username: admin_two
+  email_address: two@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>
+  entity_code: "10"
+
+sudo:
+  username: sudoname
+  sudo: true
+  email_address: sudo@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>
+
+upload_only:
+  username: uploader
+  email_address: uploader@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>
+
+read_only:
+  username: reader
+  email_address: reader@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>
+
+# Read-only on TWO entities held by TWO DIFFERENT full-access admins (one on
+# personal, two on family_biz) — the shared-accountant case: management
+# follows the actual AdminEntity links, so both should be able to manage
+# this admin. See Admin#shares_full_access_entity_with?.
+shared_reader:
+  username: shared_reader
+  email_address: shared_reader@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>
+
+# Holds DIFFERENT access levels on different entities: full_access on
+# family_biz(10), read_only on personal(01). The combination sudo can create by
+# granting one entity to an admin who was invited as a reader on another — and
+# the one that used to unlock writing everywhere. See docs/gitignored/access-model.md, F2.
+mixed:
+  username: mixed_levels
+  email_address: mixed@example.com
+  password_digest: <%= password_digest %>
+  last_seen: 2025-02-25 18:00:18
+  terms_agreed_version: <%= terms_agreed_version %>
+  terms_agreed_at: <%= terms_agreed_at %>
+  claimed_at: <%= claimed_at %>

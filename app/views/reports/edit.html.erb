@@ -1,0 +1,54 @@
+<% content_for :title, t("crud.edit") + " " + t("jargon.report") %>
+
+<div id="new_edit_view">
+
+    <h2><%= t("crud.edit") + " " + t("jargon.report") %> (<%= @report.name %>)</h2>
+
+  <%= render partial: 'shared/flash' %>
+
+  <%= form_with model: @report, 
+                #url: report_path(@report), 
+                method: :patch,
+                class: "form_report" do |f| %>
+
+    <% if @report.errors.any? %>
+      <div class="field">
+        <ul>
+          <% @report.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="field">
+      <%= f.label :name, t("attrs.name") %>
+      <%= f.text_field :name, required: true %>
+    </div>
+
+    <div class="field flex">
+      <div>
+        <%= f.label :start_date, t("attrs.start_date") %>
+        <%= f.date_field :start_date, required: true %>
+      </div>
+      <div>
+        <%= f.label :end_date, t("attrs.end_date") %>
+        <%= f.date_field :end_date, required: true %>
+      </div>
+    </div>
+
+    <div class="actions">
+      <%= f.submit (@report.persisted? ? t("crud.update") : t("crud.create")) + " " + t("jargon.report") %>
+    </div>
+
+  <% end %>
+</div>
+
+<div class="crud_navigation">
+  <%= link_to t("crud.reports"), 
+  		reports_path, 
+		class: "backend_link button green" %>
+  <%= link_to t("crud.show") + " " + t("jargon.report"), 
+  		report_path(@report), 
+		class: "backend_link button green" %>
+</div>

@@ -1,0 +1,169 @@
+<%# The saved custom report: the bookkeeper's own account list, grouped by
+    parent account, type totals when the types read top-to-bottom. Data comes
+    from Reports::CustomReport. %>
+<table class="reports">
+  <thead>
+    <tr>
+      <th><%= t("jargon.account") %></th>
+      <% @currencies_with_data.each do |curr| %>
+        <th><%= curr %></th>
+      <% end %>
+      <%# The translating column, and the choice of what it translates into.
+          Dropped entirely when a single currency already is the target — it
+          would only repeat the column beside it. %>
+      <% if translated_column?(@currencies_with_data, @display_currency) %>
+        <th>
+          <% if currency_selectable?(@currencies_with_data) %>
+            <%= form_with url: request.path, method: :get, local: true do %>
+              <%= hidden_field_tag :version, @short_version ? 'short' : 'long' %>
+              <%= select_tag :currency, currency_select_options(@currency_options, @display_selection), id: 'report-currency-select' %>
+            <% end %>
+          <% else %>
+            <%= @display_currency %>
+          <% end %>
+          <%= render "reports/rate_source", sources: rate_sources, selectable: currency_selectable?(@currencies_with_data) %>
+        </th>
+      <% end %>
+    </tr>
+	  <tr class="separator-row"></tr>
+  </thead>
+
+  <tbody>
+    <% unless @data[:show_type_totals] %>
+      <tr class="notice-row">
+        <td colspan="<%= report_colspan(@currencies_with_data, @display_currency) %>">
+          <em><%= t('reports.no_type_totals_notice') %></em>
+        </td>
+      </tr>
+    <% end %>
+
+    <% (@data[:parent_groups] || []).each do |parent_group| %>
+
+      <%# Type header, and the total for the type that just ended. Which groups
+          open a new type is worked out in Reports::CustomReport. %>
+      <% if @data[:show_type_totals] && parent_group[:type_header] %>
+        <% if @data[:type_totals][parent_group[:preceding_type_total]] %>
+          <tr class="list-header final-total">
+            <td><%= t("reports.show.total") %> <%= t("jargon.#{parent_group[:preceding_type_total]}").humanize %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td class="right"><%= format_cents_with_currency(@data[:type_totals][parent_group[:preceding_type_total]][:currency_totals][curr], curr) %></td>
+            <% end %>
+            <% if translated_column?(@currencies_with_data, @display_currency) %>
+              <td class="right"><%= format_cents_with_currency(@data[:type_totals][parent_group[:preceding_type_total]][:translated_total], @display_currency) %></td>
+            <% end %>
+          </tr>
+          <tr class="separator-row"></tr>
+        <% end %>
+        <tr class="list-header">
+          <td colspan="<%= report_colspan(@currencies_with_data, @display_currency) %>"><%= t("jargon.#{parent_group[:type_header]}").humanize %></td>
+        </tr>
+      <% end %>
+
+      <%# Account rows %>
+      <% parent_group[:accounts].each do |account| %>
+        <% next if account[:translated_total] == 0 && account[:currency_totals].values.all?(&:zero?) %>
+
+        <% if @short_version %>
+          <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+            <td><%= "#{account[:code]} - #{account[:name]}" %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td class="right"><%= format_cents_with_currency(account[:currency_totals][curr], curr) %></td>
+            <% end %>
+            <% if translated_column?(@currencies_with_data, @display_currency) %>
+              <td class="right"><%= format_cents_with_currency(account[:translated_total], @display_currency) %></td>
+            <% end %>
+          </tr>
+        <% else %>
+          <%# Long version: account header %>
+          <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+            <td><%= "#{account[:code]} - #{account[:name]}" %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td></td>
+            <% end %>
+            <% if translated_column?(@currencies_with_data, @display_currency) %>
+              <td></td>
+            <% end %>
+          </tr>
+
+          <%# Long version: individual entries %>
+          <% (account[:entries] || []).each do |entry| %>
+            <tr class="entry-row <%= cycle('list-line-odd', 'list-line-even') %>">
+              <td class="indent">
+                <% if entry[:balance_account_id] && entry[:edit_type] %>
+				  	<% if current_admin.may_open_entry_forms? %>
+                  <%= link_to "#{entry[:date]} - #{entry[:description]}",
+                       send("edit_#{entry[:edit_type]}_account_path",
+                         entry[:balance_account_id],
+                         journal_entry_id: entry[:journal_entry_id]),
+                       class: 'report-account-link popup-edit' %>
+					<% else %>
+						<%= entry[:date] %> - <%= entry[:description] %>
+					<% end %>
+                <% else %>
+                  <%= entry[:date] %> - <%= entry[:description] %>
+                <% end %>
+              </td>
+              <% @currencies_with_data.each do |curr| %>
+                <td class="right"><%= entry[:currency] == curr ? format_cents_with_currency(entry[:amount], curr) : '' %></td>
+              <% end %>
+              <% if translated_column?(@currencies_with_data, @display_currency) %>
+                <td class="right"><%= format_cents_with_currency(entry[:translated_amount], @display_currency) %></td>
+              <% end %>
+            </tr>
+          <% end %>
+
+          <%# Long version: account total %>
+          <tr class="account-total-row <%= cycle('list-line-odd', 'list-line-even') %>">
+            <td class="indent"><%= t("reports.show.total") %> <%= account[:name] %></td>
+            <% @currencies_with_data.each do |curr| %>
+              <td class="right"><%= format_cents_with_currency(account[:currency_totals][curr], curr) %></td>
+            <% end %>
+            <% if translated_column?(@currencies_with_data, @display_currency) %>
+              <td class="right"><%= format_cents_with_currency(account[:translated_total], @display_currency) %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      <% end %>
+
+      <%# Parent total (only when parent has multiple accounts) %>
+      <% if parent_group[:accounts].size > 1 %>
+        <tr class="parent-row <%= cycle('list-line-odd', 'list-line-even') %>">
+          <td><%= t("reports.show.total") %> <%= parent_group[:total_name] %></td>
+          <% @currencies_with_data.each do |curr| %>
+            <td class="right"><%= format_cents_with_currency(parent_group[:currency_totals][curr], curr) %></td>
+          <% end %>
+          <% if translated_column?(@currencies_with_data, @display_currency) %>
+            <td class="right"><%= format_cents_with_currency(parent_group[:translated_total], @display_currency) %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    <% end %>
+
+    <%# Final type total for the last type %>
+    <% if @data[:show_type_totals] && @data[:last_type] && @data[:type_totals][@data[:last_type]] %>
+      <tr class="list-header final-total">
+        <td><%= t("reports.show.total") %> <%= t("jargon.#{@data[:last_type]}").humanize %></td>
+        <% @currencies_with_data.each do |curr| %>
+          <td class="right"><%= format_cents_with_currency(@data[:type_totals][@data[:last_type]][:currency_totals][curr], curr) %></td>
+        <% end %>
+        <% if translated_column?(@currencies_with_data, @display_currency) %>
+          <td class="right"><%= format_cents_with_currency(@data[:type_totals][@data[:last_type]][:translated_total], @display_currency) %></td>
+        <% end %>
+      </tr>
+    <% end %>
+
+    <%# FX variance row %>
+    <% if @fx_variance && @fx_variance != 0 %>
+      <tr class="separator-row"></tr>
+      <tr class="fx-variance">
+        <td><%= fx_variance_label_link(start_date: @report.start_date, end_date: @report.end_date, entities: [@report.report_group.entity.code], currency: @display_param) %></td>
+        <% @currencies_with_data.each do |curr| %>
+          <td class="right">-</td>
+        <% end %>
+        <% if translated_column?(@currencies_with_data, @display_currency) %>
+          <td class="right"><%= format_cents_with_currency(@fx_variance, @display_currency) %></td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

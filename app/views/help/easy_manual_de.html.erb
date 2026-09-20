@@ -1,0 +1,197 @@
+<% content_for :title, "Benutzerhandbuch" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>So nutzt du diese App</h1>
+
+  <p>Diese App behält den Überblick über dein Geld &thinsp;&mdash;&thinsp; was hereinkommt, was hinausgeht und was auf jedem Konto verbleibt. Du richtest sie selbst ein, passend zur Struktur deines Unternehmens.</p>
+  <p>Ein Satz Bücher heißt <strong>Einheit</strong>: ein Unternehmen, eine vermietete Immobilie oder einfach dein eigener Haushalt. Du kannst hier mehrere nebeneinander führen, und jede behält ihre eigenen Konten und ihre eigenen Zahlen.</p>
+  <p>Bevor du beginnst, lohnt es sich, einen Plan zu skizzieren: Welche Einnahmequellen hast du, wofür gibst du Geld aus, und welche Bankkonten und Kreditkarten musst du verfolgen?</p>
+
+  <nav class="guide-toc" aria-label="Inhalt">
+    <ul>
+      <li><a href="#two-sides">Jede Buchung hat zwei Seiten</a></li>
+      <li><a href="#starting">Mit dem anfangen, was schon da ist</a></li><br />
+      <li><a href="#accounts">Deine Konten</a></li>
+      <li><a href="#adding-account">Ein Konto anlegen</a></li>
+      <li><a href="#deposit">Einnahmen erfassen &thinsp;&mdash;&thinsp; eine Einzahlung</a></li>
+      <li><a href="#withdrawal">Ausgaben erfassen &thinsp;&mdash;&thinsp; eine Auszahlung</a></li>
+      <li><a href="#transfer">Geld zwischen eigenen Konten verschieben &thinsp;&mdash;&thinsp; eine Überweisung</a></li>
+      <li><a href="#basis">Ist-Besteuerung und Soll-Besteuerung</a></li>
+      <li><a href="#splitting">Eine Rechnung auf betrieblich und privat aufteilen</a></li><br />
+      <li><a href="#receipts">Belege anhängen</a></li>
+      <li><a href="#repeating">Einen früheren Eintrag wiederholen</a></li>
+      <li><a href="#correcting">Einen Fehler korrigieren</a></li>
+      <li><a href="#reports">Deine Zahlen anzeigen (Berichte)</a></li>
+      <li><a href="#closing-year">Ein Geschäftsjahr abschließen</a></li>
+      <li><a href="#reconcile">Abgleich mit dem Kontoauszug</a></li><br />
+      <li><a href="#access">Anderen Personen Zugang geben</a></li>
+      <li><a href="#tax">Steuerberichte einrichten</a></li>
+      <li><a href="#filing">Vierteljährliche Zahlen selbst einreichen</a></li>
+      <li><a href="#families">Mehrere Unternehmen zusammenfassen &thinsp;&mdash;&thinsp; Familien</a></li>
+      <li><a href="#cross-business">Wenn eines deiner Unternehmen für ein anderes bezahlt</a></li>
+      <li><a href="#archive">Deine vollständigen Daten herunterladen</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="two-sides">Jede Buchung hat zwei Seiten</h2>
+  <p>Geld erscheint nicht einfach und verschwindet nicht einfach: Es kommt irgendwoher und geht irgendwohin. Deshalb fragt die App bei jeder Buchung nach einem zweiten Konto. Ein Eingang auf deinem Bankkonto kam aus einem Verkauf, von einem Kunden oder aus deiner eigenen Tasche &thinsp;&mdash;&thinsp; und es ist diese zweite Wahl, nicht die Bankzeile, die dir später sagt, was dein Unternehmen wirklich eingenommen und ausgegeben hat.</p>
+  <p>Du musst nie überlegen, welche Seite welche ist. Wähle das Bankkonto, in dem du arbeitest, sage, ob Geld herein- oder hinausging, und wähle das Konto, das sagt, wofür. Die App schreibt beide Seiten und hält sie gleich.</p>
+
+  <h2 id="starting">Mit dem anfangen, was schon da ist</h2>
+  <p>Wenn es dein Unternehmen schon gab, bevor du diese App benutzt hast, liegt auf deinem Bankkonto bereits Geld. Dieser Betrag &thinsp;&mdash;&thinsp; der Anfangsbestand &thinsp;&mdash;&thinsp; muss einmal erfasst werden, sonst ist jeder Saldo, den die App dir zeigt, für immer genau um diesen Betrag falsch.</p>
+  <p>Buche ihn als Umbuchung, dann stimmen beide Seiten. Lege zuerst ein Konto vom Typ Eigenkapital an, etwa &laquo;Anfangskapital&raquo;. Öffne dann dieses Konto, klicke auf Neue Umbuchung, wähle dein Bankkonto als Ziel, gib ein, was am Starttag auf der Bank lag, und datiere es auf diesen Tag.</p>
+  <p>Mach dasselbe für alles andere, was schon da war &thinsp;&mdash;&thinsp; ein Kreditkartensaldo, ein Darlehen. Danach buchst du ganz normal weiter.</p>
+
+  <h2 id="accounts">Deine Konten</h2>
+  <p>Konten sind die Kategorien, mit denen du dein Geld organisierst. Du legst sie selbst unter Konten im Menü an. Stell dir diese als beschriftete Eimer vor: einen für dein Bankkonto, einen für Miete, einen für Reisekosten, einen für Umsätze und so weiter. Bilanzkonten (Bankkonten, Darlehen, Kreditkarten) führen eine Währung. Ertrags- und Aufwandskonten nicht &thinsp;&mdash;&thinsp; sie sammeln nur Summen.</p>
+  <p>Sobald deine Konten eingerichtet sind, ist die laufende Buchführung einfach: Du erfasst, was sich bewegt hat und wohin es gegangen ist.</p>
+
+  <h2 id="adding-account">Ein Konto anlegen</h2>
+  <p>Geh zu Konten im Menü und klicke auf Neues Konto. Fülle aus:</p>
+  <ul>
+    <li>Name &thinsp;&mdash;&thinsp; was am besten passt, z.&nbsp;B. &laquo;HSBC GK&raquo; oder &laquo;Honorare&raquo; oder &laquo;Reisen&raquo;. Jederzeit änderbar.</li>
+    <li>Nummer &thinsp;&mdash;&thinsp; ein sechsstelliger Code mit Bedeutung. Konten werden nach dieser Nummer auf der Seite sortiert.<br/>
+		<code>5</code>04401: Die erste Ziffer legt den Kontotyp fest, und die App trägt den Typ für dich ein:<br />
+		<code>1</code> Aktiva &middot; <code>2</code> Passiva &middot; <code>3</code> Eigenkapital &middot; <code>4</code> Erträge &middot; <code>5</code> Aufwendungen &middot; <code>6</code> Privat<br />
+		5<code>04</code>401: Die nächsten 2 Ziffern stehen für dein Unternehmen/deine Einheit<br />
+		504<code>4</code>01: Ziffer 4 dient für Kategorien (z.&nbsp;B. Wareneinsatz; Auto und Reise; Miete, Abgaben, Energie und Versicherung; Instandhaltung&nbsp;...)<br />
+		5044<code>01</code>: Die letzten Ziffern sind für Details (z.&nbsp;B. Strom, Wasser, Versicherung, Miete, Abgaben&nbsp;...)
+	</li>
+    <li>Kontotyp (mit Beispielen, was typischerweise darin steht):<br />
+		Aktiva: Bankkonten, Bargeld, Immobilien, Ausstattung&nbsp;...<br />
+		Passiva: Kreditkarten, Geschäftsdarlehen, Kontokorrentkredite, Hypotheken, Umsatzsteuer&nbsp;...<br />
+		Eigenkapital: Anfangskapital, einbehaltene Gewinne, Rücklagen&nbsp;...<br />
+		Erträge: Honorare, Umsätze, Dienstleistungserlöse, erhaltene Zinsen, Zuschüsse&nbsp;...<br />
+		Aufwendungen: Miete, Reisen, Bürokosten, Personalkosten, Beraterhonorare (Steuerberater, Anwalt), Versicherungen&nbsp;...<br />
+		Privat: Entnahmen, privater Anteil gemischter Ausgaben, Gesundheit, Lebensmittel&nbsp;...
+	</li>
+    <li>Währung &thinsp;&mdash;&thinsp; nur für Bilanzkonten (Aktiva, Passiva, Eigenkapital).</li>
+    <li>Übergeordnetes Konto &thinsp;&mdash;&thinsp; optional. Weise ein übergeordnetes Konto zu, um Konten zu gruppieren. Übergeordnete Konten erhalten selbst keine Buchungen. Sie zeigen die Summe ihrer untergeordneten Konten.</li>
+  </ul>
+  <p>Speichere das Konto, und es erscheint in deiner Liste, bereit zur Verwendung.</p>
+
+  <h2 id="deposit">Einnahmen erfassen &thinsp;&mdash;&thinsp; eine Einzahlung</h2>
+  <p>Wenn Geld auf deinem Bankkonto eingeht, erfasse es als Einzahlung.</p>
+  <ol>
+    <li>Geh zu deinem Bankkonto in der Kontenliste und klicke auf Neue Einzahlung.</li>
+    <li>Gib Datum, Beschreibung und Betrag ein.</li>
+    <li>Wähle das Ertragskonto, das den Zweck des Eingangs beschreibt (z.&nbsp;B. Umsätze, Beratungshonorare).</li>
+    <li>Klicke auf Speichern.</li>
+  </ol>
+  <p>Du kannst mehrere Zeilen hinzufügen, wenn die Einzahlung verschiedene Ertragsarten umfasst. Jede Zeile erhält ihr eigenes Konto und ihren eigenen Betrag.</p>
+
+  <h2 id="withdrawal">Ausgaben erfassen &thinsp;&mdash;&thinsp; eine Auszahlung</h2>
+  <p>Wenn Geld dein Bankkonto verlässt, erfasse es als Auszahlung &thinsp;&mdash;&thinsp; genauso wie eine Einzahlung, nur umgekehrt.</p>
+  <ol>
+    <li>Geh zu deinem Bankkonto und klicke auf Neue Auszahlung.</li>
+    <li>Gib Datum, Beschreibung und Betrag ein.</li>
+    <li>Wähle das Aufwandskonto (z.&nbsp;B. Bürobedarf, Reisen, Miete).</li>
+    <li>Klicke auf Speichern.</li>
+  </ol>
+  <p>Du musst nicht jede Transaktion einzeln eingeben. Wenn du im Laufe eines Monats &euro;340 für Reisen ausgegeben hast, ist eine einzige Auszahlung von &euro;340 auf das Reisekonto vollkommen in Ordnung. Addiere die Beträge in einer Tabelle und gib die Summen ein.</p>
+
+  <h2 id="transfer">Geld zwischen eigenen Konten verschieben &thinsp;&mdash;&thinsp; eine Überweisung</h2>
+  <p>Wenn du Geld von einem Bankkonto auf ein anderes transferierst (zum Beispiel vom Girokonto auf ein Sparkonto), erfasse es als Überweisung.</p>
+  <ol>
+    <li>Geh zu dem Konto, von dem das Geld abgeht.</li>
+    <li>Klicke auf Neue Überweisung, wähle das Zielkonto, gib den Betrag ein und speichere.</li>
+  </ol>
+  <p>Wenn die beiden Konten in unterschiedlichen Währungen geführt werden, gib den tatsächlich auf dem Zielkonto eingegangenen Betrag ein. Die App berechnet den impliziten Wechselkurs sofort und zeigt ihn dir vor dem Speichern an.</p>
+
+  <h2 id="basis">Ist-Besteuerung und Soll-Besteuerung</h2>
+  <p>Bei der Ist-Rechnung buchen Sie danach, wann das Geld tatsächlich auf Ihr Konto kommt oder es verlässt. Bei der Soll-Rechnung buchen Sie danach, wann Sie etwas liefern oder erhalten &thinsp;&mdash;&thinsp; unabhängig davon, wann gezahlt wird.<br />
+	  Wenn Sie nicht sicher sind, was für Sie gilt: Ihr Finanzamt, Ihre Steuerberaterin oder Ihr Steuerberater kann es Ihnen sagen.</p>
+
+  <h3>Ist-Rechnung</h3>
+  <p>Sie folgt dem Geld: Einnahmen buchen Sie, wenn das Geld ankommt, Kosten, wenn Sie sie bezahlen. Nichts wird erfasst, bevor es auf dem Konto oder in der Kasse ist &thinsp;&mdash;&thinsp; jede Buchung ist eine gewöhnliche Einzahlung oder Auszahlung. Ein Workshop im Dezember, bezahlt im Februar, erscheint im Gewinn des Februars.</p>
+
+  <h3>Soll-Rechnung</h3>
+  <p>Bei der Soll-Rechnung buchen Sie die Einnahme, wenn Sie die Rechnung schreiben, gegen ein Konto Forderungen (Aktiva). Kommt das Geld an, gleichen Sie es mit einer Umbuchung aus: Forderungen =&gt; Bankkonto. Eine Kosten buchen Sie gegen Verbindlichkeiten (Passiva), sobald die Lieferantenrechnung da ist. Beim Bezahlen gleichen Sie ebenfalls per Umbuchung aus: Bankkonto =&gt; Verbindlichkeiten. Ein Workshop im Dezember, bezahlt im Februar, erscheint im Gewinn des Dezembers, und Ihre Bilanz zum Jahresende zeigt, was in beide Richtungen noch offen ist.</p>
+
+  <h2 id="splitting">Eine Rechnung auf betrieblich und privat aufteilen</h2>
+  <p>Manche Ausgaben sind nur zum Teil betrieblich. Dein Heiminternet nutzt du vielleicht zu 60&nbsp;% beruflich, dein Auto zu 40&nbsp;% für Kundenbesuche. Bei der Erfassung kannst du den Betrag direkt aufteilen.</p>
+  <p>Klicke auf die Schaltfläche % neben dem Betrag. Ein kleines Fenster öffnet sich, in dem du:</p>
+  <ul>
+    <li>Den betrieblichen Nutzungsanteil bestätigst oder anpasst.</li>
+    <li>Die beiden Beträge automatisch berechnet siehst.</li>
+    <li>Das zweite Konto wählst &thinsp;&mdash;&thinsp; in der Regel ein Privat- oder Entnahmekonto.</li>
+    <li>Auf Übernehmen klickst.</li>
+  </ul>
+  <p>Das Formular zeigt nun zwei Zeilen: den betrieblichen Anteil auf dem Aufwandskonto, den privaten Anteil auf dem Privatkonto. Beide werden gemeinsam gespeichert, und die Bücher bleiben ausgeglichen.</p>
+  <p>Um eine Aufteilung später zu ändern, klicke auf % in einer der beiden Zeilen. Das Fenster öffnet sich erneut mit der aktuellen Aufteilung; nimm deine Anpassungen vor und klicke auf Übernehmen.</p>
+
+  <h2 id="receipts">Belege anhängen</h2>
+  <p>Bei jeder Einzahlung oder Auszahlung kannst du auf die Schaltfläche + neben einer Zeile klicken, um ein Foto oder eine Datei anzuhängen (JPEG, PNG, PDF). Wenn du einen Beleg bereits separat hochgeladen hast, verwende stattdessen das Verknüpfungssymbol. An eine Zeile können mehrere Belege angehängt werden.</p>
+
+  <h2 id="repeating">Einen früheren Eintrag wiederholen</h2>
+  <p>Für alles, was sich wiederholt &thinsp;&mdash;&thinsp; monatliche Miete, ein laufendes Abonnement &thinsp;&mdash;&thinsp; verwende die Kopieren-Schaltfläche bei einem vorhandenen Eintrag. Es öffnet sich ein vorausgefülltes Formular. Passe das Datum und alle weiteren Angaben (wie Betrag oder Beschreibung) an und speichere. Viel schneller als von vorn anfangen.</p>
+
+  <h2 id="correcting">Einen Fehler korrigieren</h2>
+  <p>Alles, was du selbst gebucht hast, kannst du ändern oder entfernen. Nur die Konten, die die App selbst anlegt und pflegt &thinsp;&mdash;&thinsp; etwa den Gewinnvortrag &thinsp;&mdash;&thinsp; kannst du nicht anfassen.</p>
+  <p>Zum Bearbeiten geh zu deinem Bankkonto, such den Eintrag im Kontobuch und klicke auf Bearbeiten. Nimm deine Änderungen vor und speichere.</p>
+  <p>Um einen Eintrag zu löschen, klicke auf Anzeigen, um die dahinterliegende Journalbuchung zu öffnen &thinsp;&mdash;&thinsp; die zweiseitige Aufzeichnung, die die App für dich geschrieben hat. Löschen geht in zwei Schritten, weil eine gebuchte Buchung Teil deiner Zahlen ist und erst da heraus muss: Klicke auf Entbuchen/Löschen, um sie zu entbuchen &thinsp;&mdash;&thinsp; sie wird zu einem Entwurf, aus deinen Zahlen verschwunden, aber noch nicht weg. Klicke bei der entbuchten Buchung (dem Entwurf) auf Löschen, um sie vollständig zu entfernen.</p>
+
+  <h2 id="reports">Deine Zahlen anzeigen</h2>
+  <p>Auf dem Dashboard hat jedes deiner Unternehmen seine eigenen Berichtsschaltflächen. Die wichtigsten sind:</p>
+  <ul>
+    <li>Gewinn &amp; Verlust &thinsp;&mdash;&thinsp; Erträge minus Aufwendungen für jeden beliebigen Zeitraum. Das ist die Zahl, die dein Steuerberater oder deine Steuererklärung verlangt.</li>
+    <li>Bilanz &thinsp;&mdash;&thinsp; eine Momentaufnahme dessen, was du besitzt (Bankguthaben, Forderungen) und was du schuldest (Darlehen, offene Rechnungen) zu einem bestimmten Datum.</li>
+    <li>Rohbilanz &thinsp;&mdash;&thinsp; jedes Konto mit seinem laufenden Saldo. Nützlich, um zu prüfen, ob nichts am falschen Platz gebucht wurde.</li>
+    <li>Benutzerdefinierte Berichte &thinsp;&mdash;&thinsp; Erstelle auf dem Dashboard eine Berichtsgruppe und gib ihr einen Namen (z.&nbsp;B. MTD, Kinder, Scouts, Verein).<br />
+		Klicke auf die Berichtsgruppe, um festzulegen, welche Konten darin erscheinen und in welcher Reihenfolge. Ziehe diese nach oben oder unten, um sie anzuordnen. Speichere. Jeder Bericht in der Gruppe folgt diesem Layout.<br />
+		Füge der Gruppe einzelne Berichte hinzu (Q1, Q2 oder 2026, 2027) &thinsp;&mdash;&thinsp; jeder ist lediglich ein Zeitraum (von&nbsp;/&nbsp;bis). Führe einen beliebigen Bericht aus, um die Zahlen für diesen Zeitraum in genau der von dir festgelegten Anordnung zu sehen.
+	</li>
+	<li>Steuerberichte &thinsp;&mdash;&thinsp; Eine Berichtsgruppe für ein Steuerschema statt eine, die du selbst zusammengestellt hast, erstellt auf der <%= link_to "Steuer-Setup-Seite", easy_manual_path(anchor: "tax") %> weiter unten. Ansonsten dieselbe Idee wie ein Benutzerdefinierter Bericht.</li>
+  </ul>
+  <p>Die Seite Berichte im Menü listet alle Berichte, die du gespeichert hast, die neuesten zuerst.<br />
+	Einmal im Jahr erstellt die App ein unlöschbares Backup jeder einzelnen Buchung für jedes Konto in jedem Unternehmen oder jeder Familie; ein Backup lässt sich auch manuell für das laufende Jahr bis heute auslösen. Auch diese erscheinen hier und stehen zum Download bereit.</p>
+  <p>Benutzerdefinierte Berichte gibt es in einer langen und einer kurzen Version. Die kurze Version zeigt nur Kontosummen; die lange Version listet jeden einzelnen Eintrag unter dem jeweiligen Konto auf &thinsp;&mdash;&thinsp; und ermöglicht es dir, einen Eintrag direkt anzuklicken und zu korrigieren, ohne den Bericht zu verlassen.</p>
+  <p>Beim Herunterladen bekommst du die Version, die gerade auf dem Bildschirm steht. Der Versand eines Berichts per E-Mail schickt dir beide auf einmal &thinsp;&mdash;&thinsp; die kurze und die lange Version, die lange mit einem Link zum Beleg jedes Eintrags &thinsp;&mdash;&thinsp; dazu ein Dateiformat für die Steuerberatung (zum Beispiel DATEV), falls für dieses Unternehmen eines eingerichtet ist. Gibt es für den Zeitraum nichts zu melden, bekommst du stattdessen eine kurze E-Mail, die das mitteilt, ohne Anhang.</p>
+
+  <h2 id="closing-year">Ein Geschäftsjahr abschließen</h2>
+  <p>Wenn dein Geschäftsjahr vorbei ist, geh zum Dashboard und klicke auf &laquo;Jahr abschließen&raquo; in der Titelzeile deines Unternehmens. Die App addiert alle Einnahmen und Ausgaben des Jahres und überträgt das Ergebnis in deine Gewinnrücklagen (die laufende Summe dessen, was dein Unternehmen über seine gesamte Lebensdauer verdient hat).</p>
+  <p>Beim ersten Mal fragt die App, wie dein Geschäftsjahr läuft: das Kalenderjahr (1. Januar bis 31. Dezember), das britische Steuerjahr (6. April bis 5. April) oder ein anderes Abschlussdatum, das du wählst. Wähle das, das zu deinem Unternehmen passt &thinsp;&mdash;&thinsp; das wird nur einmal festgelegt.</p>
+  <p>Ein Jahr kannst du erst abschließen, wenn es vorbei ist &thinsp;&mdash;&thinsp; läuft das aktuelle noch, sagt dir die App, ab wann du es abschließen kannst.</p>
+  <p>Wenn du im Rückstand bist und mehr als ein Jahr aussteht, schließt die App sie eins nach dem anderen ab, das älteste zuerst &thinsp;&mdash;&thinsp; klicke einfach erneut auf &laquo;Jahr abschließen&raquo; für das nächste.</p>
+  <p>Wenn du später etwas korrigierst, das in einem bereits abgeschlossenen Jahr datiert ist, aktualisiert die App den Abschluss dieses Jahres automatisch für dich und zeigt einen Hinweis zur Bestätigung.</p>
+
+  <h2 id="reconcile">Abgleich mit dem Kontoauszug</h2>
+  <p>Gelegentlich lohnt es sich zu prüfen, ob das, was die App anzeigt, mit deinem Kontoauszug übereinstimmt. Geh zu deinem Bankkonto und klicke auf die Schaltfläche R. Gib das Auszugsdatum und den Saldo aus dem Auszug ein. Die App zeigt dir ihre eigene Zahl und die Differenz. Es wird nichts gespeichert &thinsp;&mdash;&thinsp; es ist nur eine schnelle Plausibilitätsprüfung. Wenn es eine Abweichung gibt, fehlt wahrscheinlich ein Eintrag oder hat den falschen Betrag.</p>
+
+  <h2 id="access">Anderen Personen Zugang geben</h2>
+  <p>Als Admin kannst du anderen Personen eingeschränkten Zugang zu deiner Buchhaltung geben. Ein Nur-Lesen-Admin kann alle Konten und Berichte einsehen, aber nichts hinzufügen oder ändern. Ein Nur-Upload-Admin kann Belege von seinem Telefon hochladen. Beide werden auf deiner Profilseite angelegt und verwaltet.</p>
+
+  <h2 id="tax">Steuerberichte einrichten</h2>
+  <p>Suche dein Unternehmen auf dem Dashboard und klicke in der Zeile Steuer auf &laquo;Steuer-Setup&raquo;. Kreuze eine Erklärung an, die du einreichen willst.</p>
+  <p>Kann sie direkt aus der App gesendet werden, wirst du gefragt, ob du von hier aus übermitteln willst.<br />
+  Sage ja, und wähle, wessen Erklärung es ist, oder lege einen neuen Steuerpflichtigen an (Steuernummer und ein Name).<br />
+  Sage nein, wenn du deine Zahlen woanders einreichst (z. B. über deinen Steuerberater).</p>
+  <p>Speichern.</p>
+  <p>Du landest bei der Berichtsgruppe der angekreuzten Erklärung. Deine verfügbaren Ertrags- und Aufwandskonten stehen rechts. Wähle für jedes Konto, das für dieses Schema relevant ist, die richtige Steuerkategorie (die App versucht, eine zu erraten), dann &laquo;+&raquo;, um das Konto zum Schema hinzuzufügen.</p>
+  <p>&laquo;Bericht hinzufügen&raquo;, um einen Zeitraum zu wählen. Deine Zahlen erscheinen so sortiert, wie das Steuerformular sie verlangt. Lade sie als Steuer-CSV herunter oder lass sie dir per E-Mail schicken (mit Beleg-Links).</p>
+  <p><strong>Wiederhole</strong> das, um weitere Steuerschemata hinzuzufügen.</p>
+
+  <h2 id="filing">Vierteljährliche Zahlen selbst einreichen</h2>
+    <p>Einige Erklärungen können direkt aus der App gesendet werden &thinsp;&mdash;&thinsp; UK Making Tax Digital (MTD), demnächst USt &thinsp;&mdash;&thinsp; aber nicht deine Jahressteuererklärung.</p>
+    <ol>
+      <li>Sage ja, wenn das Steuer-Setup nach dem Übermitteln aus der App fragt, und wähle oder ergänze den Steuerpflichtigen. Speichere und ordne deine Konten zu (siehe &laquo;Steuerberichte einrichten&raquo;).</li>
+      <li>Um dich mit deiner Steuerbehörde zu verbinden, klicke auf Verbinden &thinsp;&mdash;&thinsp; auf dem Dashboard oder auf der Steuer-Setup-Seite. Melde dich bei der Steuerbehörde an.</li>
+      <li>Sobald du verbunden bist, gehe zu den Übermittlungen, entweder vom Dashboard oder von der Steuer-Setup-Seite.</li>
+      <li>Übermittle den aktuellen Zeitraum.</li>
+    </ol>
+    <p>Die Übermittlungsseite listet die Zeiträume auf, die die Steuerbehörde erwartet, mit einer Schaltfläche pro Zeitraum, um dafür einen Bericht anzulegen &thinsp;&mdash;&thinsp; die Daten kommen von ihr, du vergibst nur den Namen. Nützlich, um die Zahlen vor dem Senden zu prüfen.</p>
+    <p>Bei UK MTD umfasst jede Übermittlung das Steuerjahr bis zum aktuellen Zeitpunkt und ersetzt die vorherige (kumulativ). Auch ein Zeitraum ohne Bewegungen muss übermittelt werden. Danach bekommst du eine E-Mail mit einer Kopie dessen, was gesendet wurde &thinsp;&mdash;&thinsp; das ist dein Nachweis.</p>
+
+  <h2 id="families">Mehrere Unternehmen zusammenfassen &thinsp;&mdash;&thinsp; Familien</h2>
+  <p>Wenn du hier mehr als eine Buchhaltung führst &thinsp;&mdash;&thinsp; ein Unternehmen und einen Haushalt, oder zwei kleine Unternehmen &thinsp;&mdash;&thinsp; kannst du sie zu einer Familie zusammenfassen. Deine Gewinn- und Verlustrechnung, Bilanz und Probebilanz umfassen dann die ganze Familie auf einmal, während jedes Unternehmen weiterhin seine eigenen Konten und übrigen Berichte behält. Zum Einrichten geh auf deine Profilseite und gib jedem Unternehmen denselben Familiennamen.</p>
+
+  <h2 id="cross-business">Wenn eines deiner Unternehmen für ein anderes bezahlt</h2>
+  <p>Dafür brauchst du Zugang zu beiden Büchern, und sie dürfen nicht in derselben Familie sein &thinsp;&mdash;&thinsp; innerhalb einer Familie decken die Berichte ohnehin beide ab, da ist nichts Besonderes nötig.</p>
+  <p>Manchmal bezahlt das Bankkonto eines Unternehmens Kosten, die eigentlich zu einem anderen gehören, und beide müssen es in ihren eigenen Büchern zeigen. Erfasse es als normale Auszahlung vom Konto, das bezahlt hat &thinsp;&mdash;&thinsp; aber für den Aufwand wähle das Konto des ANDEREN Unternehmens. Die App bemerkt das und öffnet ein kurzes Formular, das nach einem Schenkungskonto im zahlenden Unternehmen und einem Kapitalkonto im empfangenden Unternehmen fragt. Gib den Betrag ein und bestätige.</p>
+  <p>Die App erstellt beide Seiten für dich &thinsp;&mdash;&thinsp; je eine Buchung in jedem Unternehmen, jede für sich ausgeglichen &thinsp;&mdash;&thinsp; und zeigt die Zeilen des anderen Unternehmens darunter. Falls das Schenkungs- oder Kapitalkonto noch nicht existiert, kannst du es direkt anlegen. Löschen und Kopieren funktioniert wie immer; zum Bearbeiten klicke auf einen beliebigen Betrag des verbundenen Paares. Damit öffnet sich das Formular und du kannst deine Änderungen vornehmen.</p>
+
+  <h2 id="archive">Deine vollständigen Daten herunterladen</h2>
+  <p>Für einen vollständigen Export geh zum Dashboard und lade jedes Jahresabschluss-Archiv herunter, und klicke zusätzlich auf das Datum von heute, um ein Archiv mit den aktuellen Posten bis heute zu erzeugen &thinsp;&mdash;&thinsp; zusammen ergeben sie die vollständige Historie, nichts fehlt, nichts ist doppelt. Die vollständige Liste findest du auch auf der Seite Berichte.</p>
+
+</div>
+<%= render "help/back" %>

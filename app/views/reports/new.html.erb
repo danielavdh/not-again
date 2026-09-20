@@ -1,0 +1,45 @@
+<% content_for :title, "New Report" %>
+
+<div id="new_edit_view">
+  <%= render partial: 'shared/flash' %>
+
+  <%= form_with model: @report, 
+                url: report_group_reports_path(@report_group), 
+                class: "form_report" do |f| %>
+
+    <% if @report.errors.any? %>
+      <div class="field">
+        <ul>
+          <% @report.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="field">
+      <%= f.label :name %>
+      <%= f.text_field :name, required: true, placeholder: "e.g. Q1 2026" %>
+    </div>
+
+    <div class="field flex">
+      <div>
+        <%= f.label :start_date %>
+        <%= f.date_field :start_date, required: true %>
+      </div>
+      <div>
+        <%= f.label :end_date %>
+        <%= f.date_field :end_date, required: true %>
+      </div>
+    </div>
+
+    <div class="actions">
+      <%= f.submit "Create Report" %>
+    </div>
+  <% end %>
+</div>
+
+<div class="crud_navigation">
+  <%= link_to "← Back", report_group_path(@report_group), class: "backend_link button green" %>
+  <%= link_to "Cancel", report_group_path(@report_group), class: "backend_link button green" %>
+</div>

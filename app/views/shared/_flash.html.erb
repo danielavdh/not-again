@@ -1,0 +1,7 @@
+ <% if alert || notice %>
+		<div class="flash"
+			   data-behavior="removable">
+			<span><%= alert&.html_safe %><%= notice&.html_safe %></span>
+			<button type="button" class="flash-close">OK</button>
+		</div>
+ <% end %>

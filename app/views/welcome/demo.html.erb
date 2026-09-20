@@ -1,0 +1,117 @@
+<div class="wrap">
+
+  <nav>
+    <div class="brand"><%= link_to "not-again", root_path %></div>
+    <div class="navmeta">
+      <%= link_to t("welcome.index.nav_features"), root_path(anchor: "what") %>
+      <%= link_to "github ↗", REPO_URL, class: "gh", rel: "noopener" if REPO_URL %>
+      <%= link_to t("welcome.index.login"), new_session_path, class: "gh" %>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">
+      <%= safe_join(Array(t(".eyebrow")).map { |word| tag.span(word) }) %>
+      <%= render "welcome/langs" %>
+    </div>
+
+    <h1><%= t(".title_html") %></h1>
+
+    <p class="subline"><%= t(".subline") %></p>
+
+    <p class="lede"><%= t(".lede") %></p>
+
+    <%# One .door per way in, each holding its own way in and its own guide. The
+        grouping is carried by spacing alone — a small gap inside a door, a large
+        one between doors — so nothing needs a heading or a box.
+
+        The first line of each door is a self-assessment, so the reader picks by
+        recognising themselves rather than by understanding a feature difference.
+
+        ⚠️ The *_go labels carry a generated arrow at each end (one visible, one
+        hidden as a counterweight), so they cost 4 characters more than they read.
+        The door is sized in ch; locale_coverage_test enforces the budget. %>
+    <div class="cta-row demolinks">
+
+		<div class="door">
+			<% if demo_available? %>
+			  <%= button_to demo_path, class: "btn btn-primary" do %>
+			    <span><%= t(".easy_who") %></span>
+			    <span><%= t(".easy_go") %></span>
+			  <% end %>
+			<% end %>
+			<%= link_to t(".easy_guide"), easy_manual_path, class: "btn btn-ghost" %>
+		</div>
+
+		<div class="door">
+			<% if demo_available? %>
+			  <%= button_to demo_path(version: "pro"), class: "btn btn-ghost" do %>
+			    <span><%= t(".pro_who") %></span>
+			    <span><%= t(".pro_go") %></span>
+			  <% end %>
+			<% end %>
+			<%= link_to t(".pro_guide"), pro_manual_path, class: "btn btn-ghost" %>
+		</div>
+
+		<%# A ROLE, not a skill level — and phone only, because the uploader is a
+		    camera screen. %>
+		<div class="door phone-only">
+			<% if demo_available? %>
+			  <%= button_to demo_path(version: "receipts"), class: "btn btn-ghost" do %>
+			    <span><%= t(".upload_who") %></span>
+			    <span><%= t(".upload_go") %></span>
+			  <% end %>
+			<% end %>
+		</div>
+
+		<span class="cta-note"><%= t(".cta_note") %></span>
+    </div>
+  </header>
+
+  <%# ⚠️ The three figures describe whatever demo:seed last created. Change the
+      seed and the page lies quietly. %>
+  <div class="ledger">
+    <div class="cell"><div class="k"><%= t(".ledger_business") %></div><div class="v">1</div></div>
+    <div class="cell"><div class="k"><%= t(".ledger_currencies") %></div><div class="v">zł € £</div></div>
+    <div class="cell"><div class="k"><%= t(".ledger_months") %></div><div class="v">9</div></div>
+    <div class="cell"><div class="k"><%= t(".ledger_break") %></div><div class="v licence"><%= t(".ledger_nothing") %></div></div>
+  </div>
+
+  <%# These answer, one for one, the three currency claims the landing page makes;
+      demo.rake says that is why the seed exists. They describe what is IN the
+      books — do not turn them into instructions. %>
+  <section class="feat">
+    <div class="sec-head"><%= t(".features_heading") %></div>
+    <div class="rows">
+      <div class="row">
+        <div class="num">01</div>
+        <h3><%= t(".f1_title") %></h3>
+        <p><%= t(".f1_body") %></p>
+      </div>
+      <div class="row">
+        <div class="num">02</div>
+        <h3><%= t(".f2_title") %></h3>
+        <p><%= t(".f2_body") %></p>
+      </div>
+      <div class="row">
+        <div class="num">03</div>
+        <h3><%= t(".f3_title") %></h3>
+        <p><%= t(".f3_body") %></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="band">
+    <div>
+      <h2><%= t(".band_heading_html") %></h2>
+      <p><%= t(".band_note") %></p>
+    </div>
+    <%= link_to t(".band_cta"), easy_manual_path, class: "btn" %>
+  </div>
+
+  <footer>
+    <div class="sig"><%= t("welcome.index.footer_sig") %></div>
+    <div class="contrast"><%= render "welcome/contrast_toggle" %> · <%= link_to service_host, root_path %></div>
+  </footer>
+
+</div>

@@ -1,0 +1,33 @@
+<%# Inside the tax setup page's modal. Two ways out, always both offered: pick a
+    taxpayer you already have, or add one. The picker holds only what you may
+    USE — your own, plus any already filing for an entity you can write to — so
+    a bookkeeper and their assistant share one connection.
+
+    Nothing here saves the tax setup. Choosing fills the picker on the page
+    behind; adding saves a taxpayer, which is a record of its own. %>
+
+<% if @choices.any? %>
+  <div class="field">
+    <%= label_tag :choose_taxpayer_id,
+                  t("filing.register.taxpayer_label",
+                    authority: @authority_name) %>
+    <%= select_tag :choose_taxpayer_id,
+                   options_from_collection_for_select(@choices, :id, :display_name),
+                   id: :choose_taxpayer_id %>
+  </div>
+<% end %>
+
+<div class="split-actions">
+  <% if @choices.any? %>
+    <button type="button" class="button" data-taxpayer-use="<%= @authority %>">
+      <%= t("filing.register.use_taxpayer") %>
+    </button>
+  <% end %>
+  <%# Straight to the form, in this same modal — the authority is already decided. %>
+  <button type="button" class="button"
+          data-taxpayer-new="<%= @authority %>"
+          data-url="<%= new_taxpayer_path(authority: @authority, modal: 1) %>">
+    <%= t("filing.register.add") %>
+  </button>
+  <button type="button" class="button add-taxpayer-cancel"><%= t("crud.cancel") %></button>
+</div>

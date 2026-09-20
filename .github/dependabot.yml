@@ -1,0 +1,39 @@
+# Dependabot opens a pull request whenever a dependency has a newer version.
+# Left at its defaults it opened one per gem per day against `main` — a branch
+# no work happens on — so they piled up unread, which is worse than none: a
+# genuine security bump looks exactly like the other eleven.
+#
+# So: weekly, and GROUPED into one PR per ecosystem. Security advisories are
+# never grouped by Dependabot and still arrive on their own, which is the point.
+# CI also runs `bundler-audit` on every push, so an advisory is caught there
+# whether or not anyone reads a PR.
+version: 2
+updates:
+- package-ecosystem: bundler
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
+  groups:
+    # Everything routine in one PR. Majors stay separate: those are the ones
+    # that break things quietly — image_processing 1→2 in particular, where
+    # ReceiptUploader.compress_image rescues to nil and a green suite proves
+    # nothing.
+    bundler-minor-and-patch:
+      patterns: [ "*" ]
+      update-types: [ "minor", "patch" ]
+
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
+  groups:
+    actions:
+      patterns: [ "*" ]
+
+- package-ecosystem: docker
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5

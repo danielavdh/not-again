@@ -1,0 +1,97 @@
+<%# Build 2 — cross-entity modal. Opens when a posting row selects a foreign
+    nominal account (an entity outside the entry's home group). Collects the leg:
+    the receiving entity's real leg (504/404), the shared amount, the paying
+    entity's gift/601 and the receiving entity's capital/304. The JS filters each
+    select to the right entity/currency on open (all options rendered here; home
+    and payee entities are only known at trigger time). Confirm repurposes the
+    trigger row into the 601 gift and fetches JE₂'s real posting rows from the
+    server (JournalEntriesController#cross_entity_rows). %>
+<dialog id="cross-entity-modal" class="split-modal cross-entity-modal"
+        data-rows-url="<%= cross_entity_rows_journal_entries_path(locale: I18n.locale) %>"
+        data-entity-names="<%= @cross_entity_entity_names.to_json %>">
+  <div class="split-modal-box">
+    <h3><%= t("entities.cross_entity.title") %></h3>
+    <p class="cross-entity-intro" data-ce-intro data-template="<%= t('entities.cross_entity.intro') %>"></p>
+
+    <div class="split-row">
+      <label><%= t("entities.cross_entity.real_leg") %></label>
+      <select id="ce-nominal" data-tomselect="true" data-tomselect-placeholder="<%= t('attrs.tom_blank') %>">
+        <option value=""></option>
+        <% @cross_entity_account_options.each do |label, id, attrs| %>
+          <% next unless %w[income expense].include?(attrs['data-type'].to_s) %>
+          <option value="<%= id %>"
+                  data-entity="<%= attrs['data-entity'] %>"
+                  data-group="<%= attrs['data-group'] %>"
+                  data-type="<%= attrs['data-type'] %>"><%= label %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <%# Real-leg side — explicit for JEs (advanced admins); hidden for bank entries,
+        where deposit/withdrawal already fixes it. The gift takes this side, the
+        capital the opposite. Defaulted from the account type by the JS. %>
+    <div class="split-row" data-ce-side-row>
+      <label><%= t("entities.cross_entity.leg_side") %></label>
+      <select id="ce-side">
+        <option value="debit"><%= t("jargon.debit") %></option>
+        <option value="credit"><%= t("jargon.credit") %></option>
+      </select>
+    </div>
+
+    <div class="split-row">
+      <label><%= t("entities.cross_entity.amount") %></label>
+      <input type="text" id="ce-amount" inputmode="decimal" class="right">
+    </div>
+
+    <div class="split-row">
+      <label><%= t("entities.cross_entity.gift_account") %></label>
+      <select id="ce-gift" data-tomselect="true" data-tomselect-placeholder="<%= t('attrs.tom_blank') %>">
+        <option value=""></option>
+        <% @cross_entity_account_options.each do |label, id, attrs| %>
+          <% next unless attrs['data-type'].to_s == 'personal' %>
+          <option value="<%= id %>"
+                  data-entity="<%= attrs['data-entity'] %>"
+                  data-group="<%= attrs['data-group'] %>"><%= label %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div class="split-row">
+      <label><%= t("entities.cross_entity.capital_account") %></label>
+      <select id="ce-capital" data-tomselect="true" data-tomselect-placeholder="<%= t('attrs.tom_blank') %>">
+        <option value=""></option>
+        <% @cross_entity_account_options.each do |label, id, attrs| %>
+          <% next unless attrs['data-type'].to_s == 'equity' %>
+          <option value="<%= id %>"
+                  data-entity="<%= attrs['data-entity'] %>"
+                  data-group="<%= attrs['data-group'] %>"
+                  data-currency="<%= attrs['data-currency'] %>"><%= label %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <p id="cross-entity-warning" class="split-warning"
+       data-balance-msg="<%= t('entities.cross_entity.balance_blocked') %>"
+       data-incomplete-msg="<%= t('entities.cross_entity.incomplete') %>" hidden></p>
+
+    <div class="split-actions">
+      <button type="button" id="ce-confirm" class="button green"><%= t("entities.cross_entity.confirm") %></button>
+      <button type="button" class="button green ce-cancel"><%= t("crud.cancel") %></button>
+    </div>
+  </div>
+</dialog>
+
+<%# "Add account on the fly" for the gift/capital selects (#6). The form is fetched
+    from AccountsController#new (cross_entity mode) into #add-account-content, posted
+    by JS, and on success the new account is injected into the triggering select. %>
+<dialog id="add-account-modal" class="split-modal cross-entity-modal"
+        data-new-url="<%= new_account_path(locale: I18n.locale) %>"
+        data-add-label="<%= t('entities.cross_entity.add_account') %>">
+  <div class="split-modal-box">
+    <h3><%= t("accounts.new.new_account") %></h3>
+    <p id="add-account-errors" class="split-warning" hidden></p>
+    <%# The fetched form (cross-entity mode) supplies BOTH submit + cancel in its
+        own .split-actions, so they stay together and don't merge with crud_navigation. %>
+    <div id="add-account-content"></div>
+  </div>
+</dialog>

@@ -1,0 +1,35 @@
+{
+  "name": "not-again",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/rails",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "forwardPorts": [3000, 5432],
+  "portsAttributes": {
+    "3000": { "label": "Rails" },
+    "5432": { "label": "Postgres" }
+  },
+
+  "postCreateCommand": "bundle install && bin/rails db:prepare",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp",
+        "rebornix.Ruby",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg"
+      ],
+      "settings": {
+        "editor.formatOnSave": false,
+        "rubyLsp.rubyVersionManager": { "identifier": "none" }
+      }
+    }
+  },
+
+  "remoteUser": "rails"
+}

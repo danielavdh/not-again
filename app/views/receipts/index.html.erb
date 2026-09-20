@@ -1,0 +1,132 @@
+<% content_for :title, t("receipts.title") %>
+
+<div class="backend_table receipts">
+  <%= render partial: 'shared/flash' %>
+
+  <h1><%= t("receipts.title") %></h1>
+
+  <div class="controls">
+    <% if can_upload_receipts? %>
+      <%= link_to t("receipts.upload_receipt"), new_receipt_path, class: 'backend_link button green' %>
+    <% end %>
+
+    <div class="controls-filter">
+      <%= form_with url: receipts_path, method: :get, local: true do |f| %>
+        <% if @entities.size > 1 %>
+          <%= select_tag :entity_id,
+                options_from_collection_for_select(@entities, :id, :name, params[:entity_id]),
+                include_blank: t("receipts.all_entities"),
+                aria: { label: t("receipts.all_entities") },
+                class: 'form-select' %>
+        <% end %>
+        <%= label_tag :start_date, t("crud.from") %>
+        <%= date_field_tag :start_date, params[:start_date] %>
+        <%= label_tag :end_date, t("crud.to") %>
+        <%= date_field_tag :end_date, params[:end_date] %>
+        <%= select_tag :filter,
+              options_for_select([
+                [t("receipts.all"), ""],
+                [t("receipts.unlinked_only"), "unlinked"],
+                [t("receipts.linked_only"), "linked"]
+              ], params[:filter]), aria: { label: t("crud.filter") } %>
+        <%= submit_tag t("crud.filter"), class: 'button green' %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Standalone, not wrapping the table — several rows below already carry
+      their own button_to (unlink, delete), each its own <form>, and forms
+      cannot nest. Nothing renders inside it: the submit button lives in the
+      table header instead, joined to this form by id via the HTML5
+      form="..." attribute, same as every checkbox. %>
+  <%= form_with url: download_selected_receipts_path, method: :post, id: "download-selected-form" do %>
+  <% end %>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="receipt-thumb-col"></th>
+        <th><%= t("receipts.filename") %></th>
+        <th><%= t("attrs.date") %></th>
+        <th class="no-halfpad"><%= t("receipts.entity") %></th>
+        <th><%= t("receipts.linked_to") %></th>
+        <th class="no-halfpad"><%= t("receipts.description_col") %></th>
+        <th class="receipt-select-col">
+		  <div>
+            <button type="submit" form="download-selected-form"
+                    class="backend_link button green" aria-label="<%= t("receipts.download_selected_label") %>">
+              <svg class="stroke"><use xlink:href='#te_download'></use></svg>
+            </button>
+            <input type="checkbox" data-action="select-all-receipts" aria-label="<%= t("receipts.select_all_page") %>">
+		  </div>
+        </th>
+        <th class="actions"><%= t("attrs.actions") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @receipts.each do |receipt| %>
+        <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+          <td class="receipt-thumb-cell">
+            <img src="<%= receipt.thumbnail_url %>"
+                 alt="<%= receipt.title %>"
+                 class="receipt-thumbnail"
+                 data-receipt-id="<%= receipt.id %>"
+                 data-action="preview-receipt">
+          </td>
+          <td><%= receipt.display_filename %></td>
+          <td><%= format_date(receipt.receipt_date) %></td>
+          <td class="no-halfpad"><%= receipt.entity&.name %></td>
+          <td>
+            <% if receipt.posting %>
+              <%= receipt.posting.account&.code %> -
+              <%= receipt.posting.description.presence || receipt.posting.journal_entry&.memo %>
+            <% else %>
+              <span><%= t("receipts.unlinked") %></span>
+            <% end %>
+          </td>
+          <td class="no-halfpad"><%= truncate(receipt.description.to_s, length: 40) %></td>
+          <td class="receipt-select-cell">
+            <input type="checkbox" name="receipt_ids[]" value="<%= receipt.id %>"
+                   form="download-selected-form" data-role="receipt-checkbox">
+          </td>
+          <td class="actions">
+            <button class="backend_link button green"
+                    data-action="preview-receipt"
+                    data-receipt-id="<%= receipt.id %>">
+              <span class="big-screen"><%= t("crud.view") %></span>
+              <svg class="small-screen"><use xlink:href='#view'></use></svg>
+            </button>
+            <% if can_upload_receipts? %>
+              <%= link_to edit_receipt_path(receipt), class: 'backend_link button green' do %>
+                <span class="big-screen"><%= t("crud.edit") %></span>
+                <svg class="small-screen"><use xlink:href='#edit'></use></svg>
+              <% end %>
+              <% if receipt.posting_id %>
+                <%= button_to unlink_receipt_path(receipt),
+                      method: :post, class: 'backend_link button green' do %>
+                  <span class="big-screen"><%= t("receipts.unlink") %></span>
+                  <svg class="small-screen"><use xlink:href='#unlink'></use></svg>
+                <% end %>
+              <% end %>
+              <%= button_to receipt_path(receipt),
+                    method: :delete,
+                    data: { sure: t("crud.sure") },
+                    class: 'backend_link button red' do %>
+                <span class="big-screen"><%= t("crud.delete") %></span>
+                <svg class="small-screen stroke s30"><use xlink:href='#trash'></use></svg>
+              <% end %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="crud_navigation">
+  <% if @pagy %>
+    <%== @pagy.series_nav %>
+  <% end %>
+</div>
+
+<%= render "receipts/preview_modal" %>

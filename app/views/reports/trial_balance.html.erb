@@ -1,0 +1,135 @@
+<%# app/views/acc/reports/trial_balance.html.erb %>
+<% content_for :title, t("page.trial_balance") %>
+
+<div class="backend_table report trial_balance">
+	<h2><%= t("page.trial_balance") %>
+		<% if @start_date %> 
+			(<%=l @start_date, format: :short_date %> - <%=l @end_date, format: :short_date %>)
+		<% else %> 
+			(<%= t(".as_of") %> <%=l @end_date, format: :short_date %>)
+		<% end %>
+		— <%= report_scope_label(@selected_entity_codes) %>
+	</h2>
+
+  <%= render partial: 'shared/flash' %>
+
+  <!-- <p class="report-scope"><%#= report_scope_label(@selected_entity_codes) %></p> -->
+
+	<div class="controls">
+		<%= form_with url: trial_balance_reports_path, 
+			method: :get, local: true, 
+			class: 'form_trial_balance' do %>
+			<%= label_tag :start_date, t("crud.from") %>
+			<%= date_field_tag :start_date, @start_date %>
+			<%= label_tag :end_date, t("crud.to") %>
+			<%= date_field_tag :end_date, @end_date %>
+			<%= submit_tag t("crud.generate"), class: 'button green' %>
+		<% end %>
+	</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th><%= t("jargon.account") %></th>
+        <% @currencies_with_data.each do |curr| %>
+          <th class="right"><%= t("jargon.debit") %> (<%= curr %>)</th>
+          <th class="right"><%= t("jargon.credit") %> (<%= curr %>)</th>
+        <% end %>
+        <%# The translating pair. Dropped when a single currency already is the
+            target — they would only repeat the columns beside them. %>
+        <% if translated_column?(@currencies_with_data, @display_currency) %>
+          <th class="right"><%= t("jargon.debit") %> (<%= @display_currency %>)</th>
+          <th class="right">
+            <%= t("jargon.credit") %>
+            <% if currency_selectable?(@currencies_with_data) %>
+              <%= form_with url: trial_balance_reports_path, method: :get, local: true, style: 'display:inline' do %>
+                <%= hidden_field_tag :start_date, @start_date %>
+                <%= hidden_field_tag :end_date, @end_date %>
+                <%= hidden_field_tag :entities, @selected_entity_codes&.join(',') %>
+                <%= select_tag :currency, currency_select_options(@currency_options, @display_selection), id: 'report-currency-select', aria: { label: t("jargon.currency") } %>
+              <% end %>
+            <% else %>
+              (<%= @display_currency %>)
+            <% end %>
+            <%= render "reports/rate_source", sources: rate_sources, selectable: currency_selectable?(@currencies_with_data) %>
+          </th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% @accounts.each do |account| %>
+        <% balances = @balances_by_currency[account.id] || {} %>
+        <% next if balances.empty? %>
+        <% translated = @account_translated[account.id] || { debit: 0, credit: 0 } %>
+
+        <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+          <td>
+			  <%= link_to "#{account.code} - #{account.name}",
+			   			ledger_account_path(account), 
+			   			class: 'report-account-link' %>
+		  </td>
+          <% @currencies_with_data.each do |curr| %>
+            <% data = balances[curr] || { debit: 0, credit: 0 } %>
+            <td class="right"><%= data[:debit] > 0 ? format_cents_with_currency(data[:debit], curr) : '' %></td>
+            <td class="right"><%= data[:credit] > 0 ? format_cents_with_currency(data[:credit], curr) : '' %></td>
+          <% end %>
+          <% if translated_column?(@currencies_with_data, @display_currency) %>
+            <td class="right"><%= translated[:debit] > 0 ? format_cents_with_currency(translated[:debit], @display_currency) : '' %></td>
+            <td class="right"><%= translated[:credit] > 0 ? format_cents_with_currency(translated[:credit], @display_currency) : '' %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+    <tfoot>
+      <tr class="list-header">
+        <th><%= t("jargon.total") %></th>
+        <% @currencies_with_data.each do |curr| %>
+          <th class="right"><%= format_cents_with_currency(@totals[:debit_by_currency][curr], curr) %></th>
+          <th class="right"><%= format_cents_with_currency(@totals[:credit_by_currency][curr], curr) %></th>
+        <% end %>
+        <% if translated_column?(@currencies_with_data, @display_currency) %>
+          <th class="right"><%= format_cents_with_currency(@totals[:translated_debit], @display_currency) %></th>
+          <th class="right"><%= format_cents_with_currency(@totals[:translated_credit], @display_currency) %></th>
+        <% end %>
+      </tr>
+
+	<% if @fx_variance && @fx_variance != 0 %>
+	  <tr class="list-line-even fx-variance">
+	    <td><%= fx_variance_label_link(start_date: @start_date, end_date: @end_date, entities: @selected_entity_codes, currency: @display_param) %></td>
+	    <% @currencies_with_data.each do |_| %>
+	      <td></td>
+	      <td></td>
+	    <% end %>
+	    <% if @fx_variance > 0 %>
+	      <td></td>
+	      <td class="right"><%= format_amount(@fx_variance.to_i, @display_currency) %></td>
+	    <% else %>
+	      <td class="right"><%= format_amount(@fx_variance.abs.to_i, @display_currency) %></td>
+	      <td></td>
+	    <% end %>
+	  </tr>
+
+	  <tr class="list-header">
+	    <th><%= t('reports.adjusted_totals', default: 'ADJUSTED TOTALS') %></th>
+	    <% @currencies_with_data.each do |_| %>
+	      <th></th>
+	      <th></th>
+	    <% end %>
+	    <th class="right"><%= format_amount(@totals[:adjusted_debit].to_i, @display_currency) %></th>
+	    <th class="right"><%= format_amount(@totals[:adjusted_credit].to_i, @display_currency) %></th>
+	  </tr>
+	<% end %>
+
+
+    </tfoot>
+  </table>
+</div>
+
+<div class="crud_navigation">
+  <%= link_to t("crud.dashboard"), dashboard_path, class: 'button green' %>
+  <%= link_to t("crud.csv"),
+      trial_balance_reports_path(format: :csv, start_date: @start_date, end_date: @end_date, currency: @display_param, entities: @selected_entity_codes&.join(',')),
+      class: 'button green',
+      data: { sure: t("crud.csv_confirm") } %>
+  <button id="print-button" class="button green"><%= t("crud.print") %></button>
+</div>

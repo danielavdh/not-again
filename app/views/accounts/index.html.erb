@@ -1,0 +1,77 @@
+<% content_for :title, t("page.accounts") %>
+
+<div class="backend_table accounts index">
+    <h1><%= t(".chart") %></h1>
+		
+	<%= render partial: 'shared/flash' %>
+
+    <div class="controls">
+        <%= link_to t(".new_account"),
+        	new_account_path,
+        	class: "backend_link button green"  %>
+		<%= link_to t("crud.csv"),
+			accounts_path(format: :csv),
+			class: 'backend_link button green',
+			data: { sure: t("crud.csv_confirm") } %>
+		<button id="print-button" 
+				class="backend_link button green"><%= t("crud.print") %>
+		</button>
+		<!-- Filter/Search -->
+		<div class="accounts-filter">
+    		<input type="text" 
+    		       id="accounts-filter-input"
+    		       aria-label="<%= t('.placeholder') %>"
+    		       placeholder='<%= t(".placeholder") %>' 
+    		       class="form-control filter-input"
+    		       value="<%= params[:filter] %>"
+    		       autocomplete="off" />
+		</div>
+    	<!-- Pagination (only shown when not filtering) -->
+    	<% if @pagy %>
+    		<%== @pagy.series_nav %>
+    	<% end %>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+      			<th><%= t("attrs.code") %> & <%= t("attrs.name") %></th>
+      			<th class="no-phone"><%= t("attrs.type") %></th>
+      			<th class="no-phone"><%= t("jargon.currency") %></th>
+				<th class="right"><%= t("jargon.balance") %></th>
+				<th class="no-phone no-print"></th>
+				<% if sudo? %>
+				<th>tax scheme</th>
+				<th>tax cat key</th>
+				<% end %>
+            </tr>
+        </thead>
+
+        <tbody id="accounts-table-body">
+
+			<%= render partial: 'accounts/accounts_table_rows', locals: { accounts: @accounts, balances: @balances, parent_balances: @parent_balances, accounts_with_children: @accounts_with_children, undeletable_ids: @undeletable_account_ids } %>
+			
+        </tbody>
+    </table>
+
+
+</div>
+
+<dialog id="reconcile-modal" class="reconcile-modal">
+  <div class="reconcile-modal-box">
+    <h3><%= t("accounts.reconcile.title") %> <span id="reconcile-account-name"></span></h3>
+    <div class="reconcile-row">
+      <label for="reconcile-date"><%= t("accounts.reconcile.date") %></label>
+      <input type="date" id="reconcile-date">
+    </div>
+    <div class="reconcile-row">
+      <label for="reconcile-statement"><%= t("accounts.reconcile.statement_balance") %></label>
+      <input type="text" id="reconcile-statement" inputmode="decimal">
+    </div>
+    <div class="reconcile-result">
+      <span><%= t("accounts.reconcile.app_balance") %> <strong id="reconcile-app-balance">—</strong></span>
+      <span><%= t("accounts.reconcile.difference") %> <strong id="reconcile-difference">—</strong></span>
+    </div>
+    <button type="button" class="button green reconcile-close"><%= t("crud.cancel") %></button>
+    </div>
+</dialog>

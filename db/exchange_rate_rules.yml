@@ -1,0 +1,175 @@
+# Which exchange rate each country's tax law accepts. TIER 2.
+#
+# Read this together with db/exchange_rate_sources.yml, which is TIER 1 and
+# names no country at all. That file says what a source IS — its base currency,
+# its frequency, whether the figure is a spot rate or an average. This file says
+# which of them a tax authority will accept, which is a question about law and
+# has no place in the other.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# WHAT THIS DOES **NOT** GOVERN
+#
+# An ordinary report you look at on screen. That is management information: no
+# authority, no legal rule, and any consistent documented rate is correct. It
+# uses TIER 1's rule, which needs no countries in it:
+#
+#     prefer the source whose BASE CURRENCY is the display currency,
+#     otherwise cross-rate.
+#
+# So a euro report reads the ECB, not the Bundesbank — even in Germany, and even
+# though §16(6) UStG names the Bundesbank figure. The Bundesbank enters when a
+# German VAT return is FILED, not when a German looks at a profit and loss.
+#
+# This distinction is the whole reason the file exists. Collapsing the two would
+# either put a VAT-specific series in front of every German report, or leave a
+# VAT return converted at a rate the Finanzamt did not ask for.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# KEYED BY COUNTRY, not by authority. Exchange rate rules are national law: §16(6)
+# applies whether you file through ELSTER or on paper. Keying by authority would
+# also leave most of the app unkeyable — `AUTHORITY_KEY` exists only for
+# connectors that have been BUILT, which today is HMRC alone, while the tax
+# catalogue already declares `country_code` for every scheme.
+#
+# FIELDS
+#
+#   accepts   ordered list of source keys from exchange_rate_sources.yml. First
+#             one that can actually serve the date wins; the rest are the
+#             fallback, in preference order. ⚠️ Always end with a source that
+#             has real history — see the note under `ch`.
+#   date_basis      WHICH DAY the rate is keyed to. One of:
+#
+#                     transaction_date       the rate covering the day of the
+#                                            transaction. The default, and what
+#                                            you want unless the law says
+#                                            otherwise.
+#                     preceding_publication  the last rate published BEFORE that
+#                                            day.
+#
+#                   Two reasons to need the second. Some laws simply say so —
+#                   Poland keys to the publication before the tax point. And any
+#                   country whose source publishes DAILY needs it whatever the
+#                   wording, because a transaction on a Saturday, a Sunday or a
+#                   public holiday has no rate of its own at all.
+#
+#                   ⚠️ With a MONTHLY source the two are indistinguishable: one
+#                   span covers every day of the month, so nothing is ever
+#                   uncovered and the fallback never fires. Every source here is
+#                   monthly today, which is why this field changed no behaviour
+#                   until 2026-08-22. Do not read that as "it does not matter" —
+#                   read it as "the first daily feed makes it matter".
+#
+#                   It NEVER reaches forward. A rate published after the
+#                   transaction cannot be the rate that applied to it.
+#   election        whether the law lets the business choose, and how binding
+#                   the choice is once made.
+#                     none            no choice offered
+#                     consistent      choose once, apply consistently
+#                     per_tax_period  the choice binds for a whole tax period
+#   unpublished_currency   what to do when no accepted source carries the
+#                          currency at all.
+#
+# A country may add a `schemes:` block to override any of the above for ONE tax.
+# That is not hypothetical: within Germany, VAT and income tax do not want the
+# same series.
+
+de:
+  # Income tax (EÜR, Anlage V). No statutory rate is prescribed, and the ECB
+  # reference rate is the ordinary published choice.
+  accepts:      [ecb]
+  date_basis:   transaction_date
+  # `consistent`, not `none`: NOTHING is mandated for German income tax, so the
+  # law does offer a choice — any documented rate applied consistently. `none`
+  # described what the app currently offers rather than what the law allows,
+  # which is the opposite of this file's job. Contrast VAT below, where §16(6)
+  # UStG really does name one figure and there is no choice at all.
+  election:     consistent
+  unpublished_currency: manual_with_evidence
+  schemes:
+    # ⚠️ NOT BUILT YET — there is no `umsatzsteuer` scheme in db/tax_categories.
+    # Declared now because it is the reason the Bundesbank is fetched at all, and
+    # because the answer should be written down where it is looked for rather
+    # than rediscovered. Harmless until the scheme exists: nothing matches it.
+    #
+    # §16 Abs. 6 UStG requires the monthly average rate PUBLISHED by the BMF.
+    # The Bundesbank computes and publishes those figures; the BMF's own CSV sits
+    # behind a captcha, so we read the Bundesbank, which is the source of the
+    # numbers rather than a copy of them.
+    umsatzsteuer:
+      accepts:  [bundesbank, ecb]
+
+nl:
+  # Winst uit onderneming — income tax on business profit. Nothing statutory
+  # prescribes a rate: profit is determined by goed koopmansgebruik, so any
+  # consistently applied documented rate stands, and the ECB reference rate is
+  # the ordinary published choice. Same position as German income tax.
+  accepts:      [ecb]
+  date_basis:   transaction_date
+  # The law offers a choice, so `consistent` rather than `none` — see the note
+  # under `de`, which had the same field describing what the app offers instead
+  # of what the law allows.
+  election:     consistent
+  unpublished_currency: manual_with_evidence
+  schemes:
+    # ⚠️ NOT BUILT YET — there is no `omzetbelasting` scheme in db/tax_categories.
+    # Declared because it is the reason `ecb_daily` exists, and because the
+    # answer belongs where it will be looked for.
+    #
+    # Dutch VAT is keyed to the rate at the moment of the taxable event — the
+    # ECB's DAILY reference rate, not a monthly figure. Germany naming a monthly
+    # average is the European exception, not the rule.
+    #
+    # Costs nothing until the scheme exists: an override for a scheme with no
+    # catalogue file can never fire, and RateRuleConfig.all_accepted_sources
+    # ignores it, so nothing fetches ecb_daily on its account.
+    omzetbelasting:
+      accepts:  [ecb_daily]
+
+gb:
+  # HMRC publishes a monthly rate, fixed in advance for the month it names, and
+  # accepts it for both income tax and VAT. HMRC does permit a spot rate as an
+  # alternative; we do not offer that choice, so `election: none` describes what
+  # the app does rather than the full extent of the law.
+  accepts:      [hmrc]
+  date_basis:   transaction_date
+  election:     none
+  unpublished_currency: manual_with_evidence
+
+ch:
+  # ⚠️ SWITZERLAND ACCEPTS THE ESTV RATE AND NOTHING ELSE PUBLISHED. Art. 45
+  # MWSTV permits exactly three: the Monatsmittelkurs PUBLISHED BY THE ESTV, the
+  # Tageskurs (the daily SELLING rate — a mid-market reference rate is not one),
+  # or a group's own Konzernumrechnungskurs. The ECB's reference rate is none of
+  # those, and it is deliberately NOT in this list.
+  #
+  # ⚠️ It was, until 2026-08-22, and the reason is worth knowing. ESTV serves the
+  # CURRENT MONTH ONLY and ignores every date parameter, so its history can never
+  # be backfilled — and `ecb` was added so that Swiss periods before August 2026
+  # produced a figure instead of an error. That is an engineering fallback, and
+  # it had been written into a field that states TAX LAW. Daniela's call: take it
+  # out. A file that says what an authority accepts must not say something the
+  # authority does not accept.
+  #
+  # WHAT HAPPENS NOW when a Swiss tax report reaches a month ESTV cannot serve:
+  # no rate is found, the report says so and links to the rates page, and the
+  # business enters the figure by hand. That is not a degraded path — it is the
+  # COMPLIANT one. The ESTV publishes its historical Monatsmittelkurse on its
+  # website; only the API endpoint is limited. So the right rate is available to
+  # look up, and a hand-entered rate is entity-owned, carries an evidence note,
+  # and outranks every published source in the lookup.
+  #
+  # ⚠️ ORDINARY REPORTS ARE UNAFFECTED. This file governs SUBMISSIONS only — a
+  # figure converted with a `scheme:`. A custom report displayed in CHF has no
+  # scheme, so tier 1 answers it and still reads the ECB. Only a Swiss TAX report
+  # is bound, which is the one place being bound is the point.
+  #
+  # ⚠️ And it fixes itself going forward. The nightly fetch stores each ESTV
+  # month as it becomes current, so the real Swiss series accumulates from August
+  # 2026. Swiss VAT is quarterly: a Q4 return filed in January 2027 finds Oct,
+  # Nov and Dec already stored.
+  accepts:      [estv]
+  date_basis:   transaction_date
+  # The ESTV lets a business elect its own group rate, and binds the choice for a
+  # whole tax period. That is what entity-owned rates are for.
+  election:     per_tax_period
+  unpublished_currency: manual_with_evidence

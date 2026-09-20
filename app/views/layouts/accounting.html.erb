@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<%# high-contrast rides on <html>, not on <body>. The custom properties live on
+    :root, and only a class on the root element reaches the root's own background
+    (the canvas you see when overscrolling), ::backdrop, and anything JS reads from
+    document.documentElement. %>
+<html lang="<%= I18n.locale %>" dir="<%= text_direction %>" class="<%= contrast_class %>">
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="application-name" content="Rr 811">
+    <meta name="mobile-web-app-capable" content="yes">
+  	<meta charset="UTF-8">
+  	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  	<meta http-equiv="content-script-type" content="text/javascript" />
+  	<meta http-equiv="content-style-type" content="text/css" />
+  	<meta http-equiv="content-language" content="en" />
+  	<meta name="keywords" content="JS22" />
+  	<meta name="description" content="JS22" />
+  	<meta name="author" content="JS22" />
+  	<meta name="copyright" content="JS22" />
+  	<meta name="generator" content="rails 8.1" />
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+	<%= stylesheet_link_tag "accounting", media: "all" %>
+    <%= javascript_importmap_tags "accounting" %>
+
+    <title><%= content_for(:title).presence || @title || "not-again" %></title>
+  </head>
+
+  <body class="<%= controller_name %> <%= action_name %><%= ' popup-mode' if params[:popup].present? %>">
+		
+	<%= link_to t("shared.menu.skip_link"), "#main", id: "skip-link", class: "no-print" %>
+
+	<div id="page">
+
+		<%= render partial: "shared/svg_icons" %>
+
+		<%= render partial: "shared/menu" %>
+
+		<%= link_to legal_path, id: "legal-sticky", class: "no-print", "aria-label": "#{t('shared.menu.legal')} / Impressum", title: "legal/impressum" do %>
+			<svg><use xlink:href='#legal'></use></svg>
+		<% end %>
+
+		<div id="main" role="main" tabindex="-1">
+    		<%= yield %>
+		</div>
+
+	</div>
+
+	<%= content_tag :div, '', 
+	    id: 'number-format-config',
+	    data: { number_format: CurrencyConfig.js_format.to_json },
+	    class: 'hidden' %>
+	<%= content_tag :div, '',
+	    id: 'receipts-config',
+	    data: {
+	      receipts_path: receipts_path,
+	      for_posting_path: for_posting_receipts_path(':posting_id'),
+	      unlinked_path: unlinked_receipts_path,
+	      link_path: link_receipt_path(':id')
+	    },
+	    class: 'hidden' %>
+	
+  </body>
+</html>

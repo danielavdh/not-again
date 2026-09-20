@@ -1,0 +1,16 @@
+<h1><%= t("admins.consent.title") %></h1>
+
+<%= render "help/terms_text" %>
+
+<%= form_with url: agree_terms_path, method: :post, local: true do %>
+	<div>
+		<label for="terms_confirm">
+			<%= check_box_tag :confirm, "1", false, 
+							  id: "terms_confirm", 
+							  required: true %>
+			<%= t("admins.consent.confirm") %>
+		</label>
+	</div>
+
+  <%= submit_tag t("admins.consent.agree"), class: "button green" %>
+<% end %>

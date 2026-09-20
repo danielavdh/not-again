@@ -1,0 +1,197 @@
+<% content_for :title, "Guía de uso" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>Cómo usar esta aplicación</h1>
+
+  <p>Esta aplicación lleva el control de tu dinero &thinsp;&mdash;&thinsp; lo que entra, lo que sale y lo que queda en cada cuenta. La configuras tú mismo, adaptándola a la forma en que está organizado tu negocio.</p>
+  <p>Un juego de libros se llama <strong>entidad</strong>: un negocio, un inmueble en alquiler, o simplemente tu propia casa. Puedes llevar varias aquí, una al lado de otra, y cada una mantiene sus propias cuentas y sus propias cifras.</p>
+  <p>Antes de empezar, conviene esbozar un plan: ¿qué fuentes de ingresos tienes, en qué gastas el dinero y qué cuentas bancarias y tarjetas de crédito necesitas controlar?</p>
+
+  <nav class="guide-toc" aria-label="Contenido">
+    <ul>
+      <li><a href="#two-sides">Cada apunte tiene dos lados</a></li>
+      <li><a href="#starting">Empezar con lo que ya tienes</a></li><br />
+      <li><a href="#accounts">Tus cuentas</a></li>
+      <li><a href="#adding-account">Crear una cuenta</a></li>
+      <li><a href="#deposit">Registrar ingresos &thinsp;&mdash;&thinsp; un depósito</a></li>
+      <li><a href="#withdrawal">Registrar gastos &thinsp;&mdash;&thinsp; un retiro</a></li>
+      <li><a href="#transfer">Mover dinero entre tus propias cuentas &thinsp;&mdash;&thinsp; una transferencia</a></li>
+      <li><a href="#basis">Criterio de caja y criterio de devengo</a></li>
+      <li><a href="#splitting">Dividir una factura entre uso profesional y personal</a></li><br />
+      <li><a href="#receipts">Adjuntar justificantes</a></li>
+      <li><a href="#repeating">Repetir un asiento anterior</a></li>
+      <li><a href="#correcting">Corregir un error</a></li>
+      <li><a href="#reports">Ver tus cifras (Informes)</a></li>
+      <li><a href="#closing-year">Cerrar un ejercicio fiscal</a></li>
+      <li><a href="#reconcile">Verificar tu saldo con el banco</a></li><br />
+      <li><a href="#access">Dar acceso a otras personas</a></li>
+      <li><a href="#tax">Configurar la declaración de impuestos</a></li>
+      <li><a href="#filing">Presentar tú mismo las cifras trimestrales</a></li>
+      <li><a href="#families">Mantener varios negocios juntos &thinsp;&mdash;&thinsp; familias</a></li>
+      <li><a href="#cross-business">Cuando uno de tus negocios paga por otro</a></li>
+      <li><a href="#archive">Descargar todos tus datos</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="two-sides">Cada apunte tiene dos lados</h2>
+  <p>El dinero nunca aparece ni desaparece sin más: viene de algún sitio y va a algún sitio. Por eso, cada vez que registras algo, la app te pide una segunda cuenta. Un ingreso en tu banco vino de una venta, de un cliente o de tu propio bolsillo &thinsp;&mdash;&thinsp; y es esa segunda elección, no la línea del banco, la que después te dice lo que tu negocio ha ganado y gastado de verdad.</p>
+  <p>Nunca tienes que averiguar qué lado es cuál. Elige la cuenta bancaria en la que trabajas, di si entró o salió dinero, y elige la cuenta que dice para qué era. La app escribe los dos lados y los mantiene iguales.</p>
+
+  <h2 id="starting">Empezar con lo que ya tienes</h2>
+  <p>Si tu negocio ya existía antes de que empezaras a usar esta app, tu cuenta bancaria ya tiene dinero. Ese importe &thinsp;&mdash;&thinsp; el saldo inicial &thinsp;&mdash;&thinsp; hay que registrarlo una vez, o todos los saldos que te muestre la app estarán mal para siempre exactamente en esa cantidad.</p>
+  <p>Regístralo como una transferencia y los dos lados quedan bien. Primero crea una cuenta de tipo Patrimonio, llamada por ejemplo &laquo;Capital inicial&raquo;. Abre esa cuenta, pulsa Nueva transferencia, elige tu cuenta bancaria como destino, introduce lo que había en el banco el día que empezaste, y ponle esa fecha.</p>
+  <p>Haz lo mismo con todo lo demás que ya estuviera ahí &thinsp;&mdash;&thinsp; un saldo de tarjeta, un préstamo. Después registra con normalidad.</p>
+
+  <h2 id="accounts">Tus cuentas</h2>
+  <p>Las cuentas son las categorías que usas para organizar tu dinero. Las creas tú mismo en Cuentas en el menú. Imagínalas como cubos etiquetados: uno para tu cuenta bancaria, uno para el alquiler, uno para gastos de viaje, uno para ventas, y así sucesivamente. Las cuentas de balance (cuentas bancarias, préstamos, tarjetas de crédito) llevan una moneda. Las cuentas de ingresos y gastos no &thinsp;&mdash;&thinsp; solo acumulan totales.</p>
+  <p>Una vez que tus cuentas están en su lugar, la contabilidad del día a día es sencilla: registra qué se movió y adónde fue.</p>
+
+  <h2 id="adding-account">Crear una cuenta</h2>
+  <p>Ve a Cuentas en el menú y haz clic en Nueva cuenta. Rellena:</p>
+  <ul>
+    <li>Nombre &thinsp;&mdash;&thinsp; lo que mejor encaje, p.&nbsp;ej. &laquo;BBVA Corriente&raquo; o &laquo;Honorarios&raquo; o &laquo;Viajes&raquo;. Puedes cambiarlo en cualquier momento.</li>
+    <li>Número &thinsp;&mdash;&thinsp; un código de seis dígitos con significado. Las cuentas se ordenan en la página según este número.<br/>
+		<code>5</code>04401: El primer dígito fija el tipo de cuenta, y la app rellena Tipo por ti:<br />
+		<code>1</code> activo &middot; <code>2</code> pasivo &middot; <code>3</code> patrimonio &middot; <code>4</code> ingresos &middot; <code>5</code> gastos &middot; <code>6</code> personal<br />
+		5<code>04</code>401: Los siguientes 2 dígitos corresponden a tu empresa/entidad<br />
+		504<code>4</code>01: Usa el dígito 4 para crear categorías (p.&nbsp;ej. coste de ventas; coche y viajes; alquiler, impuestos, suministros y seguros; mantenimiento&nbsp;...)<br />
+		5044<code>01</code>: Los últimos dígitos son para el detalle (p.&nbsp;ej. electricidad, agua, seguro, alquiler, impuestos&nbsp;...)
+	</li>
+    <li>Tipo de cuenta (con ejemplos de lo que suele contener):<br />
+		Activo: Cuentas bancarias, efectivo, inmuebles, equipamiento&nbsp;...<br />
+		Pasivo: Tarjetas de crédito, préstamos empresariales, descubiertos, hipotecas, IVA a pagar&nbsp;...<br />
+		Patrimonio: Capital inicial, beneficios retenidos, reservas&nbsp;...<br />
+		Ingresos: Honorarios, ventas, ingresos por servicios, intereses recibidos, subvenciones&nbsp;...<br />
+		Gastos: Alquiler, viajes, costes de oficina, costes de personal, honorarios profesionales (gestor, abogado), seguros&nbsp;...<br />
+		Personal: Disposiciones, parte privada de gastos mixtos, salud, alimentación&nbsp;...
+	</li>
+    <li>Moneda &thinsp;&mdash;&thinsp; solo para cuentas de balance (Activo, Pasivo, Patrimonio).</li>
+    <li>Cuenta superior &thinsp;&mdash;&thinsp; opcional. Asigna una cuenta superior para agrupar cuentas. Las cuentas superiores nunca reciben asientos directamente. Muestran el total de sus cuentas subordinadas.</li>
+  </ul>
+  <p>Guarda la cuenta y aparecerá en tu lista, lista para usar.</p>
+
+  <h2 id="deposit">Registrar ingresos &thinsp;&mdash;&thinsp; un depósito</h2>
+  <p>Cuando llega dinero a tu cuenta bancaria, regístralo como un depósito.</p>
+  <ol>
+    <li>Ve a tu cuenta bancaria en la lista de cuentas y haz clic en Nuevo depósito.</li>
+    <li>Introduce la fecha, una descripción y el importe.</li>
+    <li>Elige la cuenta de ingresos que describe el concepto del ingreso (p.&nbsp;ej. Ventas, Honorarios de consultoría).</li>
+    <li>Haz clic en Guardar.</li>
+  </ol>
+  <p>Puedes añadir más de una línea si el depósito incluyó varios tipos de ingresos. Cada línea tiene su propia cuenta e importe.</p>
+
+  <h2 id="withdrawal">Registrar gastos &thinsp;&mdash;&thinsp; un retiro</h2>
+  <p>Cuando el dinero sale de tu cuenta bancaria, regístralo como un retiro &thinsp;&mdash;&thinsp; la misma idea que un depósito, pero a la inversa.</p>
+  <ol>
+    <li>Ve a tu cuenta bancaria y haz clic en Nuevo retiro.</li>
+    <li>Introduce la fecha, la descripción y el importe.</li>
+    <li>Elige la cuenta de gastos (p.&nbsp;ej. Material de oficina, Viajes, Alquiler).</li>
+    <li>Haz clic en Guardar.</li>
+  </ol>
+  <p>No necesitas introducir cada transacción por separado. Si has gastado &euro;340 en viajes a lo largo de un mes, un solo retiro de &euro;340 contra la cuenta de Viajes es perfectamente válido. Suma los importes en una hoja de cálculo e introduce los totales.</p>
+
+  <h2 id="transfer">Mover dinero entre tus propias cuentas &thinsp;&mdash;&thinsp; una transferencia</h2>
+  <p>Si mueves dinero de una cuenta bancaria a otra (por ejemplo, de una cuenta corriente a una cuenta de ahorro), regístralo como una transferencia.</p>
+  <ol>
+    <li>Ve a la cuenta de la que sale el dinero.</li>
+    <li>Haz clic en Nueva transferencia, elige la cuenta de destino, introduce el importe y guarda.</li>
+  </ol>
+  <p>Si las dos cuentas están en monedas distintas, introduce el importe realmente recibido en la cuenta de destino. La aplicación calcula el tipo de cambio implícito en el momento y te lo muestra antes de guardar.</p>
+
+  <h2 id="basis">Criterio de caja y criterio de devengo</h2>
+  <p>Con el criterio de caja se contabiliza cuando el dinero entra o sale de tu cuenta. Con el criterio de devengo se contabiliza cuando entregas o recibes algo, no cuando se cobra o se paga.<br />
+	  Si no sabes cuál te corresponde, tu asesor fiscal o la Agencia Tributaria pueden decírtelo.</p>
+
+  <h3>Criterio de caja</h3>
+  <p>Sigue al dinero: registras el ingreso cuando el dinero llega, y el gasto cuando lo pagas. No se anota nada hasta que está en tu cuenta bancaria o en caja, así que cada apunte es un ingreso o un pago corriente. Un taller impartido en diciembre y cobrado en febrero da su beneficio en febrero.</p>
+
+  <h3>Criterio de devengo</h3>
+  <p>Con el criterio de devengo registras el ingreso al emitir la factura, contra una cuenta de Deudores (activo). Cuando llega el dinero lo saldas con una transferencia: Deudores =&gt; Cuenta bancaria. Un gasto va contra Acreedores (pasivo) cuando el proveedor te factura. Al pagar lo saldas igualmente con una transferencia: Cuenta bancaria =&gt; Acreedores. Un taller impartido en diciembre y cobrado en febrero da su beneficio en diciembre, y tu balance a fin de año muestra lo que queda pendiente en cada sentido.</p>
+
+  <h2 id="splitting">Dividir una factura entre uso profesional y personal</h2>
+  <p>Algunos gastos son solo parcialmente profesionales. Tu internet en casa quizá lo uses un 60&nbsp;% para trabajar, y tu coche un 40&nbsp;% para visitas a clientes. Cuando los registres, puedes dividir el importe en el momento.</p>
+  <p>Haz clic en el botón % junto al importe. Se abre una pequeña ventana donde puedes:</p>
+  <ul>
+    <li>Confirmar o ajustar el porcentaje de uso profesional.</li>
+    <li>Ver los dos importes calculados automáticamente.</li>
+    <li>Elegir la segunda cuenta &thinsp;&mdash;&thinsp; normalmente una cuenta personal o de disposiciones.</li>
+    <li>Hacer clic en Aplicar.</li>
+  </ul>
+  <p>El formulario ahora tiene dos líneas: la parte profesional en la cuenta de gastos, la parte privada en la cuenta personal. Ambas se guardan juntas y los libros quedan equilibrados.</p>
+  <p>Para cambiar una división más tarde, haz clic en % en cualquiera de las dos líneas. La ventana se reabre con la división actual rellenada; haz tus ajustes y haz clic en Aplicar.</p>
+
+  <h2 id="receipts">Adjuntar justificantes</h2>
+  <p>En cualquier depósito o retiro, haz clic en el botón + junto a una línea para adjuntar una foto o archivo (JPEG, PNG, PDF). Si ya has subido un justificante por separado, usa el icono de enlace para conectarlo. A una línea se le pueden adjuntar varios justificantes.</p>
+
+  <h2 id="repeating">Repetir un asiento anterior</h2>
+  <p>Para todo lo que se repite &thinsp;&mdash;&thinsp; alquiler mensual, una suscripción recurrente &thinsp;&mdash;&thinsp; usa el botón Copiar en un asiento existente. Se abre un formulario ya rellenado. Actualiza la fecha y cualquier otro cambio (como el importe o la descripción) y guarda. Mucho más rápido que empezar desde cero.</p>
+
+  <h2 id="correcting">Corregir un error</h2>
+  <p>Puedes cambiar o eliminar todo lo que hayas registrado tú. Las únicas cuentas que no puedes tocar son las que la app crea y mantiene por su cuenta, como los Resultados acumulados.</p>
+  <p>Para editar, ve a tu cuenta bancaria, encuentra el asiento en el libro mayor y haz clic en Editar. Realiza tus cambios y guarda.</p>
+  <p>Para eliminar un asiento, haz clic en Ver para abrir el asiento contable que hay detrás &thinsp;&mdash;&thinsp; el registro de dos lados que la app ha escrito por ti. Eliminar son dos pasos porque un asiento contabilizado forma parte de tus cifras y primero tiene que salir de ellas: haz clic en Descontabilizar/Eliminar para descontabilizarlo &thinsp;&mdash;&thinsp; se convierte en un borrador, fuera de tus cifras pero todavía no borrado. Haz clic en Eliminar en el asiento descontabilizado (el borrador) para borrarlo completamente.</p>
+
+  <h2 id="reports">Ver tus cifras</h2>
+  <p>En el panel de control, cada uno de tus negocios tiene su propio juego de botones de informes. Los principales son:</p>
+  <ul>
+    <li>Pérdidas &amp; Ganancias &thinsp;&mdash;&thinsp; ingresos menos gastos para cualquier período que elijas. Este es el número que pedirá tu gestor o declaración de impuestos.</li>
+    <li>Balance &thinsp;&mdash;&thinsp; una instantánea de lo que posees (saldos bancarios, lo que te deben) y lo que debes (préstamos, facturas pendientes) en una fecha determinada.</li>
+    <li>Balance de comprobación &thinsp;&mdash;&thinsp; cada cuenta con su saldo acumulado. Útil para verificar que nada ha ido al lugar equivocado.</li>
+    <li>Informes personalizados &thinsp;&mdash;&thinsp; En el panel de control, crea un grupo de informes y dale un nombre (p.&nbsp;ej. MTD, Hijos, Scouts, Asociación).<br />
+		Haz clic en el grupo de informes para seleccionar qué cuentas aparecen en él y en qué orden. Arrástralas hacia arriba o abajo para organizarlas. Guardar. Cada informe del grupo sigue esta disposición.<br />
+		Añade informes individuales al grupo (T1, T2 o 2026, 2027) &thinsp;&mdash;&thinsp; cada uno es simplemente un intervalo de fechas (desde&nbsp;/&nbsp;hasta). Ejecuta cualquier informe para ver las cifras de ese período, dispuestas exactamente como las organizaste.
+	</li>
+	<li>Informes fiscales &thinsp;&mdash;&thinsp; Un grupo de informes para un esquema fiscal en lugar de uno que hayas organizado tú mismo, creado en la <%= link_to "página de configuración fiscal", easy_manual_path(anchor: "tax") %> más abajo. Por lo demás, la misma idea que un Informe personalizado.</li>
+  </ul>
+  <p>La página Informes del menú muestra todos los informes que has guardado, el más reciente primero.<br />
+	Una vez al año, la app crea una copia de seguridad que no se puede eliminar de cada asiento individual de cada cuenta en cada entidad o familia; también se puede activar una copia de seguridad manualmente para el año en curso hasta la fecha. Estas también aparecen aquí y están disponibles para descargar.</p>
+  <p>Los informes personalizados tienen una versión larga y una corta. La versión corta muestra solo los totales de las cuentas; la versión larga lista cada asiento individual bajo cada cuenta &thinsp;&mdash;&thinsp; y te permite hacer clic en un asiento para corregirlo sin salir del informe.</p>
+  <p>Al descargar obtienes la versión que está en pantalla. Enviar un informe por correo te manda los dos a la vez &thinsp;&mdash;&thinsp; la versión corta y la larga, la larga con un enlace al justificante de cada asiento &thinsp;&mdash;&thinsp; además de un formato de archivo para la asesoría (por ejemplo DATEV), si hay uno configurado para este negocio. Si no hay nada que declarar en el período, recibes en su lugar un correo breve que lo indica, sin ningún archivo adjunto.</p>
+
+  <h2 id="closing-year">Cerrar un ejercicio fiscal</h2>
+  <p>Cuando termine tu ejercicio fiscal, ve al dashboard y haz clic en &laquo;Cerrar año&raquo; en la fila de título de tu empresa. La app suma todos tus ingresos y gastos del año y traslada el resultado a tus Ganancias retenidas (el total acumulado de lo que tu empresa ha ganado a lo largo de toda su vida).</p>
+  <p>La primera vez, la app te pregunta cómo funciona tu ejercicio fiscal: el año natural (1 de enero a 31 de diciembre), el año fiscal británico (6 de abril a 5 de abril), u otra fecha de cierre que elijas. Elige la que corresponda a tu empresa &thinsp;&mdash;&thinsp; esto se define una sola vez.</p>
+  <p>Solo puedes cerrar un año una vez que ha terminado &thinsp;&mdash;&thinsp; si el actual todavía está en curso, la app te dice cuándo podrás cerrarlo.</p>
+  <p>Si te has atrasado y hay más de un año pendiente, la app los cierra de uno en uno, empezando por el más antiguo &thinsp;&mdash;&thinsp; solo haz clic de nuevo en &laquo;Cerrar año&raquo; para el siguiente.</p>
+  <p>Si más tarde corriges algo con fecha dentro de un año que ya has cerrado, la app actualiza el cierre de ese año automáticamente y muestra un aviso de confirmación.</p>
+
+  <h2 id="reconcile">Verificar tu saldo con el banco</h2>
+  <p>De vez en cuando conviene confirmar que lo que muestra la aplicación coincide con tu extracto bancario. Ve a tu cuenta bancaria y haz clic en el botón R. Introduce la fecha del extracto y el saldo que figura en él. La aplicación te muestra su propia cifra y la diferencia. No se guarda nada &thinsp;&mdash;&thinsp; es solo una comprobación rápida. Si hay una diferencia, probablemente falta un asiento o tiene un importe incorrecto.</p>
+
+  <h2 id="access">Dar acceso a otras personas</h2>
+  <p>Como administrador, puedes dar a otras personas acceso limitado a tu contabilidad. Un administrador de solo lectura puede ver todas las cuentas e informes, pero no puede añadir ni cambiar nada. Un administrador de solo carga puede subir justificantes desde su teléfono. Ambos se crean y gestionan desde tu página de perfil.</p>
+
+  <h2 id="tax">Configurar la declaración de impuestos</h2>
+  <p>Busca tu negocio en el panel de control y pulsa &laquo;Configurar&raquo; en la fila Impuestos. Marca una declaración que quieras presentar.</p>
+  <p>Si puede enviarse directamente desde la app, se te pregunta si quieres presentar desde aquí.<br />
+  Di que sí, y elige de quién es la declaración, o añade un nuevo contribuyente (número fiscal y un nombre).<br />
+  Di que no, si presentas tus cifras en otro sitio (p. ej. a través de tu asesor).</p>
+  <p>Guardar.</p>
+  <p>Llegas al grupo de informes de la declaración que has marcado. Tus cuentas de ingresos y gastos disponibles están a la derecha. Para cada cuenta relevante para este esquema, elige la categoría fiscal correcta (la app intenta adivinar una), y luego &laquo;+&raquo; para añadir la cuenta al esquema.</p>
+  <p>&laquo;Añadir informe&raquo; para elegir un período. Tus cifras aparecen ordenadas como las pide el formulario fiscal. Descárgalas como CSV fiscal o pide que te las envíen por correo (con enlaces a los justificantes).</p>
+  <p><strong>Repite</strong> para añadir más esquemas fiscales.</p>
+
+  <h2 id="filing">Presentar tú mismo las cifras trimestrales</h2>
+    <p>Algunas declaraciones pueden enviarse directamente desde la app &thinsp;&mdash;&thinsp; UK Making Tax Digital (MTD), IVA próximamente &thinsp;&mdash;&thinsp; pero no tu declaración anual.</p>
+    <ol>
+      <li>Di que sí cuando la configuración fiscal pregunte por presentar desde la app, y elige o añade el contribuyente. Guarda y asigna tus cuentas (véase &laquo;Configurar la declaración de impuestos&raquo;).</li>
+      <li>Para conectar con tu agencia tributaria, pulsa Conectar &thinsp;&mdash;&thinsp; en el panel de control o en la página de configuración fiscal. Inicia sesión en la agencia tributaria.</li>
+      <li>Una vez conectado, ve a las presentaciones, desde el panel de control o desde la página de configuración fiscal.</li>
+      <li>Presenta el período actual.</li>
+    </ol>
+    <p>La página de presentaciones lista los períodos que la agencia tributaria espera, con un botón en cada uno para añadir un informe &thinsp;&mdash;&thinsp; las fechas son suyas, tú solo le pones nombre. Útil para revisar las cifras antes de enviarlas.</p>
+    <p>Con UK MTD cada presentación cubre el año fiscal hasta la fecha y sustituye a la anterior (acumulativo). Un período sin movimientos también debe presentarse. Después recibes un correo con una copia de lo que se envió &thinsp;&mdash;&thinsp; ese es tu justificante.</p>
+
+  <h2 id="families">Mantener varios negocios juntos &thinsp;&mdash;&thinsp; familias</h2>
+  <p>Si aquí llevas más de una contabilidad &thinsp;&mdash;&thinsp; un negocio y un hogar, o dos pequeños negocios &thinsp;&mdash;&thinsp; puedes agruparlos en una familia. Tu Pérdidas y Ganancias, Balance y Balance de comprobación cubren entonces toda la familia a la vez, mientras que cada negocio sigue teniendo sus propias cuentas y demás informes. Para configurarlo, ve a tu página de perfil y da a cada negocio el mismo nombre de familia.</p>
+
+  <h2 id="cross-business">Cuando uno de tus negocios paga por otro</h2>
+  <p>Para esto necesitas acceso a los dos juegos de libros, y no deben estar en la misma familia &thinsp;&mdash;&thinsp; dentro de una familia los informes ya cubren ambos, así que no hace falta nada especial.</p>
+  <p>A veces la cuenta bancaria de un negocio paga un gasto que en realidad pertenece a otro, y ambos deben reflejarlo en sus propios libros. Regístralo como un reintegro normal desde la cuenta que pagó &thinsp;&mdash;&thinsp; pero para el gasto, elige la cuenta del OTRO negocio. La app lo detecta y abre un formulario breve que pide una cuenta de donación en el negocio que paga y una cuenta de capital en el negocio que recibe. Introduce el importe y confirma.</p>
+  <p>La app escribe ambos lados por ti &thinsp;&mdash;&thinsp; un asiento en cada negocio, cada uno cuadrado por sí solo &thinsp;&mdash;&thinsp; y muestra debajo las líneas del otro negocio. Si la cuenta de donación o de capital aún no existe, puedes crearla al momento. Eliminar y copiar funciona como siempre; para editar, haz clic en cualquier importe del par vinculado. Así se abre el formulario y puedes hacer tus cambios.</p>
+
+  <h2 id="archive">Descargar todos tus datos</h2>
+  <p>Para una exportación completa, ve al panel de control y descarga cada archivo de cierre de año, y además haz clic en la fecha de hoy para generar uno con los datos actuales hasta hoy &thinsp;&mdash;&thinsp; juntos forman el historial completo, sin nada que falte ni se duplique. La lista completa también está en la página Informes.</p>
+
+</div>
+<%= render "help/back" %>

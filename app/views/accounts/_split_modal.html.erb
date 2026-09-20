@@ -1,0 +1,60 @@
+<dialog id="split-modal" class="split-modal">
+  <div class="split-modal-box">
+    <h3><%= t("accounts.split.title") %></h3>
+
+    <div class="split-row">
+      <label><%= t("accounts.split.account_1") %></label>
+      <select id="split-account-1" data-tomselect="true" data-tomselect-placeholder="<%= t('attrs.tom_blank') %>">
+        <option value=""></option>
+        <% @account_options.each do |label, id, attrs| %>
+          <% next if attrs['data-currency'].present? %>
+          <option value="<%= id %>"
+                  data-deduction-pct="<%= attrs['data-deduction-pct'] %>"
+                  data-save-url="<%= save_deduction_percentage_account_path(id) %>"><%= label %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div class="split-row split-amounts">
+      <div>
+        <label><%= t("accounts.split.total") %></label>
+        <input type="text" id="split-total" inputmode="decimal" class="right">
+      </div>
+      <div>
+        <label><%= t("accounts.split.percentage") %></label>
+        <div class="pct-row">
+          <input type="text" id="split-percentage" inputmode="decimal" class="right">
+          <span>%</span>
+        </div>
+      </div>
+      <div>
+        <label><%= t("accounts.split.amount_1") %></label>
+        <input type="text" id="split-amount-1" inputmode="decimal" class="right">
+      </div>
+      <div>
+        <label><%= t("accounts.split.amount_2") %></label>
+        <input type="text" id="split-amount-2" inputmode="decimal" class="right" disabled>
+      </div>
+    </div>
+
+    <div class="split-row">
+      <label><%= t("accounts.split.account_2") %></label>
+      <select id="split-account-2" data-tomselect="true" data-tomselect-placeholder="<%= t('attrs.tom_blank') %>">
+        <option value=""></option>
+        <% @account_options.each do |label, id, attrs| %>
+          <% next if attrs['data-currency'].present? %>
+          <option value="<%= id %>"><%= label %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <p id="split-redundant-warning" class="split-warning" hidden>
+      <%= t("accounts.split.redundant_row_warning") %>
+    </p>
+
+    <div class="split-actions">
+      <button type="button" id="split-confirm" class="button green"><%= t("accounts.split.confirm") %></button>
+      <button type="button" class="button split-cancel"><%= t("crud.cancel") %></button>
+    </div>
+  </div>
+</dialog>

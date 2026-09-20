@@ -1,0 +1,31 @@
+#!/bin/sh
+# Refuses to push if anything secret has become tracked.
+#
+# This is the backstop for .gitignore, not a replacement for it. The realistic
+# failure is not "gitignore is wrong today" — it is someone reorganising it a
+# year from now, or a `git add -f` in a hurry, and a routine push afterwards.
+#
+# It has to be pre-PUSH rather than CI: a CI check runs after the push that
+# already published the secret, and for a public repo the credential bots read
+# GitHub's event stream within seconds. Removing the file afterwards does not
+# help — the token has to be revoked and the database password recreated.
+#
+# Checks the whole tracked set, not just this push's commits, because a file
+# could have been committed weeks ago and only now be leaving the machine.
+#
+# Version-controlled so it survives a fresh clone, which .git/hooks does not.
+# Requires, once per clone:   git config core.hooksPath .githooks
+set -e
+
+leaked=$(git ls-files | grep -E '(^|/)(\.kamal/secrets|master\.key|credentials\.yml\.enc|deploy\.yml|\.env)$|\.(key|pem)$' || true)
+
+if [ -n "$leaked" ]; then
+  echo
+  echo "PUSH REFUSED — these are tracked by git and must not be:"
+  echo "$leaked" | sed 's/^/    /'
+  echo
+  echo "  git rm --cached <file>     to untrack it"
+  echo "  then check .gitignore, and rotate anything that reached a remote."
+  echo
+  exit 1
+fi

@@ -1,0 +1,46 @@
+<% content_for :title, t("accounts.entries.#{@journal_entry.persisted? ? 'edit' : 'new'}_bank_entry", type: t("accounts.entries.#{@account.entry_label(@entry_type)}")) %>
+<% content_for :head do %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
+<% end %>
+
+<div id="new_edit_view">
+
+    <h1><%= t("accounts.entries.#{@journal_entry.persisted? ? 'edit' : 'new'}_bank_entry", type: t("accounts.entries.#{@account.entry_label(@entry_type)}")) %><span class="sub-heading"><%= "#{@account.code} - #{@account.name} (#{@account.currency})" %></span></h1>
+	
+	<%= render partial: 'shared/flash' %>
+
+    <% if @journal_entry.errors.any? %>
+      <p class="error_message"><%= t("crud.errors_on_page") %></p>
+      <% @journal_entry.errors[:base].each do |msg| %>
+        <p class="error_message"><%= msg %></p>
+      <% end %>
+    <% end %>
+
+    <%= render 'accounts/bank_entry_form', journal_entry: @journal_entry, account: @account, entry_type: @entry_type %>
+
+	<%= render partial: "exchange_rates/calculator-modal",
+		 	locals: { account: @account }%>
+
+</div>
+
+<div class="crud_navigation">
+	<%= link_to ledger_account_path(@account), 
+	            class: "backend_link button green" do  %>
+			<span class="bigger-screen"><%= t("crud.ledger_cancel") %></span>
+	  		<svg class="tiny-screen stroke s40">
+				<use xlink:href='#arrow_left'></use>
+			</svg>
+	<% end %>
+	<%= link_to "#", 
+		data: { action: "open-modal", 
+				modal: "fx-calculator" }, 
+		class: "button green svg-icon",
+		title:  t("exchange_rates.calculator") do %>
+		<span>
+			<svg class="stroke"><use xlink:href="#te_calculator"></use></svg>
+		</span>	
+	<% end %>
+</div>
+
+
+

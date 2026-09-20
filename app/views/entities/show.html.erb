@@ -1,0 +1,50 @@
+<% content_for :title, t("entities.show.title") %>
+
+<div class="backend_table entity-reports">
+    <%= render partial: 'shared/flash' %>
+
+    <table class="backend_show <%= orphaned?(@entity) %>">
+        <thead>
+            <tr>
+                <th class="firstCell"><%= @entity.name %> (<%= @entity.code %>):</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr class="list-line-even">
+                <td class="firstCell"><%= t("entities.show.status") %>:</td>
+                <td><%= @entity.active? ? t("entities.show.active") : t("entities.show.inactive") %></td>
+            </tr>
+            <tr class="list-line-even">
+                <td class="firstCell"><%= t("entities.show.recent_entries") %>:</td>
+                <td><% @recent_entries.each do |entry| %>
+  				<p><%= link_to "#{l(entry.entry_date)} — #{entry.memo}",
+  				               journal_entry_path(entry),
+  				               class: "backend_link" %></p>
+					<% end %>
+				</td>
+            </tr>
+            <tr class="list-line-odd">
+                <td class="firstCell"><%= t("entities.show.quick_links") %>:</td>
+                <td><%= link_to t("entities.show.accounts_link"),
+						accounts_path(entity_code: @entity.code),
+                        class: "backend_link" %>
+				</td>
+            </tr>
+        </tbody>
+    </table>
+
+	<%= render partial: "reports/overview", locals: {
+				entity: @entity,
+				orphaned: orphaned?(@entity),
+				report_groups: @entity&.report_groups} %>
+
+</div>
+
+<div class="crud_navigation">
+		<%= link_to t("crud.back"), entities_path, class: "backend_link button green" %>
+		<%= link_to t("crud.edit"), edit_entity_path(@entity), class: "backend_link button green" %>
+		<%# Tax setup is not repeated here — the report overview above renders the
+		    entity's tax row, so it would be the same button twice on one page. %>
+</div>

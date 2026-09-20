@@ -1,0 +1,29 @@
+<dialog id="reportModal-<%= group.id %>"
+	    class="report-modal">
+  <%= form_with model: Report.new, 
+                url: report_group_reports_path(group),
+                local: true do |f| %>
+    <h4 class="modal-title"><%= t(".new_report", name: group.display_name) %></h4>
+	
+	<div class="modal-body">
+		<div class="field">
+			<%= f.label :name, t(".name") %>
+    		<%= f.text_field :name, placeholder: t(".name_placeholder"), required: true %>
+		</div>
+		<div class="field">
+			<%= f.label :start_date, t(".start_date") %>
+    		<%= f.date_field :start_date, required: true %>
+		</div>
+		<div class="field">
+			<%= f.label :end_date, t(".end_date") %>
+    		<%= f.date_field :end_date, required: true %>
+		</div>
+	</div>
+	<div class="modal-actions">
+      	<button type="button"
+			 	class="button"
+				data-modal-close><%= t("crud.cancel") %></button>
+      	<%= f.submit t("crud.create"), class: "button green" %>
+    </div>
+  <% end %>
+</dialog>

@@ -1,0 +1,311 @@
+country_code: nl
+scheme: winst
+tax_year: 2025
+authority: Belastingdienst
+position: 10
+# What this scheme is CALLED, in the language of its own form — the name shown
+# in the scheme picker and in every message about it. Never translated.
+scheme_label: "Winst uit onderneming"
+report_name: "NL-winst"
+currency: EUR
+# tax_year_ends omitted: the Dutch tax year is the calendar year, which is the
+# default. Only Britain declares one here.
+#
+# No connector. The btw-aangifte is the Dutch return that could one day be
+# submitted from here — periodic, and nothing but the ledger summed — but the
+# income tax return is annual and reconciling, so it stops at tagging and export.
+# See "What tier 3 will never include" in the README.
+#
+# Winst uit onderneming — the profit section of the aangifte inkomstenbelasting,
+# for an eenmanszaak or ZZP'er.
+#
+# ⚠️ THERE IS NO FORM. The Netherlands files online only, so nothing is printed
+# with box numbers on it. The authoritative definition of the return is the XBRL
+# taxonomy it is transmitted in, and that is what these categories are
+# transcribed from — see docs/tax-forms/nl-winstaangifte-resultatenrekening-nt20.md,
+# which lists every element in the taxonomy's own order with its own Dutch
+# labels, and names the exact package and version it came from.
+#
+# So `export_column` holds the taxonomy's ELEMENT NAME rather than a box number.
+# That is the authority's own identifier, which is what the field is for — and
+# unlike Switzerland's OR article it would double as `api_field` if a Digipoort
+# connector were ever built.
+#
+# `label` is the Belastingdienst's own Dutch wording, verbatim from the taxonomy.
+#
+# WHAT IS DELIBERATELY NOT HERE:
+#   * the totals the return computes for itself — Totaal bedrijfsopbrengsten,
+#     Totaal bedrijfslasten, Totaal financiële baten en lasten, Resultaat gewone
+#     bedrijfsuitoefening, Saldo fiscale winstberekening. An account is never
+#     tagged with a subtotal.
+#   * the winstaandeel block (Aandeel belastingplichtige ondernemingswinst and
+#     the samenwerkingsverband lines). Those allocate an already-computed profit
+#     between partners; they are not things you book to an account.
+#   * Willekeurige afschrijving op bedrijfsmiddel in Nederland, a repeating
+#     specification block (bd-t_) of description/amount/book value rather than
+#     one figure.
+#   * Toelichting Resultatenrekening, which is free text.
+#
+# ON SECTIONS. `section` is the app's own vocabulary — income, expenses, other —
+# and says only WHICH SUBTOTAL a figure joins. It does not carry direction: a
+# credit to an expense account comes out negative and reduces the expense total,
+# so the figures below that can go either way still behave correctly. That is why
+# "Ontvangen uitkeringen en loonsubsidies" is an expense (the return treats it as
+# reducing personnel costs, which is also how Dutch practice books it) and why
+# the two waardeveranderingen need no fourth section value.
+#
+# ⚠️ The Netherlands has no cash-basis option for most businesses: the
+# factuurstelsel is the default and the kasstelsel is allowed only where you sell
+# almost entirely to private individuals. So a Dutch user is usually on an
+# accrual basis, which the app supports with no setting — see the user guide.
+categories:
+  # ── Bedrijfsopbrengsten ────────────────────────────────────────────────
+  - key: netto_omzet
+    label: "Netto omzet fiscaal"
+    export_column: "bd-i_TurnoverNetFiscal"
+    section: income
+    position: 10
+    keywords: [omzet, verkopen, netto omzet, honorarium, opbrengsten]
+  - key: wijziging_voorraad_onderhanden_werk
+    label: "Wijziging voorraad en onderhanden werk fiscaal"
+    export_column: "bd-i_StockAndWorkInProgressChangeFiscal"
+    section: income
+    position: 20
+    keywords: [voorraad, onderhanden werk]
+  - key: geactiveerde_productie_eigen_bedrijf
+    label: "Geactiveerde productie eigen bedrijf fiscaal"
+    export_column: "bd-i_CapitalizedProductionOwnBusinessFiscal"
+    section: income
+    position: 30
+    keywords: [geactiveerde productie]
+  - key: overige_opbrengsten
+    label: "Overige opbrengsten fiscaal"
+    export_column: "bd-i_RevenuesOtherFiscal"
+    section: income
+    position: 40
+    keywords: [overige opbrengsten, overige baten]
+
+  # ── Bedrijfslasten: inkoop en uitbesteed werk ──────────────────────────
+  - key: kosten_grond_hulpstoffen
+    label: "Kosten grond- en hulpstoffen, inkoopprijs van de verkopen fiscaal"
+    export_column: "bd-i_RawAncillaryMaterialsPurchasePriceSalesFiscal"
+    section: expenses
+    position: 100
+    keywords: [inkoop, inkoopwaarde, grondstoffen, hulpstoffen, inkoopprijs]
+  - key: kosten_uitbesteed_werk
+    label: "Kosten uitbesteed werk en andere externe kosten fiscaal"
+    export_column: "bd-i_OutsourcedWorkCostsAndOtherExternalCostsFiscal"
+    section: expenses
+    position: 110
+    keywords: [uitbesteed werk, freelancers, externe kosten, onderaanneming]
+
+  # ── Bedrijfslasten: personeelskosten ───────────────────────────────────
+  - key: lonen_en_salarissen
+    label: "Lonen en salarissen fiscaal"
+    export_column: "bd-i_WagesSalariesFiscal"
+    section: expenses
+    position: 200
+    keywords: [lonen, salarissen, brutoloon]
+  - key: arbeidsbeloning_fiscale_partner
+    label: "Arbeidsbeloning fiscale partner"
+    export_column: "bd-i_WagesEarnedByPartnerTaxPurposesFiscal"
+    section: expenses
+    position: 210
+    keywords: [arbeidsbeloning partner, meewerkende partner]
+  - key: sociale_lasten
+    label: "Sociale lasten fiscaal"
+    export_column: "bd-i_SocialSecurityCostsFiscal"
+    section: expenses
+    position: 220
+    keywords: [sociale lasten, premies, werkgeverslasten]
+  - key: pensioenlasten
+    label: "Pensioenlasten fiscaal"
+    export_column: "bd-i_PensionCostsFiscal"
+    section: expenses
+    position: 230
+    keywords: [pensioen, pensioenlasten, pensioenpremie]
+  - key: overige_personeelskosten
+    label: "Overige personeelskosten fiscaal"
+    export_column: "bd-i_PersonnelCostsOtherFiscal"
+    section: expenses
+    position: 240
+    keywords: [personeelskosten, arbodienst, opleiding personeel, reiskosten personeel]
+  # Money RECEIVED, and an expense all the same: the return files it inside
+  # Personeelskosten, where it reduces the block, and Dutch practice credits it
+  # against staff costs rather than showing it as income. Booked as a credit to
+  # an expense account it comes out negative and does exactly that.
+  - key: ontvangen_uitkeringen_loonsubsidies
+    label: "Ontvangen uitkeringen en loonsubsidies fiscaal"
+    export_column: "bd-i_BenefitsAndWageSubsidiesReceivedFiscal"
+    section: expenses
+    position: 250
+    keywords: [loonsubsidie, uitkering, ziektewet, uwv, loonkostenvoordeel]
+
+  # ── Bedrijfslasten: afschrijvingen ─────────────────────────────────────
+  - key: afschrijving_goodwill
+    label: "Goodwill afschrijvingen fiscaal"
+    export_column: "bd-i_GoodwillDepreciationFiscal"
+    section: expenses
+    position: 300
+    keywords: [goodwill]
+  - key: afschrijving_overige_immateriele_activa
+    label: "Overige immateriële vaste activa afschrijvingen"
+    export_column: "bd-i_IntangibleFixedAssetsOtherDepreciation"
+    section: expenses
+    position: 310
+    keywords: [immateriele vaste activa, afschrijving software, licenties]
+  - key: afschrijving_gebouwen_terreinen
+    label: "Gebouwen en terreinen afschrijvingen fiscaal"
+    export_column: "bd-i_BuildingsLandDepreciationFiscal"
+    section: expenses
+    position: 320
+    keywords: [afschrijving gebouwen, afschrijving terreinen, pand]
+  - key: afschrijving_machines_installaties
+    label: "Afschrijving machines en installaties fiscaal"
+    export_column: "bd-i_MachineryDepreciationFiscal"
+    section: expenses
+    position: 330
+    keywords: [afschrijving machines, installaties]
+  - key: afschrijving_andere_bedrijfsmiddelen
+    label: "Andere vaste bedrijfsmiddelen afschrijving"
+    export_column: "bd-i_TangibleFixedAssetsOtherDepreciation"
+    section: expenses
+    position: 340
+    keywords: [afschrijving inventaris, afschrijving, bedrijfsmiddelen]
+
+  # ── Bedrijfslasten: waardeveranderingen ────────────────────────────────
+  - key: overige_waardeveranderingen_vaste_activa
+    label: "Overige waardeveranderingen van immateriële en materiële vaste activa"
+    export_column: "bd-i_TangibleAndIntangibleFixedAssetsOtherValuationChangeAmount"
+    section: expenses
+    position: 400
+    keywords: [waardevermindering vaste activa]
+  - key: bijzondere_waardevermindering_vlottende_activa
+    label: "Bijzondere waardevermindering van vlottende activa"
+    export_column: "bd-i_CurrentAssetsSpecialValuationDecreaseAmount"
+    section: expenses
+    position: 410
+    keywords: [waardevermindering voorraad, afwaardering]
+
+  # ── Bedrijfslasten: overige bedrijfskosten ─────────────────────────────
+  - key: auto_en_transportkosten
+    label: "Auto- en transportkosten fiscaal"
+    export_column: "bd-i_CarAndTransportCostsFiscal"
+    section: expenses
+    position: 500
+    keywords: [autokosten, transportkosten, brandstof, wegenbelasting, leaseauto]
+  - key: huisvestingskosten
+    label: "Huisvestingskosten fiscaal"
+    export_column: "bd-i_AccommodationCostsFiscal"
+    section: expenses
+    position: 510
+    keywords: [huisvesting, huur, gas water licht, energie, schoonmaak]
+  - key: onderhoud_overige_materiele_activa
+    label: "Onderhoud overige materiële vaste activa fiscaal"
+    export_column: "bd-i_MaintenanceOtherTangibleFixedAssetsFiscal"
+    section: expenses
+    position: 520
+    keywords: [onderhoud, reparatie]
+  - key: verkoopkosten
+    label: "Verkoopkosten fiscaal"
+    export_column: "bd-i_SalesCostsFiscal"
+    section: expenses
+    position: 530
+    keywords: [verkoopkosten, reclame, advertenties, marketing, representatie]
+  - key: andere_kosten
+    label: "Andere kosten fiscaal"
+    export_column: "bd-i_CostOtherFiscal"
+    section: expenses
+    position: 540
+    keywords: [kantoorkosten, telefoon, internet, verzekeringen, accountantskosten, contributies, abonnementen]
+
+  # ── Financiële baten en lasten ─────────────────────────────────────────
+  - key: opbrengsten_overige_vorderingen
+    label: "Opbrengsten overige vorderingen fiscaal"
+    export_column: "bd-i_RevenuesOtherReceivablesFiscal"
+    section: income
+    position: 600
+    keywords: [rente vorderingen]
+  - key: opbrengsten_banktegoeden
+    label: "Opbrengsten banktegoeden fiscaal"
+    export_column: "bd-i_RevenuesBankCreditsFiscal"
+    section: income
+    position: 610
+    keywords: [rente, renteopbrengsten, spaarrente]
+  - key: ontvangen_dividend
+    label: "Ontvangen dividend (met uitzondering van deelnemingsdividend) fiscaal"
+    export_column: "bd-i_DividendExceptParticipatingInterestDividendFiscal"
+    section: income
+    position: 620
+    keywords: [dividend]
+  - key: kwijtscheldingswinst
+    label: "Kwijtscheldingswinst"
+    export_column: "bd-i_ProfitDueToDebtRemission"
+    section: income
+    position: 630
+    keywords: [kwijtschelding]
+  # Writing debtors down when payment is doubtful, or back up when it is not.
+  # Normally a cost, so it sits with the expenses; a write-BACK is a credit to
+  # that account and comes out negative, which is correct.
+  - key: waardeverandering_vorderingen
+    label: "Waardeverandering van vorderingen"
+    export_column: "bd-i_ReceivablesValuationChangeAmount"
+    section: expenses
+    position: 640
+    keywords: [dubieuze debiteuren, afboeking vorderingen, oninbaar]
+  # Effecten are shares and bonds — not cash, not equity. Held for gain, so it
+  # sits with the income; a loss is a debit and comes out negative.
+  - key: waardeverandering_effecten
+    label: "Waardeverandering van effecten"
+    export_column: "bd-i_StockValuationChangeAmount"
+    section: income
+    position: 650
+    keywords: [effecten, beleggingen, koersresultaat]
+  - key: kosten_schulden_rentelasten
+    label: "Kosten schulden, rentelasten etc. fiscaal"
+    export_column: "bd-i_InterestExpenditureEtcCostsDebtsFiscal"
+    section: expenses
+    position: 660
+    keywords: [rentelasten, rente lening, bankkosten, financieringskosten]
+
+  # ── Buitengewone resultaten ────────────────────────────────────────────
+  - key: boekwinst_op_activa
+    label: "Boekwinst op activa fiscaal"
+    export_column: "bd-i_AssetsBookProfitsFiscal"
+    section: income
+    position: 700
+    keywords: [boekwinst]
+  - key: opheffing_terugkeerreserve_positief
+    label: "Opheffing terugkeerreserve positief fiscaal"
+    export_column: "bd-i_ReturnReserveDiscontinuationPositiveFiscal"
+    section: income
+    position: 710
+  - key: overige_buitengewone_baten
+    label: "Overige buitengewone baten fiscaal"
+    export_column: "bd-i_ExtraordinaryIncomeBusinessOtherFiscal"
+    section: income
+    position: 720
+    keywords: [buitengewone baten]
+  - key: boekverlies_op_activa
+    label: "Boekverlies op activa fiscaal"
+    export_column: "bd-i_AssetsBookLossFiscal"
+    section: expenses
+    position: 730
+    keywords: [boekverlies]
+  - key: afboeking_herinvesteringsreserve
+    label: "Afboeking herinvesteringsreserve fiscaal"
+    export_column: "bd-i_ReinvestmentReservesWriteDownFiscal"
+    section: expenses
+    position: 740
+    keywords: [herinvesteringsreserve]
+  - key: opheffing_terugkeerreserve_negatief
+    label: "Opheffing terugkeerreserve negatief fiscaal"
+    export_column: "bd-i_ReturnReserveDiscontinuationNegativeFiscal"
+    section: expenses
+    position: 750
+  - key: overige_buitengewone_lasten
+    label: "Overige buitengewone lasten fiscaal"
+    export_column: "bd-i_ExtraordinaryExpenditureBusinessOtherFiscal"
+    section: expenses
+    position: 760
+    keywords: [buitengewone lasten]

@@ -1,0 +1,25 @@
+<div class="claim-container">
+	<h2><%= t("gates.claim.title") %></h2>
+	
+	<% if current_admin.verified? %>
+		<p><%= t("gates.claim.set_password_intro") %></p>
+	
+		<%= form_with url: claim_path, 
+					  method: :patch,
+					  class: "form_claim", 
+					  local: true do |f| %>
+			<%= render "shared/password_fields",
+					form: f, 
+					record: current_admin, 
+					id_prefix: "admin", 
+					required: true %><br />
+			<%= f.submit t("gates.claim.set_password_submit"), class: "button green" %>
+		<% end %>
+	<% else %>
+		<p><%= t("gates.claim.check_email", email: current_admin.email_address) %></p>
+	
+		<%= button_to t("gates.claim.resend"), resend_claim_path,
+				class: "button green",
+				method: :post %>
+	<% end %>
+</div>

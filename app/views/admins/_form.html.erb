@@ -1,0 +1,184 @@
+<%= form_with(model: admin, 
+			  id: "#{action_name}_admin", 
+			  class: "form_admin", 
+			  local: true) do |f| %>
+
+	<% if admin.errors[:base].any? %>
+		<div class="error_message">
+			<% admin.errors[:base].each do |msg| %>
+				<p><%= msg %></p>
+			<% end %>
+		</div>
+	<% end %>
+
+	<% grant_path = grant_path? %>
+
+	<%# EMAIL FIRST %>
+	<div class="field">
+		<%= f.label :email_address, t(".email") %>
+		<span class="error_message">
+			<%= admin&.errors[:email_address].to_sentence %>
+		</span><br />
+		<%= f.text_field :email_address, id: :admin_email_address %>
+	</div>
+
+	<%# USERNAME + PASSWORD — starts CLOSED by default . Opened by JS the moment #admin_email_lookup confirms the email does NOT belong to an existing admin.%>
+	<% if grant_path %>
+		<details id="new-person-fields"<%= " open" if show_new_person_fields? %>>
+			<summary><%= t(".new_person_summary") %></summary>
+			<div class="field">
+				<%= f.label :username, t(".username") %>
+				<span class="error_message">
+					<%= admin&.errors[:username].to_sentence %>
+				</span><br />
+				<%= f.text_field :username, id: :admin_username %>
+			</div>
+			<%= render "shared/password_fields", 
+					form: f, 
+					record: admin, 
+					id_prefix: "admin", 
+					required: false %>
+		</details>
+	<% else %>
+		<div class="field">
+			<%= f.label :username, t(".username") %>
+			<span class="error_message">
+				<%= admin&.errors[:username].to_sentence %>
+			</span><br />
+			<%= f.text_field :username, id: :admin_username %>
+		</div>
+	
+		<% if admin.persisted? %>
+			<details <%= " open" if admin.errors[:password].any? || admin.errors[:password_confirmation].any? %>>
+				<summary><%= t(".change_password") %></summary>
+				<%= render "shared/password_fields", 
+					form: f, 
+					record: admin, 
+					id_prefix: "admin", 
+					required: false %>
+			</details>
+		<% else %>
+			<%= render "shared/password_fields", 
+					form: f, 
+					record: admin, 
+					id_prefix: "admin", 
+					required: true %>
+		<% end %>
+	<% end %>
+
+  <%# ============================================================ %>
+  <%# OTP — sudo only %>
+  <%# ============================================================ %>
+
+  <%# OTP/owner — sudo only, and only relevant while creating a bare admin
+      (no entities checked below) — an admin holding an entity can never be
+      an owner (Admin#owner_holds_no_entity), and granting entities at
+      creation time never touches this admin's own sudo/otp flags at all
+      (coadmin_params doesn't permit either, even for sudo). %>
+	<% if sudo? %>
+		<div class="field check-boxes <%= 'hidden' unless admin.sudo? || admin.admin_entities.any? %>" id="otp-field">
+			<label for="admin_otp_enabled">
+				<%= f.check_box :otp_enabled %>
+				otp_enabled (untick to reset/delete)
+			</label>			
+			<% if admin.otp_enabled? %>
+				<span class="small info">Untick to disable and clear the secret. The admin will need to re-enrol on next login.</span>
+			<% end %>
+			<br />
+
+			<label for="admin_sudo">
+				<%= f.check_box :sudo %>
+				Owner
+			</label>
+			<span class="small info">Tick to give FULL CONTROL of this installation. The last owner/sudo cannot be un-ticked. Promoting someone clears their entity links.</span>
+		</div>
+	<% end %>
+
+	<%# ============================================================ %>
+	<%# SELF-EDIT — a full-access admin editing their own profile.    %>
+	<%# ============================================================ %>
+	<% if defined?(@mode) && @mode == :self %>
+		<div class="field">
+			<label><%= t(".access_level") %></label><br /><br />
+			<% admin.admin_entities.sort_by { |ae| ae.entity.code }.each do |ae| %>
+				<p class="field-text">
+					<%= ae.entity.code %> — <%= t("access.#{ae.access_level}") %>
+				</p>
+			<% end %>
+		</div>
+	<% end %>
+
+	<%# ============================================================ %>
+	<%# GRANTING ACCESS SURFACE  %>
+	<%# ============================================================ %>
+	
+	<% if grant_path %>
+		<% unless sudo? %>
+			<%# Access level, readonly or uploadonly. %>
+			<div class="field">
+				<label for="access_level">
+					<%= t(".access_level") %>
+				</label><br />
+				<%= select_tag :access_level,
+					options_for_select(
+						[[t(".read_only"), "read_only"], [t(".receipts_only"), "upload_receipts"]],
+					params[:access_level] || "read_only"
+					),
+					id: "access_level" %>
+			</div>
+		<% end %>
+		
+		<%# Sudo granting an entity IS granting full_access %>
+		<div class="field check-boxes">
+			<label>
+				<%= sudo? ? t(".sudo_entities_label") : t(".entities") %>
+			</label>
+			<% @manageable_entities.each do |entity| %>
+				<label>
+					<%= check_box_tag "entity_ids[]", entity.id,
+							Array(params[:entity_ids]).include?(entity.id.to_s),
+							id: "entity_#{entity.id}" %>
+					<%= entity.code %> — <%= entity.name %>
+					<% if sudo? %>
+						<% full_access_usernames = entity.admin_entities.select(&:full_access?).map { |ae| ae.admin.username } %>
+						<% if full_access_usernames.any? %>
+							— <%= t(".already_full_access", 
+								names: full_access_usernames.join(", ")) %>
+					  <% end %>
+					<% end %>
+				</label>
+			<% end %>
+		</div>
+	<% end %>
+
+	<div class="actions">
+		<%= f.submit(t(".submit")) %>
+	</div>
+
+<% end %>
+
+<%# ============================================================ %>
+<%# SUDO'S REVOCATION SURFACE — existing full_access links only.  %>
+<%# ============================================================ %>
+<% if defined?(@full_access_entities) %>
+<div class="admin-entity-checkboxes">
+	<div class="field check-boxes">
+		<label><%= t(".full_access_entities") %>:</label>
+		<% if @full_access_entities.empty? %>
+			<%= t(".no_full_access_entities") %>
+		<% else %>
+			<% @full_access_entities.each do |ae| %>
+				<span>
+					<%= ae.entity.code %> — <%= ae.entity.name %>
+					<%= button_to t("crud.remove"),
+							admin_entity_path(ae),
+							method: :delete,
+							data: { sure: t(".remove_full_access_confirm", 
+									entity: ae.entity.code) },
+							class: "backend_link button green" %>
+				</span>
+			<% end %>
+		<% end %>
+	</div>
+</div>
+<% end %>

@@ -1,0 +1,51 @@
+<div class="login_form">
+	
+		<%= render partial: "shared/flash" %>
+
+    <%= form_with url: session_path do |f| %>
+        <fieldset>
+
+            <legend><%= t(".enter_details", current: translated_role ) %></legend>
+
+            <p>
+					<% if current_login_type == "admin" %>
+            <%= f.label :username, t(".name") %><br />
+            <%= f.text_field :username, 
+								required: true, 
+								autofocus: true, 
+								autocomplete: "username", 
+								placeholder: t(".name_placeholder"), 
+								value: params[:username], 
+								class: 'input_login', 
+								id: "loginName" %>
+					<% else %>
+            <%= f.label :email_address, t(".email") %><br />
+						<%= f.email_field :email_address, 
+								required: true, 
+								autofocus: true, 
+								autocomplete: "email_address", 
+								placeholder: t(".email_placeholder"), 
+								value: params[:email_address],
+								class: 'input_login',
+								id: "loginName" %>
+					<% end %>
+            </p>
+
+            <p>
+            <%= f.label :password, t(".password") %><br />
+						<%= f.password_field :password,
+								required: true,
+								autocomplete: "current-password",
+								placeholder: current_login_type == "admin" ? t(".password_placeholder") : t(".user_password_placeholder"),
+								maxlength: 72, 
+								class: 'input_login' %>
+            </p>
+
+            <div class="p_submit">
+            	<%= f.submit t(".login"), class: "submit_login" %>
+							<%= render partial: "shared/form_links", locals: {page: nil} %>
+						</div>
+						
+        </fieldset>
+    <% end %>
+</div>

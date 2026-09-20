@@ -1,0 +1,120 @@
+<% content_for :title, t("page.dashboard") %>
+
+<div class="backend_table dashboard">
+	<% if current_admin.full_access? || sudo? %>
+		<h2>
+		<%= t(".welcome_full_access", 
+					name: current_admin.username.capitalize) %>
+		</h2>
+		<p><%= t(".full_access_can_do") %></p>
+	<% elsif current_admin.read_only? %>
+		<h2>
+			<%= t(".welcome_read_only_solo",
+					name: current_admin.username.capitalize,
+					default: "Welcome to the Dashboard, %{name}.") %>
+		</h2>
+		<% if current_admin.demo? %>
+			<p><%= t(".demo_can_do") %></p>
+		<% else %>
+			<p><%= t(".read_only_can_do") %></p>
+		<% end %>
+	<% end %>
+
+	<%= render partial: 'shared/flash' %>
+
+<% if @entities.present? && @entities.count > 1 %>
+
+	<% if sudo? %>
+		<ul class="admin-entities"><%= t(".your_entities") %>:
+			<% @entities.each do |entity| %>
+				<li class="<%= orphaned?(entity) %>">
+					<%= entity.code %> - <%= entity.name %>  <%= current_admin.otp_configured? ? t(".2fa_enabled") : link_to(t(".enable_2fa"), otp_path, class: "backend_link") %>
+				</li>
+			<% end %>
+		</ul>
+	<% end %>
+
+	<%= render partial: "frequent_accounts" %>
+
+	<% @entities.group_by(&:entity_group_id).each do |group_id, group_entities| %>
+		<% if group_id.nil? %>
+			<% group_entities.each do |entity| %>
+				<%= render partial: "reports/overview",
+						   locals: { entity: entity,
+						   orphaned: orphaned?(entity),
+						   report_groups: entity.report_groups.sort_by(&:position) } %>
+			<% end %>
+		<% else %>
+			<section class="entity-family">
+				<div class="family-reports">
+					<span class="family-name">
+						<%= group_entities.first.entity_group.name %>
+					</span>
+					<%= render partial: "reports/general_report_buttons", 
+							   locals: { 
+							   entities: group_entities.map(&:code).join(",") 
+							   } %>
+				</div>
+				<%# A family archive is the whole family's ledger, posting-level, in one
+				    file — access to one member is not access to the rest, so this is
+				    shown only to an admin with write access to EVERY member.
+				    See Admin#can_use_archive?. %>
+				<% if current_admin.can_use_archive?(Archives::Storage.scope_key_for(group_entities.first)) %>
+				<div class="family-downloads">
+					<span class="family-downloads-label">
+						<%= t("reports.overview.downloads") %>:
+					</span>
+					<span>
+						<%= button_to Date.current.strftime("%y-%m-%d"),
+							create_archive_reports_path(entity_id: group_entities.first.id),
+							method: :post, class: "backend_link button blue" %>
+						<% recent = recent_archives(group_entities.first) %>
+						<% recent[:entries].each do |archived| %>
+							<%= link_to archived.end_date.strftime("%y-%m-%d"),
+							download_archive_reports_path(key: archived.key),
+							class: "backend_link button blue" %>
+						<% end %>
+						<% if recent[:more] %>
+							<%= link_to t("reports.overview.more_downloads"),
+								reports_path,
+								class: "backend_link button" %>
+						<% end %>
+		  			</span>
+				</div>
+				<% end %>
+				<% group_entities.each do |entity| %>
+					<%= render partial: "reports/overview",
+							   locals: { entity: entity,
+							   orphaned: orphaned?(entity),
+							   report_groups: entity.report_groups.sort_by(&:position),
+							   show_general_reports: false } %>
+				<% end %>
+			</section>
+		<% end %>
+	<% end %>
+
+<% elsif @entity %>
+
+	<%= render partial: "frequent_accounts" %>
+
+	<%= render partial: "reports/overview", 
+			   locals: { entity: @entity,
+				   		 orphaned: orphaned?(@entity),
+				   		 report_groups: @report_groups } %>
+
+<% else %>
+
+	<section class="no-entities">
+		<p><%= t(".no_entities_yet") %></p>
+		<%= link_to t(".create_first_entity"), 
+				new_entity_path, 
+				class: "button green" %>
+	</section>
+
+<% end %>
+</div>
+
+<div id="new_edit_view">
+	<%= render "receipts/upload_modal" %>
+	<%= render "receipts/preview_modal" %>
+</div>

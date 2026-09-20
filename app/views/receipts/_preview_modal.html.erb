@@ -1,0 +1,40 @@
+<dialog id="receipt-preview-modal" class="receipt-modal" data-close-on-backdrop
+        data-text-error-unlink="<%= t('receipts.error_unlink_receipt') %>">
+
+  <div class="receipt-modal-content">
+
+    <div class="receipt-modal-header">
+
+      <div class="receipt-modal-header-actions">
+        <%# target="_blank" is what actually keeps you on the page. The `download`
+            attribute alone cannot: the file is served from Scaleway, and the
+            spec makes browsers IGNORE `download` on a cross-origin URL — so the
+            link simply navigated away. Kept anyway, for the day the URL is
+            same-origin. rel="noopener" because the new tab is another origin. %>
+        <a id="receipt-download-link" href="#" class="button" download
+           target="_blank" rel="noopener">
+          <%= t("receipts.download") %>
+        </a>
+        <button id="receipt-unlink-btn" type="button" class="button button-danger hidden"
+                data-action="unlink-receipt"
+                data-receipt-id="" data-posting-id="">
+          <%= t("receipts.unlink") %>
+        </button>
+      </div>
+
+      <button class="receipt-modal-close" data-modal-close aria-label="<%= t('crud.close', default: 'Close') %>">&times;</button>
+
+    </div>
+
+    <div id="receipt-preview-image" class="receipt-preview-container">
+      <img id="receipt-preview-img" src="" alt="Receipt preview">
+    </div>
+
+    <div class="receipt-preview-info">
+      <h3 id="receipt-preview-title"></h3>
+      <p id="receipt-preview-description"></p>
+    </div>
+
+  </div>
+
+</dialog>

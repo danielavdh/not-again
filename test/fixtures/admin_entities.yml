@@ -1,0 +1,50 @@
+one_personal:
+  admin: one
+  entity: personal
+  access_level: 0
+
+one_spouse:
+  admin: one
+  entity: spouse
+  access_level: 0
+
+two_family_biz:
+  admin: two
+  entity: family_biz
+  access_level: 0
+
+two_daughter:
+  admin: two
+  entity: daughter
+  access_level: 0
+
+upload_only_personal:
+  admin: upload_only
+  entity: personal
+  access_level: 1
+
+read_only_personal:
+  admin: read_only
+  entity: personal
+  access_level: 2
+
+shared_reader_personal:
+  admin: shared_reader
+  entity: personal
+  access_level: 2
+
+shared_reader_family_biz:
+  admin: shared_reader
+  entity: family_biz
+  access_level: 2
+
+# The mixed-level admin: bookkeeper for 10, reader of 01.
+mixed_full_family_biz:
+  admin: mixed
+  entity: family_biz
+  access_level: 0
+
+mixed_read_personal:
+  admin: mixed
+  entity: personal
+  access_level: 2

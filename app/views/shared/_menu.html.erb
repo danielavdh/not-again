@@ -1,0 +1,117 @@
+<nav id="menu">
+<% if admin_signed_in? %>
+
+<%########### SMALL SCREEN MENU ##########%>
+<%########### SMALL SCREEN MENU ##########%>
+
+  <div class="phone_menu">
+	<div id="menu-icons">
+	  	<%# The house is the way OUT to the public front page. The dashboard has
+	  	    its own icon further along, so this one was a duplicate. %>
+	  	<%= link_to root_path, class: "home_link" do %>
+	  		<svg><use xlink:href='#home'></use></svg>
+	  	<% end %>
+		
+	<% if current_admin.upload_receipts_only? %>
+		  	<%= link_to admin_path(current_admin) do %>
+		  		<svg><use xlink:href='#profile'></use></svg>
+		  	<% end %>
+	<% else %>
+	
+		<% if current_admin.full_access? %>
+		  	<%#= link_to admin_url(current_admin, subdomain: '') do %>
+		  	<%= link_to admin_path(current_admin) do %>
+		  		<svg><use xlink:href='#profile'></use></svg>
+		  	<% end %>
+		<% end %>
+
+	  	<%= link_to dashboard_path do %>
+	  		<svg><use xlink:href='#dashboard'></use></svg>
+	  	<% end %>
+	  	<%= link_to accounts_path do %>
+	  		<svg><use xlink:href='#accounts'></use></svg>
+	  	<% end %>
+	  	<%= link_to receipts_path do %>
+	  		<svg class="stroke s30"><use xlink:href='#receipt'></use></svg>
+	  	<% end %>
+
+		<%= button_to session_path, 
+			method: :delete,
+			class: "logout_button" do %>
+			<svg><use xlink:href='#logout'></use></svg>
+		<% end %>
+
+	<% end %>
+
+	  	<%= link_to '#', class: "lang-toggle" do %>
+	  		<svg><use xlink:href='#language'></use></svg>
+  	  	<% end %>
+  	</div>
+  	<div id="language-selector" class="hidden">
+  	  <%= language_switcher %>
+  		<button class="lang-close">✕</button>
+  	</div>
+  </div>
+
+<%########### LARGE SCREEN MENU ##########%>
+<%########### LARGE SCREEN MENU ##########%>
+
+  <% if current_admin.upload_receipts_only? %>
+  <ul>
+    <li><%= button_to t("shared.menu.logout"),
+		 			session_path, 
+					method: :delete,
+					class: "logout_button" %>
+	</li>
+	<li><%= nav_link_to current_admin.username.capitalize, admin_path(current_admin) %></li>
+	<li class="nav-lang"><%= language_switcher %></li>
+  </ul>
+  <% else %>
+  <ul>
+	<%# everyone including demo should be able to see their profile. except sudo %>
+	<% unless sudo? %>
+	<li><%= nav_link_to current_admin.username.capitalize, admin_path(current_admin) %></li>
+	<% end %>
+	<li><%= nav_link_to t(".home"), dashboard_path %></li>
+	<li><%= nav_link_to t(".accounts"), accounts_path %></li>
+	<li><%= nav_link_to t(".reports"), reports_path %></li>
+	<li><%= nav_link_to t(".receipts"), receipts_path %></li>
+	<li><%= nav_link_to t(".rates"), exchange_rates_path %></li>
+	<% if current_admin.full_access_pro? %>
+	<li><%= nav_link_to t(".je"), journal_entries_path %></li>
+	<% end %>
+	<% unless sudo? %>
+	<li><%= button_to t("shared.menu.logout"),
+		 			session_path,
+					method: :delete,
+					class: "logout_button" %>
+	</li>
+	<li><%= nav_link_to "not-again", root_path %></li>
+	<% end %>
+	<li class="nav-lang"><%= language_switcher %></li>
+  </ul>
+  <% if sudo? %>
+  <ul class="sudo-menu">
+	<li><%= nav_link_to t(".admins"), admins_path %></li>
+	<li><%= nav_link_to t(".entities"), entities_path %></li>
+	<li><%= nav_link_to t(".languages"), languages_path %></li>
+	<li><%= nav_link_to t(".easy_manual"), easy_manual_path %></li>
+	<li><%= nav_link_to t(".pro_manual"), pro_manual_path %></li>
+	<li><%= button_to t("shared.menu.logout"),
+		 			session_path,
+					method: :delete,
+					class: "logout_button" %>
+	</li>
+	<li><%= nav_link_to "not-again", root_path %></li>
+	<li class="nav-draft-lang">
+	<% if Language.custom.draft.exists? %>
+		<%= t('shared.menu.draft_language')%>: <%= draft_language_switcher %>
+	<% end %>
+	</li>
+  </ul>
+  <% end %>
+  <% end %>
+
+<% end %>
+</nav>
+

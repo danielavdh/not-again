@@ -1,0 +1,61 @@
+<%# Build 2 — the two JE₂ posting rows (capital + nominal) of ONE cross-entity
+    leg, namespaced under journal_entry[cross_entity_entries][<entry_index>].
+    Rendered by JournalEntriesController#cross_entity_rows and inserted by the
+    confirm JS as the .ce-mirror-row band under the 601 gift.
+
+    Nested fields_for with child_index bakes a UNIQUE posting index (<entry_index><j>)
+    into the object name, so it can't collide with JE₁'s posting indices AND the
+    receipt's nested receipts_attributes inherit that index. Modal-driven: account /
+    amount / side are hidden (display text shown); description/reference editable;
+    receipts (+ the gift document) attach to the nominal leg only. %>
+<%= fields_for "journal_entry[cross_entity_entries][#{entry_index}]", linked do |ef| %>
+  <% linked.postings.each_with_index do |posting, j| %>
+    <% acct = posting.account %>
+    <%# Identify the capital bridge by the ACCOUNT itself — it's always the EQUITY
+        account (304); the nominal leg is always income/expense (504/404). NEVER by
+        row position: on an edit je2.postings loads in DB order, not capital-first, so
+        a positional guess mis-tags the rows (wrong data-ce-role, receipt on the wrong
+        leg, blank modal selects). %>
+    <% capital = acct&.equity? %>
+    <%= ef.fields_for :postings, posting, child_index: "#{entry_index}#{j}" do |pf| %>
+      <tr class="ce-mirror-row posting-row <%= j.even? ? 'list-line-odd' : 'list-line-even' %>"
+          data-ce-link-id="<%= link_id %>"
+          data-ce-role="<%= capital ? 'capital' : 'nominal' %>"
+          data-ce-entity="<%= acct&.entity_code %>"><%# for the receipt modal's entity auto-select %>
+        <%# Edit (#4): carry the id so nested attributes UPDATE this JE₂ posting
+            rather than build a duplicate. child_index doesn't emit it, and the
+            AJAX-rebuilt rows set id on an unsaved object → check id, not persisted?. %>
+        <%= pf.hidden_field :id if posting.id.present? %>
+        <%= pf.hidden_field :account_id %>
+        <%= pf.hidden_field :entry_type %>
+        <% if capital %>
+          <%= pf.hidden_field :cross_entity_link_id %>
+        <% end %>
+
+        <td class="account_id ce-mirror-account"><%= "#{acct&.code} - #{acct&.name}" %></td>
+        <td class="posting-currency-display"></td>
+        <%# Bank entries have no visible entry_type column (it's implicit in
+            deposit/withdrawal); the side still submits via the hidden field above. %>
+        <% unless local_assigns[:context] == "bank" %>
+          <td class="input-cell entry_type ce-mirror-side">
+            <%# display-only (no name → doesn't submit; entry_type submits via the hidden field above) %>
+            <input type="text" value="<%= t("jargon.#{posting.entry_type}") %>" readonly tabindex="-1" aria-hidden="true">
+          </td>
+        <% end %>
+        <td class="input-cell right ce-mirror-amount">
+          <%# readonly so it displays like a posting amount + submits amount_display; edited via the modal %>
+          <%= pf.text_field :amount_display, value: amount, readonly: true, class: "posting-amount right", inputmode: "decimal" %>
+        </td>
+        <td class="input-cell no-phone"><%= pf.text_field :description, aria: { label: t("attrs.description") } %></td>
+        <%# Reference placeholder follows the host form: JE postings show it, bank postings don't. %>
+        <td class="input-cell no-phone"><%= pf.text_field :reference, aria: { label: t("attrs.reference") }, placeholder: (t("attrs.posting_placeholder") unless local_assigns[:context] == "bank") %></td>
+        <td class="posting-receipt no-phone">
+          <% unless capital %>
+            <%= render "receipts/posting_receipt_widget", pf: pf %>
+          <% end %>
+        </td>
+        <td class="input-cell"><%= pf.check_box :_destroy, class: "posting-destroy ce-mirror-destroy" %></td>
+      </tr>
+    <% end %>
+  <% end %>
+<% end %>

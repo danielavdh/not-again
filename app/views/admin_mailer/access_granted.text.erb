@@ -1,0 +1,5 @@
+<%= t('.greeting', name: @admin.username) %>
+
+<%= t('.body', granter: @granter.email_address, entities: @entity_names, access: t("access.#{@level}")) %>
+
+<%= t('.closing') %>

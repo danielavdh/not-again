@@ -1,0 +1,57 @@
+<% if pf.object.persisted? %>
+
+  <% posting_id = pf.object.id %>
+  <% receipts = pf.object.receipts %>
+
+  <div class="receipt-posting-widget" data-posting-id="<%= posting_id %>">
+    <% if receipts.any? %>
+      <button type="button"
+              data-action="view-posting-receipts"
+              data-posting-id="<%= posting_id %>"
+              title="<%= t('receipts.view_receipts') %>">
+        <svg><use xlink:href="#view"></use></svg>
+      </button>
+    <% end %>
+    <button type="button"
+            data-action="upload-receipt-for-posting"
+            data-posting-id="<%= posting_id %>"
+            title="<%= t('receipts.add_receipt') %>">
+	  <svg class="stroke s60"><use xlink:href="#add"></use></svg>
+    </button>
+    <button type="button"
+            data-action="link-existing-receipt"
+            data-posting-id="<%= posting_id %>"
+            title="<%= t('receipts.link_existing') %>">
+      <svg><use xlink:href="#te_linkFile"></use></svg>
+    </button>
+  </div>
+
+<% else %>
+
+  <div class="receipt-posting-widget" data-posting-id="">
+    <button type="button"
+            data-action="capture-receipt-for-new-posting"
+            data-posting-index="<%= pf.index %>"
+            title="<%= t('receipts.add_receipt') %>">
+	  <svg class="stroke s60"><use xlink:href="#add"></use></svg>
+    </button>
+    <button type="button"
+            data-action="link-existing-receipt-for-new-posting"
+            data-posting-index="<%= pf.index %>"
+            title="<%= t('receipts.link_existing') %>">
+      <svg><use xlink:href="#te_linkFile"></use></svg>
+    </button>
+    <span data-receipt-filename="<%= pf.index %>" class="hidden"></span>
+    <%# Hidden fields populated by JS from the modal %>
+    <%= pf.hidden_field :existing_receipt_id, data: { receipt_id: pf.index } %>
+    <%= pf.fields_for :receipts, pf.object.receipts.build do |rf| %>
+      <%= rf.hidden_field :title, data: { receipt_title: pf.index } %>
+      <%= rf.hidden_field :receipt_date, value: Date.current, data: { receipt_date: pf.index } %>
+      <%= rf.hidden_field :description, data: { receipt_description: pf.index } %>
+      <%= rf.file_field :scan, data: { receipt_scan: pf.index },
+                                   accept: "image/jpeg,image/png,image/heic,application/pdf",
+                                   hidden: true %>
+    <% end %>
+  </div>
+
+<% end %>

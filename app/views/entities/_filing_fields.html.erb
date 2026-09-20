@@ -1,0 +1,104 @@
+<%# locals: (authority:) %>
+
+<%# The filing details for one AUTHORITY: whose books these are, and that
+    authority's identifier for each business. Inside the entity form, so one
+    Save covers the whole page — the connection controls live below it, outside
+    the form, because button_to renders a <form> and forms cannot nest.
+
+    Nothing here names HMRC. The authority's name, its groups and its identifier
+    labels all arrive in `authority`, which the controller builds from the
+    catalogue headers. A second authority is another entry in that list. %>
+
+<fieldset>
+  <legend><%= authority[:name] %></legend>
+
+  <div class="field">
+    <%= label_tag "filing_#{authority[:key]}_taxpayer_id",
+                  t("filing.register.taxpayer_label", authority: authority[:name]) %>
+    <%= select_tag "filing[#{authority[:key]}][taxpayer_id]",
+                   options_from_collection_for_select(authority[:choices], :id, :display_name,
+                                                      authority[:taxpayer]&.id),
+                   include_blank: t("filing.register.taxpayer_none"),
+                   id: "filing_#{authority[:key]}_taxpayer_id",
+                   data: { taxpayer_picker: authority[:key] } %>
+    <%# Choosing or adding without leaving the page: setting a client up and
+        coming back meant losing everything else ticked here. The modal saves at
+        most a TAXPAYER, which is a record of its own — the tax setup still waits
+        for this page's one Save. Opened automatically when a scheme is ticked;
+        this button is for changing your mind later. %>
+    <button type="button" class="button add-taxpayer"
+            data-taxpayer-add="<%= authority[:key] %>"
+            data-url="<%= choose_taxpayers_path(authority: authority[:key]) %>">
+      <%= t("filing.register.choose_or_add") %>
+    </button>
+
+    <%# Said at the point of the decision, because nothing downstream can catch
+        it: accounts carry no taxpayer, so two people's books in one entity would
+        file under one number with no error anywhere. %>
+    <p class="hint">
+      <%= t("filing.register.taxpayer_hint", authority: authority[:name]) %>
+      <%= link_to t("filing.register.manage"), taxpayers_path(return_to: authority[:return_to]) %>
+    </p>
+  </div>
+
+  <%# The business identifier, one per scheme. NOT a free-text box before
+      connecting: nobody can know their identifier until the authority says it,
+      and an empty box invites the nearest number to hand — which is how an MTD
+      enrolment id ended up here once. So: connect first, then choose. %>
+  <% if authority[:taxpayer].nil? %>
+    <p class="hint" data-taxpayer-pending="<%= authority[:key] %>"><%= t("filing.register.choose_taxpayer_first") %></p>
+
+  <% elsif !authority[:taxpayer].connected? %>
+    <p class="hint"><%= t("filing.register.connect_first", authority: authority[:name]) %></p>
+
+  <% else %>
+    <% authority[:groups].each do |group| %>
+      <% offered = authority[:offered][group.id] || [] %>
+      <div class="field">
+        <%= label_tag "filing_#{authority[:key]}_business_#{group.tax_scheme}",
+                      t("filing.#{authority[:key]}.business_id_label",
+                        scheme: group.scheme_label,
+                        default: "%{scheme} business ID") %>
+
+        <%# The authority holds more than one business here and its own names do
+            not tell them apart. No field at all: a choice between two things the
+            user cannot distinguish is a coin toss, and losing it is silent. The
+            names are the authority's to fix, so that is where they are sent. %>
+        <% if authority[:blocked_schemes].include?(group.tax_scheme) %>
+          <p class="hint">
+            <%= t("filing.register.business_names_not_unique", authority: authority[:name]) %>
+            <% if authority[:name_help_url] %>
+              <%= link_to t("filing.register.business_names_fix"),
+                          authority[:name_help_url], rel: "noopener", target: "_blank" %>
+            <% end %>
+          </p>
+
+        <% elsif offered.any? %>
+          <%# Several are possible for self-employment — each trade is its own
+              business, with its own name and accounting period on the form. %>
+          <%= select_tag "filing[#{authority[:key]}][business_ids][#{group.tax_scheme}]",
+                         options_for_select(
+                           offered.map { |b| [ [ b["tradingName"], b["businessId"] ].compact.reject(&:blank?).join(" — "),
+                                               b["businessId"] ] },
+                           group.business_id),
+                         include_blank: t("filing.register.business_prompt"),
+                         id: "filing_#{authority[:key]}_business_#{group.tax_scheme}" %>
+        <% elsif authority[:businesses][group.tax_scheme].present? %>
+          <%# The authority DID answer, and every business it named is already on
+              another of this taxpayer's groups. Nothing left to choose, and no
+              reason to accept a typed value — an unclaimed one does not exist. %>
+          <p class="hint"><%= t("filing.register.business_all_claimed", authority: authority[:name]) %></p>
+
+        <% else %>
+          <%# The authority could not be reached. Keep whatever is stored visible
+              and editable rather than silently offering an empty list. %>
+          <%= text_field_tag "filing[#{authority[:key]}][business_ids][#{group.tax_scheme}]",
+                             group.business_id,
+                             id: "filing_#{authority[:key]}_business_#{group.tax_scheme}" %>
+          <p class="hint"><%= t("filing.register.business_unavailable", authority: authority[:name]) %></p>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+
+</fieldset>

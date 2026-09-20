@@ -1,0 +1,4 @@
+<span class="langs"><%= safe_join(selectable_languages.map { |name, code|
+  link_to(code.upcase, url_for(locale: code), hreflang: code, title: name,
+          class: ("on" if code.to_s == I18n.locale.to_s)) }) %></span>
+<span class="more">···</span>

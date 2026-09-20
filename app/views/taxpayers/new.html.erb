@@ -1,0 +1,10 @@
+<% content_for :title, t("filing.register.add") %>
+
+<div id="new_edit_view">
+  <h1><%= t("filing.register.add") %></h1>
+  <%= render "form", form_url: taxpayers_path, return_to: params[:return_to] %>
+
+  <div class="crud_navigation">
+    <%= link_to t("crud.back"), taxpayers_path(return_to: params[:return_to]), class: "backend_link button green" %>
+  </div>
+</div>

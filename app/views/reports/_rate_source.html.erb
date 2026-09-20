@@ -1,0 +1,22 @@
+<%# Which published series actually produced the converted column.
+    locals: (sources:, selectable:)
+
+    WHEN it shows is Reports::CurrencyColumns.name_source? — beside the
+    two rules the same table already asks it. Only the audience is decided here.
+
+    Evidence rather than everyday information, so full-access pro only — the
+    same argument as the journal entry view. The CSV exports carry it for
+    everyone, because a file outlives the person who downloaded it.
+
+    No class: <abbr> is the element that means this, and nothing here needs
+    styling of its own. %>
+<% if current_admin.full_access_pro? && name_rate_source?(sources, selectable: selectable) %>
+  (<% sources.each_with_index do |source, i| %>
+    <%= " · " if i.positive? %>
+    <% own   = source == "manual" %>
+    <% label = own ? t("reports.rate_source.own") : RateSourceConfig.short_label_for(source) %>
+    <% title = own ? t("reports.rate_source.own_title")
+                   : t("reports.rate_source.title", label: RateSourceConfig.label_for(source)) %>
+    <abbr title="<%= title %>"><%= label %></abbr>
+  <% end %>)
+<% end %>

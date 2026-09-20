@@ -1,0 +1,12 @@
+<dialog id="receipt-upload-modal" class="receipt-modal"
+        data-text-error-upload="<%= t('receipts.error_upload') %>">
+  <div class="receipt-modal-content">
+    <button class="receipt-modal-close" data-modal-close aria-label="<%= t('crud.close', default: 'Close') %>">&times;</button>
+    <h3><%= t("receipts.upload_receipt") %></h3>
+
+    <%= render "receipts/form",
+               receipt: Receipt.new(receipt_date: Date.current),
+               entities: entities_for_receipt_upload,
+			   modal: true %>
+  </div>
+</dialog>

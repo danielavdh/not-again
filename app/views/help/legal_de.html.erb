@@ -1,0 +1,161 @@
+<%= render "help/back" %>
+
+<h1>Datenschutzerklärung &amp; Nutzungsbedingungen</h1>
+
+<p>Diese Seite umfasst sowohl die Datenschutzerklärung als auch die Nutzungsbedingungen für <%= SERVICE_NAME %>, den Online-Buchhaltungsdienst unter <%= link_to service_host, "https://#{service_host}" %>. Sie erläutert, welche personenbezogenen Daten wir verarbeiten, warum und auf welcher Rechtsgrundlage, und legt die Bedingungen fest, unter denen der Dienst bereitgestellt wird.</p>
+
+<h2>Wer wir sind</h2>
+
+<p>Der Dienst wird betrieben von <%= CONTACT_TRADING %> (<%= CONTACT_NAME %>), <%= CONTACT_STREET %>, <%= CONTACT_CITY %>, <%= CONTACT_COUNTRY %>. Im Sinne des Datenschutzrechts sind wir der Verantwortliche für die nachstehend beschriebenen personenbezogenen Daten. Sie erreichen uns unter <%= mail_to CONTACT_EMAIL %>. Unsere vollständigen Anbieterangaben finden Sie im Abschnitt <%= link_to "Impressum", "#impressum" %> weiter unten.</p>
+
+<h2>Welche personenbezogenen Daten wir verarbeiten</h2>
+
+<ul>
+<li><strong>Kontodaten</strong> — Ihr Name, Ihre E-Mail-Adresse und ein sicher gehashtes Passwort.</li>
+<li><strong>Von Ihnen erfasste Buchhaltungsdaten</strong> — Konten, Transaktionen, Buchungssätze und Bankbuchungen, einschließlich Beträgen, Daten und Beschreibungen.</li>
+<li><strong>Von Ihnen hochgeladene Dokumente</strong> — Belege und zugehörige Dateien.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Steuerdaten</strong> — die Einnahmen- und Ausgabenzahlen sowie Meldepflichten, die zur Übermittlung von Making-Tax-Digital-Erklärungen (MTD) an HM Revenue &amp; Customs (HMRC) verwendet werden.</li>
+<li><strong>HMRC-Autorisierung</strong> — die OAuth-Zugriffstokens, die es uns ermöglichen, in Ihrem Namen einzureichen, sobald Sie uns bei HMRC autorisiert haben.</li>
+<% end %>
+<li><strong>Technische Daten</strong> — die unten aufgeführten Cookies<% if @authorities_in_use.include?("hmrc") %> sowie die Betrugspräventionsdaten, die HMRC von uns bei jeder Übermittlung verlangt<% end %>.</li>
+</ul>
+
+<h2>Warum wir sie verarbeiten und unsere Rechtsgrundlage</h2>
+
+<p>Wir verarbeiten Ihre Daten ausschließlich für zwei Zwecke:</p>
+
+<ul>
+<li><strong>Um den Buchhaltungs- und Einreichungsdienst bereitzustellen, für den Sie sich angemeldet haben.</strong> Rechtsgrundlage: Erfüllung eines Vertrags.</li>
+<li><strong>Um steuerliche Meldepflichten zu erfüllen und die gesetzlich vorgeschriebenen Steuerunterlagen aufzubewahren.</strong> Rechtsgrundlage: Erfüllung einer rechtlichen Verpflichtung.</li>
+</ul>
+
+<p>Wir verarbeiten Ihre Daten nicht für Werbung und verkaufen sie nicht und geben sie nicht zu Marketingzwecken an Dritte weiter.</p>
+
+<% if @authorities_in_use.any? %>
+<h2>Einreichung bei Steuerbehörden</h2>
+
+<% @authorities_in_use.each do |authority| %>
+<%= raw t("filing.#{authority}.legal_html") %>
+<% end %>
+<% end %>
+
+<h2>Wo Ihre Daten gespeichert werden</h2>
+
+<p>Alle Ihre Daten werden innerhalb der Europäischen Union gespeichert:</p>
+
+<ul>
+<li>Die Anwendung und die Datenbank werden bei Hetzner in Deutschland gehostet.</li>
+<li>Hochgeladene Dateien, Belege, Steuereinreichungen und Ihr Bücher-Archiv werden bei Scaleway Object Storage in Paris, Frankreich, gespeichert.</li>
+<li>Eine nächtliche Kopie von allem, einschließlich der Datenbank-Backups, wird zur Redundanz über zwei Anbieter bei OVH Object Storage in Straßburg, Frankreich, aufbewahrt.</li>
+<li>Ausgehende E-Mails – einschließlich der eigenen Benachrichtigungen dieser Richtlinie – werden über Brevo versendet.</li>
+</ul>
+
+<h2>Wie lange wir sie aufbewahren</h2>
+
+<p>Wir bewahren Ihre Unterlagen so lange auf, wie Ihr Konto aktiv ist, und darüber hinaus so lange, wie die geltenden Gesetze deren Aufbewahrung vorschreiben. Die Aufbewahrungsfristen unterscheiden sich je nach Land und Steuersystem, daher bewahren wir Ihre Daten für den Zeitraum auf, den das für Sie geltende Recht vorschreibt. Wenn Daten nicht mehr benötigt werden und keine gesetzliche Aufbewahrungspflicht besteht, werden sie gelöscht.</p>
+
+<h2>Ihre Rechte</h2>
+
+<p>Je nachdem, wo Sie ansässig sind, ergeben sich Ihre Rechte aus dem für Sie geltenden Datenschutzrecht — zum Beispiel der EU-DSGVO (einschließlich des EWR), der UK-DSGVO oder dem Schweizer Datenschutzgesetz (DSG). Dazu gehören in der Regel das Recht auf Auskunft über Ihre personenbezogenen Daten, auf Berichtigung unrichtiger Daten, auf Löschung (sofern wir sie nicht zur Erfüllung einer gesetzlichen Verpflichtung aufbewahren müssen), auf Einschränkung der Verarbeitung oder Widerspruch dagegen sowie auf Datenübertragbarkeit. Sie haben außerdem das Recht, sich bei der zuständigen Datenschutzbehörde zu beschweren (in der Schweiz dem EDÖB). Um eines dieser Rechte auszuüben, kontaktieren Sie uns unter <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Cookies</h2>
+
+<p>Wir verwenden ausschließlich die Cookies, die für den Betrieb des Dienstes unbedingt erforderlich sind und die von Ihnen getroffene Einstellungen speichern. Wir verwenden keine Analyse-, Werbe-, Tracking- oder Drittanbieter-Cookies, sodass kein Cookie-Banner erforderlich ist. Die von uns gesetzten Cookies sind:</p>
+
+<ul>
+<li><strong>Sitzungs-Cookie</strong> — hält Sie angemeldet. Unbedingt erforderlich.</li>
+<li><strong>Einstellung für hohen Kontrast</strong> — speichert die Anzeigeoption zur Barrierefreiheit, wird nur gesetzt, wenn Sie sie aktivieren.</li>
+<% if @authorities_in_use.include?("hmrc") %>
+<li><strong>Betrugspräventionsdaten</strong> — technische Angaben, die HMRC bei jeder Making-Tax-Digital-Übermittlung von uns verlangt. Wird nur für die Einreichung verwendet.</li>
+<% end %>
+</ul>
+
+<h2>Sicherheit</h2>
+
+<p>Daten werden bei der Übertragung mittels HTTPS verschlüsselt, und Zugangsdaten werden verschlüsselt gespeichert<% if @authorities_in_use.any? %>, ebenso die OAuth-Autorisierungstokens, mit denen wir in Ihrem Namen einreichen können<% end %>. Wenn Sie glauben, eine Sicherheitslücke gefunden zu haben, oder einen Sicherheitsvorfall melden möchten, senden Sie bitte eine E-Mail an <%= mail_to CONTACT_EMAIL %>. Maschinenlesbare Kontaktangaben werden auch unter <%= link_to "/.well-known/security.txt", "/.well-known/security.txt" %> veröffentlicht.</p>
+
+<h2>Wenn wir Daten für Ihr Unternehmen verarbeiten</h2>
+
+<p>Wenn Sie über diesen Dienst die Bücher anderer Personen führen, sind wir für diese Daten Ihr Auftragsverarbeiter nach Art. 28 DS-GVO:</p>
+
+<ul>
+<li>Wir tun damit nur, was die Anwendung tut, wenn Sie sie nutzen – nichts anderes.</li>
+<li>Jeder mit Zugriff auf den Server, einschließlich uns, ist zur Vertraulichkeit dessen verpflichtet, was er sieht.</li>
+<li>Sicherheitsmaßnahmen sind oben unter „Sicherheit" aufgeführt.</li>
+<li>Unterauftragsverarbeiter sind oben unter „Wo Ihre Daten gespeichert werden" aufgeführt; für ihren jeweiligen Teil gilt deren eigene Auftragsverarbeitungsvereinbarung.</li>
+<li>Sie können Ihre eigenen Daten jederzeit über die vorhandenen Berichte und Exporte in der Anwendung einsehen, berichtigen und exportieren. Sie werden nach Ablauf der gesetzlichen Aufbewahrungsfrist gelöscht.</li>
+<li>Von Ihnen hochgeladene Belege werden hier so lange aufbewahrt wie Ihre Bücher, aber nicht gesondert gesichert – bitte bewahren Sie eine eigene Kopie jedes Belegs so lange auf, wie es die für Sie geltenden gesetzlichen Vorschriften verlangen, ebenso wie Sie es mit einem Papierbeleg tun würden.</li>
+<li>Entdecken die Personen, die diese Installation betreiben, einen Sicherheitsvorfall, der Ihre Daten betrifft, kontaktieren sie Sie direkt über die in Ihrem Konto hinterlegte E-Mail-Adresse.</li>
+<li>Dieser Dienst ist Open Source – was mit Ihren Daten geschieht, lässt sich am Quellcode überprüfen, nicht nur auf unser Wort hin.</li>
+</ul>
+
+<h2>Nutzungsbedingungen</h2>
+
+<p>Mit der Nutzung von <%= SERVICE_NAME %> stimmen Sie den folgenden Bedingungen zu:</p>
+
+<ul>
+<li>Der Dienst wird bereitgestellt, um Ihnen die Führung Ihrer Bücher<% if @authorities_in_use.any? %> und die Einreichung von Erklärungen bei den angebundenen Steuerbehörden<% end %> zu ermöglichen.</li>
+<% if @authorities_in_use.any? %>
+<li>Sie sind für die Richtigkeit und Vollständigkeit der Zahlen verantwortlich, die Sie eingeben und bei diesen Behörden einreichen. Wir stellen die Software bereit; die von Ihnen eingereichten Erklärungen sind Ihre eigenen.</li>
+<% end %>
+<li>Sie sind dafür verantwortlich, Ihre Anmeldedaten vertraulich zu behandeln.</li>
+<li>Der Dienst wird "wie besehen" bereitgestellt, und wir garantieren keine unterbrechungsfreie Verfügbarkeit.</li>
+<li>Wir können diese Bedingungen und diese Erklärung von Zeit zu Zeit aktualisieren; die jeweils aktuelle Fassung ist stets die auf dieser Seite veröffentlichte.</li>
+</ul>
+
+<p>Wenn Sie Fragen zu dieser Erklärung oder diesen Bedingungen haben, kontaktieren Sie uns unter <%= mail_to CONTACT_EMAIL %>.</p>
+
+<h2>Wechselkurse</h2>
+
+<p>Dieser Dienst verwendet veröffentlichte Wechselkurse der Europäischen Zentralbank, der Deutschen Bundesbank (Zeitreihe BBEX3), von HM Revenue &amp; Customs sowie der Eidgenössischen Steuerverwaltung / des Bundesamts für Zoll und Grenzsicherheit. Daten der Bundesbank und des BMF werden unter der Datenlizenz Deutschland – Namensnennung – Version 2.0 verwendet. Die Kurse werden unverändert so wiedergegeben, wie sie veröffentlicht wurden.</p>
+
+<% if @eu_declaration %>
+<section id="eu-declaration">
+<h2>EU-Konformitätserklärung</h2>
+
+<p><%= link_to "EU-Konformitätserklärung herunterladen (PDF)", @eu_declaration.doc_url %></p> </section>
+<% end %>
+
+<section id="impressum">
+<h2>Impressum</h2>
+
+<p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz).</p>
+
+<h2>Anbieter</h2>
+
+<div id="logo">
+	<span id="w1">W</span><span id="w2">W</span><span id="w3">W</span>ebsites<span id="dotcom"><span>.</span>com</span>
+</div>
+
+
+<p>
+<%= CONTACT_NAME %><br />
+<%= CONTACT_STREET %><br />
+<%= CONTACT_CITY %><br />
+<%= CONTACT_COUNTRY %>
+</p>
+
+<h2>Kontakt</h2>
+
+<p>E-Mail: <%= mail_to CONTACT_EMAIL %></p>
+
+<h2>Verantwortlich für den Inhalt</h2>
+
+<p><%= CONTACT_NAME %>, Anschrift wie oben.</p>
+</section>
+
+<%= render "help/back" %>
+
+
+<% if current_admin&.sudo? %>
+<section id="eu-declaration-upload">
+<h2>EU-Konformitätserklärung</h2>
+<%= form_with url: documents_path, method: :post, local: true do %>
+<%= hidden_field_tag :kind, "eu_declaration_of_conformity" %>
+<%= file_field_tag :doc, accept: "application/pdf" %>
+<%= submit_tag @eu_declaration ? "Ersetzen" : "Hochladen", class: "button green" %>
+<% end %>
+</section>
+<% end %>
+

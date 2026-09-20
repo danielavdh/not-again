@@ -1,0 +1,165 @@
+country_code: gb
+scheme: property
+tax_year: 2026
+# The day the UK tax year ends, as MM-DD. A tax year is named by the year it
+# ENDS in, so tax_year 2026 runs 6 Apr 2025 to 5 Apr 2026 and a posting on
+# 5 Jul 2028 falls in tax_year 2029. Omit this line for a calendar year —
+# the German and Swiss files do, and the default is 12-31.
+tax_year_ends: "04-05"
+authority: HMRC
+position: 20
+# What this scheme is CALLED, in the language of its own form — the name shown
+# in the scheme picker and in every message about it. Never translated: an
+# Anlage V is called Anlage V by everyone who fills one in.
+scheme_label: "UK Property (SA105)"
+report_name: "GB-property"
+currency: GBP
+submission_name: "MTD property"   # what is actually SENT — not the annual return
+# The authority's reference for the FORM these figures feed. Names the archived
+# submission document, so a stored file says what it belongs to in HMRC's own
+# terms. Optional — a scheme without one is filed under its slug.
+form_code: SA105
+connector: hmrc_mtd
+# UK Self Assessment SA105 — UK property.
+#
+# Transcribed box by box from the return named in `source:` below, which covers
+# 6 April 2025 to 5 April 2026. Boxes 5 to 19 are no longer in use; income and
+# expenses are boxes 20 to 45.
+#
+# api_field values verified against the Property Business (MTD) OpenAPI spec.
+# UK income fields: periodAmount, premiumsOfLeaseGrant, reversePremiums,
+# otherIncome, taxDeducted, rentARoom.rentsReceived. UK expense fields:
+# premisesRunningCosts, repairsAndMaintenance, financialCosts, professionalFees,
+# costOfServices, travelCosts, residentialFinancialCost, other, plus the
+# rentARoom and consolidated variants.
+#
+# label is the box's own wording. export_column is the BOX NUMBER. api_field is
+# the MTD field and is the only one of the three the submission reads.
+#
+# The API is finer-grained than the paper form in three places, and the API
+# wins, because that is what gets filed:
+#   * box 24 is one box, the API splits premises running costs from repairs;
+#   * travelCosts has no box — SA105 folds travel into box 29;
+#   * otherIncome has no box — SA105 folds it into box 20.
+# Provenance, and what TaxFormWatchJob watches monthly: it re-fetches
+# `url`, compares the checksum, and looks on `index_url` for a later edition
+# than `form_year`. A 404 is reported (the address moved); a timeout is not.
+source:
+  form_year: 2026
+  url:       "https://assets.publishing.service.gov.uk/media/69cd19d6eafd66b876458ba9/SA105_2026_v0.1.pdf"
+  sha256:    "83daac11232f107009c7e174d4e0bf0424c6d305951de82924fb5f59770c9592"
+  index_url: "https://www.gov.uk/government/publications/self-assessment-uk-property-sa105"
+  local:     "docs/SA105_2026.pdf"
+categories:
+  - key: rent_income
+    label: "Total rents and other income from property"
+    keywords: ["rent received", "rents received", "rental income", "rent income", "rents", "lettings", "tenant"]
+    export_column: "20"
+    api_field: periodAmount
+    section: income
+    position: 10
+
+  - key: premiums_of_lease_grant
+    label: "Premiums for the grant of a lease"
+    keywords: ["lease premium", "grant of a lease"]
+    export_column: "22"
+    api_field: premiumsOfLeaseGrant
+    section: income
+    position: 20
+    notes: "From box E on the working sheet in the SA105 notes"
+
+  - key: reverse_premiums
+    label: "Reverse premiums and inducements"
+    keywords: ["reverse premium", "inducement"]
+    export_column: "23"
+    api_field: reversePremiums
+    section: income
+    position: 30
+
+  - key: other_property_income
+    label: "Other property income"
+    keywords: ["other property income", "sundry property income"]
+    api_field: otherIncome
+    section: income
+    position: 40
+    notes: "No box of its own on SA105 — it forms part of box 20. The MTD API reports it separately"
+
+  - key: rent_rates_insurance
+    label: "Rent, rates, insurance and ground rents"
+    keywords: ["ground rent", "rates", "insurance", "council tax", "service charge"]
+    export_column: "24"
+    api_field: premisesRunningCosts
+    section: expenses
+    position: 110
+
+  - key: repairs_maintenance
+    label: "Property repairs and maintenance"
+    keywords: ["repairs", "maintenance", "decorating", "renewals"]
+    export_column: "25"
+    api_field: repairsAndMaintenance
+    section: expenses
+    position: 120
+
+  - key: loan_interest
+    label: "Non-residential property finance costs"
+    keywords: ["commercial mortgage", "loan interest", "non residential finance"]
+    export_column: "26"
+    api_field: financialCosts
+    section: expenses
+    position: 130
+    notes: "Only for non-residential property. Residential finance costs are restricted to the basic rate and go in box 44"
+
+  - key: residential_finance_costs
+    label: "Residential property finance costs"
+    keywords: ["mortgage interest", "residential finance", "mortgage"]
+    export_column: "44"
+    api_field: residentialFinancialCost
+    section: expenses
+    position: 140
+    notes: "Mortgage interest on residential lettings: relieved at the basic rate only, not deducted from profit"
+
+  - key: legal_professional_fees
+    label: "Legal, management and other professional fees"
+    keywords: ["letting agent", "management fees", "legal", "accountancy", "professional fees"]
+    export_column: "27"
+    api_field: professionalFees
+    section: expenses
+    position: 150
+
+  - key: cost_of_services
+    label: "Costs of services provided, including wages"
+    keywords: ["cleaning", "gardening", "wages", "services provided"]
+    export_column: "28"
+    api_field: costOfServices
+    section: expenses
+    position: 160
+
+  - key: travel_costs
+    label: "Travel costs"
+    keywords: ["travel", "mileage", "motor"]
+    api_field: travelCosts
+    section: expenses
+    position: 170
+    notes: "No box of its own on SA105 — it forms part of box 29. The MTD API reports it separately"
+
+  - key: other_property_expenses
+    label: "Other allowable property expenses"
+    keywords: ["other property expenses", "sundries", "sundry"]
+    export_column: "29"
+    api_field: other
+    section: expenses
+    position: 180
+
+  # section vs api_section: the API files taxDeducted inside the income object,
+  # but it is not income — it is money a payer already handed to HMRC on your
+  # behalf. So it goes to HMRC in the income object and stays out of the
+  # report's income total.
+  - key: tax_taken_off
+    label: "Tax taken off any income in box 20"
+    keywords: ["tax deducted", "tax taken off"]
+    export_column: "21"
+    api_field: taxDeducted
+    section: other
+    api_section: income
+    position: 310
+    notes: "E.g. under the Non-Resident Landlord Scheme"

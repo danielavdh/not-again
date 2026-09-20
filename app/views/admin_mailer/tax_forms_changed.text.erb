@@ -1,0 +1,15 @@
+The tax catalogues are transcriptions of real forms. One or more of those forms
+appears to have changed, so a catalogue may now be describing a document that no
+longer exists.
+
+<% @findings.each do |f| %>
+<%= f[:report_name] %> — <%= f[:kind].to_s.tr("_", " ") %>
+  <%= f[:message] %>
+<% if f[:detail].present? %>  <%= f[:detail] %>
+<% end %>  <%= f[:url] %>
+
+<% end %>
+What to do: open the form, compare it against db/tax_categories/, and correct the
+catalogue in place. Then update the source checksum and form_year in its header.
+
+Nothing has changed automatically. This message is the only effect.

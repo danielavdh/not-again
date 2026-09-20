@@ -1,0 +1,299 @@
+<% content_for :head do %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
+<% end %>
+<div class="backend_table">
+
+	<%= render partial: "shared/flash" %>
+
+	<table class="backend_show admin-show">
+		<thead>
+			<tr>
+				<th class="firstCell"><%= t(".admin_label") %>:</th>
+				<th>
+					<%= link_to t(".user_guide"),
+							easy_manual_path,
+							class: "backend_link button blue" %>&nbsp;
+				  <% if current_admin.full_access_pro? || sudo? %>
+					<%= link_to t(".pro_guide"),
+							pro_manual_path,
+							class: "backend_link button blue" %>
+				  <% end %>
+				</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".name") %>:</td>
+				<td><%= @admin.username %></td>
+			</tr>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".email") %>:</td>
+				<td><%= @admin.email_address %></td>
+			</tr>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".last_seen") %>:</td>
+				<td><%=l @admin.last_seen, :format => :with_time %></td>
+			</tr>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".otp_enabled") %>:</td>
+				<td><%= @admin.otp_enabled %></td>
+			</tr>
+
+			<%# JOURNAL ENTRIES? %>
+			<% own_page = @admin == current_admin %>
+			<% if (own_page || sudo?) && @admin.full_access? && (@admin.otp_enabled? || !Admin.otp_required?) %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".journal_entries_pref") %>:</td>
+				<td>
+					<%= form_with url: update_preferences_admin_path(@admin),
+						 	method: :patch do |f| %>
+						<label for="admin_show_journal_entries">
+							<%= f.check_box :show_journal_entries,
+								{ checked: @admin.show_journal_entries?,
+								  name: "admin[show_journal_entries]",
+								  id: "admin_show_journal_entries",
+								  disabled: !own_page },
+								  "1", "0" %>
+							<%= t(".journal_entries_pref_label") %>
+						</label>
+					<% end %>
+				</td>
+			</tr>
+			<% end %>
+
+			<%# HIGH-CONTRAST ? A cookie %>
+			<% if own_page %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".contrast_pref") %>:</td>
+				<td>
+					<%= form_with url: contrast_path, 
+							method: :post, 
+							class: "form_currency" do %>
+						<%= select_tag "on",
+							options_for_select(
+							[ [ t(".contrast_auto"), "" ], [ t(".contrast_on"), "1" ], [ t(".contrast_off"), "0" ] ],
+							cookies[:high_contrast].to_s),
+							id: "admin_high_contrast" %>
+					<% end %>
+				</td>
+			</tr>
+			<% end %>
+
+			<%# NUMBER FORMATS (thousands and decimal separator, side of currency symbol) %>
+			<% if own_page || sudo? %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".number_format_pref") %>:</td>
+				<td>
+					<%= form_with url: update_preferences_admin_path(@admin),
+							method: :patch, 
+							class: "form_currency" do |f| %>
+						<%= f.select :preferred_number_format,
+							options_for_select(NumberFormat.menu, @admin.preferred_number_format),
+							{ include_blank: t(".number_format_pref_auto",
+							sample: NumberFormat.sample(NumberFormat.default_for(I18n.locale))) },
+							{ name: "admin[preferred_number_format]",
+							id: "admin_preferred_number_format",
+							disabled: !own_page } %>
+					<% end %>
+				</td>
+			</tr>
+			<% end %>
+
+			<%# PREFERRED CURRENCY ( for currency in report totals, blank keeps current behaviour: whichever currency most of your balance-sheet accounts are in. Tax reports ignores this — scheme fixes the currency. %>
+			<% if own_page || sudo? %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".currency_pref") %>:</td>
+				<td>
+					<%= form_with url: update_preferences_admin_path(@admin),
+							method: :patch, class: "form_currency" do |f| %>
+						<%# blank shows automatic choice %>
+						<%= f.select :preferred_currency,
+							options_for_select(CurrencyConfig.available,
+								 			@admin.preferred_currency),
+							{ include_blank: t(".currency_pref_auto",
+							  currency: @derived_currency) },
+							{ name: "admin[preferred_currency]",
+							  id: "admin_preferred_currency",
+							  disabled: !own_page } %>
+					<% end %>
+				</td>
+			</tr>
+			<% end %>
+
+			<%# ADD CURRENCIES %>
+			<% if (own_page || sudo?) && (current_admin.full_access? || sudo?) %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".currencies") %>:</td>
+				<td><%= link_to t(".currencies_manage"), 
+							currencies_path, 
+							class: "button transparent" %>
+				</td>
+			</tr>
+			<% end %>
+
+			<%# TAXPAYERS %>
+			<% if own_page && current_admin.usable_taxpayers.any? %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".taxpayers") %>:</td>
+				<td><%= link_to t(".taxpayers_manage"),
+							taxpayers_path(return_to: admin_path(@admin)),
+							class: "button transparent" %>
+				</td>
+			</tr>
+			<% end %>
+
+			<%# ENTITIES & ACCESS %>
+			<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+				<td class="firstCell"><%= t(".entities_access") %>:</td>
+				<td class="entity-and-tax">
+				<% @entity_access_rows.each do |row| %>
+					<% ae = row[:admin_entity] %>
+					<span>
+						<p>
+							<%= ae.entity.code %> — <%= t("access.#{ae.access_level}") %><% if row[:grouped] %> — <%= t(row[:may_manage] ? "entities.group.in_group" : "entities.group.in_family") %><% end %>
+						</p>
+						<% if row[:show_family_field] %>
+							<%= render "entities/family_field",
+								entity: ae.entity,
+								groups: row[:family_field_groups],
+								allow_create: row[:family_field_allow_create] %>
+						<% end %>
+					</span>
+					<% end %>
+					<% if @admin_entities.empty? %>
+						<em><%= t(".no_entities") %></em>
+					<% end %>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<%# ============================================================ %>
+<%# CO-ADMINS SECTION %>
+<%# ============================================================ %>
+
+<% if sudo? || (@admin == current_admin && @admin.full_access?) %>
+<div class="backend_table admin-show">
+
+	<% if @managed_admins.any? %>
+	<h3><%= t(".authorised") %></h3>
+
+	<table>
+		<thead>
+			<tr>
+				<% if sudo? %>
+				<th><%= t(".username") %></th>
+				<% end %>
+				<th><%= t(".email") %></th>
+				<th><%= t(".access_level") %></th>
+				<th><%= t(".entity") %></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<% @managed_admins.each do |coadmin| %>
+				<%# Scoped to @admin, not current_admin — this is @admin's own
+				    authorised table. For a non-sudo viewer @admin is always
+				    current_admin (enforced in the controller); for sudo viewing
+				    someone else's page, current_admin holds no entities of its
+				    own at all, so the anchor has to be whose page this is. %>
+				<% @shared_links.fetch(coadmin.id, []).each do |ae| %>
+				<tr class="<%= cycle('list-line-odd', 'list-line-even', name: 'coadmins') %>">
+				  <% if sudo? %>
+					<td><%= coadmin.username %></td>
+				  <% end %>
+					<td><%= coadmin.email_address %></td>
+					<td><%= t("access.#{ae.access_level}") %><% if coadmin.draft? %> — <%= t(".draft_label") %><% end %></td>
+					<td><%= ae.entity.code %></td>
+					<td>
+						<%# Never sudo — a draft's access level here is always
+						    read_only/upload_receipts (sudo grants full_access
+						    only), so managing it, draft or claimed, stays the
+						    full-access admin's business alone, same as the
+						    ordinary Remove button below (2026-09-19). %>
+						<% if coadmin.draft? %>
+							<% if !sudo? && current_admin.can_manage?(coadmin) %>
+								<%= button_to t(".resend_claim_email"),
+										resend_claim_email_admin_path(coadmin),
+										method: :post,
+										class: "backend_link button green" %>
+								<%= button_to t("crud.remove"),
+										admin_path(coadmin),
+										method: :delete,
+										data: { sure: t(".delete_draft_confirm",
+												email: coadmin.email_address) },
+										class: "backend_link button green" %>
+							<% end %>
+						<%# Row-level, not can_manage?(coadmin) — a coadmin who
+						    has become full_access on a DIFFERENT entity is
+						    still an ordinary coadmin on THIS one; this row's
+						    removal is between whoever holds full_access HERE
+						    and this row alone. can_manage? asks a person-wide
+						    question ("is this admin still a coadmin at all");
+						    this asks a row-wide one — conflating them hid the
+						    Remove button for a read_only grant on an entity I
+						    fully control, just because the same admin
+						    happened to be full_access elsewhere (found live,
+						    2026-09-19). %>
+						<% elsif !sudo? && ae.removable_by?(current_admin) %>
+							<%= button_to t("crud.remove"),
+									admin_entity_path(ae),
+									method: :delete,
+									data: { sure: t(".remove_confirm",
+											username: coadmin.email_address, entity: ae.entity.code) },
+									class: "backend_link button green" %>
+						<% end %>
+					</td>
+				</tr>
+				<% end %>
+			<% end %>
+		</tbody>
+	</table>
+	<% end %>
+
+</div>
+<% end %>
+
+<div class="crud_navigation">
+	<% if sudo? %>
+		<%= link_to 'Edit', edit_admin_path(@admin) %> |
+		<%= link_to 'Back', admins_path %>
+	<%# Any admin may edit themselves now, not just full_access — a claimed
+	    coadmin owns their own identity fields (2026-09-18) — except demo,
+	    who can reach the form (a plain GET) but is correctly refused on
+	    save. Showing Edit anyway was a dead end with no explanation
+	    (2026-09-19) — ensure_full_access_or_self already excludes demo
+	    from writing to its own id; this just stops offering the button. %>
+	<% elsif @admin == current_admin && !demo_admin? %>
+		<%= link_to 'Edit', edit_admin_path(@admin),
+				class: "backend_link green button"%>
+	<% end %>
+	<%# Granting is sudo's or a full-access admin's alone (gated below), AND
+	    only makes sense on your OWN page — it's a general "go create/grant"
+	    shortcut, not an action about whoever @admin happens to be. Showing
+	    it while sudo is looking at admin X's page read like a button to
+	    grant access to X specifically, which it never was (2026-09-19). %>
+	<% if @admin == current_admin && (sudo? || current_admin.full_access?) %>
+		<%= link_to t(".grant_access"),
+				new_admin_path,
+				class: "backend_link button green" %>
+	<% end %>
+	<%# Never demo — leaving destroys the link to its own sandbox entity,
+	    the one thing keeping the public demo door working at all.
+	    Confirmed exploitable 2026-09-19 before EntitiesController#leave
+	    got its own demo guard; hiding the button too, not just refusing
+	    the action, same standard as the Edit link above. %>
+	<% if @admin == current_admin && !demo_admin? %>
+		<div class="offboarding">
+		<% @admin_entities.each do |ae| %>
+			<%= button_to t(".leave_button", entity: ae.entity.code),
+					leave_entity_path(ae.entity),
+					method: :delete,
+					data: { sure: t(".leave_confirm", entity: ae.entity.code) },
+					class: "backend_link right button" %>
+		<% end %>
+		</div>
+	<% end %>
+</div>

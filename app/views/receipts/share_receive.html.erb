@@ -1,0 +1,9 @@
+<% content_for :title, t("receipts.upload_receipts") %>
+
+<div class="backend_table accounts receipts upload-standalone">
+  <%= render partial: 'shared/flash' %>
+
+  <h1><%= t("receipts.shared_receipt") %></h1>
+
+  <%= render "receipts/form", receipt: @receipt, entities: @entities %>
+</div>

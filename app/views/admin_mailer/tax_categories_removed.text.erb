@@ -1,0 +1,13 @@
+<%= t('.greeting', name: @admin.username) %>
+
+<%= t('.body', scheme: @scheme_label, year: @tax_year) %>
+
+<% @accounts.each do |code, name, key| %>
+  <%= code %> <%= name %> — <%= key %>
+<% end %>
+
+<%= t('.what_to_do') %>
+
+<%= t('.periods_note') %>
+
+<%= t('.closing') %>

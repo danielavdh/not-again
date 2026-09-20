@@ -1,0 +1,68 @@
+<%# locals: (ob:, period_start:, bd:, entity:, scheme:, authority:, currency:) %>
+<%# `currency` comes from the scheme's catalogue header via
+    Filing::Base#submission_currency. It used to be the literal "GBP" here
+    and in _submission — in a GENERIC view, next to the authority-specific
+    hmrc_mtd/ directory — so a German EÜR showed euro amounts labelled £. %>
+
+<div class="report obligations">
+
+	<div class="controls">
+		<h3>
+			<%= l(period_start, format: :short_date) %> &ndash; <%= l(ob[:end_date], format: :short_date) %> &middot; <%= authority %> (<%= t("filing.current_period") %>)
+		</h3>
+		<%= button_to t("filing.submit_current", authority: authority),
+				filing_submit_entity_path(entity),
+				params: { scheme: scheme, period_id: ob[:period_id] },
+				data: { sure: "#{t('filing.submit_confirm', authority: authority)} #{l(period_start, format: :short_date)} – #{l(ob[:end_date], format: :short_date)}?" },
+				class: "backend_link button #{ob[:overdue] ? 'red' : 'green'}" %>
+		<p class="hint">
+			<%= t("filing.due") %>: <%= l(ob[:due_date], format: :short_date) %>
+		</p>
+	</div>
+
+  <% if bd[:income].empty? && bd[:expenses].empty? %>
+    <p class="hint"><%= t("filing.preview_no_data") %></p>
+  <% else %>
+    <table>
+      <tbody>
+        <% if bd[:income].any? %>
+          <tr class="list-header">
+            <td colspan="2"><%= t("filing.income") %></td>
+          </tr>
+          <% bd[:income].each do |item| %>
+            <tr>
+              <td><%= item[:label] %></td>
+              <td class="right"><%= format_cents_with_currency(item[:amount], currency) %></td>
+            </tr>
+          <% end %>
+          <tr class="parent-row">
+            <td><%= t("filing.income_total") %></td>
+            <td class="right"><%= format_cents_with_currency(bd[:total_income], currency, show_zero: true) %></td>
+          </tr>
+        <% end %>
+
+        <% if bd[:expenses].any? %>
+          <tr class="list-header">
+            <td colspan="2"><%= t("filing.expenses") %></td>
+          </tr>
+          <% bd[:expenses].each do |item| %>
+            <tr>
+              <td><%= item[:label] %></td>
+              <td class="right"><%= format_cents_with_currency(item[:amount], currency) %></td>
+            </tr>
+          <% end %>
+          <tr class="parent-row">
+            <td><%= t("filing.expenses_total") %></td>
+            <td class="right"><%= format_cents_with_currency(bd[:total_expenses], currency, show_zero: true) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr class="list-header">
+          <th><%= t("filing.net") %></th>
+          <th class="right"><%= format_cents_with_currency(bd[:net], currency, show_zero: true) %></th>
+        </tr>
+      </tfoot>
+    </table>
+  <% end %>
+</div>

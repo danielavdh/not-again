@@ -1,0 +1,164 @@
+<%= form_with model: journal_entry,
+              url: journal_entry.new_record? ? journal_entries_path : journal_entry_path(journal_entry),
+              id: "#{action_name}_je",
+              class: "form_journal_entry",
+			  data: { entity_id: @entity&.id, empty_delete_confirm: t("journal_entries.confirm_delete") },
+			  html: { multipart: true },
+	          local: true do |f| %>
+				  
+  <%= render "entry_header_fields", f: f, entry: journal_entry, allow_closing: true %>
+
+  <h2><%= t("page.postings") %></h2>
+
+  <table class="postings-table" id="postings-table">
+    <thead>
+      <tr>
+        <th class="account"><%= t("jargon.account") %></th>
+        <th class="currency"><%#= t("jargon.currency") %></th>
+        <th class="type"><%= t("attrs.type") %></th>
+        <th class="right amount"><%= t("attrs.amount") %></th>
+        <th class="desc no-phone"><%= t("attrs.description") %></th>
+        <th class="ref no-phone"><%= t("attrs.reference") %></th>
+        <th class="receipt no-phone" title="<%= t("crud.receipt") %>">
+			<span>
+				<svg class="stroke s30"><use xlink:href='#receipt'></use></svg>
+			</span>
+		</th>
+        <th class="postings-trash">
+			<span>
+				<svg class="stroke s30"><use xlink:href='#trash'></use></svg>
+			</span>
+		</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= f.fields_for :postings do |pf| %>
+
+		    <%= render 'journal_entries/posting_fields', pf: pf %>
+		    <%# Under a 601 gift, render its JE₂ mirror rows — from the PERSISTED
+		        counterpart on an edit (#4), or from the submitted params on an error
+		        re-render (#2, which wins so in-flight edits aren't lost). %>
+		    <% if pf.object.cross_entity_link_id.present? &&
+		          (ce = @cross_entity_rerender&.[](pf.object.cross_entity_link_id) ||
+		                @cross_entity_persisted&.[](pf.object.cross_entity_link_id)) %>
+		      <%= render 'journal_entries/cross_entity_rows',
+		                 linked: ce[:linked], entry_index: ce[:entry_index],
+		                 link_id: ce[:link_id], amount: ce[:amount], context: 'je' %>
+		    <% end %>
+      <% end %>
+    </tbody>
+  </table>
+	<button type="button" 
+			id="add-posting" 
+			class="button green"><%= t("accounts.entries.add_posting") %></button>
+
+  <%# No way to save a year-end closing entry the app generated, for anyone who
+      reaches this form by URL. The model refuses the write regardless. %>
+  <% unless journal_entry.posts_to_locked_retained_earnings? %>
+  <div class="actions">
+    <%= f.submit (journal_entry.persisted? ? t("crud.update") : t("crud.create")) + " " + t("jargon.journal_entry") %>
+  </div>
+  <% end %>
+
+<% end %>
+
+<%= render partial: "receipts/preview_modal" %>
+<%= render partial: "receipts/upload_modal" %>
+<%= render partial: "receipts/picker_modal" %>
+<%= render partial: "accounts/split_modal" %>
+<%= render partial: "accounts/cross_entity_modal" %>
+
+<%# Hidden template for JS - currencies from controller %>
+<template id="posting-template">
+  <tr class="posting-row">
+    <td class="account_id">
+      <select name="journal_entry[postings_attributes][NEW_INDEX][account_id]"
+              class="form-select posting-account"
+              aria-label="<%= t('jargon.account') %>"
+              data-tomselect="true"
+              data-tomselect-placeholder="<%= t('attrs.tom_blank') %>">
+        <option value=""><%= t("attrs.account_blank") %></option>
+		<% @account_options.each do |label, id, html_attrs| %>
+		  <option value="<%= id %>"
+		          data-currency="<%= html_attrs&.dig('data-currency') %>"
+		          data-deduction-pct="<%= html_attrs&.dig('data-deduction-pct') %>"
+		          data-entity="<%= html_attrs&.dig('data-entity') %>"
+		          data-group="<%= html_attrs&.dig('data-group') %>"
+		          data-type="<%= html_attrs&.dig('data-type') %>"><%= label %></option>
+		<% end %>
+      </select>
+    </td>
+    <td class="posting-currency-display">
+      <button type="button" class="split-btn" data-action="open-split-modal">%</button>
+    </td>
+    <td class="input-cell entry_type">
+      <select name="journal_entry[postings_attributes][NEW_INDEX][entry_type]" aria-label="<%= t('attrs.type') %>">
+        <option value="debit"><%= t("jargon.debit") %></option>
+        <option value="credit"><%= t("jargon.credit") %></option>
+      </select>
+    </td>
+    <td class="input-cell right">
+      <input type="hidden"
+             name="journal_entry[postings_attributes][NEW_INDEX][deduction_pair_id]"
+             class="posting-deduction-pair-id">
+      <input type="hidden"
+             name="journal_entry[postings_attributes][NEW_INDEX][cross_entity_link_id]"
+             class="posting-cross-entity-link-id">
+      <input type="hidden"
+             name="journal_entry[postings_attributes][NEW_INDEX][deduction_percentage]"
+             class="posting-deduction-pct-field">
+      <input type="text"
+             name="journal_entry[postings_attributes][NEW_INDEX][amount_display]"
+             inputmode="decimal"
+             aria-label="<%= t('attrs.amount') %>"
+             class="posting-amount">
+    </td>
+    <td class="input-cell no-phone">
+      <input type="text" name="journal_entry[postings_attributes][NEW_INDEX][description]" aria-label="<%= t('attrs.description') %>">
+    </td>
+    <td class="input-cell no-phone">
+      <input type="text"
+             name="journal_entry[postings_attributes][NEW_INDEX][reference]"
+             aria-label="<%= t('attrs.reference') %>"
+             placeholder='<%= t("attrs.posting_placeholder") %>'>
+    </td>
+	<td class="posting-receipt no-phone">
+	  <div class="receipt-posting-widget" data-posting-id="">
+	    <button type="button"
+	            data-action="capture-receipt-for-new-posting"
+	            data-posting-index="NEW_INDEX"
+	            title="<%= t('receipts.add_receipt') %>">+
+	    </button>
+	    <button type="button"
+	            data-action="link-existing-receipt-for-new-posting"
+	            data-posting-index="NEW_INDEX"
+	            title="<%= t('receipts.link_existing') %>">
+	      <svg><use xlink:href="#te_linkFile"></use></svg>
+	    </button>
+	  </div>
+	  <span data-receipt-filename="NEW_INDEX"></span>
+	  <input type="hidden"
+	         name="journal_entry[postings_attributes][NEW_INDEX][receipts_attributes][0][title]"
+	         data-receipt-title="NEW_INDEX">
+	  <input type="hidden"
+	         name="journal_entry[postings_attributes][NEW_INDEX][receipts_attributes][0][receipt_date]"
+	         value="<%= Date.current %>"
+	         data-receipt-date="NEW_INDEX">
+	  <input type="hidden"
+	         name="journal_entry[postings_attributes][NEW_INDEX][receipts_attributes][0][description]"
+	         data-receipt-description="NEW_INDEX">
+	  <input type="file"
+	         name="journal_entry[postings_attributes][NEW_INDEX][receipts_attributes][0][scan]"
+	         data-receipt-scan="NEW_INDEX"
+	         accept="image/jpeg,image/png,image/heic,application/pdf"
+	         hidden>
+	  <input type="hidden"
+	         name="journal_entry[postings_attributes][NEW_INDEX][existing_receipt_id]"
+	         data-receipt-id="NEW_INDEX">
+	</td>
+	<td class="input-cell">
+	  <input type="hidden" name="journal_entry[postings_attributes][NEW_INDEX][_destroy]" value="0">
+	  <input type="checkbox" class="posting-destroy" name="journal_entry[postings_attributes][NEW_INDEX][_destroy]" value="1" aria-label="<%= t('crud.remove_posting', default: 'Remove posting') %>">
+	</td>
+  </tr>
+</template>

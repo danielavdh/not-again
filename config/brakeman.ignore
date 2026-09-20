@@ -1,0 +1,46 @@
+{
+  "brakeman_version": "7.1.1",
+  "ignored_warnings": [
+    {
+      "fingerprint": "2ff9190bbeffe382c1e58a2a084ccf3685802a76554145cbc68e32adfebe4690",
+      "note": "Weak. The rendered path is Filing::Base#panel_partial, which each connector class returns as a literal string; the connector is resolved through Filing::Base.for, which refuses anything not in CONNECTORS (see connector_class: const_get with `false`, so it cannot reach ::String either). params only ever choose BETWEEN registered connectors, never name a path. The indirection exists so the generic filing view cannot name an authority. Verified 2026-08-20. (app/views/acc/filing/periods.html.erb:33) Re-verified after the namespace and table renames, 2026-08-24."
+    },
+    {
+      "fingerprint": "4a06f648d466695ccdd9825deca8e1a31413a6472c72b117335556d6ecc57f02",
+      "note": "Redirects to a receipt URL resolved from a SIGNED id (find_signed with an explicit purpose); the param cannot name an arbitrary host. Verified 2026-08-01. (app/controllers/receipts_controller.rb:117) Re-verified after the namespace and table renames, 2026-08-24."
+    },
+    {
+      "fingerprint": "8153652a8aae38ff76bad1da9b387131b3c5e10f308478c5ebc8078cb3f816e6",
+      "note": "Interpolates Posting.entry_types[:debit/:credit] \u2014 integers from the enum map, never user input. Verified 2026-08-01. (app/models/account.rb:118) Re-verified after the namespace and table renames, 2026-08-24."
+    },
+    {
+      "check_name": "VerbConfusion",
+      "code": "return false unless request.get?",
+      "confidence": "Weak",
+      "file": "app/controllers/application_controller.rb",
+      "fingerprint": "12859aeeb68567bba3fb85740d679698f3b11728965242bced55da6bfe377f8f",
+      "line": 40,
+      "link": "https://brakemanscanner.org/docs/warning_types/http_verb_confusion/",
+      "location": {
+        "class": "ApplicationController",
+        "method": "demo_may_look?",
+        "type": "method"
+      },
+      "message": "Potential HTTP verb confusion. `HEAD` is routed like `GET` but `request.get?` will return `false`",
+      "note": "Inverted: here request.get? being false DENIES rather than admits. demo_may_look? returns false for HEAD, and every caller treats false as refusal \u2014 require_write_access falls through to deny_access, ensure_full_access to the access_denied redirect. Verified 2026-09-03 by request: GET a demo-readable page returns 200, HEAD the same page returns 302 to the login. HEAD is more restricted than GET, which is the opposite of the bypass this check warns about.",
+      "render_path": null,
+      "user_input": null,
+      "warning_code": 121,
+      "warning_type": "HTTP Verb Confusion"
+    },
+    {
+      "fingerprint": "1b9270c3a7a6e0b5fea373cf2aa435d10163b2327be0ce9926cbb04395042735",
+      "note": "Sanitised, and sudo-only at the source. A custom language's help text is written only through LanguagesController, which is require_sudo_only; Language#rendered_doc then runs the RedCloth output through Rails::Html::SafeListSanitizer before it reaches this template. No non-sudo input can reach it, and what sudo writes is stripped to the safe list like any other CMS body."
+    },
+    {
+      "fingerprint": "64b6846c2ab763c079fea3a5e86f873c9ddfcd8d037e9cc31f5565ed848607c9",
+      "note": "Harmless direction. request.get? being false on a HEAD request only means the return-to URL is not remembered, so the coadmin lands on the claim page and then goes to the default instead of back where they were. A HEAD request is never a person navigating to a page they want to return to. The redirect to claim_path is unconditional and is what actually gates the draft."
+    }
+  ],
+  "updated": "2026-08-24"
+}

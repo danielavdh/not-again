@@ -1,0 +1,6 @@
+# System packages for the Scalingo apt-buildpack (buildpack deploys only; the
+# Dockerfile installs its own). ImageMagick + Ghostscript render receipt
+# thumbnails; libheif1 lets ImageMagick read iPhone HEIC photos.
+imagemagick
+ghostscript
+libheif1

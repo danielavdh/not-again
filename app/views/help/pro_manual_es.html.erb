@@ -1,0 +1,131 @@
+<% content_for :title, "Guía avanzada" %>
+<%= render "help/back" %>
+<div class="guide">
+  <h1>Contabilidad avanzada</h1>
+
+  <p>Esta guía cubre las partes de la app que van más allá de las pantallas de movimientos bancarios y amplía el contenido de la <%= link_to "guía de usuario", easy_manual_path %>. Asume que estás familiarizado con la contabilidad por partida doble y que además quieres trabajar directamente con los asientos contables.</p>
+  <p>Un juego de libros es una <strong>entidad</strong> &thinsp;&mdash;&thinsp; un negocio, un inmueble en alquiler, una casa. Cada cuenta pertenece a una sola, por los dígitos 2 y 3 de su número, y eso decide qué apuntes pueden convivir en un mismo asiento.</p>
+
+  <nav class="guide-toc" aria-label="Contenido">
+    <ul>
+      <% if current_admin&.sudo? %>
+      <li><a href="#sudo">Sudo</a></li>
+      <% end %>
+      <li><a href="#how-recorded">Cómo registra la app las transacciones</a></li>
+      <li><a href="#je-screen">La pantalla de asientos contables</a></li>
+      <li><a href="#creating">Crear un asiento contable directamente</a></li>
+      <li><a href="#editing">Editar, copiar, descontabilizar y eliminar un asiento</a></li>
+      <li><a href="#cannot-change">Lo que no se puede cambiar</a></li>
+      <li><a href="#opening-balances">Saldos de apertura</a></li>
+      <li><a href="#adjusting">Asientos de ajuste</a></li>
+      <li><a href="#year-end">Cerrar un ejercicio fiscal</a></li>
+      <li><a href="#families">Familias &thinsp;&mdash;&thinsp; consolidar varias entidades</a></li>
+      <li><a href="#cross-entity">Asientos entre negocios separados</a></li>
+      <li><a href="#add-currency">Añadir una moneda</a></li>
+      <li><a href="#tax-setup">Esquemas fiscales y categorías</a></li>
+    </ul>
+  </nav>
+
+  <% if current_admin&.sudo? %>
+  <h2 id="sudo">Sudo</h2>
+  <p>Sudo es la cuenta de administrador con control sobre la instalación en sí, no sobre un juego de libros concreto. Sudo no tiene entidades propias y no es un contable. Lo que sigue es administración, no contabilidad:</p>
+  <ul>
+    <li><strong>Administradores</strong> &thinsp;&mdash;&thinsp; ve todos los administradores de la instalación, los crea, edita y elimina. Restablece la autenticación de dos factores de un administrador, obligándole a configurarla de nuevo &thinsp;&mdash;&thinsp; útil si pierde su dispositivo. Vincula cualquier administrador a cualquier entidad: esto le da a ese administrador "acceso completo" para registrar, modificar y eliminar asientos, cambiar la configuración, añadir co-administradores, etc.</li>
+    <li><strong>Entidades</strong> &thinsp;&mdash;&thinsp; ve todas las entidades de la instalación, activas y huérfanas. Crea entidades nuevas y edita una por completo: la renombra, la mueve entre familias. Elimina definitivamente una entidad huérfana y todos sus datos.</li>
+    <li><strong>Idiomas</strong> &thinsp;&mdash;&thinsp; crea, edita, publica y retira un idioma, incluida la vista previa de los textos legales y del manual de un borrador antes de que nadie más pueda verlos.</li>
+    <li><strong>Monedas</strong> &thinsp;&mdash;&thinsp; retira (o reactiva) una moneda sin uso para toda la instalación: pasa a considerarse inexistente, desaparece de todos los desplegables, pero conserva su símbolo en todo lo que ya la usaba. Edita los códigos de moneda; al guardar, el cambio se propaga a todos los asientos, cuentas y tipos de cambio. Edita el símbolo de la moneda.</li>
+    <li><strong>Tipos de cambio</strong> &thinsp;&mdash;&thinsp; ve y corrige las filas de tipos compartidas de las que beben los informes de cada entidad, en el mismo sitio, sin que se desdoblen calladamente en una fila manual privada.</li>
+    <li><strong>Documentos de la instalación</strong> &thinsp;&mdash;&thinsp; sube documentos que se muestran en la página Legal, como la Declaración de Conformidad de la UE.</li>
+    <li><strong>Comprobantes</strong> &thinsp;&mdash;&thinsp; consulta y sube comprobantes de todas las entidades.</li>
+    <li><strong>Cuentas</strong> &thinsp;&mdash;&thinsp; la lista muestra dos columnas adicionales: esquema fiscal y clave de categoría fiscal.</li>
+    <li>Conceder o revocar el propio sudo (mientras quede al menos uno).</li>
+  </ul>
+  <% end %>
+
+  <h2 id="how-recorded">Cómo registra la app las transacciones</h2>
+  <p>Cada transacción en la app es un asiento contable. Un asiento contable contiene dos o más líneas de apunte &thinsp;&mdash;&thinsp; cada línea afecta a una cuenta por un importe al debe o al haber. El total de los débitos debe ser igual al total de los créditos: el asiento debe estar cuadrado. El formulario de movimientos bancarios (ingresos, pagos, transferencias) crea asientos contables por ti.</p>
+
+  <h2 id="je-screen">La pantalla de asientos contables</h2>
+  <p>Asientos contables en el menú muestra todos los asientos de todas las cuentas, independientemente del banco al que pertenezcan. Cada fila muestra el ID del asiento, la fecha, la cuenta de balance implicada, el memo, la referencia, el importe y el estado (contabilizado o borrador). Puedes buscar por descripción, filtrar por rango de fechas y descargar la lista completa en CSV.</p>
+
+  <h2 id="creating">Crear un asiento contable directamente</h2>
+  <p>Haz clic en Nuevo asiento. Rellena:</p>
+  <ul>
+    <li>Fecha.</li>
+    <li>Memo &thinsp;&mdash;&thinsp; una breve descripción del asiento en su conjunto.</li>
+    <li>Referencia &thinsp;&mdash;&thinsp; texto libre opcional, p.&thinsp;ej. un número de factura o referencia bancaria. Aparece en la lista de asientos y en las exportaciones CSV.</li>
+  </ul>
+  <p>A continuación añade líneas de apunte. Cada línea necesita una cuenta, una descripción, un importe al debe o al haber, y una moneda si la cuenta la lleva. Sigue añadiendo líneas hasta que el asiento esté cuadrado. La app no permite guardar un asiento descuadrado.</p>
+  <p>Se aplican dos reglas más, y ninguna admite excepción:</p>
+  <ul>
+    <li><strong>Todo asiento necesita al menos una línea de balance</strong> &thinsp;&mdash;&thinsp; activo, pasivo o patrimonio. Una reclasificación puramente entre dos cuentas de gasto se rechaza; pasa por la cuenta de balance de la que vino el importe, o corrige el asiento original.</li>
+    <li><strong>En cuanto un asiento contiene una línea de ingresos, gastos o personal, solo puede contener UNA cuenta de balance.</strong> &laquo;El banco pagó el alquiler y la caja chica los sellos&raquo; son dos asientos, no uno.</li>
+  </ul>
+  <p>Un asiento compuesto solo de líneas de balance no está sujeto a la segunda regla y puede nombrar tantas cuentas como quieras. Eso es justamente lo que hace posibles los saldos de apertura &thinsp;&mdash;&thinsp; véase más abajo.</p>
+
+  <h2 id="editing">Editar, copiar, descontabilizar y eliminar un asiento</h2>
+  <p>Editar: Haz clic en Editar en cualquier asiento &thinsp;&mdash;&thinsp; desde la lista de asientos, un libro mayor o un informe detallado &thinsp;&mdash;&thinsp; modifícalo y guarda.</p>
+  <p>Copiar: En la página de detalle del asiento, haz clic en Copiar. La app crea un nuevo borrador con las mismas cuentas, descripciones e importes. Actualiza la fecha, ajusta las cifras y guarda. Útil para ajustes recurrentes que siguen el mismo patrón cada período.</p>
+  <p>Descontabilizar: Un asiento se contabiliza solo porque está cuadrado &thinsp;&mdash;&thinsp; y no puede guardarse si no lo está, así que todo asiento guardado empieza contabilizado. Descontabilízalo para excluirlo de tus cifras &thinsp;&mdash;&thinsp; se convierte en un borrador, excluido de los libros mayores y los informes, hasta que lo vuelvas a contabilizar.</p>
+  <p>Eliminar requiere descontabilizar primero, como paso de seguridad: descontabiliza el asiento y entonces aparece el botón Eliminar.</p>
+
+  <h2 id="cannot-change">Lo que no se puede cambiar</h2>
+  <p>Casi todo lo que introduces se puede corregir. Tres cosas no:</p>
+  <ul>
+    <li>Los <strong>tres primeros dígitos</strong> de una cuenta en cuanto tiene apuntes &thinsp;&mdash;&thinsp; su tipo y su entidad. Moverla reescribiría la historia en dos juegos de libros. Del dígito 4 en adelante todo sigue siendo editable, así que puedes reagrupar una cuenta más tarde.</li>
+    <li>La <strong>moneda de una cuenta de balance</strong> en cuanto tiene apuntes. Las cuentas de ingresos, gastos y personales no tienen moneda propia &thinsp;&mdash;&thinsp; la toman de la línea de balance del mismo asiento.</li>
+    <li>Las cuentas de <strong>Reservas</strong>, que crea y mantiene el cierre de ejercicio. No se pueden editar ni eliminar, y no admiten movimientos bancarios.</li>
+  </ul>
+
+  <h2 id="opening-balances">Saldos de apertura</h2>
+  <p>Cuando empiezas a usar la app a mitad de año, introduce el saldo de cada cuenta de balance tal como estaba en tu fecha de inicio. Crea un asiento contable con esa fecha. Añade un apunte para cada cuenta bancaria, préstamo, tarjeta de crédito y cuenta de patrimonio. La línea de cuadre va a una cuenta de patrimonio como Capital inicial. Contabilízalo. A partir de ese momento, tus cifras están completas.</p>
+  <p>Este es el único asiento que nombra muchas cuentas de balance a la vez, y se permite precisamente porque no lleva ninguna línea de ingresos o gastos.</p>
+  <p>Un asiento cuadra <strong>por moneda</strong>, no en conjunto. Si llevas más de una, dale a cada moneda su propia línea de cuadre en patrimonio, o haz un asiento por moneda. La única excepción es una transferencia de dos líneas entre dos cuentas de balance en monedas distintas, donde los importes deben diferir.</p>
+
+  <h2 id="adjusting">Asientos de ajuste</h2>
+  <p>Para todo lo que no pasa por una cuenta bancaria &thinsp;&mdash;&thinsp; amortizaciones, provisiones, gastos anticipados, periodificaciones &thinsp;&mdash;&thinsp; crea un asiento contable directamente. Por ejemplo: debe Gasto por amortización y haber Amortización acumulada. Estos asientos mantienen tu cuenta de resultados y balance precisos sin tocar el libro mayor bancario.</p>
+
+  <h2 id="year-end">Cerrar un ejercicio fiscal</h2>
+  <p>Para cerrar tu ejercicio fiscal, haz clic en &laquo;Cerrar año&raquo; desde el dashboard.</p>
+
+  <h3>Flujo automático</h3>
+  <p>Configuración (una vez por entidad): Elige tu ejercicio fiscal.</p>
+  <p>La app calcula el movimiento neto de todas las cuentas de ingresos y gastos del período, contabiliza un asiento de cierre equilibrado por moneda, y abona o carga el resultado neto en una cuenta bloqueada de Reservas &thinsp;&mdash;&thinsp; una por moneda. Si la cuenta aún no existe, se crea automáticamente. Estas cuentas están bloqueadas: no se pueden editar ni eliminar.</p>
+  <p>Si posteriormente contabilizas, descontabilizas o editas un asiento con fecha dentro de un período ya cerrado, la app recalcula automáticamente el asiento de cierre de ese período. Verás un aviso de confirmación. Esto solo se aplica a los asientos de cierre generados por &laquo;Cerrar año&raquo;.</p>
+  <p>Si has eliminado un asiento de cierre generado automáticamente y necesitas reconstruirlo: haz tus correcciones y vuelve a hacer clic en &laquo;Cerrar año&raquo;.</p>
+  <h3>Cierre manual del ejercicio</h3>
+  <p>Haz clic en &laquo;Lo hago yo&raquo;. Ejecuta un Balance de comprobación para el ejercicio fiscal completo. Para cada cuenta de ingresos y gastos, invierte el saldo en un nuevo asiento contable con fecha el último día del ejercicio: cuentas de ingresos debe (D), cuentas de gastos haber (H). La línea de cuadre va a Reservas &thinsp;&mdash;&thinsp; haber si hubo beneficio, debe si hubo pérdida. Contabilízalo.</p>
+  <p>Nota: la app no hace seguimiento de los asientos de cierre construidos manualmente. Si posteriormente contabilizas, descontabilizas o editas un asiento con fecha dentro de un período cerrado, la app no ajustará tu asiento de cierre &thinsp;&mdash;&thinsp; independientemente de si las cuentas implicadas están bloqueadas. Deberás actualizar el asiento de cierre tú mismo.</p>
+
+  <h2 id="families">Familias &thinsp;&mdash;&thinsp; consolidar varias entidades</h2>
+  <p>Agrupa entidades en una familia para consolidar sus informes: en tu página de perfil, une entidades en una familia dándoles el mismo nombre de familia. Pérdidas y Ganancias, Balance y Balance de comprobación abarcan entonces toda la familia; los demás informes pueden permanecer separados. Una familia también flexibiliza la regla de una entidad por asiento &thinsp;&mdash;&thinsp; dentro de una familia un solo asiento contable puede tocar a más de un miembro. Para asientos entre familias, ver más abajo.</p>
+
+  <h2 id="cross-entity">Asientos entre negocios separados</h2>
+  <p>Dos entidades de familias distintas no pueden compartir un asiento contable &thinsp;&mdash;&thinsp; cada una tiene que cuadrar por su cuenta, así que la app escribe dos y los enlaza. Cómo se activa está en <%= link_to "Cuando uno de tus negocios paga por otro", easy_manual_path(anchor: "cross-business") %>; aquí está lo que esa página no cuenta.</p>
+  <p>Las dos cuentas de balance implicadas deben estar en la misma moneda.</p>
+  <p>La pareja se mueve junta, pero no de forma simétrica. Si eliminas el asiento que paga, se eliminan los dos. Si eliminas la línea de donación, también se elimina el asiento enlazado. Si eliminas el asiento enlazado, solo se quita ese lado y se deshace el enlace &thinsp;&mdash;&thinsp; la línea de donación se queda como un apunte normal. Copiar duplica la pareja entera con un enlace nuevo.</p>
+  <p>Una transferencia entre cuentas de balance o un préstamo no es esto: contabilízalo en cada negocio por separado.</p>
+
+  <h2 id="add-currency">Añadir una moneda</h2>
+
+	<p>Para añadir monedas hace falta una manera de determinar los tipos de cambio. La app trae de serie los tipos de HMRC, el BCE, el Bundesbank y la ESTV, obtenidos según las reglas de esas administraciones tributarias. Es decir: en tus informes puedes convertir todos los asientos a euros, GBP o CHF sabiendo que los tipos son aceptables para las administraciones de Alemania, el Reino Unido y Suiza, y para los países de la zona euro que admiten los tipos mensuales del BCE.</p>
+	<p>Añadir más administraciones no está al alcance de un administrador: hace falta la persona que te proporciona esta app. La app está montada de forma que esa tarea resulte sencilla y directa desde el desarrollo.</p>
+	<p>Añadir más monedas, en cambio, puede hacerlo cualquier administrador con acceso completo. A partir de ahí podrás crear cuentas de balance en esas monedas y tus asientos aparecerán en los informes.</p>
+	<p>Ten en cuenta: si una moneda que añades no la publica ninguna de las fuentes oficiales disponibles, tendrás que introducir tus propios tipos, con justificante. (El BCE no publica UAH en 2026; si llegara a publicarla, la app lo recogerá automáticamente y recibirás un aviso por correo.)</p>
+	<p>Introducir tus propios tipos es posible &thinsp;&mdash;&thinsp; algunos países lo permiten, y a veces es necesario porque los tipos históricos no se podían obtener. Los tipos introducidos a mano siempre tienen prioridad sobre los obtenidos. Se aplican a la entidad o entidades que elijas al introducirlos, y al período que indiques. Dentro de un mismo período impositivo no conviene alternar entre tipos introducidos a mano y tipos obtenidos: la mayoría de las administraciones solo admite una fuente por período.</p>
+
+  <h2 id="tax-setup">Esquemas fiscales y categorías</h2>
+    <p>Un esquema fiscal es una declaración &thinsp;&mdash;&thinsp; SA105, Anlage V. Al marcarlo en la página de configuración fiscal y guardar se crea un grupo de informes para esa declaración, y el grupo se mantiene solo: contiene las cuentas que llevan ese esquema, de modo que una cuenta que asignes más tarde aparece sola, sin que tengas que volver a añadirla.</p>
+    <p>Una categoría es una casilla del formulario fiscal. Varias cuentas pueden apuntar a la misma casilla &thinsp;&mdash;&thinsp; Grundsteuer, Hausversicherung y Hausgeld pertenecen todas a la Kennzahl 52 &thinsp;&mdash;&thinsp; y el informe las suma en esa casilla. Una cuenta, en cambio, pertenece a un solo esquema. Por eso una cuenta que ya has asignado no aparece en la lista de otro esquema.</p>
+    <p>La categoría que se ofrece para las cuentas sin asignar es una suposición basada en el nombre de la cuenta, comparado con palabras clave del propio formulario fiscal. Si no es la correcta, elige la que corresponda. No se guarda nada hasta que la confirmas.<br />
+    Una vez que una cuenta está en el lado asignado ya no hay paso de confirmación: cambiar su categoría surte efecto de inmediato, porque la cuenta ya está comprometida con el esquema.</p>
+    <p>La asignación no lleva fecha. Si añades una cuenta a un esquema o cambias su categoría, todos los informes se recalculan &thinsp;&mdash;&thinsp; también los que ya has mirado para períodos anteriores! <br />
+Lo que ya tiene copia de seguridad no cambia. Se guarda una copia de seguridad de:<br />
+- cada informe fiscal (resúmenes por categoría), cuando lo envías por correo<br />
+- cada presentación, tal como salió.<br />
+En un régimen acumulativo como UK MTD la corrección llega a la agencia con la siguiente presentación, porque esa vuelve a enviar el año hasta la fecha.</p>
+    <p>Al descargar obtienes un CSV, el que corresponda a lo que hay en pantalla &thinsp;&mdash;&thinsp; resumen o detalle. Enviar un informe por correo te da los dos: un <strong>resumen</strong> (totales por categoría, lo que va en las casillas) y un <strong>detalle</strong> (los totales por categoría y sus asientos individuales, con enlaces a los recibos; los recibos sin vincular se listan aparte). Si la entidad tiene un formato de archivo para la asesoría configurado (por ejemplo DATEV), también se incluye. Si no hay nada que declarar en el período, recibes en su lugar un correo breve que lo indica. El CSV de resumen también se guarda cada vez que cambia, así que siempre tienes una copia de seguridad fechada de cómo estaban las casillas de un período.</p>
+    <p>Configurar un contribuyente, conectar con la agencia tributaria y enviar un período &thinsp;&mdash;&thinsp; consulta <%= link_to "Configurar la declaración de impuestos", easy_manual_path(anchor: "tax") %> y <%= link_to "Presentar tú mismo las cifras trimestrales", easy_manual_path(anchor: "filing") %>.</p>
+
+</div>
+<%= render "help/back" %>

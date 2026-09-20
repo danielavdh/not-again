@@ -1,0 +1,90 @@
+<% content_for :title, t("page.fx_variance") %>
+
+<div class="backend_table report fx_variance">
+	<h2><%= t("page.fx_variance") %>
+		<% if @start_date %>
+			(<%= l @start_date, format: :short_date %> - <%= l @end_date, format: :short_date %>)
+		<% else %>
+			(<%= t("reports.trial_balance.as_of") %> <%= l @end_date, format: :short_date %>)
+		<% end %>
+		— <%= report_scope_label(@selected_entity_codes) %>
+	</h2>
+
+	<%= render partial: 'shared/flash' %>
+
+	<div class="controls">
+		<%= form_with url: fx_variance_reports_path, 
+				method: :get, 
+				local: true, 
+				class: 'form_fx_variance' do %>
+			<%= label_tag :start_date, t("crud.from") %>
+			<%= date_field_tag :start_date, @start_date %>
+			<%= label_tag :end_date, t("crud.to") %>
+			<%= date_field_tag :end_date, @end_date %>
+			<%= hidden_field_tag :entities, @selected_entity_codes&.join(',') %>
+			<%= hidden_field_tag :currency, @display_param %>
+			<%= submit_tag t("crud.generate"), class: 'button green' %>
+		<% end %>
+	</div>
+
+  <% if @rows.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th><%= t("attrs.date") %></th>
+          <th><%= t("jargon.journal_entry") %></th>
+          <th class="right"><%= t("reports.fx_variance_page.leg_out") %></th>
+          <th class="right"><%= t("reports.fx_variance_page.leg_in") %></th>
+          <th class="right"><%= t("reports.fx_variance_page.implied_rate") %></th>
+          <th class="right"><%= t("reports.fx_variance_page.published_rate") %></th>
+          <th class="right"><%= t("reports.fx_translation_variance") %> (<%= @display_currency %>)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @rows.each do |row| %>
+          <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+            <td><%= l row[:entry_date], format: :short_date %></td>
+            <td>
+              <% if current_admin.may_open_entry_forms? %>
+                <%= link_to row[:memo].presence || t("reports.fx_variance_page.transfer"),
+                      edit_transfer_account_path(row[:to_account_id], journal_entry_id: row[:journal_entry_id]),
+                      class: 'report-account-link popup-edit' %>
+              <% else %>
+                <%= row[:memo].presence || t("reports.fx_variance_page.transfer") %>
+              <% end %>
+            </td>
+            <td class="right"><%= format_cents_with_currency(row[:from_amount_cents], row[:from_currency]) %></td>
+            <td class="right"><%= format_cents_with_currency(row[:to_amount_cents], row[:to_currency]) %></td>
+            <td class="right"><%= row[:implied_rate] ? row[:implied_rate].round(4) : '—' %></td>
+            <td class="right"><%= row[:published_rate] ? row[:published_rate].round(4) : '—' %></td>
+            <td class="right"><%= format_cents_with_currency(row[:variance_cents], @display_currency, show_zero: true) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr class="list-header">
+          <th colspan="6"><%= t("reports.fx_translation_variance") %></th>
+          <th class="right"><%= format_cents_with_currency(@fx_variance, @display_currency, show_zero: true) %></th>
+        </tr>
+      </tfoot>
+    </table>
+  <% else %>
+    <p class="empty-state"><%= t("reports.fx_variance_page.none") %></p>
+  <% end %>
+</div>
+
+<dialog id="edit-modal" class="edit-modal">
+  <div class="edit-modal-content">
+    <button type="button" class="edit-modal-close" aria-label="<%= t('crud.close', default: 'Close') %>">&times;</button>
+    <iframe id="edit-modal-frame" src="about:blank"></iframe>
+  </div>
+</dialog>
+
+<div class="crud_navigation">
+  <%= link_to t("crud.dashboard"), dashboard_path, class: 'button green' %>
+  <%= link_to t("crud.csv"),
+      fx_variance_reports_path(format: :csv, start_date: @start_date, end_date: @end_date, currency: @display_param, entities: @selected_entity_codes&.join(',')),
+      class: 'button green',
+      data: { sure: t("crud.csv_confirm") } %>
+  <button id="print-button" class="button green"><%= t("crud.print") %></button>
+</div>

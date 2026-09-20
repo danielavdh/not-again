@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= entity.name %> — <%= l(start_d, format: :short_date) %>–<%= l(end_d, format: :short_date) %></title>
+  <style>
+	body{
+		font-family: "Arial", sans-serif;
+		font-size: 14pt;
+		max-width: 90%;
+		margin: 40px auto;
+	}
+	table, th, td{
+		border: 1px solid black;
+		border-collapse: collapse;
+		text-align: start;
+	}
+	table td, table th{
+		padding: 5px 10px;
+		min-width: 150px;
+	}
+	table tr.section-header td, table tr.list-header th{
+		font-weight: bold;
+	}
+	table tr.parent-row td, tr.list-header th{
+		background-color: #dddddd;
+		border-bottom: 3px solid black;
+	}
+	tr.list-header th{
+		border-top: 3px solid black;
+	}
+	td.right, th.right{
+		text-align: end;
+	}
+  </style>
+</head>
+<body>
+  <header>
+    <h1><%= entity.name %></h1>
+    <p><%= scheme_label %> &mdash; <%= l(start_d, format: :short_date) %> &ndash; <%= l(end_d, format: :short_date) %></p>
+    <p><%= t("filing.submitted_at") %>: <%= l(submitted_at, format: :short_date) %> <%= submitted_at.strftime('%H:%M') %></p>
+  </header>
+
+  <table>
+    <tbody>
+      <% if breakdown[:income].any? %>
+        <tr class="section-header">
+          <td colspan="2"><%= t("filing.income") %></td>
+        </tr>
+        <% breakdown[:income].each_with_index do |item, i| %>
+          <tr class="<%= i.even? ? 'list-line-odd' : 'list-line-even' %>">
+            <td><%= item[:label] %></td>
+            <td class="right"><%= format_cents_with_currency(item[:amount], currency) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+      <tr class="parent-row">
+        <td><%= t("filing.income_total") %></td>
+        <td class="right"><%= format_cents_with_currency(breakdown[:total_income], currency, show_zero: true) %></td>
+      </tr>
+
+      <% if breakdown[:expenses].any? %>
+        <tr class="section-header">
+          <td colspan="2"><%= t("filing.expenses") %></td>
+        </tr>
+        <% breakdown[:expenses].each_with_index do |item, i| %>
+          <tr class="<%= i.even? ? 'list-line-odd' : 'list-line-even' %>">
+            <td><%= item[:label] %></td>
+            <td class="right"><%= format_cents_with_currency(item[:amount], currency) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+      <tr class="parent-row">
+        <td><%= t("filing.expenses_total") %></td>
+        <td class="right"><%= format_cents_with_currency(breakdown[:total_expenses], currency, show_zero: true) %></td>
+      </tr>
+
+      <%# Submitted, but neither earned nor spent — tax already deducted at
+          source. It has to appear or the archive would not match what was
+          filed, and it must stay outside both totals or it would distort them. %>
+      <% if breakdown[:other].present? %>
+        <tr class="section-header">
+          <td colspan="2"><%= t("filing.other") %></td>
+        </tr>
+        <% breakdown[:other].each_with_index do |item, i| %>
+          <tr class="<%= i.even? ? 'list-line-odd' : 'list-line-even' %>">
+            <td><%= item[:label] %></td>
+            <td class="right"><%= format_cents_with_currency(item[:amount], currency) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+    <tfoot>
+      <tr class="list-header">
+        <th><%= t("filing.net") %></th>
+        <th class="right"><%= format_cents_with_currency(breakdown[:net], currency, show_zero: true) %></th>
+      </tr>
+    </tfoot>
+  </table>
+</body>
+</html>

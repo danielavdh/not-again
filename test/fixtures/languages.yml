@@ -1,0 +1,30 @@
+# The system languages. Kept in step with db/seeds.rb — de/es/nl now, ar
+# moved to a custom (reviewed) row on 2026-09-14 and came out of this list
+# entirely rather than staying as a dead unreviewed system row.
+#
+# ⚠️ Present for the exact reason currencies.yml is — db:schema:load (what
+# the test database actually uses) does not replay a migration's `execute`
+# calls, only its schema changes. Without this fixture the table is empty
+# in every test, silently: Language.system.find_by!(code: "de") would raise
+# NotFound and nothing would say why. Found by running the actual tests
+# against the actual test database, not assumed.
+de:
+  code: de
+  label: Deutsch
+  source: system
+  status: released
+  reviewed: true
+
+es:
+  code: es
+  label: Español
+  source: system
+  status: released
+  reviewed: true
+
+nl:
+  code: nl
+  label: Nederlands
+  source: system
+  status: released
+  reviewed: true

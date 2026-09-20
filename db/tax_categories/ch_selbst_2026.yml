@@ -1,0 +1,148 @@
+country_code: ch
+scheme: selbst
+tax_year: 2026
+# ESTV — Eidgenössische Steuerverwaltung. Abbreviated because that is what a
+# Swiss user recognises, and because it is what the rate feed is named after.
+#
+# ⚠️ A simplification, and worth knowing which one. Income tax on the
+# self-employed is ASSESSED BY THE CANTON — see the note below on why the
+# categories come from the Obligationenrecht rather than from a federal
+# form. The ESTV administers the direkte Bundessteuer, which the cantons
+# collect alongside their own, so it is a real authority here and not a
+# stand-in. "Kantonale Steuerverwaltung" was more precise about the
+# assessment and named nobody a user could recognise.
+authority: ESTV
+position: 10
+# What this scheme is CALLED, in the language of its own form — the name shown
+# in the scheme picker and in every message about it. Never translated: an
+# Anlage V is called Anlage V by everyone who fills one in.
+scheme_label: "Selbständigerwerbende"
+report_name: "CH-Selbst"
+currency: CHF
+# Selbständigerwerbende.
+#
+# Switzerland has no federal form with income and expense boxes, and the file
+# used to claim otherwise. Income tax on the self-employed is assessed by the
+# CANTON, and the cantonal form asks for one figure, not a breakdown: Kanton
+# Zürich's Hilfsblatt A wants "Reingewinn bzw. -verlust gemäss Erfolgsrechnung"
+# in Ziffer 1810, plus corrections for private shares; Thurgau's Formular 14
+# does the same. The breakdown lives in the Erfolgsrechnung you attach.
+#
+# So the categories come from the Erfolgsrechnung itself, whose minimum
+# structure IS prescribed, federally and identically for every canton:
+# OR Art. 959b Abs. 2 (Produktionserfolgsrechnung), eleven positions to be
+# shown separately and in that order. The labels below are its exact wording.
+# Kept in docs/: ch-zh-hilfsblatt-a.pdf.
+#
+# export_column cites the provision — "959b:2.4" is Art. 959b Abs. 2 Ziff. 4 —
+# since there is no Kennzahl or box number to quote.
+#
+# Ziff. 7, 8 and 9 each name an Aufwand and an Ertrag together; they are split
+# here because an account is one or the other. Ziff. 11 (Jahresgewinn oder
+# Jahresverlust) is the result, not a category, and has no key.
+#
+# Abs. 3 (Absatzerfolgsrechnung, the Umsatzkostenverfahren) is the permitted
+# alternative and would need its own catalogue. A canton wanting more detail can
+# publish a richer file that users opt into.
+categories:
+  - key: nettoerloese
+    label: "Nettoerlöse aus Lieferungen und Leistungen"
+    keywords: ["nettoerlöse", "umsatz", "erlöse", "honorare"]
+    export_column: "959b:2.1"
+    section: income
+    position: 10
+    notes: "Umsatz aus selbständiger Erwerbstätigkeit"
+
+  - key: bestandesaenderungen
+    label: "Bestandesänderungen an unfertigen und fertigen Erzeugnissen sowie an nicht fakturierten Dienstleistungen"
+    keywords: ["bestandesänderungen", "warenbestand"]
+    export_column: "959b:2.2"
+    section: income
+    position: 20
+    notes: "Kann negativ sein"
+
+  - key: finanzertrag
+    label: "Finanzertrag"
+    keywords: ["finanzertrag", "zinsertrag"]
+    export_column: "959b:2.7"
+    section: income
+    position: 30
+    notes: "Ziff. 7 nennt Finanzaufwand und Finanzertrag gemeinsam"
+
+  - key: betriebsfremder_ertrag
+    label: "Betriebsfremder Ertrag"
+    keywords: ["betriebsfremder ertrag"]
+    export_column: "959b:2.8"
+    section: income
+    position: 40
+    notes: "Ziff. 8 nennt betriebsfremden Aufwand und Ertrag gemeinsam"
+
+  - key: ausserordentlicher_ertrag
+    label: "Ausserordentlicher, einmaliger oder periodenfremder Ertrag"
+    keywords: ["ausserordentlicher ertrag"]
+    export_column: "959b:2.9"
+    section: income
+    position: 50
+    notes: "Ziff. 9 nennt Aufwand und Ertrag gemeinsam"
+
+  - key: materialaufwand
+    label: "Materialaufwand"
+    keywords: ["materialaufwand", "wareneinkauf", "material"]
+    export_column: "959b:2.3"
+    section: expenses
+    position: 100
+    notes: "Material, Waren und Drittleistungen"
+
+  - key: personalaufwand
+    label: "Personalaufwand"
+    keywords: ["personalaufwand", "löhne", "gehälter"]
+    export_column: "959b:2.4"
+    section: expenses
+    position: 110
+    notes: "Löhne, Sozialleistungen. Eigensalär und Barbezüge gehören nicht hierher, sondern in die Korrekturen des kantonalen Hilfsblatts"
+
+  - key: uebriger_betrieblicher_aufwand
+    label: "Übriger betrieblicher Aufwand"
+    keywords: ["raumaufwand", "verwaltungsaufwand", "werbeaufwand", "übriger betrieblicher"]
+    export_column: "959b:2.5"
+    section: expenses
+    position: 120
+    notes: "Alles übrige Betriebliche: Raumaufwand, Verwaltung, Werbung, Fahrzeuge, Versicherungen"
+
+  - key: abschreibungen
+    label: "Abschreibungen und Wertberichtigungen auf Positionen des Anlagevermögens"
+    keywords: ["abschreibungen", "wertberichtigungen"]
+    export_column: "959b:2.6"
+    section: expenses
+    position: 130
+    notes: "Sätze siehe Merkblatt A der ESTV über Abschreibungen auf dem Anlagevermögen geschäftlicher Betriebe"
+
+  - key: finanzaufwand
+    label: "Finanzaufwand"
+    keywords: ["finanzaufwand", "zinsaufwand", "bankspesen"]
+    export_column: "959b:2.7"
+    section: expenses
+    position: 140
+    notes: "Schuldzinsen, Bankspesen"
+
+  - key: betriebsfremder_aufwand
+    label: "Betriebsfremder Aufwand"
+    keywords: ["betriebsfremder aufwand"]
+    export_column: "959b:2.8"
+    section: expenses
+    position: 150
+
+  - key: ausserordentlicher_aufwand
+    label: "Ausserordentlicher, einmaliger oder periodenfremder Aufwand"
+    keywords: ["ausserordentlicher aufwand"]
+    export_column: "959b:2.9"
+    section: expenses
+    position: 160
+
+  - key: direkte_steuern
+    label: "Direkte Steuern"
+    keywords: ["direkte steuern", "steueraufwand"]
+    export_column: "959b:2.10"
+    section: expenses
+    position: 170
+    notes: "In der Erfolgsrechnung auszuweisen; steuerlich nicht abzugsfähig und im Hilfsblatt aufzurechnen"

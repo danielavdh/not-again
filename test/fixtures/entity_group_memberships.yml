@@ -1,0 +1,27 @@
+# One open solo stint per entity fixture — the timeline every entity has from
+# creation (Entity#open_initial_membership_stint), which fixture loading skips.
+# starts_on is set early so historical test postings fall inside the window.
+personal_solo:
+  entity: personal
+  entity_group: null
+  starts_on: 2015-01-01
+
+spouse_solo:
+  entity: spouse
+  entity_group: null
+  starts_on: 2015-01-01
+
+daughter_solo:
+  entity: daughter
+  entity_group: null
+  starts_on: 2015-01-01
+
+family_biz_solo:
+  entity: family_biz
+  entity_group: null
+  starts_on: 2015-01-01
+
+standalone_solo:
+  entity: standalone
+  entity_group: null
+  starts_on: 2015-01-01

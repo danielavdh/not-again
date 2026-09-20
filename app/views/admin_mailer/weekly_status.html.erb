@@ -1,0 +1,26 @@
+<% if @problems.empty? %>
+  <p>Nothing needs attention this week.</p>
+<% else %>
+  <p><strong><%= @problems.size %> of <%= @findings.size %> checks need attention.</strong></p>
+<% end %>
+
+<table>
+  <thead>
+    <tr><th></th><th>Check</th><th>Result</th></tr>
+  </thead>
+  <tbody>
+    <% @findings.each do |f| %>
+      <tr>
+        <td><%= f.ok ? "✅" : "⚠️" %></td>
+        <td><%= f.area %></td>
+        <td><%= f.detail %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p>
+  This report is sent every Monday whether or not anything is wrong. That is
+  deliberate: if it stops arriving, something has gone wrong with the scheduler
+  itself — and in that case no alert would have been sent either.
+</p>

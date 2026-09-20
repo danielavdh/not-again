@@ -1,0 +1,31 @@
+<div class="otp-setup-container">
+  	<h2><%= t("gates.otp_setup.title") %></h2>
+
+  	<p><%= t("gates.otp_setup.scan") %></p>
+
+	<div class="qr-code">
+	  <%= raw @qr_code %>
+	</div>
+
+	<p class="manual-entry">
+	  <%= t("gates.otp_setup.manual") %><br>
+	  <code><%= @otp_secret %></code>
+	</p>
+
+	<%= form_with url: confirm_otp_path, method: :post, local: true do |f| %>
+	  <%= hidden_field_tag :otp_secret, @otp_secret %>
+	  <div>
+	    <label><%= t("gates.otp_setup.enter_code") %></label>
+	    <%= text_field_tag :otp_code, nil,
+	        class: "otp-input",
+	        placeholder: "000000",
+	        maxlength: 6,
+	        pattern: "[0-9]{6}",
+	        inputmode: "numeric",
+	        autocomplete: "one-time-code" %>
+	  </div>
+
+	  <%= submit_tag t("gates.otp_setup.submit"), class: "button green" %>
+	<% end %>
+
+</div>

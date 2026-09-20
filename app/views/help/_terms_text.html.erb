@@ -1,0 +1,14 @@
+<%# Shared by gates/terms_show and admin_mailer/terms_agreed — one fallback
+    chain instead of two copies of it. A released custom language's own
+    terms_textile wins if it has any; otherwise the shipped static partial
+    for this locale; otherwise English. Plain File.exist? rather than
+    template_exists? — this same partial renders inside a mailer, where an
+    ActionView helper isn't guaranteed to behave identically. %>
+<% custom_html = Language.custom_doc_html("terms", I18n.locale) %>
+<% if custom_html %>
+  <%= raw custom_html %>
+<% else %>
+  <% locale_partial = "terms_text_#{I18n.locale}" %>
+  <% locale_partial = "terms_text_en" unless File.exist?(Rails.root.join("app/views/help/_#{locale_partial}.html.erb")) %>
+  <%= render "help/#{locale_partial}" %>
+<% end %>

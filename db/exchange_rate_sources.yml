@@ -1,0 +1,200 @@
+# Published exchange rate series the app can read.
+#
+# TIER 1 — there are no countries in this file. A source is a fact producer:
+# "here is a rate, for this pair, over this span, published by this institution".
+# It knows about URLs and parsing. It knows nothing about tax.
+#
+# WHICH source a tax authority will accept is a different question and a
+# different file (db/exchange_rate_rules.yml, tier 2) — because the relationship
+# runs both ways: the ECB is accepted across the EU, while Switzerland accepts
+# its own monthly, its own daily, or your group's internal rate. They also change
+# for different reasons: a source changes when a bank moves a URL, a rule changes
+# when a law changes.
+#
+# ---------------------------------------------------------------------------
+# base            the currency this feed publishes AGAINST. Everything else is
+#                 reached by cross-rate.
+# display_default whether a REPORT displayed in this base currency should read
+#                 this source. Needed because a base currency does not identify
+#                 a source on its own — the Bundesbank also publishes against
+#                 EUR, but a report should use the ECB, not a tax series.
+# label           what the user sees. Never the internal key.
+# frequency       daily | monthly. Describes what one fetch RETURNS, and
+#                 therefore the validity span each stored row gets.
+# semantics       what the number IS. Two sources can both be "monthly" and mean
+#                 different things — a month-end spot rate is not a monthly
+#                 average, and German VAT law asks for the average.
+# ---------------------------------------------------------------------------
+
+ecb:
+  label: ECB
+  base: EUR
+  display_default: true
+  # The source a report falls back to when its display currency is not the base
+  # of any source — a CHF or USD report cross-rates through the euro. Exactly
+  # one source should carry this.
+  display_fallback: true
+  frequency: monthly
+  semantics: month_end_spot
+  url: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml
+  parser: ecb_xml
+  # The daily file holds today only. These two reach backwards, and the fetcher
+  # tries them in this order when a PAST period is asked for — the 90-day file
+  # is 0.1 MB, the archive 7.8 MB and back to 1999-01-04, so most gaps stay
+  # cheap.
+  history_url: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml
+  archive_url: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml
+  # The archive's first day. Stops the gap-filler asking for 1995 every night
+  # forever — no archive reaches before its publisher did. Leave unset on a
+  # source whose range is unknown: "try" costs one wasted fetch, while a wrong
+  # guess refuses a period that was actually available.
+  earliest: "1999-01-04"   # quoted: YAML.safe_load_file does not permit Date
+  # Fetched on the last day of the month, so what is stored is a month-end spot
+  # rate rather than a series. The archive is read the same way — the LAST
+  # published day within the month — so a backfilled month agrees with one
+  # fetched live.
+
+# The SAME ECB document as above, kept a day at a time instead of a month at a
+# time. Not a second feed — a second SERIES, and a different number.
+#
+#   ecb        the month's closing rate, standing for the whole month
+#   ecb_daily  each published day, standing for itself
+#
+# ⚠️ Both are needed and neither replaces the other. Storing only the daily
+# series would make a monthly report convert each posting at its own day's rate
+# rather than the month's closing rate — more precise, and it would silently
+# change every figure in every report already saved.
+#
+# WHY: the Netherlands and Spain both key VAT to the rate at the moment of the
+# taxable event, against the ECB daily reference rate. Germany naming a monthly
+# average is the exception, not the rule. So supporting a daily-rate country
+# needs no new publisher at all.
+#
+# ⚠️ NOT FETCHED unless a country's rule in db/exchange_rate_rules.yml names it.
+# A source earns its schedule by being wanted; nothing here is pulled nightly on
+# the off-chance. That matters more for a daily source than a monthly one — this
+# one is ~250 periods a year against 12.
+#
+# display_default is OFF and must stay off: it shares its base currency with
+# `ecb`, and a euro REPORT reads the month. Which series a SUBMISSION uses is a
+# tax rule and lives in the other file.
+ecb_daily:
+  label: ECB (daily)
+  short_label: ECB/d
+  base: EUR
+  display_default: false
+  frequency: daily
+  semantics: daily_spot
+  url: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml
+  parser: ecb_daily_xml
+  # The daily file holds TODAY ONLY, so these two are not an optimisation here —
+  # they are the only way to obtain a whole month. See
+  # Rates::Fetcher#candidate_urls, which reaches for them first on a
+  # daily source rather than only for past periods.
+  history_url: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml
+  archive_url: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml
+  earliest: "1999-01-04"   # quoted: YAML.safe_load_file does not permit Date
+
+hmrc:
+  label: HMRC
+  base: GBP
+  display_default: true
+  frequency: monthly
+  semantics: month_fixed
+  url: https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_csv_%{year}-%{month}.csv
+  parser: hmrc_csv
+  # The Trade Tariff service's first month — 2020-12 and earlier 404. Probed
+  # 2026-08-19; it lines up with the service launching at the end of the Brexit
+  # transition. Without this the gap-filler would ask for 2018 every night.
+  #
+  # ⚠️ Consequence worth knowing: a GBP-displayed report before 2021 cannot be
+  # converted at all, because the source follows the DISPLAY currency and HMRC
+  # has nothing that far back — while the ECB does. Same shape as the ESTV
+  # problem. Both want the cross-source fallback described in the plan.
+  earliest: "2021-01-01"
+  # HMRC's OWN file, on the Trade Tariff service. Verified 2026-08-18.
+  #
+  #   Country/Territories,Currency,Currency Code,Currency Units per £1,Start date,End date
+  #   Abu Dhabi,Dirham,AED,4.9091,01/08/2026,31/08/2026
+  #
+  # · month is NOT zero-padded — 2026-8, not 2026-08.
+  # · rate is "Currency Units per £1", so base GBP, same direction as now.
+  # · dates are DD/MM/YYYY and the feed DECLARES ITS OWN SPAN — start and end
+  #   land directly in valid_from/valid_to with nothing inferred.
+  # · rows are per COUNTRY, so many share a currency code (every country using
+  #   the US dollar gets a row). Dedupe by code on import.
+  #
+  # An earlier session concluded HMRC published nothing machine-readable. It had
+  # moved: the old gov.uk collection is marked [Withdrawn], which reads like
+  # absence and is not. Until 2026-08-18 this entry pointed at
+  # hmrc.matchilling.com — a third-party mirror that had been the app's only
+  # route to GBP rates since the beginning, and could have vanished without
+  # notice.
+
+estv:
+  label: ESTV
+  base: CHF
+  # display_default DELIBERATELY OFF, 2026-08-18.
+  #
+  # It was on for a few hours and broke every historical Swiss report. ESTV
+  # serves the CURRENT MONTH ONLY, so it holds nothing before August 2026 and
+  # never will — while the ECB holds those months and, once ESTV was the chosen
+  # source, was no longer consulted. A CHF report for March 2026 raised
+  # RateUnavailable for a rate that was sitting in the database.
+  #
+  # That also contradicted the standing decision that tier 2/3 apply going
+  # forward, not retrospectively: a historical conversion is information, not a
+  # filing, and refusing to produce one helps nobody.
+  #
+  # Turn this on when a report can fall back to another source for periods the
+  # preferred one does not cover AND say which it used — steps 8 and 9. Until
+  # then ESTV is still fetched and stored, ready for the Swiss VAT rules in
+  # step 6; it simply is not what a report reads.
+  display_default: false
+  frequency: monthly
+  semantics: month_average
+  url: https://www.backend-rates.bazg.admin.ch/api/xmlavgmonth
+  parser: estv_xml
+  # Switzerland's own monthly average for VAT, served by the BAZG for accounting
+  # software. Taxpayers may use this OR the daily selling rate, and the choice
+  # binds for a whole tax period — a tier 2 rule, not this file's business.
+  #
+  # The average is the mean of ESTV's daily rates from the 25th of one month to
+  # the 24th of the next. That is their arithmetic, not ours: we fetch the
+  # published figure, so the odd window never reaches the schema.
+  #
+  # ⚠️ CURRENT MONTH ONLY. ?d=, ?month= and ?date= are all ignored (verified
+  # 2026-08-18), so history cannot be backfilled from here.
+  # ⚠️ Weak currencies are quoted PER 100 UNITS. EstvXmlParser normalises it.
+  #
+  # Until this entry existed, a CHF report read ECB rates cross-rated through
+  # the euro — not because anyone chose that, but because the source rule was a
+  # hardcoded "GBP ? hmrc : ecb" binary.
+
+bundesbank:
+  label: Bundesbank
+  # For the report's currency dropdown, where "EUR (Bundesbank)" does not fit.
+  #
+  # Not only shorter — arguably more correct there. The BMF is what PUBLISHES
+  # the §16(6) UStG monthly average, and BMF is the name a German user is
+  # looking for; we fetch from the Bundesbank because it computes those figures
+  # and the BMF's own CSV sits behind a captcha. So: BMF where the user is
+  # choosing a tax rate, Bundesbank where we are naming the feed we called.
+  short_label: BMF
+  base: EUR
+  display_default: false
+  frequency: monthly
+  semantics: month_average
+  url: https://api.statistiken.bundesbank.de/rest/data/BBEX3/M..EUR.BB.AC.A01?format=csv&lang=en&startPeriod=%{year}-%{month2}&endPeriod=%{year}-%{month2}
+  parser: bundesbank_csv
+  # The monthly averages of the ECB daily reference rates — the figures the BMF
+  # publishes as binding for German VAT under §16(6) UStG. The BMF's own CSV is
+  # behind bot management and cannot be fetched; this is not a substitute for it
+  # but the SOURCE of it, sent to the BMF on the first working day of the month.
+  #
+  # display_default: false ON PURPOSE. It shares a base currency with the ECB,
+  # and a euro REPORT should read the ECB. This source exists for the tax rules
+  # layer, which is a different question and a different file.
+  #
+  # %{month2} is the zero-padded month: this API wants 2026-06 and rejects
+  # 2026-6, where HMRC's files want the opposite.

@@ -1,0 +1,27 @@
+<% content_for :title, t("journal_entries.edit") %>
+<% content_for :head do %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
+<% end %>
+
+<div id="new_edit_view">
+
+    <h2><%= t("journal_entries.edit") %> (<%= @journal_entry.id %>)</h2>
+
+    <% if @journal_entry.errors.any? %>
+    <p class="error_message"><%#= @journal_entry.errors.full_messages.join(', ') %><%= @journal_entry.errors[:base].to_sentence %></p>
+    <% end %>
+
+    <%= render 'form', journal_entry: @journal_entry %>
+
+    <div class="crud_navigation">
+    	<%= link_to t("crud.je"), 
+				journal_entries_path, 
+				class: "backend_link button green"  %>
+		<%= link_to t("crud.show"), 
+				journal_entry_path(@journal_entry), 
+				class: "backend_link button green"  %>
+    </div>
+
+</div>
+
+
