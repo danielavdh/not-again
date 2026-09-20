@@ -17,20 +17,10 @@
 
     <h1><%= t(".title_html") %></h1>
 
-    <p class="subline"><%= t(".subline") %></p>
+    <p class="subline demo"><%= t(".subline") %></p>
 
     <p class="lede"><%= t(".lede") %></p>
 
-    <%# One .door per way in, each holding its own way in and its own guide. The
-        grouping is carried by spacing alone — a small gap inside a door, a large
-        one between doors — so nothing needs a heading or a box.
-
-        The first line of each door is a self-assessment, so the reader picks by
-        recognising themselves rather than by understanding a feature difference.
-
-        ⚠️ The *_go labels carry a generated arrow at each end (one visible, one
-        hidden as a counterweight), so they cost 4 characters more than they read.
-        The door is sized in ch; locale_coverage_test enforces the budget. %>
     <div class="cta-row demolinks">
 
 		<div class="door">
@@ -53,8 +43,6 @@
 			<%= link_to t(".pro_guide"), pro_manual_path, class: "btn btn-ghost" %>
 		</div>
 
-		<%# A ROLE, not a skill level — and phone only, because the uploader is a
-		    camera screen. %>
 		<div class="door phone-only">
 			<% if demo_available? %>
 			  <%= button_to demo_path(version: "receipts"), class: "btn btn-ghost" do %>
@@ -68,8 +56,6 @@
     </div>
   </header>
 
-  <%# ⚠️ The three figures describe whatever demo:seed last created. Change the
-      seed and the page lies quietly. %>
   <div class="ledger">
     <div class="cell"><div class="k"><%= t(".ledger_business") %></div><div class="v">1</div></div>
     <div class="cell"><div class="k"><%= t(".ledger_currencies") %></div><div class="v">zł € £</div></div>
@@ -77,9 +63,6 @@
     <div class="cell"><div class="k"><%= t(".ledger_break") %></div><div class="v licence"><%= t(".ledger_nothing") %></div></div>
   </div>
 
-  <%# These answer, one for one, the three currency claims the landing page makes;
-      demo.rake says that is why the seed exists. They describe what is IN the
-      books — do not turn them into instructions. %>
   <section class="feat">
     <div class="sec-head"><%= t(".features_heading") %></div>
     <div class="rows">

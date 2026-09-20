@@ -55,7 +55,8 @@ overflow-x: hidden;
 				}
 			}
 			@media( max-width: 500px ){
-				.brand{
+				padding: 4vw 0 3.5vw;
+				.brand a{
 				font-size: 0.94rem;
 				}
 				.navmeta{
@@ -68,6 +69,9 @@ overflow-x: hidden;
 		}
 		.hero{
 		padding: 2.9vw 0 3vw;
+			@media(max-width: 500px){
+			padding: 5vw 0 5vw;
+			}
 			.eyebrow{
 			font-family: 'JetBrains Mono',monospace;
 			font-size: 0.86rem;
@@ -82,13 +86,13 @@ overflow-x: hidden;
 			align-items: baseline;
 			gap: 0.1rem 3.6rem;
 				> span { position: relative; }
-			 	> span + span:not(.more)::before {
+				> span + span:not(.more)::before {
 				content: "·";
 				position: absolute;
 				inset-inline-start: -1.8rem;
 				transform: translateX(-50%);
 				opacity: .5;
-			 	}
+				}
 				.langs {
 				display: flex;
 				align-items: baseline;
@@ -99,28 +103,28 @@ overflow-x: hidden;
 					color: inherit;
 					text-decoration: none;
 					}
-				    a + a::before {
-				    content: "·";
+					a + a::before {
+					content: "·";
 					position: absolute;
 					inset-inline-start: -1.8rem;
 					transform: translateX(-50%);
-				    opacity: .75;
-				    }
-				    a.on {
-				    opacity: 1;
-				    color: var(--ink);
-				        &::after {
-				        content: "";
-				        position: absolute;
-				        inset-inline-start: 0; inset-inline-end: 0.14em;
-				        bottom: -0.25vw;
-				        height: 0.15vw;
-				        background: var(--flag);
-				        }
-					    &::before {
-					    opacity: .33;
-					    }
-				    }
+					opacity: .75;
+					}
+					a.on {
+					opacity: 1;
+					color: var(--ink);
+						&::after {
+						content: "";
+						position: absolute;
+						inset-inline-start: 0; inset-inline-end: 0.14em;
+						bottom: -0.25vw;
+						height: 0.15vw;
+						background: var(--flag);
+						}
+						&::before {
+						opacity: .33;
+						}
+					}
 					a:hover { opacity: 1; }
 				}
 				.more { 
@@ -128,13 +132,12 @@ overflow-x: hidden;
 				letter-spacing: .25em;
 				margin-inline-start: -1.8rem; 
 				}
-			}
-			@media(max-width: 500px){
-				.eyebrow{
+				@media(max-width: 500px){
 				font-size: 0.7rem; 
 				line-height: 1.2;
 				margin-top: 0.5vw;
-				gap: 0.1rem 1.8rem;
+				margin-bottom: 8vw;
+				gap: 0.5rem 1.8rem;
 					> span + span:not(.more)::before {
 					inset-inline-start: -0.9rem;
 					}
@@ -176,7 +179,8 @@ overflow-x: hidden;
 			}
 			@media(max-width: 500px){
 				h1{
-				margin-bottom: 5vw;
+				margin-bottom: 8vw;
+				line-height: 1;
 				font-size: 40px;
 				}
 				h1 .again::after{
@@ -210,10 +214,13 @@ overflow-x: hidden;
 					will-change: opacity;
 					}
 				}
-			}
-			@media(max-width: 500px){
-				.subline{
+				@media(max-width: 500px){
 				font-size: 22px;
+				}
+			}
+			.subline.demo{
+				@media(max-width: 500px){
+				line-height: 1;
 				}
 			}
 			.lede{
@@ -221,11 +228,9 @@ overflow-x: hidden;
 			margin: 3vw 0 4vw;
 			font-size: 1.2rem;
 			color: var(--muted);
-			}
-			@media(max-width: 500px){
-				.lede{
+				@media(max-width: 500px){
 				font-size: 1rem;
-				margin: 5vw 0 8vw;
+				margin: 5vw 0 10vw;
 				}
 			}
 			.cta-row{
@@ -268,6 +273,22 @@ overflow-x: hidden;
 				font-size: 0.86rem;
 				color: var(--muted);
 				}
+				@media(max-width: 500px){
+				gap: 4vw 8vw;
+				align-items: stretch;
+					.btn{
+					width: 42vw;
+					padding: 3vw 3.5vw;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					text-align: center;
+					}
+					.cta-note{
+					flex-basis: 100%;
+					order: 3;
+					}
+				}
 			}
 			.cta-row.demolinks{
 			align-items: flex-start;
@@ -294,6 +315,7 @@ overflow-x: hidden;
 						}
 					}
 					.btn{
+					flex-direction: column;
 					width: 100%;
 					padding: 1vw 1.5vw;
 					//padding: 0.7em 1.5ch;
@@ -310,16 +332,53 @@ overflow-x: hidden;
 				}
 				.door.phone-only{ display: none; }
 				.cta-note{ align-self: center; }
-			}
-			@media (max-width: 600px){
-				.cta-row.demolinks{
-				gap: 5vw;
-					.door{ width: 100%; }
-					.door.phone-only{ display: flex; }
+				// 600px because arrow overlaps between 500 & 600
+				@media(max-width: 600px){
+				display: grid;
+				grid-template-columns: repeat(2, 43vw);
+				column-gap: 5vw;
+				row-gap: 8vw;
+				align-items: stretch;
+					.door{
+					width: auto;
+					display: grid;
+					grid-template-rows: subgrid;
+					grid-row: span 2;
+						form.button_to{
+						height: 100%;
+							button.btn{
+							height: 100%;
+							width: 100%;
+							padding: 1vw 1.5vw;
+							text-align: center;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+								span{
+								white-space: normal;
+								}
+								span:last-child::before{
+								content: "";
+								}
+								span:last-child::after{
+								content: "";
+								}
+								span:first-child::after{
+								content: ".";
+								}
+							}
+						}
+					}
+					.door.phone-only{ 
+					grid-column: 1 / -1;
+					width: auto;
+					display: flex;
+					}
+					.cta-note{
+					grid-column: 1 / -1;
+					}
 				}
-			}
-			@media(min-width: 900px){
-				.cta-row.demolinks{
+				@media(min-width: 900px){
 					.door{
 					width: 30vw;
 					}
@@ -361,9 +420,7 @@ overflow-x: hidden;
 			.cell:last-child{ 
 			border-inline-end:none; 
 			}
-		}
-		@media(max-width: 500px){
-			.ledger{
+			@media(max-width: 500px){
 			grid-template-columns:repeat(2,1fr);
 				.cell{
 					.k{
@@ -379,10 +436,10 @@ overflow-x: hidden;
 					font-size: 0.875rem;
 					}
 				}
-  				.cell:nth-child(2){
+	  			.cell:nth-child(2){
 				border-inline-end: none;
 				}
-  				.cell:nth-child(1),.cell:nth-child(2){
+	  			.cell:nth-child(1),.cell:nth-child(2){
 				border-bottom: 0.1vw solid var(--line);
 				}
 			}
@@ -438,9 +495,8 @@ overflow-x: hidden;
 					}
 				}
 			}
-		}
-		@media(max-width: 500px){
-			section.feat{
+			@media(max-width: 500px){
+			padding: 12vw 0 4vw;
 				.sec-head{
 				font-size: 0.75rem;
 				}
@@ -491,10 +547,8 @@ overflow-x: hidden;
 			font-size: 0.92rem;
 			margin-top: 1.2vw;
 			}
-			@media(max-width: 500px){
-				p{
-				font-size: 0.8125rem;
-				}
+			p::before{
+			content: "// ";
 			}
 			.btn{
 			border-color: var(--paper);
@@ -503,6 +557,16 @@ overflow-x: hidden;
 			.btn:hover{
 			background: var(--paper);
 			color: var(--ink);
+			}
+			@media(max-width: 500px){
+				p{
+				font-size: 0.8125rem;
+				margin-top: 5vw;
+				margin-inline-start: 6.5vw;
+				}
+				p::before{
+				margin-inline-start: -6.5vw;	
+				}
 			}
 		}
 		footer{
@@ -542,10 +606,12 @@ overflow-x: hidden;
 					}
 				}
 			} 
-		}
-		@media(max-width: 500px){
-			footer{
+			@media(max-width: 500px){
 			font-size: 0.7rem;
+				div.contrast form button{
+				--svg-width: 3.5vw;
+				--svg-height: 3.5vw;
+				}
 			}
 		}
 	}
