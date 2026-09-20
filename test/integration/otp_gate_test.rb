@@ -96,6 +96,51 @@ class OtpGateTest < ActionDispatch::IntegrationTest
     end
   end
 
+
+  # A brand-new admin has neither a second factor nor an agreement to the
+  # current terms — the state every real installation starts in, straight after
+  # `bin/rails install:owner`.
+  #
+  # BaseController runs the OTP gate BEFORE the terms gate, so /otp has to be
+  # reachable without agreeing first. When it was not, /otp redirected to
+  # /terms (terms gate), /terms redirected to /otp (OTP gate), and the browser
+  # gave up: ERR_TOO_MANY_REDIRECTS, on the first login, for every new account
+  # on a live server.
+  #
+  # Nothing caught it because Admin.otp_required? is Rails.env.production? —
+  # the OTP gate never fires in test, so the loop cannot form. Hence
+  # with_otp_required here.
+  test "a new admin with no second factor and no agreed terms can still reach the OTP setup" do
+    @admin.update!(otp_secret: nil, otp_enabled: false,
+                   terms_agreed_version: nil, terms_agreed_at: nil)
+
+    with_otp_required do
+      post session_url(locale: :en),
+           params: { username: @admin.username, password: "password" }
+
+      get otp_path(locale: :en)
+      assert_response :success,
+        "the second-factor page must render — a redirect here is the login loop"
+    end
+  end
+
+  # The other half of the same loop: the terms page must send an admin who has
+  # no second factor to /otp, and /otp must then stop. One hop, not a volley.
+  test "the terms page sends a new admin to the second factor, and it ends there" do
+    @admin.update!(otp_secret: nil, otp_enabled: false,
+                   terms_agreed_version: nil, terms_agreed_at: nil)
+
+    with_otp_required do
+      post session_url(locale: :en),
+           params: { username: @admin.username, password: "password" }
+
+      get terms_path(locale: :en)
+      assert_redirected_to otp_path(locale: :en)
+
+      follow_redirect!
+      assert_response :success, "/otp bounced onwards — the gates are still circular"
+    end
+  end
 end
 
 # The return target is read back out of the session, so the OTP controller only

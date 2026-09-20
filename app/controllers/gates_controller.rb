@@ -5,8 +5,23 @@
 class GatesController < BaseController
   CLAIM_ACTIONS = [ :claim_show, :claim_update, :claim_resend ].freeze
 
-  skip_before_action :require_otp_verification, only: [ :otp_show, :otp_verify, :otp_confirm ] + CLAIM_ACTIONS
-  skip_before_action :require_terms_agreement,  only: [ :terms_show, :terms_agree ] + CLAIM_ACTIONS
+  OTP_ACTIONS = [ :otp_show, :otp_verify, :otp_confirm ].freeze
+
+  skip_before_action :require_otp_verification, only: OTP_ACTIONS + CLAIM_ACTIONS
+  # ⚠️ OTP_ACTIONS here too, and it is not optional.
+  #
+  # BaseController runs the gates in order: claim, then OTP, then terms. So a
+  # brand-new admin is sent to /otp by the OTP gate — and if the terms gate
+  # still applied there, /otp would bounce to /terms, /terms would bounce back
+  # to /otp (it does not skip the OTP gate), and nobody could ever finish a
+  # first login. ERR_TOO_MANY_REDIRECTS, on a live server, for every new
+  # account.
+  #
+  # Invisible in test and development: Admin.otp_required? is
+  # Rails.env.production?, so the OTP gate never fires there and the loop
+  # cannot form. See the guard in test/integration/otp_gate_test.rb, which
+  # forces otp_required? true for exactly this reason.
+  skip_before_action :require_terms_agreement,  only: [ :terms_show, :terms_agree ] + OTP_ACTIONS + CLAIM_ACTIONS
   # Agreeing to terms and claiming an account are not book writes, so an upload-
   # only or read-only admin must be able to reach them like anyone else.
   skip_before_action :require_write_access,     only: [ :terms_show, :terms_agree ] + CLAIM_ACTIONS

@@ -142,7 +142,10 @@ cryptsetup open --key-file /root/.$NAME.key "$VOL" "$NAME"
 mkfs.ext4 /dev/mapper/$NAME
 mkdir -p "$DATA"
 mount /dev/mapper/$NAME "$DATA"
+rm -rf "$DATA"/lost+found      # PostgreSQL will not set itself up in a folder that has anything in it
 ```
+
+The last line matters. `mkfs.ext4` puts a `lost+found` folder on every filesystem it makes, and that is enough for PostgreSQL to consider the folder occupied and refuse to create the database. Deleting it is safe: it is where `fsck` puts files it rescues from a damaged disk, and `fsck` makes it again if it ever needs it.
 
 #### Make it survive a reboot
 
@@ -184,23 +187,26 @@ Replace <service> with the real value from config/deploy.yml:
 
 It must print a line showing `/dev/mapper/<your name>`. Nothing printed means the folder is not on the encrypted disk: fix it before deploying anything.
 
-#### Last step: empty the folder
+#### Check the database actually started
 
-`mkfs.ext4` puts a `lost+found` directory on every filesystem it creates. PostgreSQL refuses to set itself up in a folder that already has something in it, and a freshly mounted volume therefore looks "not empty" to it. Delete it now, while the disk is genuinely empty:
+`kamal accessory boot db` says `exit status 0` even when the database then fails to start, so check rather than assume. On the server:
 
 ```bash
-rm -rf "$DATA"/lost+found
-ls -a "$DATA"        # only . and .. — nothing else
+docker ps --format '{{.Names}}\t{{.Status}}'
 ```
 
-Skip this and the first `kamal accessory boot db` appears to succeed — Kamal reports `exit status 0` — and the container then restarts every few seconds forever. `docker logs <service>-db` is the only place it says why:
+You want `Up 2 minutes` next to `<service>-db`. **`Restarting (1) 5 seconds ago` means it is failing and trying again** — every few seconds, for ever. That is the symptom; nothing else tells you.
+
+#### If it says Restarting
+
+Usually because the `rm -rf` line above was skipped. `docker logs <service>-db` is the only place it says why:
 
 ```
 initdb: error: directory "/var/lib/postgresql/data" exists but is not empty
 initdb: detail: It contains a lost+found directory, perhaps due to it being a mount point.
 ```
 
-If you have already hit it, the same fix works afterwards:
+Fix it on the server, replacing `<service>` with the `service:` value from `config/deploy.yml`:
 
 ```bash
 docker stop <service>-db
@@ -210,8 +216,6 @@ docker exec <service>-db pg_isready -U <the POSTGRES_USER from config/deploy.yml
 ```
 
 You want `accepting connections`.
-
-Deleting `lost+found` is safe: it is where `fsck` puts files it rescues from a damaged filesystem, and `fsck` recreates it if it ever needs to. It only blocks the *creation* of the database — once PostgreSQL has set itself up, the directory reappearing beside its files changes nothing.
 
 ---
 
