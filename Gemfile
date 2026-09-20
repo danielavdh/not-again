@@ -50,7 +50,7 @@ gem 'RedCloth'
 gem "recaptcha", require: 'recaptcha/rails' 
 # Two-factor authentication
 gem "rotp", "~> 6.3"
-gem "rqrcode", "~> 2.2"
+gem "rqrcode", "~> 3.2"
 
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
