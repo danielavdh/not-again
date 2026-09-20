@@ -30,7 +30,7 @@ class TaxSetupTest < ApplicationSystemTestCase
 
   test "a scheme that only gets tagged and exported asks nothing" do
     visit_tax_setup
-    check "entity_tax_scheme_euer"
+    check "entity_tax_scheme_de_euer"
 
     assert_no_selector "#add-taxpayer-modal[open]"
     assert_no_selector "#filing_hmrc_taxpayer_id"
@@ -55,7 +55,7 @@ class TaxSetupTest < ApplicationSystemTestCase
     assert_selector "#add-taxpayer-modal[open]"
     find("[data-taxpayer-use]").click
 
-    check "entity_tax_scheme_self_employment"
+    check "entity_tax_scheme_gb_self_employment"
     assert_no_selector "#add-taxpayer-modal[open]"
   end
 
@@ -157,7 +157,15 @@ class TaxSetupTest < ApplicationSystemTestCase
     uncheck "entity_tax_scheme_gb_property"
     find("form#edit_tax_entity input[type=submit]").click
 
-    assert_no_selector "#filing-fields fieldset", wait: 5
+    # Wait for the FLASH, not for the fieldset to go. Unticking removes the
+    # fieldset client-side straight away (see "unticking one of two schemes"
+    # below), so `assert_no_selector "#filing-fields fieldset"` is satisfied
+    # before the form is even submitted — and the reload below then raced the
+    # POST, passing or failing depending on which won. The flash only exists
+    # after the server has redirected, which is exactly the point this test
+    # needs to wait for.
+    assert_selector ".flash", wait: 5
+
     account.reload
     assert_nil account.tax_scheme
     assert_nil account.tax_category_key
@@ -187,7 +195,7 @@ class TaxSetupTest < ApplicationSystemTestCase
 
     accept_confirm { check "entity_tax_scheme_gb_property" }
     find("[data-taxpayer-use]").click
-    check "entity_tax_scheme_self_employment"
+    check "entity_tax_scheme_gb_self_employment"
 
     uncheck "entity_tax_scheme_gb_property"
     assert_selector "#filing-fields fieldset"

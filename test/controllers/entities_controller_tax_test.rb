@@ -637,7 +637,7 @@ class EntitiesControllerTaxTest < ActionDispatch::IntegrationTest
     get edit_tax_entity_path(e, locale: :en)
 
     assert_select "input#entity_tax_scheme_gb_property[data-authority=?]", "hmrc"
-    assert_select "input#entity_tax_scheme_euer[data-authority]", count: 0
+    assert_select "input#entity_tax_scheme_de_euer[data-authority]", count: 0
   end
 
   test "read-only admins cannot reach the picker" do

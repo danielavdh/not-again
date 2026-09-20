@@ -572,3 +572,5 @@ document now, and needs your eye:
 
 **No runtime dependencies.** The app serves every asset it uses; nothing is fetched from a CDN, a font host or a package registry while it runs. That is what makes it work on a private network, survive someone else's outage, and keep a Content-Security-Policy naming only your own origins.
 TomSelect and the fonts are vendored for exactly that reason; they and everything the container image bundles are listed in [THIRD-PARTY.md](THIRD-PARTY.md).
+
+**Built with extensive use of Claude (Anthropic) as a development collaborator.**

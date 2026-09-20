@@ -25,4 +25,8 @@ jobs:
           path-to-signatures: 'signatures/version1/cla.json'
           path-to-document: 'https://github.com/danielavdh/not-again/blob/main/CLA-individual.md'
           branch: 'main'
-          allowlist: danielavdh
+          # dependabot[bot] raises a PR whenever a dependency moves. A CLA is a
+          # human granting licence rights to their own work; a version bump in a
+          # lockfile is neither. Without this every Dependabot PR sits blocked
+          # on a signature nothing can give.
+          allowlist: danielavdh,dependabot[bot]

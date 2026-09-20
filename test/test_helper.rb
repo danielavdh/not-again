@@ -10,10 +10,19 @@ require_relative "test_helpers/session_test_helper"
 # filesystem, outside any transaction, so it survives AR rollback and piles up
 # run after run.
 #
+# tax_exports for a sharper reason than tidiness: TaxExportStorage writes to
+# tax_exports/<report id>/, ids climb with every run, and a new report
+# eventually lands on an id some earlier run already wrote a file under. Then
+# "a custom report's export is never backed up" finds that stale file and
+# fails — intermittently, and only on a machine that has run the suite before.
+# CI never sees it; a developer sees it and cannot reproduce it.
+#
 # Once, after the whole suite: per-worker would race four workers wiping mid-
 # run.
 Minitest.after_run do
-  FileUtils.rm_rf(Rails.root.join("public", "uploads", "cache")) if Rails.env.test?
+  next unless Rails.env.test?
+  FileUtils.rm_rf(Rails.root.join("public", "uploads", "cache"))
+  FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports"))
 end
 
 
