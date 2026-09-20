@@ -184,6 +184,35 @@ Replace <service> with the real value from config/deploy.yml:
 
 It must print a line showing `/dev/mapper/<your name>`. Nothing printed means the folder is not on the encrypted disk: fix it before deploying anything.
 
+#### Last step: empty the folder
+
+`mkfs.ext4` puts a `lost+found` directory on every filesystem it creates. PostgreSQL refuses to set itself up in a folder that already has something in it, and a freshly mounted volume therefore looks "not empty" to it. Delete it now, while the disk is genuinely empty:
+
+```bash
+rm -rf "$DATA"/lost+found
+ls -a "$DATA"        # only . and .. — nothing else
+```
+
+Skip this and the first `kamal accessory boot db` appears to succeed — Kamal reports `exit status 0` — and the container then restarts every few seconds forever. `docker logs <service>-db` is the only place it says why:
+
+```
+initdb: error: directory "/var/lib/postgresql/data" exists but is not empty
+initdb: detail: It contains a lost+found directory, perhaps due to it being a mount point.
+```
+
+If you have already hit it, the same fix works afterwards:
+
+```bash
+docker stop <service>-db
+rm -rf /root/<service>-db/data/lost+found
+docker start <service>-db
+docker exec <service>-db pg_isready -U <the POSTGRES_USER from config/deploy.yml>
+```
+
+You want `accepting connections`.
+
+Deleting `lost+found` is safe: it is where `fsck` puts files it rescues from a damaged filesystem, and `fsck` recreates it if it ever needs to. It only blocks the *creation* of the database — once PostgreSQL has set itself up, the directory reappearing beside its files changes nothing.
+
 ---
 
 ## 2. DNS — ClouDNS, or your registrar

@@ -124,3 +124,25 @@ accessories:
 builder:
   # Correct as-is for a typical x86 server. Use arm64 if yours is ARM.
   arch: amd64
+
+  # ⚠️ Keep this, and keep .kamal/hooks/pre-build with it.
+  #
+  # Kamal normally clones the repository into a temp directory and builds from
+  # the clone, so an image can only contain committed code. Good default — but
+  # `config/credentials.yml.enc` is NOT in this repository (see .gitignore: the
+  # repo is public, and you are meant to run `bin/rails credentials:edit` and
+  # get your own). A clone therefore has no credentials file at all.
+  #
+  # The app then boots with nothing to decrypt and dies on the first thing that
+  # needs a secret:
+  #
+  #   S3 object storage is not configured for production.
+  #
+  # which sends you looking at your S3 settings, which are fine. `.dockerignore`
+  # is no help either — the file was never in the build context to be ignored.
+  #
+  # `context: .` builds from the working directory instead, where the file is.
+  # What that gives up — the guarantee that a deployed image matches committed
+  # code — `.kamal/hooks/pre-build` puts back: it refuses to build a dirty
+  # checkout, or one whose HEAD is not pushed.
+  context: .

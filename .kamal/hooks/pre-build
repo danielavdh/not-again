@@ -1,0 +1,52 @@
+#!/bin/sh
+# Refuse to build anything that is not committed and pushed.
+#
+# ⚠️ This is not optional tidiness. config/deploy.yml sets `builder: context: .`
+# so that the build reads THIS directory rather than a git clone — the clone has
+# no config/credentials.yml.enc, which is deliberately not in the repo. Building
+# from the working directory means an image can contain edits that exist nowhere
+# else, deployed with no record of what is actually running.
+#
+# Kamal's own default (clone, then build) gives that guarantee for free. Since
+# we gave it up, this puts it back.
+set -e
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Working tree is not clean — commit or stash before deploying." >&2
+  git status --porcelain >&2
+  exit 1
+fi
+
+remote=$(git remote | head -1)
+if [ -z "$remote" ]; then
+  echo "No git remote configured — nothing to check this build against." >&2
+  exit 1
+fi
+
+branch=$(git branch --show-current)
+if [ -z "$branch" ]; then
+  echo "Detached HEAD — check out a branch before deploying." >&2
+  exit 1
+fi
+
+# refs/heads/, not `--tags`: the sample hook Kamal ships passes --tags, which
+# restricts the lookup to refs/tags/* and so matches nothing for a branch name.
+# It then aborts with "Branch not pushed to remote" on a branch that HAS been
+# pushed. Fails closed rather than open, so it is safe — just wrong, and
+# impossible to deploy past.
+remote_head=$(git ls-remote "$remote" "refs/heads/$branch" | cut -f1)
+
+if [ -z "$remote_head" ]; then
+  echo "Branch '$branch' has never been pushed to '$remote' — push before deploying." >&2
+  exit 1
+fi
+
+local_head=$(git rev-parse HEAD)
+
+if [ "$local_head" != "$remote_head" ]; then
+  echo "HEAD ($local_head) does not match '$remote/$branch' ($remote_head)." >&2
+  echo "Push first, so what is deployed is what is on the remote." >&2
+  exit 1
+fi
+
+exit 0

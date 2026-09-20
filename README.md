@@ -434,7 +434,40 @@ bundle exec kamal deploy     # every time after that
 
 `setup` takes a while and says a lot. If it stops on the certificate, it is almost always DNS: the domain is not yet pointing at the server. That is part of step 1.
 
-Migrations and the tax catalogues load by themselves, from the pre-deploy hook.
+Migrations and the tax catalogues load by themselves, from the pre-deploy hook — **from the second deploy onwards**.
+
+⚠️ **The very first deploy is the exception, and it fails.** The hook runs `kamal app exec "bin/rails db:migrate"`, which needs the environment file on the server; that file is only written *by* a completed deploy. So on a brand-new server the hook asks for something nothing has created yet, and you get:
+
+```
+docker: --env-file: open .kamal/apps/<service>/env/roles/web.env: no such file or directory
+```
+
+The image is already built and pushed by then, so nothing is wasted. Do the first one in four steps instead:
+
+```bash
+bundle exec kamal accessory boot db          # the database, on its own volume
+bundle exec kamal deploy --skip-hooks        # the app, and the env files the hook needs
+bundle exec kamal app exec "bin/rails db:migrate"
+bundle exec kamal app exec "bin/rails tax_categories:load"
+```
+
+The last two are exactly what the hook would have done. After this `bundle exec kamal deploy` works normally, hook and all, because the environment file now exists.
+
+If `accessory boot db` reports success but the database container restarts over and over, it is the `lost+found` problem — see [Encrypting that volume](docs/provider-setup.md#encrypting-that-volume).
+
+#### Deploy only what you have pushed
+
+`config/deploy.yml` sets `builder: context: .`, and `.kamal/hooks/pre-build` refuses to build unless your checkout is clean and its HEAD matches the remote. Both are deliberate and belong together.
+
+The reason is `config/credentials.yml.enc`. It is **not** in this repository — the repository is public, and you are meant to make your own with `bin/rails credentials:edit`. Kamal normally builds from a fresh clone of the repository, which therefore has no credentials file, so the app boots with nothing to decrypt and stops at the first secret it needs:
+
+```
+S3 object storage is not configured for production.
+```
+
+That message sends you to check your S3 settings, which are fine. `.dockerignore` is no help either: the file was never in the build context to be ignored in the first place.
+
+`context: .` builds from your working folder, where the file is. The cost is that Kamal is no longer guaranteeing that what you deployed is what is in git — so the `pre-build` hook enforces it instead. If it stops you, commit and push; that is it doing its job.
 
 ### Make your account on the server (step 6)
 
