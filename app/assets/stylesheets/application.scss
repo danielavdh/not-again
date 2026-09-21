@@ -349,7 +349,6 @@ overflow-x: hidden;
 							button.btn{
 							height: 100%;
 							width: 100%;
-							padding: 1vw 1.5vw;
 							text-align: center;
 							display: flex;
 							align-items: center;
@@ -367,6 +366,10 @@ overflow-x: hidden;
 								content: ".";
 								}
 							}
+						}
+						.btn{
+						font-size: 0.95rem;
+						padding: 1.5vw 2vw;
 						}
 					}
 					.door.phone-only{ 

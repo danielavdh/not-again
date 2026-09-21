@@ -31,6 +31,11 @@
 	  	<%= link_to accounts_path do %>
 	  		<svg><use xlink:href='#accounts'></use></svg>
 	  	<% end %>
+	  <% if current_admin.full_access_pro? %>
+	  	<%= link_to journal_entries_path do %>
+	  		<svg><use xlink:href='#journal'></use></svg>
+	  	<% end %>
+	  <% end %>
 	  	<%= link_to receipts_path do %>
 	  		<svg class="stroke s30"><use xlink:href='#receipt'></use></svg>
 	  	<% end %>

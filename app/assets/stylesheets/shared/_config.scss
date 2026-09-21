@@ -68,46 +68,86 @@ $block_font: "Open Sans", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "
 	display: flex;
 	align-items: center;
 	gap: 0.5vw;
-		input[type="checkbox"]{
-		margin-top: 0;
-		margin-inline-end: 1vw;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		appearance: none;
-		-webkit-appearance: none;
-		width: 2vw;
-		height: 2vw;
-		border: 0.1vw solid var(--green);
-		border-radius: 0.25vw;
-		cursor: pointer;
-		background-color: var(--bkgg);
-		}
-		input[type="checkbox"]:checked {
-		background-color: var(--green);
-		border-color: var(--green);
-		}
-		input[type="checkbox"]:checked::after{
-		content: "\2714\FE0E";
-		color: var(--bkgg);
-		}
+	@include checkbox;
+//		input[type="checkbox"]{
+//		margin-top: 0;
+//		margin-inline-end: 1vw;
+//		display: inline-flex;
+//		align-items: center;
+//		justify-content: center;
+//		appearance: none;
+//		-webkit-appearance: none;
+//		width: 2vw;
+//		height: 2vw;
+//		border: 0.1vw solid var(--green);
+//		border-radius: 0.25vw;
+//		cursor: pointer;
+//		background-color: var(--bkgg);
+//		}
+//		input[type="checkbox"]:checked {
+//		background-color: var(--green);
+//		border-color: var(--green);
+//		}
+//		input[type="checkbox"]:checked::after{
+//		content: "\2714\FE0E";
+//		color: var(--bkgg);
+//		}
+//	}
+//	@media (max-width: 450px){
+//		label{
+//			input[type="checkbox"]{
+//			margin-inline-end: 2vw;
+//			width: 4vw;
+//			height: 4vw;
+//			}
+//		}
+//	}
+//	@media (min-width: 900px){
+//		label{
+//			input[type="checkbox"]{
+//			margin-inline-end: 0.5vw;
+//			width: 1.3vw;
+//			height: 1.3vw;
+//			}
+//		}
+	}
+}
+@mixin checkbox{
+	input[type="checkbox"]{
+	margin-top: 0;
+	margin-inline-end: 1vw;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	appearance: none;
+	-webkit-appearance: none;
+	width: 2vw;
+	height: 2vw;
+	border: 0.1vw solid var(--green);
+	border-radius: 0.25vw;
+	cursor: pointer;
+	background-color: var(--bkgg);
+	}
+	input[type="checkbox"]:checked {
+	background-color: var(--green);
+	border-color: var(--green);
+	}
+	input[type="checkbox"]:checked::after{
+	content: "\2714\FE0E";
+	color: var(--bkgg);
 	}
 	@media (max-width: 450px){
-		label{
-			input[type="checkbox"]{
-			margin-inline-end: 2vw;
-			width: 4vw;
-			height: 4vw;
-			}
+		input[type="checkbox"]{
+		margin-inline-end: 2vw;
+		width: 4vw;
+		height: 4vw;
 		}
 	}
 	@media (min-width: 900px){
-		label{
-			input[type="checkbox"]{
-			margin-inline-end: 0.5vw;
-			width: 1.3vw;
-			height: 1.3vw;
-			}
+		input[type="checkbox"]{
+		margin-inline-end: 0.5vw;
+		width: 1.3vw;
+		height: 1.3vw;
 		}
 	}
 }

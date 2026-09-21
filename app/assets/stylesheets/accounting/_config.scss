@@ -18,6 +18,7 @@ width: $width;
 	text-align: start;
 	font-size: var(--fontsize, 0.85rem);
 	padding: 0.5vh 0.5vw;
+	@include checkbox;
 		/* in main site? - affects destroy buttons */
 		form{
 		display: inline;
@@ -93,6 +94,10 @@ width: $width;
 	font-size: 0.85rem;
 		td, th {
 	  	padding: 1vh 1vw;
+		}
+		th div.flex span{
+		display: flex;
+		gap: 2vw;
 		}
 		td.actions{
 		white-space: initial;

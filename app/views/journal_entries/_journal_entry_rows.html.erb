@@ -1,6 +1,6 @@
 <% journal_entries.each do |je| %>
   <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
-    <td>
+    <td class="no-phone">
       <%= je.id %>
       <% if local_assigns[:cross_entity_je_ids]&.include?(je.id) %>
         <span class="ce-linked-cue" title="<%= t('entities.cross_entity.linked') %>" aria-label="<%= t('entities.cross_entity.linked') %>">
@@ -10,20 +10,20 @@
     </td>
     <td><%= format_date(je.entry_date) %></td>
     <td><%= balance_account[je.id] %></td>
-    <td><%= je.memo %></td>
-    <td><%= je.journal_reference %></td>
+    <td class="no-phone"><%= je.memo %></td>
+    <td class="no-phone"><%= je.journal_reference %></td>
     <td class="right">
       <% credit = credit_sums[je.id] %>
       <%= format_amount(credit&.dig(:amount) || 0, credit_currency[je.id]) %>
     </td>
-    <td>
+    <td class="no-phone">
       <% if je.posted? %>
         <span class="badge-posted"><%= t("attrs.posted") %></span>
       <% else %>
         <span class="badge-draft"><%= t("attrs.draft") %></span>
       <% end %>
     </td>
-    <td class="actions no-print">
+    <td class="actions no-print no-phone">
       <%# A year-end closing entry the app generated is maintained by it — no edit,
           no copy. Reopening the year is the only way back, from the dashboard. %>
       <% unless local_assigns[:app_owned_close_ids]&.include?(je.id) %>
