@@ -12,6 +12,7 @@
         class: 'backend_link button green' %>
     <%= link_to t("crud.csv"),
         journal_entries_path(format: :csv, search: params[:search], start_date: params[:start_date], end_date: params[:end_date]),
+        target: "_blank", rel: "noopener",
         class: 'backend_link button green',
         data: { sure: t("crud.csv_confirm") } %>
 

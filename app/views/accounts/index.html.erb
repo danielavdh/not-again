@@ -11,6 +11,7 @@
         	class: "backend_link button green"  %>
 		<%= link_to t("crud.csv"),
 			accounts_path(format: :csv),
+			target: "_blank", rel: "noopener",
 			class: 'backend_link button green',
 			data: { sure: t("crud.csv_confirm") } %>
 		<button id="print-button" 

@@ -50,6 +50,7 @@
 			currency: @display_param, 
 			version: @short_version ? 'short' : 'long', 
 			format: :csv),
+			target: "_blank", rel: "noopener",
 			class: 'button green',
 			data: { sure: t("crud.csv_confirm") } %>
 	

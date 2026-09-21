@@ -205,6 +205,7 @@
 	<%= link_to t("crud.dashboard"), dashboard_path, class: 'button green' %>
 	<%= link_to t("crud.csv"),
 		profit_loss_reports_path(format: :csv, start_date: @start_date, end_date: @end_date, currency: @display_param, entities: @selected_entity_codes&.join(',')),
+		target: "_blank", rel: "noopener",
 		class: 'button green',
 		data: { sure: t("crud.csv_confirm") } %>
 	<button id="print-button" class="button green"><%= t("crud.print") %>

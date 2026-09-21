@@ -225,6 +225,7 @@
 	<%= link_to t("crud.csv"),
 			ledger_account_path(@account,
 			format: :csv, start_date: @start_date, end_date: @end_date),
+			target: "_blank", rel: "noopener",
 			class: 'backend_link button green',
 			data: { sure: t("crud.csv_confirm") } %>
 	<button id="print-button" 

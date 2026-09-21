@@ -9,6 +9,7 @@
   <div class="controls">
     <%= link_to t("crud.csv"),
 			exchange_rates_path(format: :csv),
+			target: "_blank", rel: "noopener",
 			class: 'button green',
 			data: { sure: t("crud.csv_confirm") } %>
 
