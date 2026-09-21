@@ -1,4 +1,3 @@
-<%# Exchange Rates Index %>
 <% content_for :title, t("exchange_rates.index.title") %>
 
 <div class="backend_table no-print">
@@ -13,23 +12,10 @@
 			class: 'button green',
 			data: { sure: t("crud.csv_confirm") } %>
 
-	<%# Both open to any admin now.
-	    FETCHING writes nothing but publisher data for a declared source and
-	    month — no wrong figure can be introduced, and a period already held is
-	    updated rather than duplicated. Keeping it sudo left an admin unable to
-	    fetch a missing month AND unable to type it, waiting on someone else for
-	    a rate anyone could have pulled.
-	    NEW RATE is offered to everyone because Rates::WritePolicy decides
-	    on save: a shared series only where nothing can fetch it, an entity's own
-	    rate where they have write access. %>
 	<%= link_to t("exchange_rates.new_rate"),
 			new_exchange_rate_path,
 			class: 'button green' %>
 	<%= form_with url: fetch_rates_exchange_rates_path, method: :post, class: "inline-fetch-form" do |f| %>
-	  <%# A prompt, so the box does not sit there naming whichever authority sorts
-	      first and inviting a fetch nobody asked for. Submitting it blank is
-	      already refused: fetch_rates checks RateSourceConfig.exists? before it
-	      does anything. %>
 	  <%= f.select :source, @fetchable_sources,
 	        { prompt: t("exchange_rates.choose_source") },
 	        class: "select-small", aria: { label: t("exchange_rates.source") } %>
@@ -46,15 +32,12 @@
 	<table>
   		<thead>
   		  <tr>
-  		    <%# Not a date: period_label renders a SPAN — a single day, a whole
-  		        month, or a range. "Date" described none of the three. %>
   		    <th><%= t("exchange_rates.index.valid_for") %></th>
   		    <th><%= t("exchange_rates.index.from") %></th>
   		    <th><%= t("exchange_rates.index.to") %></th>
   		    <th><%= t("exchange_rates.index.rate") %></th>
   		    <th><%= t("exchange_rates.index.source") %></th>
-			<%# Always present: which ROWS carry buttons now varies per rate, so a
-			    column that appears only for sudo would put the table out of step. %>
+			<%# Unconditional: the buttons vary per ROW, so the column must not. %>
   		    <th></th>
   		  </tr>
   		</thead>
@@ -66,10 +49,6 @@
   		      <td><%= rate.to_currency %></td>
   		      <td><%= number_with_precision(rate.rate, precision: 6) %></td>
   		      <td><%= rate.source %></td>
-			  <%# Per RATE, not per admin. A shared ECB row is sudo's; a hole
-			      nothing can fetch, or this business's own rate, is theirs. Showing
-			      a button that the policy would then refuse is worse than showing
-			      none. %>
 			  <% if @writable_rates[rate.id] %>
   		      <td>
   		        <%= link_to edit_exchange_rate_path(rate),
@@ -86,8 +65,7 @@
 					<% end %>
   		      </td>
 			  <% else %>
-			  <%# An empty cell, not no cell. Skipping it would put this row one
-			      column short of the header and every other row. %>
+			  <%# Empty cell, not no cell — the row must keep its column count. %>
 			  <td></td>
 			  <% end %>
   		    </tr>
