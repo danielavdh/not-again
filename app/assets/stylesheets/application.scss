@@ -54,7 +54,7 @@ overflow-x: hidden;
 					}
 				}
 			}
-			@media( max-width: 500px ){
+			@media( max-width: #{$phone} ){
 				padding: 4vw 0 3.5vw;
 				.brand a{
 				font-size: 0.94rem;
@@ -69,7 +69,7 @@ overflow-x: hidden;
 		}
 		.hero{
 		padding: 2.9vw 0 3vw;
-			@media(max-width: 500px){
+			@media(max-width: #{$phone}){
 			padding: 5vw 0 5vw;
 			}
 			.eyebrow{
@@ -132,7 +132,7 @@ overflow-x: hidden;
 				letter-spacing: .25em;
 				margin-inline-start: -1.8rem; 
 				}
-				@media(max-width: 500px){
+				@media(max-width: #{$phone}){
 				font-size: 0.7rem; 
 				line-height: 1.2;
 				margin-top: 0.5vw;
@@ -177,7 +177,7 @@ overflow-x: hidden;
 			transform: skewX(-12deg) scaleX(0); transform-origin: left;
 			animation: strike .7s cubic-bezier(.2,.8,.2,1) .5s forwards;
 			}
-			@media(max-width: 500px){
+			@media(max-width: #{$phone}){
 				h1{
 				margin-bottom: 8vw;
 				line-height: 1;
@@ -214,12 +214,12 @@ overflow-x: hidden;
 					will-change: opacity;
 					}
 				}
-				@media(max-width: 500px){
+				@media(max-width: #{$phone}){
 				font-size: 22px;
 				}
 			}
 			.subline.demo{
-				@media(max-width: 500px){
+				@media(max-width: #{$phone}){
 				line-height: 1;
 				}
 			}
@@ -228,7 +228,7 @@ overflow-x: hidden;
 			margin: 3vw 0 4vw;
 			font-size: 1.2rem;
 			color: var(--muted);
-				@media(max-width: 500px){
+				@media(max-width: #{$phone}){
 				font-size: 1rem;
 				margin: 5vw 0 10vw;
 				}
@@ -273,7 +273,7 @@ overflow-x: hidden;
 				font-size: 0.86rem;
 				color: var(--muted);
 				}
-				@media(max-width: 500px){
+				@media(max-width: #{$phone}){
 				gap: 4vw 8vw;
 				align-items: stretch;
 					.btn{
@@ -381,7 +381,7 @@ overflow-x: hidden;
 					grid-column: 1 / -1;
 					}
 				}
-				@media(min-width: 900px){
+				@media(min-width: #{$desktop}){
 					.door{
 					width: 30vw;
 					}
@@ -423,7 +423,7 @@ overflow-x: hidden;
 			.cell:last-child{ 
 			border-inline-end:none; 
 			}
-			@media(max-width: 500px){
+			@media(max-width: #{$phone}){
 			grid-template-columns:repeat(2,1fr);
 				.cell{
 					.k{
@@ -498,7 +498,7 @@ overflow-x: hidden;
 					}
 				}
 			}
-			@media(max-width: 500px){
+			@media(max-width: #{$phone}){
 			padding: 12vw 0 4vw;
 				.sec-head{
 				font-size: 0.75rem;
@@ -561,7 +561,7 @@ overflow-x: hidden;
 			background: var(--paper);
 			color: var(--ink);
 			}
-			@media(max-width: 500px){
+			@media(max-width: #{$phone}){
 				p{
 				font-size: 0.8125rem;
 				margin-top: 5vw;
@@ -609,7 +609,7 @@ overflow-x: hidden;
 					}
 				}
 			} 
-			@media(max-width: 500px){
+			@media(max-width: #{$phone}){
 			font-size: 0.7rem;
 				div.contrast form button{
 				--svg-width: 3.5vw;
@@ -742,7 +742,7 @@ body.welcome.easy_manual, body.welcome.pro_manual{
 		}
 	}
 }
-@media (max-width: 450px) {
+@media (max-width: #{$phone}) {
 	body.welcome.easy_manual, body.welcome.pro_manual{
 		#page #main{
 			div.guide{
@@ -849,7 +849,7 @@ background-color: var(--bkgg);
 		}
 	}
 }
-@media (min-width: 500px) {
+@media (min-width: #{$phone}) {
 	body.welcome.legal{
 		#page{
 			// in menu.scss

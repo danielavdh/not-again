@@ -1087,6 +1087,7 @@ nl:
       gb: "Verenigd Koninkrijk"
       de: "Duitsland"
       ch: "Zwitserland"
+      nl: "Nederland"
     section:
       income: "Inkomsten"
       expenses: "Uitgaven"

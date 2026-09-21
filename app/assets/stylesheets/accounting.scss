@@ -2,18 +2,18 @@
 @use 'sass:color';
 @use 'shared/colors' as *;
 @use 'shared/config' as *;
-@use 'accounting/config' as *;
+//@use 'accounting/config' as *;
 @use 'shared/base' as *;
-@use 'accounting/base' as *;
+//@use 'accounting/base' as *;
 @use 'shared/menu';
 @use 'accounting/accounts';
-//@use 'accounting/receipts';
 
 body {
-color: $backend_text;  // is black
+color: var(--color);  // is black
 background-color: var(--green);
 	#page{
 	text-align: start;
+		#menu{/* in shared/menu.scss */}
 		#main{
 /***************************************************************/
 /***************** INDEX *** INDEX *** INDEX *******************/
@@ -142,7 +142,7 @@ background-color: var(--green);
 						display: inline;
 						}
 					}
-					@media (min-width: 900px) {
+					@media (min-width: #{$desktop}) {
 						span{
 						margin: 0.5vw 0;
 						}
@@ -271,13 +271,14 @@ background-color: var(--green);
 /*** SMALL<500 *** SMALL<500 *** SMALL<500 *** SMALL<500 ***/
 /*** SMALL<500 *** SMALL<500 *** SMALL<500 *** SMALL<500 ***/
 /*** SMALL<500 *** SMALL<500 *** SMALL<500 *** SMALL<500 ***/
-@media (max-width: 500px) {
+@media (max-width: #{$phone}) {
 	body{
 		#page{
 			#main{
 				#new_edit_view{
+				margin-bottom: 20vw;
 					h1{
-					margin: 3vw 0;
+					margin: 5vw 0;
 					}
 					p.hint{
 					margin-bottom: 4vw;
@@ -290,7 +291,7 @@ background-color: var(--green);
 /*************** BIG>900 *************** BIG>900 ***************/
 /*************** BIG>900 *************** BIG>900 ***************/
 /*************** BIG>900 *************** BIG>900 ***************/
-@media (min-width: 900px) {
+@media (min-width: #{$desktop}) {
 	body{
 		#page{
 			#main{

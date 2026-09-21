@@ -90,7 +90,7 @@ width: $width;
 		height: 5.66vw;
 		}
 	}
-	@media (max-width: 450px){
+	@media (max-width: #{$phone}){
 	font-size: 0.85rem;
 		td, th {
 	  	padding: 1vh 1vw;
@@ -111,7 +111,7 @@ width: $width;
 		margin-top: 0.5vw;
 		}
 	}
-	@media (min-width: 900px){
+	@media (min-width: #{$desktop}){
 	font-size: 0.85rem;
 		th{
 		padding: 2vh 1vw;
@@ -297,7 +297,7 @@ width: $width;
 	bottom: 0;
 //	width: 50vw;
 	height: 10vw;
-	padding: 0.5vw 12vw 4vw;
+//	padding: 0.5vw 12vw 4vw;
 //	padding: 0.5vw var(--action-padding, 12vw) 4vw;
 	padding: 0.5vw 0 4vw;
 	background-color: var(--green-l-8);
@@ -318,9 +318,13 @@ width: $width;
 			}
 		}
 	}
-	@media (max-width: 450px){
+	@media (max-width: #{$phone}){
 		select{
 		max-width: 90vw;
+		}
+		.field{
+		margin: 2vw 0;
+		padding: 3vw 2vw 3vw;
 		}
 		.field.flex{
 		flex-wrap: wrap;
@@ -333,14 +337,16 @@ width: $width;
 			}
 		}
 		.actions{
+		inset-inline-start: initial;
+		inset-inline-end: 0;
 		height: 15vw;
-		padding: 0.5vw 6vw 4vw;
+		padding: 1vw 2vw 4vw;
 			input[type="submit"]{
 			padding: 2.5vw 3vw 8vw;
 			}
 		}
 	}
-	@media (min-width: 900px){
+	@media (min-width: #{$desktop}){
 		.field{
 		width: var(--field-width, 43vw);
 			input, textarea, label{
@@ -474,10 +480,10 @@ z-index: 100;
 		color: white;
 		}
 	}
-	@media (max-width: 450px){
+	@media (max-width: #{$phone}){
 	height: 18vw;
 	}
-	@media (min-width: 900px){
+	@media (min-width: #{$desktop}){
 	height: 5vw;
 	padding: 0 1.25vw;
 		a, button{
@@ -489,7 +495,6 @@ z-index: 100;
 @mixin input_date(){
 appearance: none; 
 -webkit-appearance: none;
-//font-size: 90%;
 font-size: 0.9rem;
 padding: 0.3vw 0.7vw;
 background-color: var(--bkgg);

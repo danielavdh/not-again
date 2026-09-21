@@ -23,42 +23,43 @@
 
 
 <div class="crud_navigation">
-  <%= link_to t("crud.dashboard"),
-    dashboard_path,
-    class: "backend_link button green no-halfpad" %>
-  <%= link_to t("crud.back_to", name: @report.report_group.display_name),
-    report_group_path(@report.report_group),
-    class: "backend_link button" %>
-  <%= link_to report_path(@report, currency: @display_param, version: 'short'),
-    class: "button #{@short_version ? 'yellow' : 'green'}",
-    data: { version: 'short' } do %>
-    <span class="big-screen"><%= t(".short") %></span>
-    <svg class="small-screen stroke s30"><use xlink:href='#short'></use></svg>
-  <% end %>
-  <%= link_to report_path(@report, currency: @display_param, version: 'long'),
-    class: "button #{@short_version ? 'green' : 'yellow'}",
-    data: { version: 'long' } do %>
-    <span class="big-screen"><%= t(".long") %></span>
-    <svg class="small-screen stroke s30"><use xlink:href='#long'></use></svg>
-  <% end %>
+	<%= link_to t("crud.dashboard"),
+		dashboard_path,
+		class: "backend_link button green no-halfpad" %>
 
-  <%# One CSV button for every report. For a tax report it mirrors the
-      categorised screen (summary or detail per the toggle); for a custom
-      report it is the account list (summary or detail). %>
-  <%= link_to t("crud.csv"),
-    report_path(@report, currency: @display_param, version: @short_version ? 'short' : 'long', format: :csv),
-    class: 'button green',
-    data: { sure: t("crud.csv_confirm") } %>
+	<%= link_to t("crud.back_to", name: @report.report_group.display_name),
+		report_group_path(@report.report_group),
+		class: "backend_link button no-phone" %>
 
-  <%# The emailed export is for every report: transactions with receipt links, and
-      DATEV for German entities, built from THIS report's accounts. A tax report
-      adds its category summary to the same email. %>
-  <%= button_to t(@report.tax_report? ? "reports.tax_export_email" : "reports.export_email"),
-    tax_export_report_path(@report, currency: @display_currency),
-    method: :post,
-    class: 'button green' %>
-  <button id="print-button" class="button green print-report">
-    <span class="bigger-screen"><%= t("crud.print") %></span>
-    <svg class="tiny-screen stroke s20"><use xlink:href='#print'></use></svg>
-  </button>
+	<%= link_to report_path(@report, currency: @display_param, version: 'short'),
+			class: "button #{@short_version ? 'yellow' : 'green'}",
+			data: { version: 'short' } do %>
+		<span class="big-screen"><%= t(".short") %></span>
+		<svg class="small-screen stroke s30"><use xlink:href='#short'></use></svg>
+	<% end %>
+
+	<%= link_to report_path(@report, currency: @display_param, version: 'long'),
+			class: "button #{@short_version ? 'green' : 'yellow'}",
+			data: { version: 'long' } do %>
+		<span class="big-screen"><%= t(".long") %></span>
+		<svg class="small-screen stroke s30"><use xlink:href='#long'></use></svg>
+	<% end %>
+	
+	<%= link_to t("crud.csv"),
+			report_path(@report, 
+			currency: @display_param, 
+			version: @short_version ? 'short' : 'long', 
+			format: :csv),
+			class: 'button green',
+			data: { sure: t("crud.csv_confirm") } %>
+	
+	<%= button_to t(@report.tax_report? ? "reports.tax_export_email" : "reports.export_email"),
+			tax_export_report_path(@report, currency: @display_currency),
+			method: :post,
+			class: 'button green' %>
+	
+	<button id="print-button" class="button green print-report">
+		<span class="bigger-screen"><%= t("crud.print") %></span>
+		<svg class="tiny-screen stroke s15"><use xlink:href='#print'></use></svg>
+	</button>
 </div>

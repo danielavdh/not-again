@@ -23,7 +23,7 @@ function isHidden(el) {
 /* Check for small screen and toggle language in menu */
 export function toggleLanguageBar(){
 	delegate(document, 'click', '.lang-toggle', (e) => {
-		const phoneMenu = document.querySelector('.phone_menu');
+		const phoneMenu = document.querySelector('.touch_menu');
 		if (!phoneMenu || isHidden(phoneMenu)) return;
 		const selector = document.getElementById('language-selector');
 		if (selector.classList.contains('hidden')) {

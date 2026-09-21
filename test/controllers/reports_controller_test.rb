@@ -611,12 +611,25 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   # Archives::BooksCsv pulls the whole family's ledger for one member's
   # scope_key, so partial access to a family must not create OR download it.
   class FamilyArchiveAccessTests < ActionDispatch::IntegrationTest
+    # ⚠️ A DEDICATED id per test, for the same reason the tests above use a
+    # dedicated entity CODE each — and it has to be the id, not the code,
+    # because a family's archives live under `g<EntityGroup id>`.
+    #
+    # Parallel workers get a database each but SHARE the real disk under
+    # public/uploads/archives/. Left to the sequence, every worker's first
+    # EntityGroup is id 1, so all three of these tests write to `archives/g1/`
+    # at once — and "create_archive is refused" asserts that directory is
+    # EMPTY while "download_archive is refused" is busy putting a file in it.
+    # Green alone, red at random in a full run, and only ever on the machine
+    # that happened to interleave them.
+    GROUP_IDS = { create: 9101, download: 9102, both: 9103 }.freeze
+
     def cleanup(scope_key)
       FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", scope_key))
     end
 
     test "create_archive is refused with access to only one family member" do
-      group = EntityGroup.create!(name: "Family archive test create")
+      group = EntityGroup.create!(id: GROUP_IDS[:create], name: "Family archive test create")
       e1 = Entity.create!(name: "FamC 1", code: "31", active: true, entity_group: group)
       Entity.create!(name: "FamC 2", code: "32", active: true, entity_group: group)
       admin = admins(:read_only)
@@ -632,7 +645,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     end
 
     test "download_archive is refused with write access to only one family member" do
-      group = EntityGroup.create!(name: "Family archive test download")
+      group = EntityGroup.create!(id: GROUP_IDS[:download], name: "Family archive test download")
       e1 = Entity.create!(name: "FamD 1", code: "33", active: true, entity_group: group)
       e2 = Entity.create!(name: "FamD 2", code: "34", active: true, entity_group: group)
       admin = admins(:two) # full_access is fixture default
@@ -651,7 +664,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     end
 
     test "full access to every family member unlocks both create and download" do
-      group = EntityGroup.create!(name: "Family archive test both")
+      group = EntityGroup.create!(id: GROUP_IDS[:both], name: "Family archive test both")
       e1 = Entity.create!(name: "FamB 1", code: "35", active: true, entity_group: group)
       e2 = Entity.create!(name: "FamB 2", code: "36", active: true, entity_group: group)
       admin = admins(:read_only)
