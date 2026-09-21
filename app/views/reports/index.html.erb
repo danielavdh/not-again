@@ -6,13 +6,7 @@
 
   <%= render partial: 'shared/flash' %>
 
-  <%# No trial balance or P&L here. Everything on this page is a SAVED report
-      belonging to an entity; those two are live reports across everything you
-      can see, so they had no scope in this context. They live on the dashboard,
-      where each entity — or each family, once — has its own set.
-
-      Archives (§8) share this table with saved reports, rather than a page of
-      their own — see Reports::Row and reports_controller#index. %>
+  <%# Everything here is a SAVED report belonging to an entity. The trial balance and P&L are live reports across everything you can see, so they live on the dashboard. Archives share this table — see Reports::Row. %>
 
   <table>
     <thead>
@@ -45,16 +39,12 @@
 		    <%=l row.period_start, format: :short_date %> - <%=l row.period_end, format: :short_date %>
 		  <% end %>
 		  </td>
-          <%# Matches the <th> above: the actions column is hidden on phones,
-              because the books are not kept on a phone. %>
+          <%# Matches the <th> above: hidden on phones, because the books are not kept on a phone. %>
           <td class="actions no-phone">
           <% if row.archive? %>
-            <%# No small-screen icon variant exists for "download" — the text
-                label is shown at every width this column is visible at. %>
             <%= link_to t("reports.index.download"), download_archive_reports_path(key: row.archive_key),
                   class: 'backend_link button green' %>
-            <%# A year-end archive is the permanent record of an actual close,
-                not a convenience copy — no delete for those, ever. %>
+            <%# A year-end archive is the permanent record of a close, not a convenience copy — no delete, ever. %>
             <% unless row.year_end? %>
               <%= button_to t("reports.index.delete_archive"), destroy_archive_reports_path(key: row.archive_key),
                     method: :delete, class: 'backend_link button green', data: { sure: t("crud.sure") } %>

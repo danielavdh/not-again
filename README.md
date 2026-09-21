@@ -237,7 +237,7 @@ Leave that terminal window open. Closing it stops the app.
 
 Email is the exception: it really does try to send mail, using whatever mail settings are in the settings file. Without email settings, anything that sends an email — a password reset, an export — stops with an error rather than failing quietly, because `config/environments/development.rb` sets `raise_delivery_errors = true`.
 
-Once you have mail settings — [Email — Brevo](docs/provider-setup.md#4-email--brevo) covers getting them — add them with `EDITOR="nano -w" bin/rails credentials:edit`. The `smtp:` block is shown under [Configuration](#configuration-steps-2-and-3).
+Once you have mail settings — [Email — Scaleway Transactional Email](docs/provider-setup.md#4-email--scaleway-transactional-email) covers getting them — add them with `EDITOR="nano -w" bin/rails credentials:edit`. The `smtp:` block is shown under [Configuration](#configuration-steps-2-and-3).
 
 ⚠️ That is a YAML file, so **indentation is not decoration**: two spaces, spaces and never tabs, and every key under `smtp:` lined up with the others. A misaligned line is not a warning — it stops the app from starting.
 
@@ -287,7 +287,7 @@ Three accounts, none of which has to be with the providers named here:
 |---|---|---|
 | A server | to run it | Hetzner (DE), Scaleway (FR), OVH (FR), Infomaniak (CH) |
 | S3-compatible object storage | receipts and filing archives | Scaleway (FR), OVH (FR), Infomaniak (CH) |
-| An SMTP provider | password resets, export notices | Brevo (FR), Scaleway TEM (FR), Infomaniak (CH) |
+| An SMTP provider | password resets, export notices | Scaleway TEM (FR), Infomaniak (CH) |
 
 Optionally a CDN — Bunny (SI) — and DNS from ClouDNS (BG) or your registrar. If you want to thank the author: keep all of it in Europe.
 
@@ -305,7 +305,7 @@ Each one is explained below.
 
 ### Set up the services (step 1)
 
-The reference installation at not-again.eu uses Hetzner for the server, Scaleway for the S3 buckets, Brevo for email, Bunny as an asset host and ClouDNS for DNS. **[docs/provider-setup.md](docs/provider-setup.md) walks through each one**, screen by screen — including encrypting the volume the database sits on, and the GitHub token the deploy needs.
+The reference installation at not-again.eu uses Hetzner for the server, Scaleway for the S3 buckets and email, Bunny as an asset host and ClouDNS for DNS. **[docs/provider-setup.md](docs/provider-setup.md) walks through each one**, screen by screen — including encrypting the volume the database sits on, and the GitHub token the deploy needs.
 
 When you come back, you have (and must have):
 
@@ -370,10 +370,10 @@ s3:           # any S3-compatible provider (scaleway/paris in this example)
   access_key:    <access key>
   secret_key:    <secret key>
 
-smtp:        # example uses brevo
-  server:   <smtp-relay.brevo.com>
+smtp:        # example uses Scaleway Transactional Email
+  server:   <smtp.tem.scaleway.com>
   port:     <587>
-  username: <xxxxxxxxx@smtp-brevo.com (login=username)>
+  username: <your Scaleway project ID>
   password: <xsmtpsib-very-long-number (smtp-key=password)>
 
 active_record_encryption:            # bin/rails db:encryption:init generates these
@@ -588,7 +588,7 @@ wording. The identity — name, address, contact, service name, hostname — fil
 in from `CONTACT_*` / `SERVICE_NAME` / `APP_HOST`. Everything else is your legal
 document now, and needs your eye:
 
-- **"Where your data is stored"** — it names Hetzner, Scaleway, OVH and Brevo.
+- **"Where your data is stored"** — it names Hetzner, Scaleway and OVH.
   Change it to your own providers and their locations. Plain text in
   `app/views/help/legal_{en,de,nl,es}.html.erb`.
 - **"How long we keep it"**, **"Your rights"** — written for EU/UK/CH. If your

@@ -1,8 +1,6 @@
 <% content_for :title, t("filing.title", authority: @authority, name: @entity.name) %>
 
-<%# Submitting from this page calls the authority, and some of what the call
-    carries can only be read in the browser. The connector says whether it wants
-    anything; scripts/index.js starts the named collector. %>
+<%# Some of what the call carries can only be read in the browser. The connector says whether it wants anything; index.js starts the named collector. %>
 <div class="backend_table" data-browser-collector="<%= @browser_collector %>">
 
   <%= render "shared/flash" %>
@@ -28,10 +26,7 @@
     <%= render "filing/periods", obligations: @obligations, entity: @entity, scheme: @scheme, authority: @authority, report_periods: @report_periods %>
   <% end %>
 
-  <%# Whatever this authority shows and the others do not. Declared by the
-      connector (Filing::Base#panel_partial), so this page never names one.
-      Outside the branches above because these are statements about the SOFTWARE,
-      not about the data — they show even when no obligations came back. %>
+  <%# Whatever this authority shows and others do not, declared by the connector. Outside the branches above because these are statements about the SOFTWARE, so they show even with no obligations. %>
   <% if @panel_partial %>
     <%= render partial: @panel_partial,
                locals: { authority: @authority, business: @business || [], filed: @filed } %>
@@ -42,9 +37,7 @@
   <dialog id="filing-submission-modal"
           data-text-error="<%= t('filing.not_available') %>">
     <button data-modal-close class="filing-modal-close" aria-label="<%= t('crud.close', default: 'Close') %>">&times;</button>
-    <%# Points at whichever submission the modal is showing — the opening button
-        carries the URL, and index.js copies it here. Without this a past
-        submission could be read on screen but never printed. %>
+    <%# index.js copies the URL here from the opening button. Without it a past submission could be read on screen but never printed. %>
     <a data-submission-print href="#" target="_blank" rel="noopener"
        class="backend_link button green"><%= t("filing.print_link") %></a>
     <div data-submission-content></div>

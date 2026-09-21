@@ -1,23 +1,6 @@
-<%# Business-family control for admin/show. Posts to the ENTITY update (one save
-    path) with group_only=1, which lets a full-access admin set ONLY the family
-    (EntitiesController#authorize_update). Locals: entity, groups, allow_create.
-    A plain path, not a subdomain-qualified URL: admins/show only renders this
-    section on the accounts host, so the form and the page share an origin. It
-    used to hard-code the host, and posting across hosts is exactly what Rails'
-    CSRF origin check refuses — which is why this button used to land you on the
-    login page saying your session had expired.
+<%# Locals: entity, groups, allow_create. Posts to the ENTITY update with group_only=1, so a full-access admin can set only the family. A plain path, not a host-qualified URL — posting across hosts is what Rails' CSRF origin check refuses.
 
-    Two different forms, never both at once: an ALREADY-grouped entity gets
-    only the "leave" checkbox (no select — joining is a one-way door once it
-    happens, see Entity#family_ties_do_not_block_leaving); an ungrouped one
-    gets a picker to join an existing family it fully holds, or — only when
-    allow_create is true, i.e. another ungrouped entity exists to form a
-    brand-new family WITH — a TomSelect that can also type a new name. With
-    only one entity ever available, "create a group" is meaningless (there is
-    nothing to put in it besides itself), so a plain select with a "choose a
-    family" prompt and the real option(s) replaces it — never pre-selected,
-    even when there is only one family to choose, so joining is always a
-    deliberate choice (Daniela, 2026-09-07). %>
+    Two forms, never both: a grouped entity gets only the leave checkbox (joining is one-way, see Entity#family_ties_do_not_block_leaving); an ungrouped one gets a picker, which can also create a family when another ungrouped entity exists to form it with. Never pre-selected, so joining is always deliberate. %>
 <% if entity.entity_group_id? %>
   <%= form_with url: entity_path(entity), method: :patch, class: "form_entity" do |f| %>
     <%= hidden_field_tag :group_only, 1 %>

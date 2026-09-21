@@ -45,6 +45,5 @@
 <div class="crud_navigation">
 		<%= link_to t("crud.back"), entities_path, class: "backend_link button green" %>
 		<%= link_to t("crud.edit"), edit_entity_path(@entity), class: "backend_link button green" %>
-		<%# Tax setup is not repeated here — the report overview above renders the
-		    entity's tax row, so it would be the same button twice on one page. %>
+		<%# Tax setup is not repeated here — the report overview above already renders that row. %>
 </div>

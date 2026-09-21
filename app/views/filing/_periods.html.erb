@@ -31,9 +31,7 @@
                             data: { sure: "#{t('filing.submit_confirm', authority: authority)} #{l(ob[:start_date], format: :short_date)} – #{l(ob[:end_date], format: :short_date)}?" },
                             class: "backend_link button #{ob[:overdue] ? 'red' : 'green'}" %>
             <% end %>
-            <%# What is in this figure? The submission shows totals; a report shows
-                the accounts behind them, and can be exported. Offered, never
-                made automatically — see FilingController#report. %>
+            <%# The submission shows totals; a report shows the accounts behind them. Offered, never made automatically. %>
             <%= button_tag t("filing.report.add"), type: "button",
                            class: "backend_link button",
                            data: { action: "open-modal",
@@ -44,12 +42,9 @@
     </tbody>
   </table>
 
-  <%# The dates the report will carry, worked out once by the connector from the
-      obligations it already has — asking per row would be an API call per row. %>
+  <%# Worked out once by the connector from obligations it already holds — asking per row would be an API call per row. %>
   <% obligations.each do |ob| %>
-    <%# Falls back to the obligation's own start: before 2025-26 a submission
-        covers just the quarter, and that is also the honest answer if the
-        cumulative range could not be worked out. %>
+    <%# Falls back to the obligation's own start: before 2025-26 a submission covers just the quarter, and that is also the honest answer if the cumulative range could not be worked out. %>
     <%= render "filing/add_report_modal", entity: entity, scheme: scheme, ob: ob,
                                               period_start: (report_periods[ob[:period_id]] || []).first || ob[:start_date] %>
   <% end %>

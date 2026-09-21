@@ -1,4 +1,3 @@
-<%# The currencies this installation supports. Adding one is data, not a deploy. %>
 <% content_for :title, t("currencies.index.title") %>
 
 <div class="backend_table no-print">
@@ -16,8 +15,6 @@
         <th><%= t("currencies.index.code") %></th>
         <th><%= t("currencies.index.symbol") %></th>
         <th><%= t("currencies.index.example") %></th>
-        <%# Which publishers we already hold rates from. A currency with none is
-            the case worth seeing: its rates have to be entered by hand. %>
         <th><%= t("currencies.index.published_by") %></th>
         <th></th>
       </tr>
@@ -28,10 +25,7 @@
           <td><%= currency.code %></td>
           <td><%= currency.symbol %></td>
           <td><%= CurrencyConfig.format_cents(123_456, currency.code) %></td>
-          <%# Which sources we hold rates from — a stored rate IS the proof of
-              publication. Empty needs two different sentences: a currency added
-              since the last fetch has not had its turn, and saying "no source"
-              there is what made a freshly added UAH read as unsupported. %>
+          <%# A stored rate IS the proof of publication. Empty needs two sentences: a currency added since the last fetch has not had its turn yet. %>
           <td>
             <% sources = @held[currency.code].to_a %>
             <% if sources.any? %>
@@ -42,13 +36,7 @@
               <%= t("currencies.index.not_checked") %>
             <% end %>
           </td>
-          <%# Three different acts, and they are not interchangeable:
-                edit        — full access, until anything rests on the currency
-                delete      — full access, only while NOTHING rests on it
-                deactivate  — SUDO, and it means the currency has ceased to exist
-              Deactivate used to be what Delete silently became once a currency
-              was in use, which let a full-access admin retire a currency for
-              every other admin from a button labelled Delete. %>
+          <%# Three different acts: edit (full access, until anything rests on it), delete (full access, only while nothing does), deactivate (SUDO — the currency has ceased to exist). %>
           <td class="actions">
             <%= link_to edit_currency_path(currency), 
 					  class: 'backend_link button green' do %>
@@ -68,8 +56,7 @@
 
             <% if sudo? %>
               <% if currency.active? %>
-                <%# Warned even when the check passes: it is global, it is for
-                    every admin, and it stops rates being fetched. %>
+                <%# Warned even when the check passes: it is global and it stops rates being fetched. %>
                 <%= button_to t("currencies.deactivate"), deactivate_currency_path(currency),
                       method: :patch,
                       data: { sure: t("currencies.deactivate_confirm", code: currency.code) },

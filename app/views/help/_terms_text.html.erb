@@ -1,9 +1,4 @@
-<%# Shared by gates/terms_show and admin_mailer/terms_agreed — one fallback
-    chain instead of two copies of it. A released custom language's own
-    terms_textile wins if it has any; otherwise the shipped static partial
-    for this locale; otherwise English. Plain File.exist? rather than
-    template_exists? — this same partial renders inside a mailer, where an
-    ActionView helper isn't guaranteed to behave identically. %>
+<%# Shared by gates/terms_show and admin_mailer/terms_agreed. A released custom language's terms_textile wins, then the shipped partial for this locale, then English. File.exist? rather than template_exists? — this renders inside a mailer too. %>
 <% custom_html = Language.custom_doc_html("terms", I18n.locale) %>
 <% if custom_html %>
   <%= raw custom_html %>

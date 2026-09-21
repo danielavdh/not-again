@@ -16,7 +16,7 @@ Roughly what it costs: a small server around €4–5 a month, storage a few cen
     - [Encrypting that volume](#encrypting-that-volume)
 - [2. DNS — ClouDNS, or your registrar](#2-dns--cloudns-or-your-registrar)
 - [3. Object storage — Scaleway](#3-object-storage--scaleway)
-- [4. Email — Brevo](#4-email--brevo)
+- [4. Email — Scaleway Transactional Email](#4-email--scaleway-transactional-email)
 - [5. CDN — Bunny (optional)](#5-cdn--bunny-optional)
 - [6. The GitHub token for deploying](#6-the-github-token-for-deploying)
 - [7. Mirroring to a second provider — OVH (optional)](#7-mirroring-to-a-second-provider--ovh-optional)
@@ -277,24 +277,43 @@ The action is **Expiration**. Prefixes need the trailing slash.
 
 ---
 
-## 4. Email — Brevo
+## 4. Email — Scaleway Transactional Email
 
-Password resets and export notices go out over SMTP. Brevo's free tier is far more than this app will ever send.
+Every mail this app sends is transactional: resets, invitations, export notices. Scaleway TEM is built for exactly that. It does not rewrite links or add unsubscribe headers, as marketing platforms do. The free monthly allowance is far more than this app sends.
 
-1. **Create an account** for this installation.
-2. **Authenticate your domain**: Senders, Domains & Dedicated IPs → **Domains** → *Add a domain*. Brevo gives you records to add at your **DNS provider** — a verification code, two DKIM `CNAME`s and a `DMARC` `TXT`. Add them all, then come back and verify. Once per domain you send from.
-3. **Get an SMTP key**: Brevo → **SMTP & API** → generate one. The username (login) looks like `something@smtp-brevo.com`; the key is the password.
-4. Put them in credentials:
+Use the same Scaleway project as your storage (§3).
+
+1. **Add your domain**: console → **Domains & Web Hosting** → **Transactional Email** → add it.
+2. **Add the four records it shows** at your DNS provider, then wait for verification:
+    - SPF — `TXT` at the domain: `v=spf1 include:_spf.tem.scaleway.com -all`
+    - DKIM — `TXT` at `<id>._domainkey`
+    - MX — `blackhole.tem.scaleway.com`
+    - DMARC — `TXT` at `_dmarc`: `v=DMARC1; p=none` to start
+3. **Create a key that can only send mail.** IAM → **Applications** → create one, e.g. `<service>-mail`. IAM → **Policies** → give that application `TransactionalEmailFullAccess`, scoped to this project only. Then generate an API key for it and copy the **secret** — it is shown once.
+
+    A separate application because this key is the SMTP password: if it ever leaks, it can send mail and nothing else. Your receipts stay out of reach.
+
+4. Put it in credentials:
 
 ```yaml
 smtp:
-  server:   smtp-relay.brevo.com
+  server:   smtp.tem.scaleway.com
   port:     587
-  username: <the smtp-brevo.com login>
-  password: <the generated SMTP key>
+  username: <the project ID>
+  password: <that application's secret key>
 ```
 
-5. **Test it after deploying** — trigger a password reset and check it arrives.
+**Port 587**, not 465 or 25: the app upgrades the connection with STARTTLS, and Hetzner blocks outbound 25 and 465 by default.
+
+5. **Test the login before deploying** — it connects and authenticates but sends nothing:
+
+```bash
+bin/rails runner 'require "net/smtp"; c = Rails.application.credentials.smtp; s = Net::SMTP.new(c[:server], c[:port].to_i); s.enable_starttls_auto; s.start("<your domain>", c[:username], c[:password], :plain) { puts "OK" }'
+```
+
+`OK` means you are ready. `535 Permission denied` almost always means the policy is missing, or the username is the organisation ID instead of the project ID. IAM changes can take a minute to apply.
+
+6. **After deploying**, send yourself a password reset.
 
 ---
 

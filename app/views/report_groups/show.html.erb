@@ -26,10 +26,7 @@
 	    <% else %>
 			<li><%= t(".empty", model: "reports") %></li>
 	    <% end %>
-		<%# Outside the branch above: it used to sit inside it, so a group with no
-		    reports offered no way to make one. Tax groups are always created
-		    empty, which made it look like a rule about them — it was not, an
-		    empty custom group had the same problem. %>
+		<%# Outside the branch above, so a group with no reports still offers a way to make one. %>
 		<li>
 			<span class="flex">
 				<span></span>
@@ -61,13 +58,7 @@
 				<use xlink:href='#arrow_left'></use>
 			</svg>
 	<% end %>
-	<%# Both assignment screens save as you go now. The tax one always did — its
-	    accounts follow the tagging — while this one waited for a Save button, so
-	    a long selection was lost by walking away from it. The two looked the
-	    same and behaved differently, with nothing to say which was which.
-
-	    The status element carries its own words as data attributes: the script
-	    must not hold English, or the message stays English in every language. %>
+	<%# Both assignment screens save as you go. The status element carries its own words as data attributes — the script must not hold English, or the message stays English in every language. %>
 	<% unless @report_group.tax_report? %>
   	<%= link_to t("crud.edit"),
 		edit_report_group_path(@report_group),

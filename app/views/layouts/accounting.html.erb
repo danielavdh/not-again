@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<%# high-contrast rides on <html>, not on <body>. The custom properties live on
-    :root, and only a class on the root element reaches the root's own background
-    (the canvas you see when overscrolling), ::backdrop, and anything JS reads from
-    document.documentElement. %>
+<%# high-contrast rides on <html>: the custom properties live on :root, and only a class there reaches the root background, ::backdrop, and document.documentElement. %>
 <html lang="<%= I18n.locale %>" dir="<%= text_direction %>" class="<%= contrast_class %>">
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -22,7 +19,6 @@
   	<meta name="generator" content="rails 8.1" />
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
     <%= csrf_meta_tags %>
@@ -44,7 +40,9 @@
 
 		<%= render partial: "shared/svg_icons" %>
 
+		<% unless controller_name =~ /passwords|sessions/ %>
 		<%= render partial: "shared/menu" %>
+		<% end %>
 
 		<%= link_to legal_path, id: "legal-sticky", class: "no-print", "aria-label": "#{t('shared.menu.legal')} / Impressum", title: "legal/impressum" do %>
 			<svg><use xlink:href='#legal'></use></svg>

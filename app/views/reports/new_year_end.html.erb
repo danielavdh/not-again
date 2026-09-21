@@ -5,9 +5,7 @@
 
     <%= render partial: 'shared/flash' %>
 
-    <%# Already closing on some pattern: say what it is, and offer to change it.
-        Changing means the existing closes no longer describe the years wanted,
-        so they are removed and re-closed with the ordinary button. %>
+    <%# Changing the pattern means the existing closes no longer describe the years wanted, so they are removed and re-closed. %>
     <% unless @first_close %>
 	  <div class="change-financial-year">
       	<p><%= t("reports.year_end.current_pattern",
@@ -59,9 +57,7 @@
         </div>
 
         <div class="actions">
-          <%# The pattern has nowhere else to live — it IS the first closing entry —
-              so saving it and closing that year are one action. True whether this is
-              a first close or a re-choice after changing the year end. %>
+          <%# The pattern has nowhere else to live — it IS the first closing entry — so saving it and closing that year are one action. %>
           <%= submit_tag t("reports.year_end.continue"),
                 data: { sure: t("reports.year_end.confirm_pattern") } %>
         </div>
@@ -70,9 +66,7 @@
 
     <div class="crud_navigation">
       <%= link_to t("crud.cancel"), dashboard_path, class: "button" %>
-      <%# Only alongside the picker: it is an escape hatch from setting a pattern
-          at all. Reopening makes @first_close true again, so a pro user who wants
-          to hand-close from now on still meets it at the right moment. %>
+      <%# Only alongside the picker: an escape hatch from setting a pattern at all. Reopening makes @first_close true again. %>
       <% if @first_close && current_admin.full_access_pro? %>
         <%= link_to t("reports.year_end.do_it_myself"),
               pro_manual_path(anchor: "year-end"), class: "button" %>

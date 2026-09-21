@@ -4,10 +4,7 @@
               id: "#{action_name}_language",
               class: 'form_language' do |f| %>
 
-	<%# Locked once released, same reasoning as Currency's code/symbol: the
-	    routes check (ApplicationController#verify_locale_is_released) already
-	    depends on this code, so changing it out from under a released
-	    language would silently 404 every link pointing at it. %>
+	<%# Locked once released: verify_locale_is_released depends on this code, so changing it would silently 404 every link pointing at the language. %>
 	<% locked = language.persisted? && language.released? %>
 
 	<div class="field flex">

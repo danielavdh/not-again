@@ -22,9 +22,7 @@
     <% end %>
   </h2>
   
-  <%# Home group/entity/currency of the fixed bank — the cross-entity trigger
-      compares a selected account's group against this (one indexed lookup,
-      made once in load_form_data). %>
+  <%# The fixed bank's group/entity/currency — the cross-entity trigger compares a selected account against these. %>
   <table class="bank-postings-table" id="bank-postings-table"
          data-home-group="<%= @home_group_key %>"
          data-home-entity="<%= account.entity_code %>"
@@ -57,8 +55,7 @@
                    currency: account.currency,
                    entry_type: entry_type,
 				   account_id: account.id %>
-        <%# JE₂ mirror rows under the 601 gift — persisted on edit (#4), or submitted
-            params on an error re-render (#2, which wins). %>
+        <%# JE₂'s mirror rows: persisted on edit, or the submitted params on an error re-render, which win. %>
         <% if pf.object.cross_entity_link_id.present? &&
               (ce = @cross_entity_rerender&.[](pf.object.cross_entity_link_id) ||
                     @cross_entity_persisted&.[](pf.object.cross_entity_link_id)) %>

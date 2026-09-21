@@ -7,8 +7,7 @@
 	<h1><%= t("page.ledger", code: @account.code) %> - <%= @account.name %></h1>
 
 	<div class="controls">
-	<%# A locked account (the reserved 3EE9xx retained-earnings range) is written
-	only by the year-end flow, so it offers no way to book into it by hand. %>
+	<%# The reserved 3EE9xx retained-earnings range is written only by the year-end flow. %>
 		<% if @account.balance_account? && !@account.locked? %>
 			<%= link_to @account.equity? ? t(".new_drawing") : t(".new_deposit"),
 					new_deposit_account_path(@account),
@@ -49,7 +48,6 @@
 				<th class="right">
 					<%= credit_header_name(@account.account_type) %> (CR)
 				</th>
-				<%# ADD: Balance column for balance sheet accounts %>
 			  <% if @show_balance %>
 				<th class="right"><%= t("jargon.balance") %></th>
 			  <% end %>
@@ -203,7 +201,7 @@
 				  <% end %>
 				</td>
 			  <% else %>
-				<%# no-phone has to match the <th> and the other branch of this same column — hide the header without hiding the cell and the row runs one column wider than its heading. %>
+				<%# no-phone must match the <th> and the other branch of this column, or the row runs wider than its heading. %>
 				<td class="actions no-phone">
 					<%= link_to t("crud.edit"), ledger_edit_path(row), class: 'backend_link button green' if ledger_edit_path(row) %>
 				</td>

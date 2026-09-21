@@ -1,7 +1,4 @@
-<%# `fixed_type` present → cross-entity "add account on the fly" mode (#6): the
-    entity+type are fixed (encoded in code_prefix), so type & currency show as
-    read-only values, the code is pre-filled with its first 3 digits, and tax is
-    hidden. Normal new/edit pass none of these locals and are unaffected. %>
+<%# fixed_type present = the add-account-on-the-fly mode: entity and type are fixed, the code is pre-filled, tax is hidden. Normal new/edit pass no locals and are unaffected. %>
 <% ce = local_assigns[:fixed_type].present? %>
 <%= form_with model: account,
 			  local: true,
@@ -62,15 +59,7 @@
 	    <span class="error_message">
 	    <%= account&.errors[:currency].to_sentence %>
 	    </span><br />
-			<%# ⚠️ The FULL active list, deliberately — this and the exchange rate
-			    form are the two places a currency ARRIVES, so narrowing it here
-			    would make a currency unreachable the moment it was added.
-			    Everywhere else shows only what is in use; see
-			    BaseController#report_currencies.
-
-			    Grouped, because with a long list the ones this business already
-			    keeps books in are what you almost always want, and <optgroup>
-			    draws the heading and the rule with no CSS. %>
+			<%# ⚠️ The FULL active list: this and the exchange rate form are the two places a currency ARRIVES, so narrowing it would make a new one unreachable. Grouped, so the ones already in use come first. %>
 			<%= f.select :currency,
 									currency_options_for_account(account&.currency),
 									{ include_blank: true },
@@ -92,8 +81,7 @@
 	</div>
 
 
-	<%# Your own reminder of what belongs in this account, shown as the title when
-	    you hover its name. Never translated — it is what you wrote. %>
+	<%# Never translated — it is what the bookkeeper wrote. %>
 	<div class="field">
 	    <%= f.label :description, t("attrs.description") %>
 	    <span class="error_message">
@@ -133,8 +121,7 @@
 	<% end %>
 
   <% if ce %>
-    <%# In the add-account modal: keep submit + cancel together in .split-actions
-        (the form's normal .actions would visually merge with .crud_navigation). %>
+    <%# Keeps submit and cancel together; the form's normal .actions would merge with .crud_navigation. %>
     <div class="split-actions">
       <%= f.submit t(".create"), class: "button" %>
       <button type="button" class="button add-account-cancel"><%= t("crud.cancel") %></button>

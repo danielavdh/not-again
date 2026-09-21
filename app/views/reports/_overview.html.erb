@@ -2,16 +2,12 @@
 	<thead>
 		<tr class="entity-title">
 			<th>
-				<%# Names the set of books this table is about — the entity, never the
-				    signed-in admin. %>
+				<%# The entity, never the signed-in admin. %>
 				<span class="admin-name"><%= entity.name %> - <%= entity.code %></span>
 			</th>
 			<th>
 				<div>
-	  			<%# Year end likewise. Where a year is still open this is a link to the
-	  			    close screen, which is worth seeing; where one is closed it is a
-	  			    button that posts, and a demo clicking it is told what the demo
-	  			    page already told them. %>
+	  			<%# Open year: a link to the close screen. Closed: a button that posts. %>
 	  			<% if current_admin.full_access? || sudo? || current_admin.may_open_entry_forms? %>
 	  			  <% if last_closed_on(entity).present? %>
 	  			    <%= button_to t("reports.year_end.button"),
@@ -33,18 +29,13 @@
 				</div>
 			</th>
 		</tr>
-		<%# Entity-level tax actions live with the entity, not on the admin's own
-		    page: they are settings and doings OF this business, and this partial is
-		    the only place an entity reliably appears — acc/entities is sudo-only. %>
-		<%# The demo too: the tax setup screen is one of the more interesting
-		    things here, the link is a GET, and everything it can submit is
-		    refused by require_write_access. %>
+		<%# Tax actions belong to the business, and this partial is the only place an entity reliably appears — entities#index is sudo-only. %>
+		<%# The demo too: the link is a GET and everything it can submit is refused by require_write_access. %>
 		<% if sudo? || can_edit_for_entity?(entity.code) || current_admin.may_open_entry_forms? %>
 		  <tr class="entity-tax">
 		    <th class="firstCell"><%= t("entities.edit_tax.link") %>:</th>
 		    <th>
-		      <%# "Tax Setup" only while there is none — after that the row already
-		          says Tax, and the button is simply the way back in. %>
+		      <%# "Tax Setup" only while there is none; after that the row already says Tax. %>
 		      <%= link_to (Array(entity.tax_schemes).empty? ?
 		                     t("entities.edit_tax.setup") : t("crud.edit")),
 		            edit_tax_entity_path(entity),
@@ -52,10 +43,7 @@
 
 		      <% offers = entity.filing_offers %>
 		      <% offers[:connect].each do |offer| %>
-		        <%# New tab, matching the tax setup page — see the note in
-		            acc/entities/_filing_authority. Abandoning the authority's
-		            login leaves no way back: browser Back re-runs filing#connect
-		            and bounces straight out again. %>
+		        <%# New tab, as on the tax setup page: abandoning the authority's login leaves no way back — Back re-runs filing#connect and bounces out again. %>
 		        <%= link_to t("filing.connect", authority: offer[:authority]),
 		              filing_connect_entity_path(entity, connector: offer[:connector],
 		                                             taxpayer_id: offer[:taxpayer].id),
@@ -71,14 +59,9 @@
 		    </th>
 		  </tr>
 		<% end %>
-		<%# The books, portable, one click away — not a report you open, a file
-		    you take. Sits with Tax, not inside the report-groups list below, so
-		    it never reads as "one more thing to click into". See
-		    docs/known-limitations.md §8.
+		<%# Not a report you open, a file you take — so it sits with Tax rather than in the report-groups list. See docs/known-limitations.md §8.
 
-		    Gated on show_general_reports, same as the general-reports row below:
-		    a grouped member's archive is the FAMILY's (dashboard/index.html.erb's
-		    family-downloads div), one per family, not one per member. %>
+		    Gated on show_general_reports: a grouped member's archive is the FAMILY's, one per family, not one per member. %>
 		<% if local_assigns.fetch(:show_general_reports, true) %>
 		<tr class="entity-downloads">
 		  <th class="firstCell"><%= t(".downloads") %>:</th>
@@ -112,15 +95,14 @@
 	</thead>
 	
 	<tbody>
-	  <%# Tax report groups first (a business reads its returns before its own
-	      cuts of the data), then custom groups, then the add-group form. %>
+	  <%# Tax groups first, then custom, then the add-group form. %>
 	  <% report_groups = Array(report_groups).sort_by { |g| [ g.tax_report? ? 0 : 1, g.position.to_i ] } %>
 	  <% report_groups.each do |group| %>
 	    <tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
 	    	<td class="firstCell">
 				<div class="flex">
 	    	  		<span class="group-actions">
-				  		<%# Nothing on a tax report group is editable: its name is declared by the scheme and its accounts follow the tagging. Accounts are assigned in bulk on the group's show page, or one at a time on the account's own edit page. %>
+				  		<%# Nothing here is editable: the name is declared by the scheme and the accounts follow the tagging. Assign them on the group's show page, or on the account's own edit page. %>
 				  		<% if group.tax_report? %>
 				  		<span class="group-kind"><%= t("reports.overview.scheme") %></span>
 				  		<% else %>
@@ -132,15 +114,14 @@
 							</svg>
 				  		<% end %>
 				  		<% end %>
-	     				<%# A tax report group belongs to its scheme, not to the admin — it appears when the scheme is subscribed to and goes when it is discontinued. Deleting it by hand would leave the scheme with nowhere to show its accounts. %>
+	     				<%# A tax group belongs to its scheme: it appears when the scheme is subscribed to and goes when it is dropped. Deleting it by hand would leave the scheme nowhere to show its accounts. %>
 	     				<%= button_to t("crud.delete"),
 	     				  		report_group_path(group),
 	     				  		method: :delete,
 	     						class: "backend_link button green",
 	     				  		data: {sure: t("crud.sure")} if group.deletable? %>
 	    	  		</span>
-	    	  		<%# display_name, not name: a tax group's name is declared by its
-	     			    scheme ("DE-Vermietung") and never translated. %>
+	    	  		<%# display_name, not name: a tax group's name comes from its scheme and is never translated. %>
 	    	  		<%= link_to group.display_name,
 	     						report_group_path(group),
 	     						class: "group-name backend_link button" %>
@@ -190,10 +171,7 @@
 
 	    <% if local_assigns.fetch(:show_general_reports, true) %>
 	    <tr>
-	        <%# All three general reports call Entity.family_codes_for, so
-	            clicking one from a single member produces the WHOLE family's
-	            report — a trial balance only balances at family level. Say so,
-	            or the buttons read as if they were about this entity alone. %>
+	        <%# All three call Entity.family_codes_for, so clicking one from a single member produces the WHOLE family's report — a trial balance only balances at family level. %>
 	        <th class="firstCell emphasis"><%= t(".general_groups") %><%
 	            if entity.entity_group %> <%= t(".for_family", family: entity.entity_group.name) %><% end %>:</th>
 	        <th>

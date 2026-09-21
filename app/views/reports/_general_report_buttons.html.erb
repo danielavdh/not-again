@@ -1,5 +1,4 @@
-<%# entities: a comma-joined entity-code string. Reports auto-expand any member
-    to its whole consolidation family, so one member or the whole set both work. %>
+<%# locals: entities — a comma-joined code string. Reports expand any member to its whole family, so one member or the set both work. %>
 <span>
   <%= link_to t("reports.overview.trial_balance"),
         trial_balance_reports_path(entities: entities),

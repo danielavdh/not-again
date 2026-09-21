@@ -1,6 +1,4 @@
-<%# The saved tax report: the scheme's tagged accounts, grouped by tax
-    category, banded income / expenses / other with a net line. Same figures
-    the submission carries — data comes from Reports::TaxReport. %>
+<%# The scheme's tagged accounts, grouped by category, banded income / expenses / other with a net line. The same figures the submission carries. %>
 <% show_translated = translated_column?(@currencies_with_data, @display_currency, forced: true) %>
 <% colspan = report_colspan(@currencies_with_data, @display_currency, forced: true) %>
 <table class="reports">

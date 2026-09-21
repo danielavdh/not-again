@@ -170,9 +170,7 @@
 	</table>
 </div>
 
-<%# ============================================================ %>
-<%# CO-ADMINS SECTION %>
-<%# ============================================================ %>
+<%# ===== CO-ADMINS SECTION ===== %>
 
 <% if sudo? || (@admin == current_admin && @admin.full_access?) %>
 <div class="backend_table admin-show">
@@ -194,11 +192,7 @@
 		</thead>
 		<tbody>
 			<% @managed_admins.each do |coadmin| %>
-				<%# Scoped to @admin, not current_admin — this is @admin's own
-				    authorised table. For a non-sudo viewer @admin is always
-				    current_admin (enforced in the controller); for sudo viewing
-				    someone else's page, current_admin holds no entities of its
-				    own at all, so the anchor has to be whose page this is. %>
+				<%# @admin's own table, not the viewer's: for sudo, current_admin holds no entities at all. %>
 				<% @shared_links.fetch(coadmin.id, []).each do |ae| %>
 				<tr class="<%= cycle('list-line-odd', 'list-line-even', name: 'coadmins') %>">
 				  <% if sudo? %>
@@ -208,11 +202,6 @@
 					<td><%= t("access.#{ae.access_level}") %><% if coadmin.draft? %> — <%= t(".draft_label") %><% end %></td>
 					<td><%= ae.entity.code %></td>
 					<td>
-						<%# Never sudo — a draft's access level here is always
-						    read_only/upload_receipts (sudo grants full_access
-						    only), so managing it, draft or claimed, stays the
-						    full-access admin's business alone, same as the
-						    ordinary Remove button below (2026-09-19). %>
 						<% if coadmin.draft? %>
 							<% if !sudo? && current_admin.can_manage?(coadmin) %>
 								<%= button_to t(".resend_claim_email"),
@@ -226,17 +215,7 @@
 												email: coadmin.email_address) },
 										class: "backend_link button green" %>
 							<% end %>
-						<%# Row-level, not can_manage?(coadmin) — a coadmin who
-						    has become full_access on a DIFFERENT entity is
-						    still an ordinary coadmin on THIS one; this row's
-						    removal is between whoever holds full_access HERE
-						    and this row alone. can_manage? asks a person-wide
-						    question ("is this admin still a coadmin at all");
-						    this asks a row-wide one — conflating them hid the
-						    Remove button for a read_only grant on an entity I
-						    fully control, just because the same admin
-						    happened to be full_access elsewhere (found live,
-						    2026-09-19). %>
+						<%# Row-level, not can_manage?: a coadmin who is full_access on a DIFFERENT entity is still an ordinary coadmin on this one. can_manage? asks a person-wide question; this row asks about this grant alone. %>
 						<% elsif !sudo? && ae.removable_by?(current_admin) %>
 							<%= button_to t("crud.remove"),
 									admin_entity_path(ae),
@@ -260,31 +239,18 @@
 	<% if sudo? %>
 		<%= link_to 'Edit', edit_admin_path(@admin) %> |
 		<%= link_to 'Back', admins_path %>
-	<%# Any admin may edit themselves now, not just full_access — a claimed
-	    coadmin owns their own identity fields (2026-09-18) — except demo,
-	    who can reach the form (a plain GET) but is correctly refused on
-	    save. Showing Edit anyway was a dead end with no explanation
-	    (2026-09-19) — ensure_full_access_or_self already excludes demo
-	    from writing to its own id; this just stops offering the button. %>
+	<%# Demo can reach the form but is refused on save, so the button is hidden rather than offered as a dead end. %>
 	<% elsif @admin == current_admin && !demo_admin? %>
 		<%= link_to 'Edit', edit_admin_path(@admin),
 				class: "backend_link green button"%>
 	<% end %>
-	<%# Granting is sudo's or a full-access admin's alone (gated below), AND
-	    only makes sense on your OWN page — it's a general "go create/grant"
-	    shortcut, not an action about whoever @admin happens to be. Showing
-	    it while sudo is looking at admin X's page read like a button to
-	    grant access to X specifically, which it never was (2026-09-19). %>
+	<%# Only on your OWN page: it is a general create/grant shortcut, not an action about whoever @admin is. %>
 	<% if @admin == current_admin && (sudo? || current_admin.full_access?) %>
 		<%= link_to t(".grant_access"),
 				new_admin_path,
 				class: "backend_link button green" %>
 	<% end %>
-	<%# Never demo — leaving destroys the link to its own sandbox entity,
-	    the one thing keeping the public demo door working at all.
-	    Confirmed exploitable 2026-09-19 before EntitiesController#leave
-	    got its own demo guard; hiding the button too, not just refusing
-	    the action, same standard as the Edit link above. %>
+	<%# Never demo: leaving destroys the link to its sandbox entity, which is what keeps the public demo working. %>
 	<% if @admin == current_admin && !demo_admin? %>
 		<div class="offboarding">
 		<% @admin_entities.each do |ae| %>

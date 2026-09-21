@@ -25,13 +25,9 @@
             <td><%= taxpayer.display_name %></td>
             <td><%= taxpayer.authority_name %></td>
             <td><%= taxpayer.admin&.username || "—" %></td>
-            <%# Not a secret (it identifies, it does not grant) but a list of full
-                NINOs is still not something to leave on screen — masked to the
-                last character, enough to tell two apart. %>
+            <%# Not a secret — it identifies, it does not grant — but a list of full NINOs is still not something to leave on screen. %>
             <td><%= taxpayer.identifier_keys.filter_map { |k| taxpayer.masked_identifier(k) }.join(", ").presence || "—" %></td>
-            <%# The report groups filing with this taxpayer — the direct
-                relationship. Entity code included because two groups of the same
-                scheme (two trades, one person) would otherwise read alike. %>
+            <%# Entity code included because two groups of the same scheme — two trades, one person — would otherwise read alike. %>
             <td><%= taxpayer.report_groups.map { |g| "#{g.entity.code} · #{g.display_name}" }.sort.join(", ").presence || "—" %></td>
             <td>
               <%= taxpayer.connected? ?
@@ -39,9 +35,7 @@
                       expires: taxpayer.token_expires_at && "#{l(taxpayer.token_expires_at, format: :short_date)} #{taxpayer.token_expires_at.strftime('%H:%M')}") :
                     t("filing.not_connected_label") %>
             </td>
-            <%# Shared ones are here because they file for an entity you can
-                write to, so you may use and connect them — but the record stays
-                with whoever set the client up. %>
+            <%# Shared ones appear because they file for an entity you can write to, so you may use and connect them. The record stays with whoever set the client up. %>
             <td>
               <% if taxpayer.admin_id == current_admin.id %>
                 <%= link_to t("crud.edit"), edit_taxpayer_path(taxpayer, return_to: params[:return_to]),

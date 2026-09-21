@@ -12,8 +12,7 @@
             <% else %>
               <span class="parent-code"><%= account.code %></span>
             <% end %>
-            <%# title only when there is one — the bookkeeper's own note on what
-                belongs in this account. tag.span drops a nil attribute. %>
+            <%# The bookkeeper's own note on what belongs here, shown on hover. %>
             <%= tag.span account.name, class: "account-name",
                          title: account.description.presence %>
           <% end %>

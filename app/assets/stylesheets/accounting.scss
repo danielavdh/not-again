@@ -32,6 +32,9 @@ background-color: var(--green);
 					width: 30%;
 					}
 				}
+				@media (min-width: #{$desktop}) {
+				padding: 0 1vw 4vw;
+				}
 			}
 			.admin-show{
 			margin-bottom: 10vw;
@@ -92,6 +95,36 @@ background-color: var(--green);
 				td form{
 				@include label-checkbox;	
 				}
+				@media (min-width: #{$desktop}) {
+					td.entity-and-tax{
+					row-gap: 0.25vw;
+						> span{
+						grid-template-columns: subgrid;
+						column-gap: 0.5vw;
+						padding: 0.1vw 0;
+						border-bottom: none;
+							form{
+							align-items: center;
+								.ts-wrapper {
+								min-width: 20vw;
+								}
+								input[type="submit"]{
+								margin-inline-start: 0.5vw;
+								}
+							}
+							> span{
+							justify-self: end; 
+							margin-bottom: 0;
+								a{
+								margin-inline-start: 0.5vw;
+								}
+							}
+						}
+						> span:last-of-type{
+						border: none;
+						}
+					}
+				}
 			}
 			table.admin-show{
 			margin-bottom: 2vw;
@@ -116,6 +149,29 @@ background-color: var(--green);
 				}
 				p.light{
 				color: var(--blue-l40);
+				}
+				@media (max-width: #{$phone}) {
+				margin-bottom: 20vw;
+					h1{
+					margin: 5vw 0;
+					}
+					p.hint{
+					margin-bottom: 4vw;
+					}
+				}
+				@media (min-width: #{$desktop}) {
+					h1 span.sub-heading{
+					display: inline;
+					font-size: inherit;
+					color: inherit;
+						&::before { content: " \2014  "; }
+					}
+					.form_admin{
+					--select-fontsize: 0.75rem;
+					}
+					p.hint{
+					margin-bottom: 1vw;
+					}
 				}
 /*************** FORMS *** FORMS *** FORMS *********************/
 /************** .form_{model} **********************************/
@@ -156,9 +212,10 @@ background-color: var(--green);
 /***************************************************************/
 /**************** LOGIN *** LOGIN *** LOGIN ********************/
 /***************************************************************/
-			.login_form, .resend_form, .password_form, .form_user{
+			.login_form, .resend_form, .password_form{
 				fieldset{
-				margin: 20vw 1vw 0.5vw 1vw;
+				margin-block: 20vw 0.5vw;
+				margin-inline: 1vw 1vw;
 				width: 98vw;
 				padding: 3vw 7vw;
 				border: 0.5vw solid white;
@@ -266,90 +323,16 @@ background-color: var(--green);
 		}
 	}
 }
-/*** SMALL<500 *** SMALL<500 *** SMALL<500 *** SMALL<500 ***/
-/*** SMALL<500 *** SMALL<500 *** SMALL<500 *** SMALL<500 ***/
-/*** SMALL<500 *** SMALL<500 *** SMALL<500 *** SMALL<500 ***/
-@media (max-width: #{$phone}) {
-	body{
-		#page{
-			#main{
-				#new_edit_view{
-				margin-bottom: 20vw;
-					h1{
-					margin: 5vw 0;
-					}
-					p.hint{
-					margin-bottom: 4vw;
-					}
-				}
-			}
-		}
-	}
-}
 /*************** BIG>900 *************** BIG>900 ***************/
 /*************** BIG>900 *************** BIG>900 ***************/
 /*************** BIG>900 *************** BIG>900 ***************/
 @media (min-width: #{$desktop}) {
-	body{
-		#page{
-			#main{
-				.backend_table{
-				padding: 0 1vw 4vw;
-				}
-				.admin-show{
-					td.entity-and-tax{
-					row-gap: 0.25vw;
-						> span{
-						grid-template-columns: subgrid;
-						column-gap: 0.5vw;
-						padding: 0.1vw 0;
-						border-bottom: none;
-							form{
-							align-items: center;
-								.ts-wrapper {
-								min-width: 20vw;
-								}
-								input[type="submit"]{
-								margin-inline-start: 0.5vw;
-								}
-							}
-							> span{
-							justify-self: end; 
-							margin-bottom: 0;
-								a{
-								margin-inline-start: 0.5vw;
-								}
-							}
-						}
-						> span:last-of-type{
-						border: none;
-						}
-					}
-				}
-				#new_edit_view{
-					h1 span.sub-heading{
-					display: inline;
-					font-size: inherit;
-					color: inherit;
-						&::before { content: " \2014  "; }
-					}
-					.form_admin{
-					--select-fontsize: 0.75rem;
-					}
-					p.hint{
-					margin-bottom: 1vw;
-					}
-				}
-			}
-		}
-	}
 	body.sessions, body.passwords{
 	margin-top: 10vw;
 		#page{
 			#main{
 				.login_form, .resend_form, .password_form{
 					fieldset{
-					//margin: 2vw 0.5vw 0.5vw 10vw;
 					margin-block: 2vw 0.5vw;
 					margin-inline: 10vw 0.5vw;
 					width: 50vw;

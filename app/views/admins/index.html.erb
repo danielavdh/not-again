@@ -39,8 +39,7 @@
                 <td><%= admin.email_address %></td>
                 <td><%=l admin.last_seen, format: :with_time %></td>
                 <td><%=l admin.terms_agreed_at, format: :with_time if admin.terms_agreed_at %></td>
-<%# no .includes here: the controller already preloads admin_entities: :entity, and
-    calling includes on the association throws that preload away and re-queries per row %>
+<%# No .includes: the controller preloads these, and calling includes on the association throws that away and re-queries per row. %>
                 <td><%= safe_join(admin.admin_entities.sort_by { |ae| ae.entity.code }.map { |ae|
                         "#{ae.entity.code} #{access_words[ae.access_level]}"
                       }, tag.br) %></td>

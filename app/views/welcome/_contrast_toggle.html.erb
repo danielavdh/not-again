@@ -1,6 +1,4 @@
-<%# Public high-contrast toggle. A plain form post — works with JavaScript off,
-    which an accessibility control should. Flips the cookie between forced-on
-    and forced-off; the profile page has the full three-way (auto/on/off). %>
+<%# A plain form post, so it works with JavaScript off — as an accessibility control should. Flips the cookie; the profile page has the full three-way. %>
 <%= form_with url: contrast_path, method: :post, class: "contrast-toggle" do %>
   <%= hidden_field_tag :on, cookies[:high_contrast] == "1" ? "0" : "1" %>
   <button type="submit" aria-label="<%= t("welcome.index.footer_contrast") %>">

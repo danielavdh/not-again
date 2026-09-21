@@ -2,7 +2,6 @@
   <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
 <% end %>
 
-<%# app/views/acc/entities/_form.html.erb %>
 <%= form_with model: entity, 
 			url: entity.persisted? ? entity_path(entity) : entities_path,
 			id: "#{action_name}_entity",
@@ -39,14 +38,9 @@
 	                id: :entity_active %>
 	</div>
 
-	<%# No tax schemes here, deliberately. Creating or renaming an entity has
-	    nothing to do with which returns it files, and tax setup has its own page
-	    — reached from the entity's row on the dashboard, or from entities#show.
-	    Two places to tick the same boxes only means two places to keep in step. %>
+	<%# No tax schemes here: tax setup has its own page, reached from the dashboard or entities#show. Two places to tick the same boxes means two places to keep in step. %>
 
-	<%# Business family (consolidation group). A SELECT, not fields_for: the family
-	    is a shared record — many entities join one — so we pick/create it, we
-	    don't nest-create it. Saved with the entity via update. Edit only. %>
+	<%# A SELECT, not fields_for: the family is a shared record, so it is picked or created, not nest-created. Edit only. %>
 	<% if entity.persisted? %>
 	<div class="field">
 	    <%= f.label :group_value, t("entities.group.label") %>

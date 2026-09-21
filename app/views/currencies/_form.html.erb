@@ -4,30 +4,18 @@
               id: "#{action_name}_currency",
               class: 'form_currency' do |f| %>
 
-	<%# Rails does NOT emit this on its own. Without it every submit carries the
-	    row's CURRENT lock_version, so the optimistic lock can never fire and
-	    CurrenciesController#update's StaleObjectError rescue is unreachable —
-	    which is the state this was in. A rename cascades onto accounts,
-	    postings and rates, so two admins renaming at once is the one edit here
-	    that must not silently win twice. %>
+	<%# ⚠️ Rails does not emit this. Without it every submit carries the row's current lock_version, the optimistic lock can never fire, and CurrenciesController#update's StaleObjectError rescue is unreachable. %>
 	<%= f.hidden_field :lock_version if currency.persisted? %>
 
-	<%# Settled = a POSTING already carries it (Currency#settled? == #posted?,
-	    narrower than #in_use? — an account alone does not lock it). A
-	    currency is GLOBAL, so after that point it is not one admin's to change. %>
+	<%# Settled = a POSTING carries it (narrower than #in_use?; an account alone does not lock it). A currency is GLOBAL. %>
 	<% locked = currency.persisted? && currency.settled? && !sudo? %>
 
 	<div class="field flex">
 		<div>
 			<%= f.label :code, t("currencies.form.code") %>
 			<span class="error_message"><%= currency.errors[:code].to_sentence %></span><br />
-			<%# Three letters, the ISO code. Uppercased on save, so typing "uah"
-			    is fine. %>
-			<%# Read-only once a posting rests on it. Editing anyway cascades to
-			    every account, posting and rate that carries it
-			    (Currency#migrate_dependents_to_new_code) rather than orphaning
-			    them — the lock is against two genuinely different currencies
-			    colliding, not against fixing a typo. %>
+			<%# Three letters, ISO. Uppercased on save. %>
+			<%# Editing anyway cascades to every account, posting and rate carrying it — the lock is against two different currencies colliding, not against fixing a typo. %>
 			<%= f.text_field :code, 
 							maxlength: 3, 
 							required: true, 
@@ -39,10 +27,7 @@
 		<div>
 			<%= f.label :symbol, t("currencies.form.symbol") %>
 			<span class="error_message"><%= currency.errors[:symbol].to_sentence %></span><br />
-			<%# A currency with no distinct sign uses its code with a trailing
-			    space, the way CHF does. %>
-			<%# Read-only for the same reason: it rewrites how every historical
-			    amount reads, on everyone screen. %>
+			<%# A currency with no distinct sign uses its code plus a trailing space, as CHF does. %>
 			<%= f.text_field :symbol, 
 							required: true,
 							placeholder: "€", 

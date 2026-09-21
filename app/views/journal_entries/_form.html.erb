@@ -35,9 +35,7 @@
       <%= f.fields_for :postings do |pf| %>
 
 		    <%= render 'journal_entries/posting_fields', pf: pf %>
-		    <%# Under a 601 gift, render its JE₂ mirror rows — from the PERSISTED
-		        counterpart on an edit (#4), or from the submitted params on an error
-		        re-render (#2, which wins so in-flight edits aren't lost). %>
+		    <%# JE₂'s mirror rows: the persisted counterpart on an edit, or the submitted params on an error re-render, which win so in-flight edits are not lost. %>
 		    <% if pf.object.cross_entity_link_id.present? &&
 		          (ce = @cross_entity_rerender&.[](pf.object.cross_entity_link_id) ||
 		                @cross_entity_persisted&.[](pf.object.cross_entity_link_id)) %>
@@ -52,8 +50,7 @@
 			id="add-posting" 
 			class="button green"><%= t("accounts.entries.add_posting") %></button>
 
-  <%# No way to save a year-end closing entry the app generated, for anyone who
-      reaches this form by URL. The model refuses the write regardless. %>
+  <%# The model refuses this write regardless; this just stops offering it. %>
   <% unless journal_entry.posts_to_locked_retained_earnings? %>
   <div class="actions">
     <%= f.submit (journal_entry.persisted? ? t("crud.update") : t("crud.create")) + " " + t("jargon.journal_entry") %>
@@ -68,7 +65,6 @@
 <%= render partial: "accounts/split_modal" %>
 <%= render partial: "accounts/cross_entity_modal" %>
 
-<%# Hidden template for JS - currencies from controller %>
 <template id="posting-template">
   <tr class="posting-row">
     <td class="account_id">

@@ -1,10 +1,4 @@
-<%# Inside the tax setup page's modal. Two ways out, always both offered: pick a
-    taxpayer you already have, or add one. The picker holds only what you may
-    USE — your own, plus any already filing for an entity you can write to — so
-    a bookkeeper and their assistant share one connection.
-
-    Nothing here saves the tax setup. Choosing fills the picker on the page
-    behind; adding saves a taxpayer, which is a record of its own. %>
+<%# Two ways out, always both: pick a taxpayer you have, or add one. The picker holds only what you may USE — your own, plus any already filing for an entity you can write to. Nothing here saves the tax setup. %>
 
 <% if @choices.any? %>
   <div class="field">

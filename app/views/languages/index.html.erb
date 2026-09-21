@@ -1,7 +1,4 @@
-<%# Sudo-only — see LanguagesController for why this sits at a different bar
-    than currencies. System rows (the pre-packaged languages) are a toggle,
-    nothing to edit — content lives in app/views/help and on disk, never in
-    this table. Custom rows are sudo-authored, full review flow. %>
+<%# Sudo only. System rows are a toggle — their content lives in app/views/help and on disk, never in this table. Custom rows are sudo-authored and go through the review flow. %>
 <% content_for :title, t("languages.index.title") %>
 
 <div class="backend_table no-print">

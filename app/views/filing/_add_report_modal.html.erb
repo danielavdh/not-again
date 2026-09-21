@@ -1,11 +1,6 @@
 <%# locals: (entity:, scheme:, ob:, period_start:) %>
 
-<%# Same shape as the report modal on the dashboard, with one difference: the
-    dates are the AUTHORITY's, so they are shown rather than chosen. A report
-    meant to mirror an obligation has to match it.
-
-    Only the name is yours. Nothing is created until this is submitted — the
-    link that used to sit here created a record just by being followed. %>
+<%# Like the dashboard's report modal, but the dates are the AUTHORITY's and so are shown rather than chosen. Only the name is yours, and nothing is created until this is submitted. %>
 
 <dialog id="filingReportModal-<%= ob[:period_id] %>" class="report-modal">
   <%= form_with url: filing_report_entity_path(entity), method: :post do |f| %>

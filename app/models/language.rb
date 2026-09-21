@@ -15,6 +15,15 @@ class Language < ApplicationRecord
 
   belongs_to :released_by_admin, class_name: "Admin", optional: true
 
+  # A system language ships with the app, so somebody read it before it shipped
+  # — that is what shipping it means. `reviewed` exists to mark the opposite
+  # case, and nothing in the UI can set it on a system row anyway: the Edit
+  # link renders only for custom ones. Leaving the column to its `false`
+  # default made the languages screen report every shipped language as
+  # unreviewed, which is not something an installation should have to correct
+  # by hand.
+  before_validation -> { self.reviewed = true if system? }
+
   CACHE_TTL = 60
 
   # doc name (WelcomeController::HELP_DOCS, plus "terms") => the field holding

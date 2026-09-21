@@ -24,12 +24,8 @@
 		<%= f.text_field :memo,
 				id: :journal_entry_memo %>
 	</div>
-	<%# Closing a year is a journal-entry concept. This partial is shared with the
-	    bank and transfer forms — the guided path, which exists so that its users
-	    never have to meet it — so the caller opts in. %>
-	<%# Just the tick. The period is derived — it ends on the entry date and runs a
-	    year back — and the result is shown as "closed up to" on the dashboard,
-	    the same place beginners see it. %>
+	<%# Shared with the bank and transfer forms — the guided path, which exists so its users never meet this — so the caller opts in. %>
+	<%# Just the tick: the period ends on the entry date and runs a year back, and the result shows as "closed up to" on the dashboard. %>
 	<% if local_assigns[:allow_closing] %>
 		<div>
 			<%= f.check_box :closing_entry, id: :journal_entry_closing_entry %>

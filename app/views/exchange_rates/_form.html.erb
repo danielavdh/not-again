@@ -4,10 +4,7 @@
   			  id: "#{action_name}_exchange_rate",
 			  class: 'form_exchange_rate' do |f| %>
 
-	<%# A rate is valid over a PERIOD, not on a date. A daily rate has the same
-	    day in both fields; a monthly one runs the 1st to the last. The old form
-	    asked for a single effective_date, which could not say which of those it
-	    meant — and the two are different numbers. %>
+	<%# A rate is valid over a PERIOD, not on a date: a daily rate has the same day in both fields, a monthly one runs 1st to last. A single date cannot say which, and the two are different numbers. %>
 	<div class="field flex">
 		<div>
 	    	<%= f.label :valid_from, t("exchange_rates.form.valid_from") %>
@@ -43,11 +40,7 @@
 	    	<span class="error_message">
 	    	<%= exchange_rate&.errors[:from_currency].to_sentence %>
 	    	</span><br />
-	    	<%# Which way round the rate goes lives in the LABEL — "From (1 unit)" —
-	    	    rather than in every option. The selected value reads better as CHF
-	    	    than as 1 CHF, and 1.25 CHF -> GBP is otherwise ambiguous: one franc
-	    	    costs about 0.80 pounds, so typing 1.25 records the inverse,
-	    	    silently and plausibly. %>
+	    	<%# ⚠️ Direction lives in the LABEL — "From (1 unit)". 1.25 CHF → GBP is otherwise ambiguous: a franc costs about 0.80 pounds, so typing 1.25 records the inverse, silently and plausibly. %>
 	    	<%= f.select :from_currency,
 						 available_currencies,
 						 {},
@@ -63,21 +56,15 @@
 					 {},
 	                 id: :exchange_rate_to_currency %>
 		</div>
-		<%# No source field. A typed rate is always `manual` — nobody publishes
-		    it, which is what entering your own rate means. Offering a choice
-		    would invite filing a private figure under a publisher that never
-		    issued it. Where the figure IS a publisher's, a transcribed 2018 HMRC
-		    rate say, that belongs in the evidence note. %>
+		<%# No source field: a typed rate is always `manual`. Offering a choice would invite filing a private figure under a publisher that never issued it. A transcribed published rate belongs in the evidence note. %>
 
 		<div>
-		<%# Whose rate this is. A typed rate is NEVER global: leaving this blank means every entity you have access to, and writes one row each — a convenience so four businesses need not be typed four times, not a shared row wearing a different hat. %>
+		<%# A typed rate is NEVER global. Blank means every entity you can reach, written as one row each — a convenience, not a shared row. %>
 		   <%= f.label :entity_id, t("exchange_rates.form.entity_id") %>
 		   <span class="error_message">
 		   <%= exchange_rate&.errors[:entity_id].to_sentence %>
 		   </span><br />
-		   <%# No explicit id: Rails generates exchange_rate_entity_id, which is what
-		       f.label above points `for` at. A hardcoded one silently stops matching
-		       the moment the attribute is renamed. %>
+		   <%# No explicit id: Rails generates the one f.label points at. A hardcoded one stops matching the moment the attribute is renamed. %>
 		   <%= f.select :entity_id,
 						 @entity_options,
 						 { include_blank: t("exchange_rates.all_my_entities") } %>
@@ -86,9 +73,7 @@
 
 
 	<div class="field">
-	<%# Where a rate is a documented daily rate rather than a published one,
-	    this IS the documentation — the Kurszettel or Bankmitteilung the law
-	    asks for. Not prose: something checkable in two years. %>
+	<%# For a documented daily rate this IS the documentation — the Kurszettel or Bankmitteilung the law asks for. Something checkable in two years, not prose. %>
 		<%= f.label :note, t("exchange_rates.form.note") %>
 		<span class="error_message">
 		<%= exchange_rate&.errors[:note].to_sentence %>

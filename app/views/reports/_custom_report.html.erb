@@ -1,6 +1,4 @@
-<%# The saved custom report: the bookkeeper's own account list, grouped by
-    parent account, type totals when the types read top-to-bottom. Data comes
-    from Reports::CustomReport. %>
+<%# The bookkeeper's own account list, grouped by parent, with type totals when the types read top to bottom. Data from Reports::CustomReport. %>
 <table class="reports">
   <thead>
     <tr>
@@ -8,9 +6,7 @@
       <% @currencies_with_data.each do |curr| %>
         <th><%= curr %></th>
       <% end %>
-      <%# The translating column, and the choice of what it translates into.
-          Dropped entirely when a single currency already is the target — it
-          would only repeat the column beside it. %>
+      <%# Dropped when a single currency already IS the target — it would only repeat the column beside it. %>
       <% if translated_column?(@currencies_with_data, @display_currency) %>
         <th>
           <% if currency_selectable?(@currencies_with_data) %>
@@ -39,8 +35,7 @@
 
     <% (@data[:parent_groups] || []).each do |parent_group| %>
 
-      <%# Type header, and the total for the type that just ended. Which groups
-          open a new type is worked out in Reports::CustomReport. %>
+      <%# Which groups open a new type is worked out in Reports::CustomReport. %>
       <% if @data[:show_type_totals] && parent_group[:type_header] %>
         <% if @data[:type_totals][parent_group[:preceding_type_total]] %>
           <tr class="list-header final-total">

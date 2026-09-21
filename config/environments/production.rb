@@ -57,7 +57,7 @@ Rails.application.configure do
   # background job, so a raised error lands the job in
   # solid_queue_failed_executions and lets retry_on give it another go — where
   # swallowing it left a rejected mail with nothing in the log. A wrong From: or
-  # an unauthorised Brevo sender now fails loudly.
+  # an unauthorised sender now fails loudly.
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.delivery_method = :smtp
   # SMTP settings are filled in by config/initializers/smtp.rb — one place,

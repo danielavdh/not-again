@@ -24,8 +24,7 @@
       <% end %>
     </td>
     <td class="actions no-print no-phone">
-      <%# A year-end closing entry the app generated is maintained by it — no edit,
-          no copy. Reopening the year is the only way back, from the dashboard. %>
+      <%# A generated year-end entry is maintained by the year-end flow — no edit, no copy. Reopening the year is the way back. %>
       <% unless local_assigns[:app_owned_close_ids]&.include?(je.id) %>
         <%= link_to edit_journal_entry_path(je), class: "backend_link button green" do %>
           <span class="big-screen"><%= t("crud.edit") %></span>

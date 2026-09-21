@@ -34,11 +34,7 @@
     </div>
   </div>
 
-  <%# Standalone, not wrapping the table — several rows below already carry
-      their own button_to (unlink, delete), each its own <form>, and forms
-      cannot nest. Nothing renders inside it: the submit button lives in the
-      table header instead, joined to this form by id via the HTML5
-      form="..." attribute, same as every checkbox. %>
+  <%# Standalone, not wrapping the table: rows carry their own button_to forms and forms cannot nest. The submit lives in the table header, joined by the HTML5 form="..." attribute. %>
   <%= form_with url: download_selected_receipts_path, method: :post, id: "download-selected-form" do %>
   <% end %>
 

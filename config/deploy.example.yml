@@ -63,7 +63,7 @@ env:
 
     # Optional. The From: address on every email the app sends. Defaults to
     # no-reply@<APP_HOST>; set this only if the address your mail provider
-    # (Brevo) has authorised is different.
+    # has authorised is different.
     # MAIL_FROM: <no-reply@accountingapp.eu>
 
     # ⚠️ REQUIRED. Who runs this installation — shown on the legal pages, in the

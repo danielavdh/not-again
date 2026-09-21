@@ -1,8 +1,5 @@
 <%# locals: (ob:, period_start:, bd:, entity:, scheme:, authority:, currency:) %>
-<%# `currency` comes from the scheme's catalogue header via
-    Filing::Base#submission_currency. It used to be the literal "GBP" here
-    and in _submission — in a GENERIC view, next to the authority-specific
-    hmrc_mtd/ directory — so a German EÜR showed euro amounts labelled £. %>
+<%# `currency` comes from the scheme's catalogue header via Filing::Base#submission_currency — never a literal, or a German EÜR shows euro amounts labelled £. %>
 
 <div class="report obligations">
 

@@ -1,11 +1,4 @@
-<%# Build 2 — cross-entity modal. Opens when a posting row selects a foreign
-    nominal account (an entity outside the entry's home group). Collects the leg:
-    the receiving entity's real leg (504/404), the shared amount, the paying
-    entity's gift/601 and the receiving entity's capital/304. The JS filters each
-    select to the right entity/currency on open (all options rendered here; home
-    and payee entities are only known at trigger time). Confirm repurposes the
-    trigger row into the 601 gift and fetches JE₂'s real posting rows from the
-    server (JournalEntriesController#cross_entity_rows). %>
+<%# Opens when a posting row picks a nominal account outside the entry's home group. Collects the receiving entity's real leg, the amount, the paying entity's gift (601) and the receiver's capital (304). Every option is rendered here and the JS filters on open, because the entities are only known at trigger time. %>
 <dialog id="cross-entity-modal" class="split-modal cross-entity-modal"
         data-rows-url="<%= cross_entity_rows_journal_entries_path(locale: I18n.locale) %>"
         data-entity-names="<%= @cross_entity_entity_names.to_json %>">
@@ -27,9 +20,7 @@
       </select>
     </div>
 
-    <%# Real-leg side — explicit for JEs (advanced admins); hidden for bank entries,
-        where deposit/withdrawal already fixes it. The gift takes this side, the
-        capital the opposite. Defaulted from the account type by the JS. %>
+    <%# Explicit for journal entries; hidden for bank entries, where deposit/withdrawal already fixes the side. %>
     <div class="split-row" data-ce-side-row>
       <label><%= t("entities.cross_entity.leg_side") %></label>
       <select id="ce-side">
@@ -81,17 +72,13 @@
   </div>
 </dialog>
 
-<%# "Add account on the fly" for the gift/capital selects (#6). The form is fetched
-    from AccountsController#new (cross_entity mode) into #add-account-content, posted
-    by JS, and on success the new account is injected into the triggering select. %>
+<%# Add-an-account-on-the-fly for the gift and capital selects. Fetched from AccountsController#new, posted by JS, and the new account injected into the select that triggered it. %>
 <dialog id="add-account-modal" class="split-modal cross-entity-modal"
         data-new-url="<%= new_account_path(locale: I18n.locale) %>"
         data-add-label="<%= t('entities.cross_entity.add_account') %>">
   <div class="split-modal-box">
     <h3><%= t("accounts.new.new_account") %></h3>
     <p id="add-account-errors" class="split-warning" hidden></p>
-    <%# The fetched form (cross-entity mode) supplies BOTH submit + cancel in its
-        own .split-actions, so they stay together and don't merge with crud_navigation. %>
     <div id="add-account-content"></div>
   </div>
 </dialog>

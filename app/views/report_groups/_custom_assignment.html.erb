@@ -1,6 +1,4 @@
-<%# The custom report group's account picker: a curated list, chosen and
-    ordered by hand. A TAX report has no such list — its accounts are whatever
-    carries its scheme — so it renders _tax_assignment instead. %>
+<%# A curated, hand-ordered list. A TAX report has no such list — its accounts are whatever carries its scheme — so it renders _tax_assignment instead. %>
 <h2><%= t("report_groups.show.template", name: @report_group.display_name) %></h2>
 
   <div class="account-selector-container">
@@ -25,10 +23,7 @@
           <% end %>
         <% end %>
 
-        <%# The row cloned by accounts-drag-drop.js when an account is added.
-            Same markup as the ones above, written once, here — it used to be a
-            template string in the JS with the account name interpolated into
-            innerHTML. %>
+        <%# Cloned by accounts-drag-drop.js when an account is added. Same markup as the rows above, written once here rather than as a template string in the JS. %>
         <template id="selected-account-template">
           <li draggable="true">
             <span class="drag-handle">⋮⋮</span>

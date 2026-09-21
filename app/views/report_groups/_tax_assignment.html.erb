@@ -1,10 +1,4 @@
-<%# Assigning accounts to a tax scheme.
-    Assigned on the left, unassigned on the right — the same shape as the custom
-    report's account picker, except that what moves an account across is choosing
-    its CATEGORY. Both sides write tax_scheme + tax_category_key onto the account
-    itself; membership is never stored, so this page and a submission cannot
-    disagree. An account belongs to exactly one scheme, so anything another
-    scheme has claimed is not offered here. %>
+<%# Assigned left, unassigned right. What moves an account across is choosing its CATEGORY. Both sides write tax_scheme and tax_category_key onto the account itself — membership is never stored, so this page and a submission cannot disagree. An account belongs to exactly one scheme. %>
 
 <h2><%= t("report_groups.show.assign_title", name: @report_group.display_name) %></h2>
 <p class="hint"><%= t("report_groups.show.assign_hint") %></p>

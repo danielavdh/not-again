@@ -66,15 +66,9 @@
 		<% end %>
 	<% end %>
 
-  <%# ============================================================ %>
-  <%# OTP — sudo only %>
-  <%# ============================================================ %>
+  <%# ===== OTP — sudo only ===== %>
 
-  <%# OTP/owner — sudo only, and only relevant while creating a bare admin
-      (no entities checked below) — an admin holding an entity can never be
-      an owner (Admin#owner_holds_no_entity), and granting entities at
-      creation time never touches this admin's own sudo/otp flags at all
-      (coadmin_params doesn't permit either, even for sudo). %>
+  <%# An admin holding an entity can never be an owner (Admin#owner_holds_no_entity), and granting entities at creation never touches these flags — coadmin_params permits neither, even for sudo. %>
 	<% if sudo? %>
 		<div class="field check-boxes <%= 'hidden' unless admin.sudo? || admin.admin_entities.any? %>" id="otp-field">
 			<label for="admin_otp_enabled">
@@ -94,9 +88,7 @@
 		</div>
 	<% end %>
 
-	<%# ============================================================ %>
-	<%# SELF-EDIT — a full-access admin editing their own profile.    %>
-	<%# ============================================================ %>
+	<%# ===== SELF-EDIT — a full-access admin editing their own profile. ===== %>
 	<% if defined?(@mode) && @mode == :self %>
 		<div class="field">
 			<label><%= t(".access_level") %></label><br /><br />
@@ -108,9 +100,7 @@
 		</div>
 	<% end %>
 
-	<%# ============================================================ %>
-	<%# GRANTING ACCESS SURFACE  %>
-	<%# ============================================================ %>
+	<%# ===== GRANTING ACCESS SURFACE ===== %>
 	
 	<% if grant_path %>
 		<% unless sudo? %>
@@ -157,9 +147,7 @@
 
 <% end %>
 
-<%# ============================================================ %>
-<%# SUDO'S REVOCATION SURFACE — existing full_access links only.  %>
-<%# ============================================================ %>
+<%# ===== SUDO'S REVOCATION SURFACE — existing full_access links only. ===== %>
 <% if defined?(@full_access_entities) %>
 <div class="admin-entity-checkboxes">
 	<div class="field check-boxes">

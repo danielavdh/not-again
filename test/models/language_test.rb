@@ -316,4 +316,30 @@ class LanguageTest < ActiveSupport::TestCase
 
     assert_includes Language.custom_doc_html("easy_manual", :bg), "Real text."
   end
+
+  # A shipped language has been read by somebody — that is what shipping it
+  # means. Nothing in the UI can set this on a system row (the Edit link is
+  # custom-only), so left to the column default every installation would report
+  # its own shipped languages as unreviewed.
+  test "a system language is reviewed, without anyone having to say so" do
+    lang = Language.create!(code: "pt", label: "Português", source: :system)
+    assert lang.reviewed, "a shipped language must not arrive marked unreviewed"
+  end
+
+  test "a system language cannot be left unreviewed, even if asked" do
+    lang = Language.create!(code: "pt", label: "Português", source: :system, reviewed: false)
+    assert lang.reviewed
+
+    lang.update!(reviewed: false)
+    assert lang.reload.reviewed
+  end
+
+  # Custom languages are the case the flag exists for, so they keep it.
+  test "a custom language keeps whatever review state it is given" do
+    lang = Language.create!(code: "pt", label: "Português", source: :custom)
+    assert_not lang.reviewed
+
+    lang.update!(reviewed: true)
+    assert lang.reload.reviewed
+  end
 end

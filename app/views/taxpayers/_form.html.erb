@@ -1,17 +1,10 @@
-<%# The taxpayer's own details. The identifier fields are whatever the
-    connectors at this authority declare, so a new authority adds its own
-    without touching this file.
+<%# The identifier fields are whatever the connectors at this authority declare, so a new authority adds its own without touching this file.
 
-    `modal` present → opened from the tax setup page, where the authority is
-    already decided by the block you clicked, so it is shown rather than chosen,
-    and submit + cancel sit together. The standalone /taxpayers/new passes no
-    locals and is unaffected. %>
+    `modal` present = opened from the tax setup page, where the authority is already decided. The standalone /taxpayers/new passes no locals. %>
 <% in_modal = local_assigns[:modal].present? %>
 <%= form_with model: @taxpayer, url: form_url, class: "form_entity" do |f| %>
 
-  <%# Carried through so create/update can land back where the flow started —
-      the tax setup page, or the profile. Not in the modal, which never
-      navigates. %>
+  <%# So create/update can land back where the flow started. Not in the modal, which never navigates. %>
   <% if !in_modal && local_assigns[:return_to].present? %>
     <%= hidden_field_tag :return_to, return_to %>
   <% end %>
@@ -47,11 +40,9 @@
     </div>
   <% end %>
 
-  <%# Not crud.save — that one is "Save %{type}", and with no interpolation
-      passed I18n renders the placeholder rather than raising. %>
+  <%# Not crud.save — that one is "Save %{type}", and with no interpolation I18n renders the placeholder rather than raising. %>
   <% if in_modal %>
-    <%# Together in .split-actions, as the add-account modal does: the form's
-        normal .actions would visually merge with the page behind it. %>
+    <%# Together in .split-actions: the form's normal .actions would merge with the page behind. %>
     <div class="split-actions">
       <%= f.submit t("crud.create"), class: "button" %>
       <button type="button" class="button add-taxpayer-cancel"><%= t("crud.cancel") %></button>

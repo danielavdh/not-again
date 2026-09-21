@@ -44,7 +44,7 @@ All of your data is stored within the European Union:
 
 * A nightly copy of everything, including database backups, is kept with OVH Object Storage in Strasbourg, France, for redundancy across two providers.
 
-* Outgoing email — including this policy's own transactional mail — is sent through Brevo.
+* Outgoing email — including this policy's own transactional mail — is sent through Scaleway Transactional Email in Paris, France.
 
 h2. How long we keep it
 

@@ -33,11 +33,7 @@
           <% schemes.each do |scheme| %>
             <% authority_key, authority_name = @authority_by_scheme[scheme] %>
             <div>
-              <%# data-authority only on schemes that CAN be filed from here, so
-                  the question is asked once per authority and never for a scheme
-                  that only ever gets tagged and exported. The sentence comes with
-                  it, already naming the authority, so the script has no text of
-                  its own. %>
+              <%# data-authority only on schemes that can be FILED, so the question is asked once per authority and never for one that is only tagged and exported. %>
               <%= check_box_tag "entity[tax_schemes][]", scheme,
                         Array(@entity.tax_schemes).include?(scheme),
                         id: "entity_tax_scheme_#{scheme}",
@@ -58,35 +54,19 @@
 
     </div>
 
-    <%# Whose books these are, at each authority that can file them. Inside the
-        form, so the page has ONE Save — two forms meant unticking a scheme and
-        then clicking the nearer Save silently discarded the change.
-
-        Ticking a submittable scheme asks the question below and, on yes, fetches
-        another of these into #filing-fields. Saved and pending blocks are the
-        same partial and post the same fields, so the one Save covers both. %>
+    <%# Inside the form, so the page has ONE Save — two forms meant unticking a scheme and then clicking the nearer Save discarded it silently. %>
     <div id="filing-fields" data-url="<%= filing_fields_entity_path(@entity) %>">
       <% @filing_authorities.each do |authority| %>
         <%= render "entities/filing_fields", authority: authority %>
       <% end %>
     </div>
 
-    <%# The question a ticked scheme asks is a confirm(), not markup: it has to be
-        answered before anything else happens, and a block appearing further down
-        the page can be walked past — you could then Save a return that files from
-        the app with nobody to file it for. Same convention as data-sure.
-        The sentence lives in acc.filing.register.submit_question; tax.js reads it
-        from the checkbox. %>
+    <%# A confirm(), not markup: a block further down the page can be walked past, and you could then Save a return that files from the app with nobody to file it for. Text in filing.register.submit_question; tax.js reads it from the checkbox. %>
 
-    <%# An extra file for the accountant, alongside the universal transactions
-        CSV. DATEV is a German and Austrian convention; other countries' formats
-        can join the list. Not derived from anywhere — it is what this entity's
-        accountant asked for. %>
+    <%# An extra file for the accountant, alongside the universal CSV. What this entity's accountant asked for — not derived from anything. %>
     <div class="field accountant-export">
       <%= f.label :accountant_export, t("tax.accountant_export_field") %>
-      <%# From the registry, so adding a format never means editing this view.
-          Reads "Standard CSV" / "add DATEV" — the standard files always go, so
-          every entry here is something EXTRA rather than an alternative. %>
+      <%# From the registry, so adding a format never means editing this view. Every entry is something EXTRA, not an alternative. %>
       <%= f.select :accountant_export,
                    accountant_export_options,
                    { include_blank: t("tax.accountant_export_none") } %>
@@ -99,27 +79,16 @@
 
   <% end %>
 
-  <%# The connection controls, one per authority. Outside the form: the
-      Disconnect button is a button_to, which renders a <form>. Empty for an
-      entity whose schemes all stop at tagging and export — the normal case. %>
+  <%# Outside the form: Disconnect is a button_to, which renders a <form>. Empty for an entity whose schemes all stop at tagging and export. %>
   <% @filing_authorities.each do |authority| %>
     <%= render "entities/filing_authority", authority: authority, entity: @entity %>
   <% end %>
 
   <div class="crud_navigation">
-    <%# Back to the dashboard, not to the admin page: this page is reached from
-        the entity's own block on the dashboard now, since tax setup belongs to
-        the entity rather than to the admin. %>
     <%= link_to t("crud.back"), dashboard_path, class: "backend_link button green" %>
   </div>
 
-  <%# Setting a client up without leaving the page. The form is fetched from
-      TaxpayersController#new in modal mode and posted by JS; on success the new
-      taxpayer joins the picker it was opened from. Only the TAXPAYER is saved —
-      a record of its own — so the tax setup still waits for the page's one Save.
-
-      Outside the entity form, deliberately: it contains a form, and forms cannot
-      nest. %>
+  <%# Fetched from TaxpayersController#new and posted by JS; the new taxpayer joins the picker it was opened from. Outside the entity form, because it contains a form and forms cannot nest. %>
   <dialog id="add-taxpayer-modal" class="split-modal">
     <div class="split-modal-box">
       <h3><%= t("filing.register.add") %></h3>

@@ -1,4 +1,3 @@
-<%# app/views/acc/reports/balance_sheet.html.erb %>
 <% content_for :title, t("page.balance_sheet") %>
 
 <div class="backend_table report balance_sheet">
@@ -201,7 +200,7 @@
 				</th>
 			  <% end %>
 			</tr>
-			<%# The residual (assets − liabilities − equity). It is a translated total, so with more than one currency it sits in the translating column and the currency columns show a dash; with one currency there is no translating column and it belongs there. %>
+			<%# The residual (assets − liabilities − equity). A translated total, so with more than one currency it sits in the translating column and the currency columns show a dash. %>
 			<% show_translating = translated_column?(@currencies_with_data, @display_currency) %>
 			<tr class="list-header">
 				<th><%= t(".net_profit_loss") %></th>
@@ -215,7 +214,7 @@
 				</th>
 			</tr>
 
-			<%# That residual is really unclosed profit PLUS the FX translation	variance from cross-currency transfers. Split it so the profit	figure means what it says; the variance links to the transfers	behind it. %>
+			<%# That residual is unclosed profit PLUS the FX translation variance from cross-currency transfers. Split, so the profit figure means what it says. %>
 		  <% if @fx_variance && @fx_variance != 0 %>
 			<tr class="fx-variance">
 				<td>

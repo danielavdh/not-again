@@ -1,4 +1,3 @@
-<%# Journal Entry Detail %>
 <% content_for :title, t("jargon.journal_entry") %>
 
 
@@ -180,9 +179,7 @@
   <% end %>
   	<button id="print-button"
 			class="button green"><%= t("crud.print") %></button>
-  <%# A closing entry the year-end flow generated is maintained by it: rebuilt on
-      every change inside its period. Nothing here is a user action — the way back
-      is reopening the year, which takes all currencies of the period together. %>
+  <%# Rebuilt on every change inside its period. The way back is reopening the year, which takes all its currencies together. %>
   <% unless @journal_entry.posts_to_locked_retained_earnings? %>
   <% if current_admin.full_access_pro? %>
 	<%= link_to t("crud.copy"),

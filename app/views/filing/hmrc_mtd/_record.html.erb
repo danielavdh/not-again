@@ -1,12 +1,6 @@
 <%# locals: (business:, filed:, authority:) %>
 
-<%# HMRC's own record of the business, read back from Business Details and the
-    cumulative period summary. Shown so the trade the figures land against is
-    visible, and so "did my last submission arrive?" is answerable here.
-
-    The VALUES are HMRC's, shown exactly as HMRC holds them and deliberately not
-    translated — this panel is their record, and paraphrasing it would defeat the
-    point of showing it. Only the row labels are translated. %>
+<%# HMRC's own record, read back from Business Details and the cumulative period summary — so the trade the figures land against is visible. The VALUES are HMRC's and deliberately untranslated; only the row labels are. %>
 <details>
 	<summary><%= t("filing.hmrc.hmrc_record", authority: authority) %></summary>
 

@@ -1,16 +1,10 @@
 <!DOCTYPE html>
-<%# high-contrast rides on <html>, not on <body>. The custom properties live on
-    :root, and only a class on the root element reaches the root's own background
-    (the canvas you see when overscrolling), ::backdrop, and anything JS reads from
-    document.documentElement. %>
+<%# high-contrast rides on <html>: the custom properties live on :root, and only a class there reaches the root background, ::backdrop, and document.documentElement. %>
 <html lang="<%= I18n.locale %>" dir="<%= text_direction %>" class="<%= contrast_class %>">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <%# content_for first, so a view can title itself; @title for controllers that
-        set one; the tagline only when neither did. The accounting layout has always
-        read content_for — this one did not, so every `content_for :title` in a
-        manual was dead and all eight showed the front page's title. %>
+    <%# content_for first so a view can title itself, then @title for controllers, then the tagline. Without the content_for branch every `content_for :title` in a manual is dead. %>
     <title><%= "not-again — #{content_for(:title).presence || @title || 'Bookkeeping. Not again.'}" %></title>
 
     <meta name="description" content="<%= t('welcome.meta_description', default: 'Multi-currency double-entry bookkeeping with digital tax filing.') %>" />
@@ -20,9 +14,7 @@
     <meta property="og:url" content="<%= request.original_url %>" />
     <meta property="og:title" content="not-again" />
     <meta property="og:description" content="<%= t('welcome.meta_description', default: 'Multi-currency double-entry bookkeeping with digital tax filing.') %>" />
-    <%# The picture shown when a link is pasted into WhatsApp, Slack, Mastodon.
-        app/assets/images/social-preview.jpg is a placeholder — replace the file,
-        nothing else needs touching. %>
+    <%# Shown when a link is pasted into WhatsApp, Slack or Mastodon. social-preview.jpg is a placeholder — replace the file, nothing else. %>
     <meta property="og:image" content="<%= image_url('social-preview.jpg') %>" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="<%= image_url('social-preview.jpg') %>" />
@@ -36,10 +28,7 @@
     <%= csp_meta_tag %>
   </head>
 
-  <%# The PUBLIC face of the app: front page, legal, demo. Everything behind a
-      login uses the other layout. The `public` body class is kept as a styling
-      hook, and controller_name/action_name give per-page hooks — body.welcome.index
-      is what the landing page's JS looks for. %>
+  <%# The PUBLIC face: front page, legal, demo. Everything behind a login uses the other layout. body.welcome.index is what the landing page's JS looks for. %>
   <body class="<%= controller_name %> <%= action_name %>">
 
 	<%#= link_to t("shared.menu.skip_link"), "#main", id: "skip-link", class: "no-print" %>

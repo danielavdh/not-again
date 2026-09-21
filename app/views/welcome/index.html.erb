@@ -4,8 +4,7 @@
     <div class="brand"><%= link_to "not-again", root_path %></div>
     <div class="navmeta">
       <%= link_to t(".nav_features"), "#what" %>
-      <%# Guarded like the CTA below it: an installation with no demo seeded should
-          not offer a door that opens onto a page with no way in. %>
+      <%# Guarded: an installation with no demo seeded must not offer a door onto a page with no way in. %>
       <%= link_to t(".nav_demo"), demo_path if demo_available? %>
       <%= link_to "github ↗", REPO_URL, class: "gh", target: "_blank", rel: "noopener" if REPO_URL %>
       <%= link_to t(".login"), new_session_path, class: "gh" %>

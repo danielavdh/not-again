@@ -42,18 +42,18 @@
       "description": "Object-storage secret key."
     },
     "SMTP_ADDRESS": {
-      "description": "Outgoing mail server — Brevo is smtp-relay.brevo.com.",
-      "value": "smtp-relay.brevo.com"
+      "description": "Outgoing mail server — Scaleway Transactional Email.",
+      "value": "smtp.tem.scaleway.com"
     },
     "SMTP_PORT": {
       "description": "Mail server port.",
       "value": "587"
     },
     "SMTP_USERNAME": {
-      "description": "Brevo SMTP login (shown on Brevo's SMTP & API page)."
+      "description": "Your Scaleway project ID (not the organisation ID)."
     },
     "SMTP_PASSWORD": {
-      "description": "Brevo SMTP key."
+      "description": "Secret key of a Scaleway IAM application with TransactionalEmailFullAccess."
     },
     "SERVICE_NAME": {
       "description": "What this installation calls itself — shown on the legal pages."
@@ -86,8 +86,7 @@
       "required": false
     },
     "MAIL_FROM": {
-      "description": "Optional. The From: address on outgoing mail. Defaults to no-reply@<your APP_HOST>; set this only if Brevo authorised a different sender.",
-      "required": false
+      "description": "The From: address on outgoing mail, on the domain verified in Scaleway, e.g. no-reply@yourdomain.com. Defaults to no-reply@<your APP_HOST>, which Scaleway refuses for a scalingo.io address."
     }
   },
   "formation": {

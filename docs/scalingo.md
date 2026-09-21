@@ -1,6 +1,6 @@
 # Deploying to Scalingo
 
-The hosted route: nothing installed on your own computer, no terminal, no server to maintain. This page is specific to Scalingo because that is what makes the deploy button below work — but nothing about the app requires it. Any provider that can build this app from its code (hosted on GitHub) and give you cloud storage for files plus a way to send email works the same way; Scalingo (hosted server), Scaleway (file storage) and Brevo (email) are simply the ones this page is written against, and all three are EU-based, which is why they were picked over the larger US platforms.
+The hosted route: nothing installed on your own computer, no terminal, no server to maintain. This page is specific to Scalingo because that is what makes the deploy button below work — but nothing about the app requires it. Any provider that can build this app from its code (hosted on GitHub) and give you cloud storage for files plus a way to send email works the same way; Scalingo (hosted server) and Scaleway (file storage and email) are simply the ones this page is written against. Both are EU-based, which is why they were picked over the larger US platforms.
 
 **This path cannot file directly to HMRC.** Digital submission needs the app
 to be registered with HMRC from one server address that never changes, which
@@ -20,7 +20,7 @@ to Step 1 below.
 - [What you will end up with](#what-you-will-end-up-with)
 - [Before you start](#before-you-start)
 - [Step 1 — the receipt store (Scaleway)](#step-1--the-receipt-store-scaleway)
-- [Step 2 — email (Brevo)](#step-2--email-brevo)
+- [Step 2 — email (Scaleway)](#step-2--email-scaleway)
 - [Step 3 — deploy](#step-3--deploy)
 - [Step 4 — your own web address](#step-4--your-own-web-address)
 - [When something goes wrong](#when-something-goes-wrong)
@@ -40,18 +40,17 @@ first time — most of it is waiting, or filling in a form.
 
 ## What you will end up with
 
-Three accounts:
+Two accounts:
 
 - **Scalingo** — runs the app and its database.
-- **Scaleway** — holds your uploaded receipt files. The app itself cannot store them permanently.
-- **Brevo** — sends the app's email: password resets, and the tax export when you ask for it by email. Set it up — without it a forgotten password can only be reset from the Scalingo console.
+- **Scaleway** — holds your uploaded receipt files (the app itself cannot store them permanently), and sends the app's email: password resets, invitations, the tax export.
 
-All three are European, and all have a free tier to start on except Scalingo
-itself, which needs a card.
+Both are European. Scaleway has a free tier; Scalingo needs a card.
 
 ## Before you start
 
 - **A GitHub account.** Free — [github.com](https://github.com), *Sign up*. Scalingo uses it to sign you in and to find the app's code. You never have to use GitHub beyond signing in.
+- **A domain name**, e.g. `yourdomain.com`, and access to its DNS settings at your registrar. The email service only sends from a domain you own. Buy one first if you don't have one — any registrar will do.
 - **Pen and paper**, or a notes app. You will collect about ten values along the way and paste them all into one form at the end; writing them down as you go is calmer than switching tabs to look each one up again.
 
 ---
@@ -85,32 +84,24 @@ itself, which needs a card.
 
 ---
 
-## Step 2 — email (Brevo)
+## Step 2 — email (Scaleway)
 
-*About 10 minutes.*
+*About 15 minutes, plus waiting for DNS.*
 
-Without this, a forgotten password can only be reset by someone with console
-access, and the tax export can't be emailed.
+Without this, a forgotten password can only be reset from the Scalingo console, and the tax export can't be emailed.
 
-1. [brevo.com](https://www.brevo.com) → free account.
-2. Left menu → **SMTP & API** → the **SMTP** tab. ("SMTP" is just the technical name for the settings that let an app send email — Brevo's menu uses the term directly, so it's worth knowing what it stands for even though you won't need to understand it beyond this page.) Note down:
+Use the same Scaleway project as Step 1.
 
-	- Server: `smtp-relay.brevo.com`
-	- Port: `587`
-	- Login: the email address shown
-	- **SMTP key** — click to generate one, then copy it.
-3. Left menu → **Senders, Domains & Dedicated IPs → Senders** → **Add a sender** — use an address you can receive mail at, and follow the verification link Brevo emails you.
+1. Console → **Domains & Web Hosting** → **Transactional Email** → add your domain.
+2. Scaleway shows four records. Add each one at your registrar's **DNS settings** (type, name, value — copy them exactly), then wait until Scaleway marks the domain verified. That can take minutes or hours.
+3. **IAM → Applications** → create one, e.g. `smith-books-mail`. **IAM → Policies** → give it `TransactionalEmailFullAccess`, for this project only. Then **API keys** → generate a key for that application and copy the **secret key** — it is shown once.
 
-⚠️ **This verified address must be typed into Step 3 as `MAIL_FROM`, exactly.** The
-app does not pick it up automatically — left unset, it tries to send as
-`no-reply@` your Scalingo address instead, which nobody can verify (there's no
-real mailbox there to receive Brevo's confirmation link), and Brevo will refuse
-to send it. So: write the sender address down now, and use it for `MAIL_FROM`
-below, not just the address you registered Brevo with.
+	A separate application, so this key can send mail and nothing else. If it ever leaks, your receipts stay out of reach.
+4. **Project settings** → copy the **project ID**. Not the organisation ID.
 
-Write down: server, port, login, SMTP key, verified sender address (for `MAIL_FROM`).
+Write down: project ID, secret key, and a sender address on your domain for `MAIL_FROM`, e.g. `no-reply@yourdomain.com`. It needs no mailbox.
 
-**If you already have your own domain name** and plan to use it for your app (see Step 4), you can follow [Email — Brevo in provider setup](provider-setup.md#4-email--brevo) instead — it authorises your whole domain rather than one address, which is a few more steps. Not required; the steps above work without one.
+⚠️ **`MAIL_FROM` is not optional here.** Left blank, the app sends as `no-reply@` your Scalingo address, which Scaleway will refuse.
 
 ---
 
@@ -132,10 +123,11 @@ Write down: server, port, login, SMTP key, verified sender address (for `MAIL_FR
 		| `S3_REGION` | `fr-par` |
 		| `S3_ENDPOINT` | `https://s3.fr-par.scw.cloud` |
 		| `S3_ACCESS_KEY` / `S3_SECRET_KEY` | from your notes |
-		| `SMTP_ADDRESS` | `smtp-relay.brevo.com` |
+		| `SMTP_ADDRESS` | `smtp.tem.scaleway.com` |
 		| `SMTP_PORT` | `587` |
-		| `SMTP_USERNAME` / `SMTP_PASSWORD` | from your Brevo notes |
-		| `MAIL_FROM` | the exact address you verified as a sender in Step 2 — **not optional**, see the warning there |
+		| `SMTP_USERNAME` | the project ID from Step 2 |
+		| `SMTP_PASSWORD` | the secret key from Step 2 |
+		| `MAIL_FROM` | the sender address on your domain from Step 2 — **not optional**, see the warning there |
 		| `SERVICE_NAME` | your business name — appears on the app's legal page |
 		| `CONTACT_NAME`, `CONTACT_EMAIL`, `CONTACT_TRADING`, `CONTACT_STREET`, `CONTACT_CITY`, `CONTACT_COUNTRY` | your own details — also on the legal page; required in Germany, honest practice everywhere |
 
@@ -152,7 +144,7 @@ Write down: server, port, login, SMTP key, verified sender address (for `MAIL_FR
 
 *Optional, and can be done later.*
 
-1. Buy a domain if you don't already have one — any registrar (we currently use Hostinger. It's a constantly changing landscape, and moving to someone else is not a big deal anymore).
+1. Use the domain from Step 2 (we currently use Hostinger as registrar. Moving to another later is not a big deal).
 2. Scalingo dashboard → your app → **Settings → Domains** → add `books.yourdomain.com`. It shows you a target, something like `smith-books.osc-fr1.scalingo.io`.
 3. At your domain registrar, find the **DNS settings** for your domain — usually  under something called "DNS", "DNS management" or "Name servers" once you've  clicked into the domain itself. Every registrar's screen looks different, but  they all ask for the same three things when you add a record: a **type**, a  **name**, and a **value** (some call it "target", "points to" or "content" —  same thing). <br />Add one with: type=CNAME, name=`books`, value=`smith-books.osc-fr1.scalingo.io` (from step 2) <br />Leave anything else (TTL, priority) at whatever it defaults to. This is a  **CNAME record** — it tells the internet "when someone looks for  `books.yourdomain.com`, send them to this Scalingo address instead." Changes  can take anywhere from a few seconds to a few hours to take effect  everywhere; if it doesn't work immediately, wait and try again before  assuming something's wrong.
 4. Back in Scalingo, wait for the green tick. It is issuing the **certificate** — the thing that makes your address start with `https` and show a padlock in the browser. This happens automatically; the tick just means it's done.
@@ -165,7 +157,7 @@ Write down: server, port, login, SMTP key, verified sender address (for `MAIL_FR
 - **Deploy failed.** Scalingo → your app → **Deploy** → open the last deployment's log and scroll to the bottom. Almost always a wrong storage key from Step 1, or a `CONTACT_*` field left empty — production refuses to start with those blank. Fix the value under **Environment**, then **Deploy → Manual deploy**.
 - **Page won't load, says "Blocked host".** The app only answers to the one address you told it to expect, as a security measure — and the address in your browser doesn't match it. Go to Scalingo → your app → **Environment** and check `APP_HOST`: it should be typed exactly as the address you're trying to visit, with no `https://` and no trailing slash — e.g. `smith-books.osc-fr1.scalingo.io`, or `books.yourdomain.com` if you've set up your own address in Step 4.
 - **Receipts won't upload.** One of the Scaleway values from Step 1 is wrong. Re-check the bucket name, region, endpoint and both keys against your notes — a fresh key is quick to generate if in doubt.
-- **Password resets or the tax export never arrive by email.** `MAIL_FROM` doesn't exactly match the address you verified in Step 2 — check it under **Environment**. A personal address on a large provider (Gmail, Outlook, Yahoo) can also cause trouble even once verified, since Brevo isn't authorised to send as that domain in the provider's own eyes; an address on a domain you actually control tends to work more reliably.
+- **Password resets or the tax export never arrive by email.** Check three things under **Environment**: `MAIL_FROM` is on the domain Scaleway verified in Step 2; `SMTP_USERNAME` is the project ID, not the organisation ID; the application from Step 2 has its `TransactionalEmailFullAccess` policy. Scaleway → **Transactional Email** → your domain shows whether mail was sent or refused.
 
 ## What it costs
 
@@ -173,7 +165,7 @@ Write down: server, port, login, SMTP key, verified sender address (for `MAIL_FR
 
 - **Scalingo:** from around €25/month for the smallest app and database — likely more once real usage is accounted for. You choose and pay for the size of each separately, so it scales with what you actually need.
 - **Scaleway (file storage):** free under 75 GB.
-- **Brevo (email):** free under 300 emails/day.
+- **Scaleway (email):** a free monthly allowance, far more than this app sends.
 
 ## What you are trusting
 

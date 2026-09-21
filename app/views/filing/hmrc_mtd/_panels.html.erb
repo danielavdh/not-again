@@ -1,8 +1,6 @@
 <%# locals: (authority:, business:, filed:) %>
 
-<%# Everything the filing page shows ONLY because the authority is HMRC.
-    Reached solely through Filing::HmrcMtd#panel_partial, so periods.html.erb
-    never names an authority and adding a second one changes nothing generic. %>
+<%# Everything shown ONLY because the authority is HMRC. Reached solely through Filing::HmrcMtd#panel_partial, so periods.html.erb never names an authority. %>
 
 <% if business.present? || filed.present? %>
 	<%= render "filing/hmrc_mtd/record", business: business, filed: filed, authority: authority %>

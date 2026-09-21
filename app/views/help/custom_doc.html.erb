@@ -1,9 +1,4 @@
-<%# Shared by every released custom language, for easy_manual/pro_manual/
-    legal alike — see WelcomeController#localized_doc. @custom_doc names
-    which one (Language::DOC_FIELDS' keys), @custom_doc_html is that row's
-    own content, already converted from Textile and sanitized
-    (Language#rendered_doc). Terms has its own partial, help/_terms_text —
-    it is never a full page on its own. %>
+<%# Every released custom language's easy_manual/pro_manual/legal. @custom_doc names which (Language::DOC_FIELDS), @custom_doc_html is the converted, sanitised content. Terms has its own partial — it is never a full page. %>
 <%= render "help/back" %>
 
 <% if %w[easy_manual pro_manual].include?(@custom_doc) %>
@@ -14,11 +9,7 @@
   <%= raw @custom_doc_html %>
 <% end %>
 
-<%# The EU declaration is a real uploaded Document, not translatable text —
-    no custom Textile field could reproduce it, so it is appended here
-    exactly as the static per-locale legal_*.html.erb templates render it,
-    rather than being something sudo has to account for in their own
-    content. %>
+<%# The EU declaration is an uploaded Document, not translatable text, so it is appended exactly as the static legal templates render it. %>
 <% if @custom_doc == "legal" %>
   <% if @eu_declaration %>
     <section id="eu-declaration">
