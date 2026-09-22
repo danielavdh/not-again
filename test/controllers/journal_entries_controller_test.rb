@@ -16,7 +16,7 @@ class JournalEntriesControllerTest < ActionDispatch::IntegrationTest
   # several tests below land inside its closed period on purpose and trigger
   # exactly that.
   teardown do
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "10"))
+    FileUtils.rm_rf(uploads_path("archives", "10"))
   end
 
   # ==================== Index Tests ====================
@@ -449,7 +449,7 @@ class JournalEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes refreshed, "placeholder", "the stale content must actually be replaced, not left alone"
   ensure
     if group
-      FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "g#{group.id}"))
+      FileUtils.rm_rf(uploads_path("archives", "g#{group.id}"))
     end
   end
 
@@ -499,7 +499,7 @@ class JournalEntriesControllerTest < ActionDispatch::IntegrationTest
     refreshed_2026 = Archives::Storage.read(key_2026)
     assert_equal "placeholder 2026", refreshed_2026, "the 2026 archive must be untouched — the correction's own date is in 2025"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "g#{group.id}")) if group
+    FileUtils.rm_rf(uploads_path("archives", "g#{group.id}")) if group
   end
 
   test "entry for different entity does not touch another entity closing entry" do

@@ -7,7 +7,7 @@ class TaxExportStorageTest < ActiveSupport::TestCase
   end
 
   teardown do
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports", @report_id.to_s))
+    FileUtils.rm_rf(uploads_path("tax_exports", @report_id.to_s))
   end
 
   test "upload then list then read round-trips, newest first" do
@@ -62,6 +62,6 @@ class TaxExportStorageTest < ActiveSupport::TestCase
     assert_empty TaxExportStorage.list(@report_id)
     assert_equal 1, TaxExportStorage.list(other_id).size
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports", other_id.to_s))
+    FileUtils.rm_rf(uploads_path("tax_exports", other_id.to_s))
   end
 end

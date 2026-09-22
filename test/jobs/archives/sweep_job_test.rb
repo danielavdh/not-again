@@ -18,7 +18,7 @@ class Archives::SweepJobTest < ActiveJob::TestCase
   end
 
   teardown do
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "10"))
+    FileUtils.rm_rf(uploads_path("archives", "10"))
   end
 
   def entity_with_income(code, date, amount: 100)
@@ -38,7 +38,7 @@ class Archives::SweepJobTest < ActiveJob::TestCase
     entries = Archives::Storage.list(Archives::Storage.scope_key_for(entity))
     assert_equal [ Date.new(@checked_year, 12, 31) ], entries.map(&:end_date)
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "41"))
+    FileUtils.rm_rf(uploads_path("archives", "41"))
   end
 
   test "an entity with an existing archive covering that year is left alone" do
@@ -51,7 +51,7 @@ class Archives::SweepJobTest < ActiveJob::TestCase
 
     assert_equal "already archived", Archives::Storage.read(key)
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "42"))
+    FileUtils.rm_rf(uploads_path("archives", "42"))
   end
 
   test "an entity with no activity that year gets nothing forced on it" do
@@ -59,7 +59,7 @@ class Archives::SweepJobTest < ActiveJob::TestCase
     Archives::SweepJob.perform_now
     assert_empty Archives::Storage.list(Archives::Storage.scope_key_for(entity))
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "43"))
+    FileUtils.rm_rf(uploads_path("archives", "43"))
   end
 
   test "the generated archive is protected, same as a real close" do
@@ -67,7 +67,7 @@ class Archives::SweepJobTest < ActiveJob::TestCase
     Archives::SweepJob.perform_now
     assert Archives::Storage.list(Archives::Storage.scope_key_for(entity)).first.year_end
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "44"))
+    FileUtils.rm_rf(uploads_path("archives", "44"))
   end
 
   test "a family is swept once, not once per member" do
@@ -82,6 +82,6 @@ class Archives::SweepJobTest < ActiveJob::TestCase
     scope_key = Archives::Storage.scope_key_for(entity.reload)
     assert_equal 1, Archives::Storage.list(scope_key).size
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "g#{group.id}")) if group
+    FileUtils.rm_rf(uploads_path("archives", "g#{group.id}")) if group
   end
 end

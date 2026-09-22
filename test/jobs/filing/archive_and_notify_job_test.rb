@@ -31,7 +31,7 @@ module Filing
 
       assert_equal html, Filing::Storage.fetch_html(filename)
     ensure
-      FileUtils.rm_f(Rails.root.join("public", "tax_submissions", filename))
+      FileUtils.rm_f(submissions_path(filename))
     end
   end
 end

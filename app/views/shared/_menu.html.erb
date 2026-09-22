@@ -18,7 +18,6 @@
 	<% else %>
 	
 		<% if current_admin.full_access? %>
-		  	<%#= link_to admin_url(current_admin, subdomain: '') do %>
 		  	<%= link_to admin_path(current_admin) do %>
 		  		<svg><use xlink:href='#profile'></use></svg>
 		  	<% end %>

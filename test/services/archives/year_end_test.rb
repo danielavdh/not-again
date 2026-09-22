@@ -4,13 +4,13 @@ require "test_helper"
 # The trigger brain: which calendar years get an undeletable archive, and when.
 #
 # Each test uses its OWN random 2-digit entity code and cleans up only its own
-# scope dirs — the suite runs parallel processes sharing public/uploads.
+# scope dirs.
 class Archives::YearEndTest < ActiveSupport::TestCase
   setup { @scopes = [] }
 
   teardown do
     @scopes.uniq.each do |s|
-      FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", s))
+      FileUtils.rm_rf(uploads_path("archives", s))
     end
   end
 

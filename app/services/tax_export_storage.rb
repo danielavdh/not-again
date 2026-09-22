@@ -63,7 +63,7 @@ class TaxExportStorage
                             prefix: "#{PREFIX}/#{report_id}/", max_keys: 1000)
           .contents.map(&:key)
       else
-        Dir.glob(Rails.root.join("public", "uploads", PREFIX, report_id.to_s, "*.csv"))
+        Dir.glob(store.directory.join(PREFIX, report_id.to_s, "*.csv"))
            .map { |path| "#{PREFIX}/#{report_id}/#{File.basename(path)}" }
       end
 

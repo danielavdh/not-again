@@ -46,20 +46,8 @@ class EntityPurgeServiceTest < ActiveSupport::TestCase
 
   # audit C3: the purge must also erase the entity's books archive and its
   # filed tax documents — not just the database rows.
-  # ⚠️ Its OWN entity code, not the shared @a from setup — the only test in this
-  # file that touches real disk, and the paths are keyed on the code.
-  #
-  # EntityPurgeService erases filings with Shrine's delete_prefixed, which is
-  # `FileUtils.rm_rf public/tax_submissions/<code>/`. The test above purges @a
-  # too, and code "77" is used by six test files. So in a parallel run another
-  # process would rm_rf the directory this test is writing into — and because
-  # Shrine chmods a file AFTER writing it, the failure landed on the chmod:
-  #
-  #   Errno::ENOENT @ apply2files - public/tax_submissions/77/MTD/…
-  #
-  # Rare, because the window is between two lines of Shrine's upload; invisible
-  # locally for the same reason. CODE is free across the whole suite — check
-  # before reusing it.
+  # Its OWN entity code, not @a from setup: the paths it checks are keyed on the
+  # code, and code "77" is used by six test files.
   CODE = "40"
 
   test "purging an entity erases its archive and filing objects, not just the DB" do
@@ -78,7 +66,7 @@ class EntityPurgeServiceTest < ActiveSupport::TestCase
     assert_empty Archives::Storage.list(CODE), "the entity's books archive must be gone"
     assert_raises(Shrine::FileNotFound) { Filing::Storage.fetch_html(filing) }
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", CODE))
-    FileUtils.rm_rf(Rails.root.join("public", "tax_submissions", CODE))
+    FileUtils.rm_rf(uploads_path("archives", CODE))
+    FileUtils.rm_rf(submissions_path(CODE))
   end
 end

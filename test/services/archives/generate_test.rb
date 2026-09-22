@@ -9,7 +9,7 @@ class Archives::GenerateTest < ActiveSupport::TestCase
   end
 
   teardown do
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", @scope))
+    FileUtils.rm_rf(uploads_path("archives", @scope))
   end
 
   test "generates and uploads, and the result is readable back" do

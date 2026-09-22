@@ -98,7 +98,7 @@ module Archives
                               prefix: "#{PREFIX}/#{scope_key}/", max_keys: 1000)
             .contents.map(&:key)
         else
-          Dir.glob(Rails.root.join("public", "uploads", PREFIX, scope_key, "*.csv"))
+          Dir.glob(store.directory.join(PREFIX, scope_key, "*.csv"))
              .map { |path| "#{PREFIX}/#{scope_key}/#{File.basename(path)}" }
         end
 

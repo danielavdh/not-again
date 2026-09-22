@@ -7,10 +7,9 @@ class ReceiptsFixLegacyPathsTest < ActiveSupport::TestCase
     Rails.application.load_tasks unless Rake::Task.task_defined?("receipts:fix_legacy_paths")
     Rake::Task["receipts:fix_legacy_paths"].reenable
     @store = Shrine.storages.fetch(:store)
-    # A random token per test, not a hardcoded id segment: parallel test workers
-    # share this local FileSystem storage directory, and a fixed literal like
+    # A random token per test, not a hardcoded id segment: a fixed literal like
     # ".../900/..." can collide with an unrelated receipt that happens to get
-    # auto-assigned id 900 in a different worker.
+    # id 900.
     @tok = SecureRandom.hex(6)
   end
 

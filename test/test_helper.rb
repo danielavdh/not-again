@@ -17,12 +17,13 @@ require_relative "test_helpers/session_test_helper"
 # fails — intermittently, and only on a machine that has run the suite before.
 # CI never sees it; a developer sees it and cannot reproduce it.
 #
-# Once, after the whole suite: per-worker would race four workers wiping mid-
-# run.
+# Once, after the whole suite. A parallel run writes under per-worker folders
+# instead (see parallelize_setup), which go too.
 Minitest.after_run do
   next unless Rails.env.test?
   FileUtils.rm_rf(Rails.root.join("public", "uploads", "cache"))
   FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports"))
+  FileUtils.rm_rf(Dir.glob(Rails.root.join("public", "{uploads,tax_submissions}", "w[0-9]*")))
 end
 
 
@@ -31,6 +32,23 @@ module ActiveSupport
     # Run tests in parallel with specified workers
     #parallelize(workers: :number_of_processors)
     parallelize(workers: 4)
+
+    # Workers get a database each, whose id sequences overlap, but would share
+    # one disk: worker 1's report 18 and worker 3's report 18 both write
+    # tax_exports/18/. Each worker gets its own folder, emptied at start.
+    parallelize_setup do |worker|
+      FileUtils.rm_rf(Dir.glob(Rails.root.join("public", "{uploads,tax_submissions}", "w#{worker}")))
+      Shrine.storages = {
+        cache:       Shrine::Storage::FileSystem.new("public", prefix: "uploads/w#{worker}/cache"),
+        store:       Shrine::Storage::FileSystem.new("public", prefix: "uploads/w#{worker}"),
+        tax_filings: Shrine::Storage::FileSystem.new("public", prefix: "tax_submissions/w#{worker}")
+      }
+    end
+
+    # Where the current process's files land — always ask these, never build
+    # public/uploads by hand, or a parallel test cleans another worker's folder.
+    def uploads_path(*parts)     = Shrine.storages.fetch(:store).directory.join(*parts)
+    def submissions_path(*parts) = Shrine.storages.fetch(:tax_filings).directory.join(*parts)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical
     # order.

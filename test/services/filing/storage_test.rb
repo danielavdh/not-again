@@ -59,7 +59,7 @@ module Filing
       assert_equal content, result
     ensure
       # Clean up the test file from local filesystem
-      path = Rails.root.join("public", "tax_submissions", name)
+      path = submissions_path(name)
       FileUtils.rm_f(path)
     end
   end

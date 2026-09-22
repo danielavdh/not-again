@@ -7,7 +7,7 @@ class Archives::StorageTest < ActiveSupport::TestCase
   end
 
   teardown do
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", @scope_key))
+    FileUtils.rm_rf(uploads_path("archives", @scope_key))
   end
 
   test "scope_key_for keys grouped entities by their family, not the member" do

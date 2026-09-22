@@ -8,7 +8,7 @@
     <h2><%= t("journal_entries.edit") %> (<%= @journal_entry.id %>)</h2>
 
     <% if @journal_entry.errors.any? %>
-    <p class="error_message"><%#= @journal_entry.errors.full_messages.join(', ') %><%= @journal_entry.errors[:base].to_sentence %></p>
+    <p class="error_message"><%= @journal_entry.errors[:base].to_sentence %></p>
     <% end %>
 
     <%= render 'form', journal_entry: @journal_entry %>

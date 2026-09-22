@@ -222,7 +222,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "sales_income,Sales,100"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports", @report.id.to_s))
+    FileUtils.rm_rf(uploads_path("tax_exports", @report.id.to_s))
   end
 
   test "download_tax_export_backup refuses a report the admin cannot access" do
@@ -234,7 +234,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     get download_tax_export_backup_report_url(other_report, key: File.basename(key), locale: :en)
     assert_response :not_found
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports", other_report.id.to_s))
+    FileUtils.rm_rf(uploads_path("tax_exports", other_report.id.to_s))
   end
 
   test "download_tax_export_backup on a filename that was never uploaded reports not found, not a 500" do
@@ -397,7 +397,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_includes content, "uk income 2023"
     assert_includes content, "calendar income 2023"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "g#{group.id}")) if group
+    FileUtils.rm_rf(uploads_path("archives", "g#{group.id}")) if group
   end
 
   # --- create_archive / download_archive (§8) ---
@@ -408,7 +408,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_match "text/csv", response.content_type
     assert_includes response.body, "EntryID,Date,Entity,AccountCode"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", @entity.code))
+    FileUtils.rm_rf(uploads_path("archives", @entity.code))
   end
 
   # The manual button snapshots this scope's CURRENT calendar year, up to
@@ -435,7 +435,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Sale this year"
     assert_not_includes response.body, "Sale last year", "the snapshot is this calendar year only"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "77"))
+    FileUtils.rm_rf(uploads_path("archives", "77"))
   end
 
   test "create_archive refuses an entity the admin does not hold" do
@@ -451,7 +451,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "EntryID,Date,Entity,AccountCode"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", @entity.code))
+    FileUtils.rm_rf(uploads_path("archives", @entity.code))
   end
 
   test "download_archive refuses a key scoped to an entity the admin cannot access" do
@@ -462,7 +462,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to dashboard_url(locale: :en)
     assert_equal I18n.t("access.read_only_deny"), flash[:alert]
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", other.code))
+    FileUtils.rm_rf(uploads_path("archives", other.code))
   end
 
   test "download_archive on a key that was never uploaded reports not found, not a 500" do
@@ -476,11 +476,9 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
 
   # --- destroy_archive ---
   #
-  # Dedicated entities, one code each, rather than reusing entities(:family_biz)
-  # (code "10"): other tests here and in journal_entries_controller_test.rb also
-  # read, write and clean real files under public/uploads/archives/10/, and the
-  # suite runs in parallel processes sharing that filesystem. Three DIFFERENT
-  # codes for the same reason — these three can run in parallel with each other.
+  # Dedicated entities, one code each, rather than entities(:family_biz): other
+  # tests write archives under code 10 too, and these assert on what the
+  # directory holds.
   test "destroy_archive removes an on-demand archive" do
     entity = Entity.create!(name: "Archive Delete Test", code: "91", active: true)
     AdminEntity.create!(admin: @admin, entity: entity, access_level: :full_access)
@@ -492,7 +490,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reports_url(locale: :en)
     assert_empty Archives::Storage.list(Archives::Storage.scope_key_for(entity))
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "91"))
+    FileUtils.rm_rf(uploads_path("archives", "91"))
   end
 
   test "destroy_archive refuses a year-end archive, server-side" do
@@ -507,7 +505,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, Archives::Storage.list(Archives::Storage.scope_key_for(entity)).size,
       "a year-end archive must survive an attempt to delete it"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "92"))
+    FileUtils.rm_rf(uploads_path("archives", "92"))
   end
 
   test "destroy_archive requires write access, not just read" do
@@ -524,7 +522,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, Archives::Storage.list(Archives::Storage.scope_key_for(entity)).size,
       "an admin with no access to this entity must not be able to delete its archive"
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "93"))
+    FileUtils.rm_rf(uploads_path("archives", "93"))
   end
 
   # --- Unauthenticated ---
@@ -540,11 +538,8 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   # "10/../05/x.csv" authorise as 10 and then read — or delete — entity 05's
   # posting-level ledger.
   class ArchiveKeyTraversalTests < ActionDispatch::IntegrationTest
-    # A victim entity PER TEST, not one shared fixture: these write and clean
-    # real files under public/uploads/archives/<code>/, and parallel test
-    # processes share that directory, so one test's teardown would delete
-    # another's file mid-run — which looks exactly like the vulnerability
-    # passing.
+    # A victim entity PER TEST: each asserts on a directory no other test
+    # writes to, so a leftover file cannot look like the vulnerability passing.
     def victim_setup(code)
       admin  = admins(:two)              # full access on 10 and 04; never on `code`
       victim = Entity.create!(name: "Traversal Victim #{code}", code: code, active: true)
@@ -556,7 +551,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     end
 
     def cleanup(code)
-      FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", code))
+      FileUtils.rm_rf(uploads_path("archives", code))
     end
 
     def traversals(code)
@@ -611,21 +606,14 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
   # Archives::BooksCsv pulls the whole family's ledger for one member's
   # scope_key, so partial access to a family must not create OR download it.
   class FamilyArchiveAccessTests < ActionDispatch::IntegrationTest
-    # ⚠️ A DEDICATED id per test, for the same reason the tests above use a
-    # dedicated entity CODE each — and it has to be the id, not the code,
-    # because a family's archives live under `g<EntityGroup id>`.
-    #
-    # Parallel workers get a database each but SHARE the real disk under
-    # public/uploads/archives/. Left to the sequence, every worker's first
-    # EntityGroup is id 1, so all three of these tests write to `archives/g1/`
-    # at once — and "create_archive is refused" asserts that directory is
-    # EMPTY while "download_archive is refused" is busy putting a file in it.
-    # Green alone, red at random in a full run, and only ever on the machine
-    # that happened to interleave them.
+    # A DEDICATED id per test, for the same reason the tests above use a
+    # dedicated entity CODE each — the id, not the code, because a family's
+    # archives live under `g<EntityGroup id>`. "create_archive is refused"
+    # asserts that directory is EMPTY.
     GROUP_IDS = { create: 9101, download: 9102, both: 9103 }.freeze
 
     def cleanup(scope_key)
-      FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", scope_key))
+      FileUtils.rm_rf(uploads_path("archives", scope_key))
     end
 
     test "create_archive is refused with access to only one family member" do

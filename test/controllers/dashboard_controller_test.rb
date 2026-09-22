@@ -105,7 +105,7 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "tr.entity-downloads a", text: today, count: 0
   ensure
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", entity.code))
+    FileUtils.rm_rf(uploads_path("archives", entity.code))
   end
   # The tax row: one next step per scheme, and nothing that leads nowhere.
   # Subscribing alone was enough to show a submissions button, so an entity

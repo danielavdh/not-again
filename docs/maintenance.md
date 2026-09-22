@@ -189,7 +189,19 @@ aws s3 ls "s3://$BUCKET/daily/" --endpoint-url "$ENDPOINT"   # find the newest
 aws s3 cp "s3://$BUCKET/daily/<newest-file>" . --endpoint-url "$ENDPOINT"
 ```
 
-**2. Restore it into a scratch database** and check that it opens, that the row counts are plausible, and that a receipt resolves. Half an hour, and it is the only evidence any of the above works — a verified dump proves the file is well-formed, never that it can be brought back.
+**2. Restore it into a scratch database** and check that it opens, that the figures match production, and that a receipt resolves. Half an hour, and it is the only evidence any of the above works — a verified dump proves the file is well-formed, never that it can be brought back.
+
+```bash
+createdb restore_drill
+pg_restore --no-owner --no-acl --exit-on-error -d restore_drill <newest-file>
+psql -d restore_drill -c "select currency, entry_type, count(*), sum(amount) from postings group by 1, 2 order by 1, 2"
+```
+
+Run the same query on production and compare — anything posted since the backup's timestamp is the only acceptable difference. Then take one receipt's key from the restored copy (`select scan_data::jsonb->>'id' from receipts limit 1`) and `aws s3api head-object` it in the receipts bucket.
+
+**3. Throw it away** — `dropdb restore_drill` and delete the dump. It is a full copy of the books on a laptop.
+
+Last run: 2026-09-22, backup of 03:05 that night — every count and every per-currency sum identical to production, receipt 58 resolved.
 
 ### Server
 
@@ -303,6 +315,4 @@ Automatic, monthly. It never deletes on its own: it emails the sudo admin — fa
 - **Receipts have no backup separate from the live bucket, by design** — not planned, see the "Database backups" section above for why.
 <!-- TODO: schedule the mirror_to_second_provider.sh cron lines on the production server, waiting on first deploy -->
 - **The second-provider mirror (tax filings, database backups, archive CSVs) is built and tested but not yet scheduled on the production server** — waiting on first deploy. See "Mirroring to a second provider" above.
-<!-- TODO: run a real restore drill, as part of the data migration into this app (a full dump-and-load already exercises the same path) -->
-- No restore has been tested. Planned as part of the data migration into this app, which is a full dump-and-load and so exercises the same path with something real at stake.
 - No visible "last backup" or "last archive" date for the people who depend on them. The weekly report tells the maintainer; the bookkeepers still cannot see it. `known-limitations.md` §7.

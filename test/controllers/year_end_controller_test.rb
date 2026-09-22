@@ -14,7 +14,7 @@ class YearEndControllerTest < ActionDispatch::IntegrationTest
   # Pre-existing gap, unrelated to today's work: create_year_end has always
   # archived the period it closes, and this file never cleaned that up.
   teardown do
-    FileUtils.rm_rf(Rails.root.join("public", "uploads", "archives", "77"))
+    FileUtils.rm_rf(uploads_path("archives", "77"))
   end
 
   # Scoped to this test's entity — fixtures hold closing entries for others.

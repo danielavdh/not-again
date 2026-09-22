@@ -26,7 +26,7 @@ class TaxExportJobTest < ActiveSupport::TestCase
   end
 
   teardown do
-    @tax_backup_report_ids.each { |id| FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports", id.to_s)) }
+    @tax_backup_report_ids.each { |id| FileUtils.rm_rf(uploads_path("tax_exports", id.to_s)) }
   end
 
   def run_job(report: @report, **opts)
