@@ -71,8 +71,8 @@
       	<th><%= t("attrs.description") %></th>
       	<th class="big-screen"><%= t("attrs.reference") %></th>
       	<!-- <th class="right"><%#= t("attrs.amount") %></th> -->
-      	<th class="right"><%= t("jargon.debit") %></th>
-      	<th class="right"><%= t("jargon.credit") %></th>
+      	<%= tag.th t("jargon.debit"), class: "right", data: { sum: @display_currency } %>
+      	<%= tag.th t("jargon.credit"), class: "right", data: { sum: @display_currency } %>
       	<th><%= t("jargon.currency") %></th>
 		<th><%= t("receipts.receipts") %></th>
       </tr>
@@ -211,6 +211,7 @@
 			class: 'button red' %>
   <% end %>
   <% end %>
+	<%= render "shared/cell_sum" %>
 </div>
 
 <%= render partial: 'receipts/preview_modal' %>

@@ -8,6 +8,27 @@ class AdminMailerTest < ActionMailer::TestCase
     @entity = entities(:family_biz)
   end
 
+  # ==================== Message-ID ====================
+
+  test "Message-ID is on the sender's domain, never the machine's hostname, and unique per mail" do
+    ids = 2.times.map do
+      mail = AdminMailer.with(
+        admin: @admin, entity: @entity,
+        start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31),
+        attachments: {}, locale: "en"
+      ).tax_export_ready
+      mail.deliver_now
+      mail.message_id
+    end
+
+    domain = Mail::Address.new(MAIL_FROM).domain
+    ids.each do |id|
+      assert id.end_with?("@#{domain}"), id
+      refute_includes id, Socket.gethostname
+    end
+    assert_equal 2, ids.uniq.size
+  end
+
   # ==================== tax_export_ready ====================
 
   test "tax_export_ready subject includes entity name and dates" do

@@ -363,6 +363,18 @@ export function formatAmountFromCents(cents) {
   return `${cents < 0 ? '-' : ''}${int}${separator}${dec}`;
 }
 
+/* Integer cents + currency code -> the display string with its symbol.
+ * The mirror of `CurrencyConfig#format_cents`. */
+export function formatCentsWithCurrency(cents, currency) {
+  if (cents == null || !Number.isFinite(cents)) return '';
+  const { symbol: layout = '%u%n', symbols = {} } = getNumberFormat();
+  const symbol = currency ? (symbols[currency.toUpperCase()] || '') : '';
+  const number = formatAmountFromCents(Math.abs(cents));
+  const result = layout.replace('%u', symbol).replace('%n', number)
+    .replace(/ {2,}/g, ' ').trim().replace(/ /g, '\u00A0');
+  return cents < 0 ? `-${result}` : result;
+}
+
 /********** debugging ***********/
 
 export function checkType(value) {

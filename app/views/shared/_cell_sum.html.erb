@@ -1,0 +1,21 @@
+<%# Filled by scripts/cell-sum.js once two or more amounts are ⌘/Shift-clicked. %>
+<output id="cell-sum" class="hidden">
+	<div>
+		<div class="copy-confirm">
+			<%= tag.span "", 
+					class: "copy-status hidden", 
+					data: { copied: t("crud.copied") } %>
+		</div>
+		<div class="sum-output">
+			<span><%= t("jargon.total") %> (<span data-sum-count></span>):</span> 
+			<span data-sum-total></span>
+			<button type="button"
+					data-action="copy-cell-sum"
+					class="button green"
+					title="<%= t('crud.copy') %>"
+					aria-label="<%= t('crud.copy') %>">
+				<svg class="stroke s10"><use xlink:href='#copy'></use></svg>
+			</button>
+		</div>
+	</div>
+</output>

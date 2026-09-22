@@ -233,9 +233,10 @@ module CurrencyConfig
 
     # What #number-format-config hands the JS (getNumberFormat) — the same
     # separator and delimiter the server formats with, so the on-blur reformat
-    # and the running totals match what is saved.
+    # and the running totals match what is saved. The symbol layout and table
+    # let formatCentsWithCurrency mirror #format_cents.
     def js_format(locale: I18n.locale)
-      number_format(locale).slice(:separator, :delimiter)
+      number_format(locale).slice(:separator, :delimiter, :symbol).merge(symbols: symbols)
     end
 
   end

@@ -164,6 +164,7 @@ const Accounts = {
 		});
 		/* Open split modal when clicking the amount of a paired posting */
 		delegate(document, 'click', '.posting-amount, input[data-amount-field]', (e, input) => {
+		    if (e.metaKey || e.ctrlKey || e.shiftKey) return; // adding to the sum (cell-sum.js)
 		    const row = input.closest('tr');
 		    const pairId = row?.querySelector('.posting-deduction-pair-id')?.value;
 		    if (!pairId) return;
@@ -462,6 +463,7 @@ const Accounts = {
 		/* A linked amount (the 601 gift or a JE₂ mirror) is locked — clicking it
 		   reopens the modal pre-filled, so all three legs edit together. */
 		delegate(document, 'click', '.posting-amount', (e, input) => {
+		    if (e.metaKey || e.ctrlKey || e.shiftKey) return; // adding to the sum (cell-sum.js)
 		    const row = input.closest('tr');
 		    const linkId = row?.classList.contains('ce-mirror-row')
 		        ? row.dataset.ceLinkId

@@ -1762,6 +1762,43 @@ body{
 				--svg-width: 3.5vw;
 				--svg-height: 3.5vw;
 				}
+				output{
+				margin-inline-start: auto;
+					div{
+					display: flex;
+					align-items: center;
+					background-color: var(--green-l-8);
+						div.copy-confirm{
+						margin-inline-end: 1vw;
+							span.copy-status{
+							color: var(--light);
+							font-size: 0.75rem;
+							font-style: italic;
+							}
+						}
+						div.sum-output{
+						display: flex;
+						align-items: center;
+						gap: 1vw;
+						background-color: var(--light);
+						padding-inline-start: 0.5vw;
+						font-size: 0.75rem;
+							span{
+							//color: inherit;
+							}
+							button{
+							padding: 0.25vw;
+							margin-inline-end: 0;
+							@include svg-icon;
+								svg{
+								--svg-stroke: var(--be-link);
+								width: 1.5vw;
+								height: 1.5vw;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}

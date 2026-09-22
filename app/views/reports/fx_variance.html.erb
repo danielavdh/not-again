@@ -37,7 +37,7 @@
           <th class="right"><%= t("reports.fx_variance_page.leg_in") %></th>
           <th class="right"><%= t("reports.fx_variance_page.implied_rate") %></th>
           <th class="right"><%= t("reports.fx_variance_page.published_rate") %></th>
-          <th class="right"><%= t("reports.fx_translation_variance") %> (<%= @display_currency %>)</th>
+          <th class="right" data-sum="<%= @display_currency %>"><%= t("reports.fx_translation_variance") %> (<%= @display_currency %>)</th>
         </tr>
       </thead>
       <tbody>
@@ -88,4 +88,5 @@
       class: 'button green',
       data: { sure: t("crud.csv_confirm") } %>
   <button id="print-button" class="button green"><%= t("crud.print") %></button>
+	<%= render "shared/cell_sum" %>
 </div>

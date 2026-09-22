@@ -28,10 +28,10 @@
 			<tr>
 				<th><%= t("jargon.account") %></th>
 				<% @currencies_with_data.each do |curr| %>
-				<th class="right"><%= curr %></th>
+				<th class="right" data-sum="<%= curr %>"><%= curr %></th>
 				<% end %>
 			  <% if translated_column?(@currencies_with_data, @display_currency) %>
-				<th class="right">
+				<th class="right" data-sum="<%= @display_currency %>">
 				  <% if currency_selectable?(@currencies_with_data) %>
 					<%= form_with url: balance_sheet_reports_path, 
 							method: :get, 
@@ -256,4 +256,5 @@
 		class: 'button green',
 		data: { sure: t("crud.csv_confirm") } %>
 	<button id="print-button" class="button green"><%= t("crud.print") %></button>
+	<%= render "shared/cell_sum" %>
 </div>

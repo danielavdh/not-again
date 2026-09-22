@@ -2,6 +2,7 @@ import Accounts from "scripts/accounts";
 import { setupFlashMessages, delegate, isTouchDevice, showElementSmoothly, hideElementSmoothly, showTransientStatus, initModals, toggleLanguageBar } from "scripts/utils";
 import { TaxMapping, TaxSetup, HmrcFraudPrevention } from "scripts/tax";
 import TomSelectHelper from "scripts/tomselect_helper";
+import CellSum from "scripts/cell-sum";
 
 /* Authority-specific browser collectors, keyed by the name the server sends.
    See initAccounts below. */
@@ -35,6 +36,7 @@ const vdh = {
 		Accounts.init();
 		TaxMapping.init();
 		TaxSetup.init();
+		CellSum.init();
 		/* Browser-side data an authority requires, started ONLY where the server
 		   says one is wanted, and looked up by NAME rather than tested for.
 
@@ -76,6 +78,7 @@ const vdh = {
 	/* Escape key triggers the cancel/back link in crud_navigation */
 	document.addEventListener('keydown', (e) => {
 	  if (e.key !== 'Escape') return;
+	  if (CellSum.clear()) return;
 	  const active = document.activeElement;
 	  if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
 	  const nav = document.querySelector('.crud_navigation');

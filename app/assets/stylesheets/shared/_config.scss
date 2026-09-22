@@ -164,6 +164,9 @@ width: $width;
 	th.sed, td.sed{
 	width: 1vw;
 	}
+	td[data-summable] { 
+	cursor: cell; 
+	}
 	td.right, th.right{
 	text-align: end;
 	}
@@ -578,7 +581,6 @@ z-index: 100;
 	nav.pagy.series-nav, div.offboarding{ 
 	margin-inline-start: auto;
 		a{
-		//margin: 0 0 0 0.25vw;
 		margin-block: 0 0;
 		margin-inline: 0.25vw 0;
 		color: #646464;

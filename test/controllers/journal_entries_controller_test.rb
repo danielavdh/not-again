@@ -44,18 +44,22 @@ class JournalEntriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "an app-generated close offers no copy, edit, unpost or delete on its own page" do
+    @admin.update!(show_journal_entries: true) # full_access_pro?, or copy/edit/delete never render anyway
     closing = journal_entries(:closing_entry_fy2024)
     get journal_entry_url(locale: :en, id: closing)
     assert_response :success
-    nav = css_select("div.crud_navigation").to_s
-    assert_no_match I18n.t("crud.copy"),   nav
-    assert_no_match I18n.t("crud.edit"),   nav
-    assert_no_match I18n.t("crud.unpost"), nav
-    assert_no_match I18n.t("crud.delete"), nav
+    assert_select "div.crud_navigation a[href=?]", duplicate_journal_entry_path(closing, locale: :en), count: 0
+    assert_select "div.crud_navigation a[href=?]", edit_journal_entry_path(closing, locale: :en), count: 0
+    assert_select "div.crud_navigation form[action^=?]", unpost_journal_entry_path(closing, locale: :en), count: 0
+    assert_select "div.crud_navigation form input[name=_method][value=delete]", count: 0
 
     # an ordinary posted entry still offers its normal actions
     get journal_entry_url(locale: :en, id: @journal_entry)
-    assert_match I18n.t("crud.unpost"), css_select("div.crud_navigation").to_s
+    assert_select "div.crud_navigation a[href=?]", duplicate_journal_entry_path(@journal_entry, locale: :en)
+    assert_select "div.crud_navigation a[href=?]", edit_journal_entry_path(@journal_entry, locale: :en)
+    assert_select "div.crud_navigation form[action^=?]", unpost_journal_entry_path(@journal_entry, locale: :en)
+    get journal_entry_url(locale: :en, id: @draft_entry) # delete is offered on drafts only
+    assert_select "div.crud_navigation form input[name=_method][value=delete]"
   end
 
   test "copying a closing entry produces an ordinary entry, not a second close" do

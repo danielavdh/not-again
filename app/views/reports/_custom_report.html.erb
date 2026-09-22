@@ -4,11 +4,11 @@
     <tr>
       <th><%= t("jargon.account") %></th>
       <% @currencies_with_data.each do |curr| %>
-        <th><%= curr %></th>
+        <th data-sum="<%= curr %>"><%= curr %></th>
       <% end %>
       <%# Dropped when a single currency already IS the target — it would only repeat the column beside it. %>
       <% if translated_column?(@currencies_with_data, @display_currency) %>
-        <th>
+        <th data-sum="<%= @display_currency %>">
           <% if currency_selectable?(@currencies_with_data) %>
             <%= form_with url: request.path, method: :get, local: true do %>
               <%= hidden_field_tag :version, @short_version ? 'short' : 'long' %>

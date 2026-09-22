@@ -6,10 +6,10 @@
     <tr>
       <th><%= t("reports.show.category") %></th>
       <% @currencies_with_data.each do |curr| %>
-        <th><%= curr %></th>
+        <th data-sum="<%= curr %>"><%= curr %></th>
       <% end %>
       <% if show_translated %>
-        <th>
+        <th data-sum="<%= @display_currency %>">
           <%# A tax report's currency is the scheme's — never a dropdown. %>
           <%= @display_currency %>
           <%= render "reports/rate_source", sources: rate_sources, selectable: false %>
