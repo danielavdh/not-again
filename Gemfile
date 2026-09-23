@@ -100,5 +100,5 @@ group :test do
   # `bundle update rails` resolved it to 6, which drops `minitest/mock` —
   # test_helper requires it, and the whole suite failed to load. Moving to 6 is
   # its own job: extract the mock dependency first, then lift this pin.
-  gem "minitest", "~> 5.26"
+  gem "minitest", "~> 6.0"
 end
