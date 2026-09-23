@@ -17,7 +17,7 @@ What the words mean, what one set of books can hold, and the reasoning behind th
     - [Translation variance](#translation-variance)
 - [Closing a year](#closing-a-year)
 - [Reconciliation](#reconciliation)
-- [Admin Access levels](#admin-access-levels)
+- [Admin access levels](#admin-access-levels)
 - [Entities, families, and cross-entity entries](#entities-families-and-cross-entity-entries)
 - [Tax — categories, schemes, and the three tiers](#tax--categories-schemes-and-the-three-tiers)
     - [The words](#the-words)
@@ -66,10 +66,10 @@ Accounts use a 6-digit code (`app/models/concerns/account_coding.rb`):
 
 | Position | Meaning | Example |
 |---|---|---|
-| 1   | Type — 1 Asset, 2 Liability, 3 Equity, 4 Income, 5 Expense, 6 Personal | <font color="#cc0000">5</font>04102 is an expense account |
-| 2–3 | Entity (matches `entities.code`) | 5<font color="#cc0000">04</font>102 is entity/business/household 04 |
-| 4   | Subcategory — a rough grouping, yours to define | 504<font color="#cc0000">3</font>02 could be 'Office Costs' |
-| 5–6 | Fine detail | 5043<font color="#cc0000">02</font> could be 'Computer and Digital Supplies' |
+| 1   | Type — 1 Asset, 2 Liability, 3 Equity, 4 Income, 5 Expense, 6 Personal | **5**04102 is an expense account |
+| 2–3 | Entity (matches `entities.code`) | 5**04**102 is entity/business/household 04 |
+| 4   | Subcategory — a rough grouping, yours to define | 504**3**02 could be 'Office Costs' |
+| 5–6 | Fine detail | 5043**02** could be 'Computer and Digital Supplies' |
 
 Positions 1–3 are **fixed** ; positions 4–6 can be chosen **freely**. Accounts sort by code, so your numbering *is* your reading order.<br /> 
 Use parent accounts (e.g. 504300) to group accounts visually. Parent accounts don't hold postings, but they show the total of their children's amounts.
@@ -159,7 +159,7 @@ The accounts index has an **R** button on every balance-account leaf. It opens a
 
 ---
 
-## Admin Access levels
+## Admin access levels
 
 | Level | Can do | OTP required |
 |---|---|:---:|

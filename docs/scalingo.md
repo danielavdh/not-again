@@ -1,6 +1,10 @@
 # Deploying to Scalingo
 
-The hosted route: nothing installed on your own computer, no terminal, no server to maintain. This page is specific to Scalingo because that is what makes the deploy button below work — but nothing about the app requires it. Any provider that can build this app from its code (hosted on GitHub) and give you cloud storage for files plus a way to send email works the same way; Scalingo (hosted server) and Scaleway (file storage and email) are simply the ones this page is written against. Both are EU-based, which is why they were picked over the larger US platforms.
+The hosted route: nothing installed on your own computer, no terminal, no server to maintain. You will need **a domain name** — the email service only sends from a domain you own.
+
+This page is written against Scalingo (the server) and Scaleway (files and email), both EU-based. Any provider that can build the app from its code on GitHub, store files and send email works the same way.
+
+⚠️ **Written September 2026.** Control panels get redesigned, so buttons move and menus get renamed. The shape of each task stays the same: create a thing, restrict it, take a key.
 
 **This path cannot file directly to HMRC.** Digital submission needs the app
 to be registered with HMRC from one server address that never changes, which
@@ -9,8 +13,7 @@ reports and the tax export all work regardless; you would just file the
 figures yourself.
 
 None of "Getting started" in the main [README](../README.md) applies here — nothing
-to install, nothing to download, nothing to run on your own computer. Skip straight
-to Step 1 below.
+to install, nothing to download, nothing to run on your own computer.
 
 <!-- toc -->
 
@@ -33,7 +36,7 @@ to Step 1 below.
 
 You keep your books in an app. You use a smartphone. You have never typed a command
 into a terminal and would rather not start now. You are willing to pay a monthly fee
-to have someone else run the machine.
+to have someone else run the machine, and to own a domain name.
 
 This path is mostly clicking and copy-pasting. Set aside an undisturbed hour the
 first time — most of it is waiting, or filling in a form.
@@ -51,6 +54,7 @@ Both are European. Scaleway has a free tier; Scalingo needs a card.
 
 - **A GitHub account.** Free — [github.com](https://github.com), *Sign up*. Scalingo uses it to sign you in and to find the app's code. You never have to use GitHub beyond signing in.
 - **A domain name**, e.g. `yourdomain.com`, and access to its DNS settings at your registrar. The email service only sends from a domain you own. Buy one first if you don't have one — any registrar will do.
+- **An authenticator app** on your phone — Google Authenticator, 1Password, Aegis, whichever. The app asks for a second factor at your first sign-in and every one after.
 - **Pen and paper**, or a notes app. You will collect about ten values along the way and paste them all into one form at the end; writing them down as you go is calmer than switching tabs to look each one up again.
 
 ---
@@ -86,9 +90,11 @@ Both are European. Scaleway has a free tier; Scalingo needs a card.
 
 ## Step 2 — email (Scaleway)
 
-*About 15 minutes, plus waiting for DNS.*
+*About 15 minutes of work, then a wait of minutes to hours.*
 
-Without this, a forgotten password can only be reset from the Scalingo console, and the tax export can't be emailed.
+Without this, nobody can reset a forgotten password and the tax export can't be emailed.
+
+⚠️ **Do items 1 and 2 below before anything else**, then go back and work through Step 1 while the DNS records spread. Verification is the only part of this guide you cannot hurry.
 
 Use the same Scaleway project as Step 1.
 
@@ -128,6 +134,9 @@ Write down: project ID, secret key, and a sender address on your domain for `MAI
 		| `SMTP_USERNAME` | the project ID from Step 2 |
 		| `SMTP_PASSWORD` | the secret key from Step 2 |
 		| `MAIL_FROM` | the sender address on your domain from Step 2 — **not optional**, see the warning there |
+		| `OWNER_USERNAME` | the name of your first account, e.g. `daniela`. It is created when the app starts — there is no sign-up page |
+		| `OWNER_PASSWORD` | its password, at least 8 characters. Anyone with access to this Scalingo app can read it here, so change it once you are in |
+		| `OWNER_EMAIL` | optional, but without it that account can never reset its own password |
 		| `SERVICE_NAME` | your business name — appears on the app's legal page |
 		| `CONTACT_NAME`, `CONTACT_EMAIL`, `CONTACT_TRADING`, `CONTACT_STREET`, `CONTACT_CITY`, `CONTACT_COUNTRY` | your own details — also on the legal page; required in Germany, honest practice everywhere |
 
@@ -136,7 +145,13 @@ Write down: project ID, secret key, and a sender address on your domain for `MAI
 
 4. Click **Create**. Scalingo builds and starts the app — about 5 to 8 minutes. The page shows a log; you don't need to read it.
 
-5. When it says the app is running, open `https://smith-books.osc-fr1.scalingo.io`.<br />**Register** — the first account is the owner, we don't recommend you use it for your day to day bookkeeping (see [the README](../README.md#about-sudo) for what "owner" means and why). Write the password down somewhere durable, then log in and create your admin(s) and give them entities (businesses).
+5. When it says the app is running, open `https://smith-books.osc-fr1.scalingo.io` and sign in with `OWNER_USERNAME` and `OWNER_PASSWORD`. There is no sign-up page: that account was created as the app started, and it is the only way in.
+
+6. You are asked to set up the **second factor**: the page shows a QR code, you scan it with your authenticator app and type the six digits back. From now on every sign-in asks for a fresh six digits.
+
+7. Change that password (your name, top right → your admin page), since it is still readable in Scalingo's Environment page.
+
+8. That first account is the **owner** — see [what "owner" means](../README.md#about-sudo). Add a second, ordinary admin for your own day-to-day bookkeeping, and give it the entities (businesses) it keeps.
 
 ---
 
@@ -156,6 +171,7 @@ Write down: project ID, secret key, and a sender address on your domain for `MAI
 
 - **Deploy failed.** Scalingo → your app → **Deploy** → open the last deployment's log and scroll to the bottom. Almost always a wrong storage key from Step 1, or a `CONTACT_*` field left empty — production refuses to start with those blank. Fix the value under **Environment**, then **Deploy → Manual deploy**.
 - **Page won't load, says "Blocked host".** The app only answers to the one address you told it to expect, as a security measure — and the address in your browser doesn't match it. Go to Scalingo → your app → **Environment** and check `APP_HOST`: it should be typed exactly as the address you're trying to visit, with no `https://` and no trailing slash — e.g. `smith-books.osc-fr1.scalingo.io`, or `books.yourdomain.com` if you've set up your own address in Step 4.
+- **The app is running but you cannot sign in.** The owner account is created by the deploy, from `OWNER_USERNAME` / `OWNER_PASSWORD`. If you left them blank, the deploy log's last lines say so. Fill them in under **Environment**, then **Deploy → Manual deploy**, which creates the account.
 - **Receipts won't upload.** One of the Scaleway values from Step 1 is wrong. Re-check the bucket name, region, endpoint and both keys against your notes — a fresh key is quick to generate if in doubt.
 - **Password resets or the tax export never arrive by email.** Check three things under **Environment**: `MAIL_FROM` is on the domain Scaleway verified in Step 2; `SMTP_USERNAME` is the project ID, not the organisation ID; the application from Step 2 has its `TransactionalEmailFullAccess` policy. Scaleway → **Transactional Email** → your domain shows whether mail was sent or refused.
 
@@ -170,5 +186,7 @@ Write down: project ID, secret key, and a sender address on your domain for `MAI
 ## What you are trusting
 
 Scalingo holds your database, Scaleway holds your receipt files. Both protect the data while it sits on their servers, but it isn't on hardware you own or control — you're trusting their security, not just your own. In exchange, you never have to keep a server's software up to date yourself, and if a hard drive fails, that's their problem to fix, not yours.
+
+⚠️ **Those backups are of the database only.** Receipts and tax filings live in your Scaleway bucket, and nothing copies them anywhere else — that is yours to decide about, see [maintenance.md](maintenance.md).
 
 **Database backups are automatic — nothing to set up.** Every paid Scalingo plan (which is what this guide uses) includes daily backups of your database by default: the last 7 days, kept automatically, plus 7 days of [point-in-time recovery](https://doc.scalingo.com/databases/about/backup-policies). No add-on, no extra cost, no cron job to remember — unlike some other hosting platforms, where backups are something you have to switch on yourself.

@@ -1,6 +1,6 @@
 # Maintenance — what has to keep happening
 
-Everything this app needs done on a recurring basis, and by whom. Written 2026-08-25.
+Everything this app needs done on a recurring basis, and by whom.
 
 Three roles, because self-hosting splits them:
 
@@ -317,7 +317,7 @@ Automatic, monthly. It never deletes on its own: it emails the sudo admin — fa
 | Admin leaves | `lib/tasks/offboarding.rake`; check whether an entity is left orphaned |
 | Entity closed | `EntityPurgeService`, subject to the retention policy |
 | New country or scheme | two YAML files, possibly one Ruby class: `db/tax_categories/<cc>_<scheme>_<year>.yml` and a country block in `db/exchange_rate_rules.yml` |
-| New language | one line in `config/initializers/locale.rb`, one file in `config/locales/` (the app's strings — Rails' own come from the `rails-i18n` gem), three manual pages in `app/views/help/` |
+| New language | one line in `config/initializers/locale.rb`, one file in `config/locales/` (the app's strings — Rails' own come from the `rails-i18n` gem), four pages in `app/views/help/` — easy manual, pro manual, legal, terms |
 | Security report | the address in `/.well-known/security.txt`, which is generated from `CONTACT_EMAIL` |
 
 ---
@@ -325,6 +325,4 @@ Automatic, monthly. It never deletes on its own: it emails the sudo admin — fa
 ## Known gaps
 
 - **Receipts have no backup separate from the live bucket, by design** — not planned, see the "Database backups" section above for why.
-<!-- TODO: schedule the mirror_to_second_provider.sh cron lines on the production server, waiting on first deploy -->
-- **The second-provider mirror (tax filings, database backups, archive CSVs) is built and tested but not yet scheduled on the production server** — waiting on first deploy. See "Mirroring to a second provider" above.
 - No visible "last backup" or "last archive" date for the people who depend on them. The weekly report tells the maintainer; the bookkeepers still cannot see it. `known-limitations.md` §7.

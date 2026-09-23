@@ -6,6 +6,9 @@ How to add tax support for a new country — one YAML file transcribing the auth
 
 **Contents**
 
+- [Finding the original scheme](#finding-the-original-scheme)
+    - [What to commit](#what-to-commit)
+    - [The rule underneath all of this](#the-rule-underneath-all-of-this)
 - [Catalogue](#catalogue)
     - [The header](#the-header)
     - [Each category row](#each-category-row)
@@ -14,20 +17,40 @@ How to add tax support for a new country — one YAML file transcribing the auth
 - [Years, forward-only and correctable in place](#years-forward-only-and-correctable-in-place)
 - [Account-form dropdown](#account-form-dropdown)
 - [Auto-assignment — suggestions from keywords](#auto-assignment--suggestions-from-keywords)
-- [Finding the original scheme.](#finding-the-original-scheme)
-    - [What to commit](#what-to-commit)
-    - [The rule underneath all of this](#the-rule-underneath-all-of-this)
 - [Adding a country — a worked example](#adding-a-country--a-worked-example)
     - [What will fail, and what to do about it](#what-will-fail-and-what-to-do-about-it)
     - [What you do NOT need](#what-you-do-not-need)
 - [Tax category depth and inheritance](#tax-category-depth-and-inheritance)
-- [Tax catalogue loading](#tax-catalogue-loading)
 - [Email tax export](#email-tax-export)
 - [Adding an accountant format](#adding-an-accountant-format)
 - [Where accounts get tagged](#where-accounts-get-tagged)
 - [Filename convention](#filename-convention)
 
 <!-- tocstop -->
+
+## Finding the original scheme
+
+Everything else in this document assumes you have the authority's own description of what goes in the return. Getting it is the first step and usually the longest, because **it is not the same kind of document in each country** &mdash; and knowing which situation you are in decides how the catalogue is built.
+
+Four routes, all of them live in this repository:
+
+**A numbered form.** The best case. Britain's SA105 and Germany's Anlage EÜR are PDFs with box numbers on them, so `label` is the box's printed wording and `export_column` is its number or Kennzahl. Download it, put it in `docs/tax-forms/`, transcribe it box by box.
+
+**No form at all.** Switzerland has no federal form with income and expense boxes &mdash; income tax on the self-employed is assessed cantonally, and the cantonal forms ask for a single figure with the breakdown attached. So the categories come from the statute that prescribes that breakdown, OR Art. 959b Abs. 2, and `export_column` cites the provision (`959b:2.4`) because there is no box number to quote.
+
+**The form is a schema.** The Netherlands files online only; the authoritative definition of the return is the XBRL taxonomy it is transmitted in. The structure is real and complete, it just is not printed anywhere. Extracting it means joining three linkbases that XBRL deliberately keeps apart &mdash; presentation says *what and in what order*, labels say *what each element is called*, and they meet only through opaque locator ids. The element names then serve as `export_column`, and would double as `api_field` if a connector were ever built, which is unnecessary as one files online to start with.
+
+**A form that is too coarse.** Spain's Modelo 130 looks promising and has three boxes: income, deductible expenses, net. It is a payment on account, not a breakdown. The real categories are in the annex to the ministerial order approving Modelo 100, published in the BOE. Check that a form actually has the granularity you need before building on it.
+
+### What to commit
+
+Whatever you found, commit something the next person can check your transcription against, in `docs/tax-forms/`. A PDF where there is one. Where there is not, commit a **readable extract** naming the exact source version &mdash; see `nl-winstaangifte-resultatenrekening-nt20.md`, which is 12 KB and lists every element in the taxonomy's own order with its own labels.
+
+⚠️ **A huge source download must not get committed.** The Dutch taxonomy, for instance, is 1.7 GB of XBRL, and git cannot forget a blob once it has one. `docs/tax-forms/gitignored/` exists for exactly this — drop the download there, read it, extract what you need into a real, committed file, then delete it.
+
+### The rule underneath all of this
+
+**Never from memory, never from a summary, never from a blog post explaining the form.** Use what the authority itself publishes. The whole catalogue mechanism assumes its contents are a faithful transcription of a real document; everything downstream &mdash; the report, the accountant's CSV, a submission &mdash; inherits any error you introduce here, and inherits it silently.
 
 ## Catalogue
 
@@ -180,7 +203,9 @@ Loaded in exactly three places, **none of them a user's request**:
 
 So removing a key is announced instead: `TaxCategoryRemovalNotificationJob` emails every bookkeeper with full access to an affected entity, listing **their** accounts and asking them to re-tag. If nothing was using the removed keys, nobody hears anything.
 
-When you run the task **by hand**, read what it prints: a `removed N stale category row(s)` line means keys disappeared from a file.
+When you run the task **by hand**, read what it prints: a `removed N stale category row(s)` line means keys disappeared from a file. That is the only place a category row is ever deleted.
+
+⚠️ **On a deploy, read the output too** — `kamal deploy --verbose`. Kamal hides hook output otherwise, and a deploy that deletes categories looks exactly like one that does not. The hook runs `db:migrate` first and the loader second, under `set -e`, so a failing migration stops the deploy instead of being masked by a load that succeeds.
 
 ## Years, forward-only and correctable in place
 
@@ -200,7 +225,7 @@ Past exports must not crash, but are not guaranteed to match later schemas. That
 
 Mass assignment happens on the [tax report group page](#where-accounts-get-tagged). You can reassign an individual account on its edit form. The select
 
-- appears only on **leaf** income / expense accounts of accounts of an entity that has susbscribed to a scheme,
+- appears only on **leaf** income / expense accounts of an entity subscribed to a scheme,
 - shows the entity's schemes for the **latest** catalogue year, grouped by section, each option reading `52 — Umgelegte Kosten`,
 - carries each category's `notes` as a `data-note` attribute, which `tax.js` shows as a hint line under the select,
 - if the account is tagged with a key that has since gone, that retired key appears at the top labelled as such, so it is visible rather than silently blank.
@@ -226,30 +251,6 @@ Three rules worth knowing before you write keywords:
 - **Write them in the FORM's language, never the user's.** A German Vermietung box is not "service charges" in any language. An account named in one language will not match a catalogue written in another, and that is an accepted limit rather than a gap — what you call your own accounts is your business.
 
 Suggestions are only ever *proposals*, confirmed on the form. Categories with no keywords simply never suggest anything, which is a perfectly good place to start.
-
-## Finding the original scheme.
-
-Everything below assumes you have the authority's own description of what goes in the return. Getting it is the first step and usually the longest, because **it is not the same kind of document in each country** &mdash; and knowing which situation you are in decides how the catalogue is built.
-
-Four routes, all of them live in this repository:
-
-**A numbered form.** The best case. Britain's SA105 and Germany's Anlage EÜR are PDFs with box numbers on them, so `label` is the box's printed wording and `export_column` is its number or Kennzahl. Download it, put it in `docs/tax-forms/`, transcribe it box by box.
-
-**No form at all.** Switzerland has no federal form with income and expense boxes &mdash; income tax on the self-employed is assessed cantonally, and the cantonal forms ask for a single figure with the breakdown attached. So the categories come from the statute that prescribes that breakdown, OR Art. 959b Abs. 2, and `export_column` cites the provision (`959b:2.4`) because there is no box number to quote.
-
-**The form is a schema.** The Netherlands files online only; the authoritative definition of the return is the XBRL taxonomy it is transmitted in. The structure is real and complete, it just is not printed anywhere. Extracting it means joining three linkbases that XBRL deliberately keeps apart &mdash; presentation says *what and in what order*, labels say *what each element is called*, and they meet only through opaque locator ids. The element names then serve as `export_column`, and would double as `api_field` if a connector were ever built, which is unnecessary as one files online to start with.
-
-**A form that is too coarse.** Spain's Modelo 130 looks promising and has three boxes: income, deductible expenses, net. It is a payment on account, not a breakdown. The real categories are in the annex to the ministerial order approving Modelo 100, published in the BOE. Check that a form actually has the granularity you need before building on it.
-
-### What to commit
-
-Whatever you found, commit something the next person can check your transcription against, in `docs/tax-forms/`. A PDF where there is one. Where there is not, commit a **readable extract** naming the exact source version &mdash; see `nl-winstaangifte-resultatenrekening-nt20.md`, which is 12 KB and lists every element in the taxonomy's own order with its own labels.
-
-⚠️ **A huge source download must not get committed.** The Dutch taxonomy, for instance, is 1.7 GB of XBRL, and git cannot forget a blob once it has one. `docs/tax-forms/gitignored/` exists for exactly this — drop the download there, read it, extract what you need into a real, committed file, then delete it.
-
-### The rule underneath all of this
-
-**Never from memory, never from a summary, never from a blog post explaining the form.** Use what the authority itself publishes. The whole catalogue mechanism assumes its contents are a faithful transcription of a real document; everything downstream &mdash; the report, the accountant's CSV, a submission &mdash; inherits any error you introduce here, and inherits it silently.
 
 ## Adding a country — a worked example
 
@@ -366,22 +367,6 @@ If you do want it, see [Adding digital submission for a new country](tier-3-exte
 ## Tax category depth and inheritance
 
 Accounts have at most one level of parent — the `parent_cannot_be_grandparent` validation prevents deeper nesting. Tagging does not walk that tree at all: only leaves carry a category, so `effective_tax_category_key` is the account's own key or nothing.
-
-## Tax catalogue loading
-
-Tax category files reach the database from **three places, none of them a user request**:
-
-```bash
-db/seeds.rb                  # a fresh database
-.kamal/hooks/pre-deploy      # every deploy, with set -e
-bin/rails tax_categories:load   # by hand, after editing a file
-```
-
-Each file is upserted by its own header, keyed on `(country_code, scheme, tax_year, key)`, so a reload updates rows in place. **The loader also prunes**: a key you removed from the file is deleted from the database, and the bookkeepers whose accounts used it are emailed. A dangling category is worse than a missing one — an account goes on being tagged with it while the export drops the figure in silence.
-
-**On deploy this is automatic.** `.kamal/hooks/pre-deploy` runs `db:migrate` and then the loader, in that order and under `set -e` — so a failing migration stops the deploy instead of being masked by a succeeding load. The order matters because a new category row may need a column the migration adds, and nothing loads these files on boot.
-
-⚠️ **Read the deploy output when a file changed.** `kamal deploy --verbose` — Kamal hides hook output otherwise, and a deploy that deletes categories looks exactly like one that does not. A `removed N stale category row(s)` line means keys disappeared from a file. That is the only place a category row is ever deleted.
 
 ## Email tax export
 

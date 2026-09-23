@@ -12,6 +12,7 @@ for the one connector that exists today.
 - [Tax categories vs. digital submission — two separate concerns](#tax-categories-vs-digital-submission--two-separate-concerns)
     - [Account tagging (all countries)](#account-tagging-all-countries)
     - [Digital submission (tier 3) — one connector exists today](#digital-submission-tier-3--one-connector-exists-today)
+- [How filing works](#how-filing-works)
     - [Submission storage layout](#submission-storage-layout)
     - [The submission sequence](#the-submission-sequence)
     - [The `connector` bridge](#the-connector-bridge)
@@ -19,7 +20,11 @@ for the one connector that exists today.
     - [The filing controller](#the-filing-controller)
     - [Reaching the filing pages, and authority naming](#reaching-the-filing-pages-and-authority-naming)
     - [A note on session and OAuth state](#a-note-on-session-and-oauth-state)
-    - [Adding digital submission for a new country](#adding-digital-submission-for-a-new-country)
+- [Adding digital submission for a new country](#adding-digital-submission-for-a-new-country)
+    - [What a connector consists of, on disk](#what-a-connector-consists-of-on-disk)
+    - [The wiring — two steps](#the-wiring--two-steps)
+    - [The build — five things the registry cannot give you](#the-build--five-things-the-registry-cannot-give-you)
+    - [Naming reads itself](#naming-reads-itself)
 
 <!-- tocstop -->
 
@@ -40,6 +45,8 @@ This is all that currently exists for Germany (`euer`, `vermietung`), Switzerlan
 ### Digital submission (tier 3) — one connector exists today
 
 **Digital submission** — connecting to a tax authority's API, reading filing obligations, and posting quarterly updates — is a separate and significantly larger concern than tagging. Today exactly one connector is built, for the United Kingdom via HMRC Making Tax Digital (MTD). See [tier-3-hmrc.md](tier-3-hmrc.md) for what that connector consists of, its HMRC-specific mechanics (cumulative quarterly updates, fraud prevention headers), and how to apply to HMRC for credentials.
+
+## How filing works
 
 ### Submission storage layout
 
@@ -176,13 +183,13 @@ list anything.
 
 The OAuth state token, entity ID, and `connector` are stored in the Rails session during the connect flow and consumed on callback. This is standard OAuth CSRF protection. One known limitation: if a user opens two browser tabs and starts OAuth for two different entities simultaneously, the second connect overwrites the first's session state. The first callback will then fail with a state mismatch (safe, explicit failure — the user reconnects). In practice this is unlikely: OAuth flows take seconds and connecting two entities simultaneously serves no purpose.
 
-### Adding digital submission for a new country
+## Adding digital submission for a new country
 
 This is a substantial undertaking, and the YAML file alone is not sufficient. **Wiring it in is two steps; the other five are the actual build.** Before starting, read [Finding the original scheme](tier-2-extending-countries.md#finding-the-original-scheme) and [What tier 3 will never include](concepts.md#what-tier-3-will-never-include) — a scheme reaches tier 3 only if the figures it sends are nothing but the ledger, summed.
 
 **Only one connector has ever actually been built and connected: HMRC.** Everything below is real, working machinery — but it is proven by that one case, not by several. A second country is still design, not experience yet. Every "pattern: `Hmrc::X`" below means "the only example that exists," not "the normal case."
 
-#### What a connector consists of, on disk
+### What a connector consists of, on disk
 
 Worked through for the Dutch **btw-aangifte**, the strongest next candidate on the tax side: 27 elements, entirely the ledger summed, and its structure is already extracted in `docs/tax-forms/VAT/`. Its *authentication* is a different story — Digipoort uses PKIoverheid certificates, not OAuth, which is exactly the one shape `Base` does not yet support (see the ⚠️ under Authentication, below). So the file layout below is real and worth copying; step 3 as written is not — a Digipoort connector would need a certificate-based setup control this app has not built yet, not just a different `connect_url` body.
 
@@ -230,7 +237,7 @@ app/models/taxpayer.rb                    identifiers are jsonb; no migration pe
 
 `test/services/filing/authority_neutrality_test.rb` derives the authority list from the tax category files and fails if any name appears outside its own connector's territory — so your authority is covered by it the day your YAML lands, without anyone remembering to add it.
 
-#### The wiring — two steps
+### The wiring — two steps
 
 1. **Write the connector.** `app/services/filing/<connector>.rb`, subclassing `Filing::Base`.
 	
@@ -263,7 +270,7 @@ app/models/taxpayer.rb                    identifiers are jsonb; no migration pe
 
 	`CONNECTORS` and the YAML headers are deliberately two separate lists. A catalogue may declare an authority nobody has built a connector for — the header describes the country's reality, `CONNECTORS` describes ours. Until the connector exists the scheme simply stops at tier 2 and is offered no connect button. That is what lets a country arrive at tier 2 and gain submission later.
 
-#### The build — five things the registry cannot give you
+### The build — five things the registry cannot give you
 
 1. **Authentication.** Every authority differs: HMRC uses OAuth 2.0 with Government Gateway, ELSTER uses certificates, the Dutch Digipoort uses PKIoverheid certificates. Pattern: `Hmrc::Oauth`.
 
@@ -283,7 +290,7 @@ app/models/taxpayer.rb                    identifiers are jsonb; no migration pe
 
 	The bag is deliberately **not** encrypted: these numbers identify, they do not grant. A NINO is on your payslips and your accountant has it, and knowing one files nobody's return — the *token* does that, which is why only the tokens are encrypted. Anything a future connector stores that grants access, such as an ELSTER certificate password, needs its own encrypted column.
 
-#### Naming reads itself
+### Naming reads itself
 
 The authority's display name comes from `authority:` in the scheme's header, and the tax setup page derives its anchor from the country code (`de_connection`). Buttons and confirmation messages interpolate `%{authority}`, so they read correctly with no wording changes. German VAT, for instance, would file the **Umsatzsteuervoranmeldung** via **ELSTER**, and both the button and the stored filenames would say so. (The *annual* Umsatzsteuererklärung is out of scope by design — see [What tier 3 will never include](concepts.md#what-tier-3-will-never-include).)
 

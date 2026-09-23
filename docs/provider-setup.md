@@ -92,7 +92,7 @@ Login to the server (=> in terminal `ssh 'root@<IP-address>'`) and set these thr
 
 ```bash
 VOL=</dev/disk/by-id/scsi-0HC_Volume_123456789>    
-NAME=<not-again-db-crypt>               # the same name you gave it when you created the volume
+NAME=<not-again-db-crypt>               # a name you choose for the unlocked disk; it appears as /dev/mapper/<NAME>
 DATA=/root/<service>-db/data            # <service> = the service: value in config/deploy.yml 
 ```
 
@@ -342,7 +342,7 @@ Kamal pushes the built app to a container registry, and GitHub does not accept y
 2. **Personal access tokens** → **Tokens (classic)** → *Generate new token (classic)*.
 3. Name it after the app, so several are tellable apart.
 4. **Expiration: No expiration** — otherwise deploys break one day with no warning.
-5. **Scopes: `write:packages` and `delete:packages`.** Nothing else.
+5. **Scopes: `write:packages` and `delete:packages`.** GitHub ticks `repo` along with them — that is its own behaviour, not a requirement of the deploy. Untick it if the form lets you: Kamal builds locally and only pushes and pulls the image, so nothing here reads your repositories. If it insists, leave it, and know that the token is then as powerful as your account is over every private repository — which is the reason to give each app its own and to delete one the moment it is out of use.
 6. Generate, and copy it — it starts `ghp_` and is shown once.
 
 It goes into `.kamal/secrets` as `KAMAL_REGISTRY_PASSWORD`.
@@ -408,7 +408,7 @@ aws s3 ls --profile ovh --endpoint-url https://s3.sbg.io.cloud.ovh.net/
 
 Empty output, no error, means it works.
 
-⚠️ **These credentials never go into `credentials.yml.enc`.** The Rails app does not talk to this bucket at all — only `lib/scripts/mirror_to_second_provider.sh` does, via this AWS CLI profile, on whichever machine runs it (your own machine for now; the production server once it is wired into its crontab — not done yet, waiting on first deploy).
+⚠️ **These credentials never go into `credentials.yml.enc`.** The Rails app does not talk to this bucket at all — only `lib/scripts/mirror_to_second_provider.sh` does, via this AWS CLI profile, on whichever machine runs it — your own machine to test it, the server for the nightly run (see "Mirroring to a second provider" in `maintenance.md` for the cron lines).
 
 Worth a glance before agreeing to anything: OVH's Auftragsverarbeitungsvertrag (DPA) is a standard Article 28 instrument, nothing alarming — but its clause 10.3 means account termination or non-renewal *for any reason* can trigger automatic, irreversible deletion of everything, including the mirrored backups. Billing health for this account needs the same attention Scaleway's does.
 
@@ -416,6 +416,6 @@ Worth a glance before agreeing to anything: OVH's Auftragsverarbeitungsvertrag (
 
 ## When it is all done
 
-Back to the README: [Configuration](../README.md#configuration-steps-2-and-3), then
-[Deploying](../README.md#deploying-step-5), then [Backups](../README.md#backups-step-7).
+Back to [self-hosting.md](self-hosting.md): [Configuration](self-hosting.md#configuration-steps-2-and-3),
+then [Deploying](self-hosting.md#deploying-step-5), then [Backups](self-hosting.md#backups-step-7).
 

@@ -3,8 +3,12 @@
   "description": "Self-hosted multi-currency double-entry bookkeeping, with receipts, tax categories and filing.",
   "repository": "https://github.com/danielavdh/not-again",
   "env": {
-    "RAILS_ENV":  { "value": "production" },
-    "RACK_ENV":   { "value": "production" },
+    "RAILS_ENV": {
+      "value": "production"
+    },
+    "RACK_ENV": {
+      "value": "production"
+    },
     "SECRET_KEY_BASE": {
       "description": "Rails session/cookie signing key. Leave the generated value.",
       "generator": "secret"
@@ -23,6 +27,16 @@
     },
     "APP_HOST": {
       "description": "The address this app answers on, no https:// — e.g. yourname.osc-fr1.scalingo.io, or your own domain once you point it here."
+    },
+    "OWNER_USERNAME": {
+      "description": "The first account, created when the app first starts. Every page needs a login and only this account can create others, so without it the installation cannot be entered."
+    },
+    "OWNER_PASSWORD": {
+      "description": "Password for that first account, at least 8 characters. Visible in this app's Environment page afterwards, so change it once you are signed in."
+    },
+    "OWNER_EMAIL": {
+      "description": "Email address for the first account, used for password resets. Optional but recommended.",
+      "required": false
     },
     "S3_BUCKET": {
       "description": "Object-storage bucket for receipts (e.g. a Scaleway bucket)."
@@ -90,12 +104,15 @@
     }
   },
   "formation": {
-    "web": { "amount": 1, "size": "M" }
+    "web": {
+      "amount": 1,
+      "size": "M"
+    }
   },
   "addons": [
     "postgresql"
   ],
   "scripts": {
-    "postdeploy": "bundle exec rails db:migrate && bundle exec rails tax_categories:load"
+    "postdeploy": "bundle exec rails db:migrate && bundle exec rails tax_categories:load && bundle exec rails install:owner_if_missing"
   }
 }

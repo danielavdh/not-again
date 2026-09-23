@@ -1,13 +1,14 @@
 # Documentation
 
-The [main README](../README.md) covers what the app is, installing it, running it
-locally, and deploying it. These are the deeper documents.
+The [main README](../README.md) covers what the app is, and running it on your own
+machine. These are the deeper documents.
 
 ## Run it
 
 | | |
 |---|---|
 | [scalingo.md](scalingo.md) | Hosted on Scalingo — no terminal, no server. Click by click |
+| [self-hosting.md](self-hosting.md) | On a server you rent: the seven steps from accounts to first sign-in |
 | [provider-setup.md](provider-setup.md) | Self-hosted: setting up the outside services — server, DNS, object storage, email, optional CDN — click by click, plus the GitHub token the deploy needs |
 | [maintenance.md](maintenance.md) | What has to keep happening once it is live, and by whom: scheduled jobs, backups, the weekly report |
 | [self-hosting-legal.md](self-hosting-legal.md) | A developer's reading of the EU product-liability and cyber-resilience rules — what the app already does, and what changes if you charge for hosting. Not legal advice |

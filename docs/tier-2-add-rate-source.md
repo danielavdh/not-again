@@ -52,16 +52,16 @@ Two more fields exist but aren't in this example, because ECB doesn't need them:
 **2. Write the parser** — skip this if an existing one in `app/services/rates/` already fits (check
 there first). If not:
 
-- **Pick a name.** This is the value you wrote after `parser:` in step 1 — `bnb_xml`, in our example. One name, used in three places: the YAML, the file, the class — steps b and c below.
-- **Copy the template to that name:**
+- **(a) Pick a name.** This is the value you wrote after `parser:` in step 1 — `bnb_xml`, in our example. One name, used in three places: the YAML, the file, the class.
+- **(b) Copy the template to that name:**
 
 		cp app/services/rates/example_parser.rb.template \
 		   app/services/rates/<name>_parser.rb
 		
-		`<name>` is whatever you picked in (a) — `app/services/rates/bnb_xml_parser.rb` here.
+		`<name>` is the name from (a) — `app/services/rates/bnb_xml_parser.rb` here.
 
-- **Open the new file and rename the class.** It still says `class ExampleParser` — change it to `<name>`, camelized: `class BnbXmlParser`. This one rename **is the entire wiring.** `ExchangeRateFetcher#parser_for` builds `"Rates::#{name.camelize}Parser"` straight from the `parser:` string in the YAML and looks up that constant — get the class name right and Rails' own autoloading finds it. There is no separate registry file, no array, no third place that also needs to know your parser exists — only (a) and (c) have to agree.
-- **Fill in the one method the template leaves as `raise NotImplementedError`:**
+- **(c) Open the new file and rename the class.** It still says `class ExampleParser` — change it to `<name>`, camelized: `class BnbXmlParser`. This one rename **is the entire wiring.** `ExchangeRateFetcher#parser_for` builds `"Rates::#{name.camelize}Parser"` straight from the `parser:` string in the YAML and looks up that constant — get the class name right and Rails' own autoloading finds it. There is no separate registry file, no array, no third place that also needs to know your parser exists — only the `parser:` line in the YAML and the class name have to agree.
+- **(d) Fill in the one method the template leaves as `raise NotImplementedError`:**
 
 		def self.parse(body, requested_date:)
 		  # => { rates: { "EUR" => 1.9558 }, valid_from: Date, valid_to: Date }

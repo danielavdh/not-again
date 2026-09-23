@@ -43,10 +43,25 @@ MTD-specific mechanics, and the field-mapping proof.
 
 ## Applying to HMRC
 
-<!-- TODO: write together — per-installation vendor application, doesn't transfer
-     between installs, developer-path-only (credentials.hmrc.* has no ENV fallback,
-     deliberately — see config/initializers vs Scalingo path), not-again.eu's own
-     dated pending-approval status. -->
+<!-- TODO: write the walk-through together — Developer Hub screens, the production
+     credentials application and what HMRC asks to see, plus not-again.eu's own
+     dated status. The facts below are checked against the code and can stand
+     meanwhile. -->
+
+⚠️ **Not written yet** — the walk-through through HMRC's own screens is still to do. What is
+settled, and true of any installation:
+
+- **Every installation applies for itself.** Credentials identify *you* as the vendor, so they do
+  not transfer from this one, and there is nothing to copy into your own build.
+- **Two sets exist, sandbox and production**, held in `credentials.yml.enc` as `hmrc.sandbox.*`
+  and `hmrc.production.*`. The app decides which it is by whether a production client id is
+  present (`Hmrc::Config::SANDBOX`), so a sandbox installation needs no flag of its own.
+- **There is no environment-variable fallback for the client id and secret**, deliberately —
+  `Hmrc::Config.client_id` raises without them. Filing therefore belongs to the self-hosted
+  route; the [hosted route](scalingo.md) cannot file, which is what that page's opening warning
+  says.
+- **The vendor identity for the fraud-prevention headers is separate** (`hmrc.vendor.*`) and
+  appears in every call — see [Fraud prevention headers](#fraud-prevention-headers-mandatory).
 
 ## Cumulative quarterly updates (2025-26 onwards)
 

@@ -22,9 +22,9 @@ namespace :install do
       MSG
     end
 
-    username = ENV["USERNAME"].presence || prompt("Username")
-    email    = ENV["EMAIL"].presence    || prompt("Email address (optional, used for password resets)", allow_blank: true)
-    password = ENV["PASSWORD"].presence || prompt_secret("Password (at least 8 characters)")
+    username = owner_env("USERNAME") || prompt("Username")
+    email    = owner_env("EMAIL")      || prompt("Email address (optional, used for password resets)", allow_blank: true)
+    password = owner_env("PASSWORD")   || prompt_secret("Password (at least 8 characters)")
 
     admin = Admin.new(username: username, email_address: email.presence, sudo: true)
     admin.password = password
@@ -47,6 +47,35 @@ namespace :install do
     DONE
 
     warn "\nNOTE: PASSWORD was read from the environment, so it is in your shell history." if ENV["PASSWORD"].present?
+  end
+
+  # The same thing for a platform that has no terminal to type into — a hosted
+  # deploy (Scalingo, and anything else with a post-deploy hook) runs this with
+  # OWNER_USERNAME / OWNER_EMAIL / OWNER_PASSWORD set, and a fresh installation
+  # comes up with a way in. Without it that installation is unreachable: every
+  # page needs a login, and only an owner can make one.
+  #
+  # Unlike install:owner it SUCCEEDS when the installation is already set up,
+  # because it runs on every deploy and a deploy must not fail on the second
+  # one. It is no more of a back door than install:owner: it refuses just the
+  # same, it only refuses quietly. Nothing existing is ever changed.
+  #
+  # The test is ANY admin, not "no owner". An installation whose last owner was
+  # somehow demoted by hand still holds real books, and minting a fresh owner
+  # into it from environment variables would be a way in that nobody asked for.
+  # "Is this installation still empty?" cannot do that.
+  desc "Create the owner from OWNER_USERNAME/OWNER_EMAIL/OWNER_PASSWORD, or do nothing if this installation has admins."
+  task owner_if_missing: :environment do
+    if Admin.any?
+      puts "This installation already has #{Admin.count} admin(s) — nothing to do."
+      next
+    end
+
+    unless ENV["OWNER_USERNAME"].present? && ENV["OWNER_PASSWORD"].present?
+      abort "OWNER_USERNAME and OWNER_PASSWORD must be set to create the first admin."
+    end
+
+    Rake::Task["install:owner"].invoke
   end
 
   # RECOVERY — a back door by nature, but not a NEW one: anyone who can run this
@@ -127,6 +156,13 @@ namespace :install do
 
           bin/rails runner 'Admin.find_by(username: "#{admin.username}").destroy'
     DONE
+  end
+
+  # OWNER_-prefixed first: a hosted platform sets these as ordinary app
+  # environment variables, where a bare USERNAME would collide with the one
+  # every Unix shell already has.
+  def owner_env(name)
+    ENV["OWNER_#{name}"].presence || ENV[name].presence
   end
 
   def find_admin!(username)

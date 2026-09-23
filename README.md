@@ -17,19 +17,11 @@ The server side does talk to services you choose: object storage for the receipt
     - [What you need](#what-you-need)
     - [First install](#first-install)
 - [Run it locally](#run-it-locally)
-    - [If you are planning to run your books from localhost, please take note:](#if-you-are-planning-to-run-your-books-from-localhost-please-take-note)
+    - [What is different on localhost](#what-is-different-on-localhost)
     - [Setup locally](#setup-locally)
     - [Running the tests](#running-the-tests)
     - [The demo — it does not exist until you make it](#the-demo--it-does-not-exist-until-you-make-it)
 - [Run it in production](#run-it-in-production)
-    - [What you need](#what-you-need-1)
-    - [Do these in order](#do-these-in-order)
-    - [Set up the services (step 1)](#set-up-the-services-step-1)
-    - [Configuration (steps 2 and 3)](#configuration-steps-2-and-3)
-    - [`.kamal/secrets` (step 4)](#kamalsecrets-step-4)
-    - [Deploying (step 5)](#deploying-step-5)
-    - [Make your account on the server (step 6)](#make-your-account-on-the-server-step-6)
-    - [Backups (step 7)](#backups-step-7)
 - [Documentation](#documentation)
     - [One more command, only if you will push commits](#one-more-command-only-if-you-will-push-commits)
     - [The server is yours, and so is what is on it](#the-server-is-yours-and-so-is-what-is-on-it)
@@ -181,7 +173,7 @@ You want two because the app occupies one of them:
 
 ## Run it locally
 
-### If you are planning to run your books from localhost, please take note:
+### What is different on localhost
 
 - **Exchange rates** are not fetched automatically — run `bin/rails exchange_rates:fetch`.
 - **Email** needs SMTP credentials added before it will send anything — until then, a password reset or an export fails loudly rather than silently.
@@ -218,7 +210,7 @@ bin/dev											# http://localhost:3000
 `install:owner` exists because every page needs a login and only a logged-in owner can add people — so a brand-new copy has no other way in.
 
 <a id="about-sudo"></a>
-<font color="#0000cc">
+
 That first admin is **sudo** — the owner of the installation. Sudo is not simply an admin with more buttons:
 
 - **Sudo sees every entity's books**, whether or not it has been given access to them.
@@ -229,7 +221,6 @@ That first admin is **sudo** — the owner of the installation. Sudo is not simp
 - Admin access is per entity, not global: an admin reaches the businesses they have been linked to, and nothing else.
 
 **Create a separate admin for your own day-to-day bookkeeping.** Sudo sees every entity and every admin-management screen — useful for running the installation, not for just doing the books. Add yourself as a regular full-access admin and work from there instead.
-</font>
 
 **Use `bin/dev`, not `bin/rails server`.** Three things must run together — the app, a stylesheet rebuilder, and a worker for slow jobs. `bin/dev` starts all three; `bin/rails server` starts the app alone, and the other two silently never happen.
 
@@ -237,7 +228,7 @@ Leave that terminal window open. Closing it stops the app.
 
 Email is the exception: it really does try to send mail, using whatever mail settings are in the settings file. Without email settings, anything that sends an email — a password reset, an export — stops with an error rather than failing quietly, because `config/environments/development.rb` sets `raise_delivery_errors = true`.
 
-Once you have mail settings — [Email — Scaleway Transactional Email](docs/provider-setup.md#4-email--scaleway-transactional-email) covers getting them — add them with `EDITOR="nano -w" bin/rails credentials:edit`. The `smtp:` block is shown under [Configuration](#configuration-steps-2-and-3).
+Once you have mail settings — [Email — Scaleway Transactional Email](docs/provider-setup.md#4-email--scaleway-transactional-email) covers getting them — add them with `EDITOR="nano -w" bin/rails credentials:edit`. The `smtp:` block is shown in [docs/self-hosting.md](docs/self-hosting.md#configuration-steps-2-and-3).
 
 ⚠️ That is a YAML file, so **indentation is not decoration**: two spaces, spaces and never tabs, and every key under `smtp:` lined up with the others. A misaligned line is not a warning — it stops the app from starting.
 
@@ -277,277 +268,16 @@ Fetch the exchange rates for the demo with `bin/rails exchange_rates:fetch`.
 
 ## Run it in production
 
-The local install is a real way to keep books on your own computer, just for yourself. If you want to make the app available for **other people**, you need to run it on a server.
-
-### What you need
-
-Three accounts, none of which has to be with the providers named here:
-
-| What | Why | Suggested |
-|---|---|---|
-| A server | to run it | Hetzner (DE), Scaleway (FR), OVH (FR), Infomaniak (CH) |
-| S3-compatible object storage | receipts and filing archives | Scaleway (FR), OVH (FR), Infomaniak (CH) |
-| An SMTP provider | password resets, export notices | Scaleway TEM (FR), Infomaniak (CH) |
-
-Optionally a CDN — Bunny (SI) — and DNS from ClouDNS (BG) or your registrar. If you want to thank the author: keep all of it in Europe.
-
-### Do these in order
-
-Each one is explained below.
-
-1. **[Set up the services](#set-up-the-services-step-1)** — server, DNS, storage, email, and a GitHub token
-2. **[Make your `config/deploy.yml`](#configuration-steps-2-and-3)** — copy the example, fill it in
-3. **[Fill in credentials](#configuration-steps-2-and-3)** — the storage and mail secrets
-4. **[Write `.kamal/secrets`](#kamalsecrets-step-4)** — the three values that must never enter the image
-5. **[Deploy](#deploying-step-5)**
-6. **[Make your account on the server](#make-your-account-on-the-server-step-6)** — the server's database is empty; nothing can log in yet
-7. **[Set up the backups](#backups-step-7)** — a separate job, on the server itself 
-
-### Set up the services (step 1)
-
-The reference installation at not-again.eu uses Hetzner for the server, Scaleway for the S3 buckets and email, Bunny as an asset host and ClouDNS for DNS. **[docs/provider-setup.md](docs/provider-setup.md) walks through each one**, screen by screen — including encrypting the volume the database sits on, and the GitHub token the deploy needs.
-
-When you come back, you have (and must have):
-
-- a server, running Ubuntu, that you can ssh root@ into without a password
-- its firewall allowing only 22, 80 and 443
-- cryptsetup, unzip, curl and the AWS CLI installed on it
-- an encrypted volume, mounted at the database's folder, and proven to remount by itself
-- A records for your domain and www pointing at that server
-- private buckets: one for receipts, one for backups, plus one for filings if you want to file digitally
-- a sending domain verified at your mail provider, with its DKIM and DMARC records in DNS
-- optionally, a CDN pull zone with cdn.yourdomain resolving to it
-
-**Things you will need next:**
-
-- the server's IP address ==> goes into deploy.yml
-- your domain, and www  ==> goes into deploy.yml — proxy: host: and APP_HOST 
-- your GitHub username  ==> goes into deploy.yml — in image name and registry
-- a GitHub token (write:packages) ==> .kamal/secrets
-- storage access key and secret ==> credentials
-- the storage region, endpoint and bucket ==> credentials
-- SMTP server, port, login and key ==> credentials
-- the CDN hostname, if you made one ==> deploy.yml — ASSET_HOST
-- the LUKS passphrase and the rails master.key ==> on a safe piece of paper
-
-### Configuration (steps 2 and 3)
-
-**2 - Environment variables.** First make the file, by copying the example:
-
-```bash
-cp config/deploy.example.yml config/deploy.yml
-```
-
-Replace every `<placeholder>` in it; everything else is a working default. Your copy is gitignored, so your server address and domain stay out of the repository.
-
-It holds the things that differ between installations and are not secret. They live under `env: clear:`.
-
-| Variable | Required | What it is |
-|---|---|---|
-| `APP_HOST` | **yes** | The hostname this installation answers to, e.g. `books.example.eu`. Mailers have no request to infer it from, so the app refuses to boot without it rather than send links to nowhere. |
-| `SERVICE_NAME`, `CONTACT_*` | **yes** | Who runs this installation. The legal pages and terms name *you*; production refuses to boot with them unset, because an Impressum with holes in it is worse than a deployment that stops. |
-| `DB_HOST` `DB_USER` `DB_NAME` | no | Already right in `config/deploy.yml` for the database Kamal sets up alongside the app. Change them only to point at a database somewhere else. The password is not among them — it comes from `POSTGRES_PASSWORD` in `.kamal/secrets`. `DATABASE_URL` is deliberately not used. |
-| `ASSET_HOST` | no | A CDN hostname. Unset means the app serves its own assets, which is a perfectly good way to run it. |
-| `WEB_CONCURRENCY` `JOB_CONCURRENCY` `RAILS_MAX_THREADS` | no | Sizing. Defaults are fine on a small server. |
-| `SOLID_QUEUE_IN_PUMA` | no | Runs background jobs inside the web process, so there is no separate worker to keep alive. |
-
-Everything written `<like this>` in the example is a placeholder that must be replaced. Everything else is a real, working value.
-
-**3 - Credentials** — anything secret, plus settings meaningless when separated from a secret.
-`bin/rails credentials:edit` opens `config/credentials.yml.enc` in a text editor. `bin/setup` already created it and `config/master.key` alongside it; what follows is what to add.
-
-⚠️ It opens whatever `$EDITOR` says, and stops with "No $EDITOR to open file in" if you have not set one. Put one in front if you need to — `EDITOR="nano -w" bin/rails credentials:edit`, saving with ctrl-O and closing with ctrl-X.
-
-```yaml
-secret_key_base: <already generated for you>
-
-s3:           # any S3-compatible provider (scaleway/paris in this example)
-  bucket:        <app-files>          # REQUIRED — for receipts. Create it yourself
-  backup_bucket: <app-db-backups>     # for the database backup, check below
-  tax_bucket:    <app-tax>            # only if you submit tax digitally from app (hmrc), otherwise omit.
-  region:        <fr-par>
-  endpoint:      <https://s3.fr-par.scw.cloud>
-  access_key:    <access key>
-  secret_key:    <secret key>
-
-smtp:        # example uses Scaleway Transactional Email
-  server:   <smtp.tem.scaleway.com>
-  port:     <587>
-  username: <your Scaleway project ID>
-  password: <xsmtpsib-very-long-number (smtp-key=password)>
-
-active_record_encryption:            # bin/rails db:encryption:init generates these
-                                     # only needed if filing to HMRC; omit otherwise
-  primary_key:            …
-  deterministic_key:      …
-  key_derivation_salt:    …
-
-hmrc:                                # only if filing to HMRC; omit entirely otherwise
-  sandbox:    { client_id: …, client_secret: … }
-  production: { client_id: …, client_secret: … }
-  vendor:     { license_id: …, public_ip: … }
-```
-
-**The bucket names above are examples — choose your own.** What matters is that they exist before you deploy; nothing creates them for you.
-
-- **receipts** (`bucket`) — **required.** Every uploaded receipt and its thumbnail.
-- **database backups** (`backup_bucket`) — see [Backups](#backups-step-7). The backup script writes to this bucket. A weekly report reads it to confirm the backups are real. Optional in the sense that the app runs without it, but the books carry statutory retention periods measured in years.
-- **the filing archive** (`tax_bucket`) — **only if you submit returns digitally from the app**, which today means HMRC. Tagging accounts, running reports and producing the tax export do not need it — so an installation that files on paper, or through an accountant, can skip this bucket.
-
-Keep all buckets private.
-
-**`active_record_encryption` is only needed if you file to HMRC.** It encrypts the OAuth tokens on `Taxpayer` (`access_token`, `refresh_token`). Omit the `hmrc:` block and you can omit these keys too.
-
-### `.kamal/secrets` (step 4)
-
-This file is not in the repository — make it yourself, at `.kamal/secrets`, with three lines:
-
-```
-KAMAL_REGISTRY_PASSWORD=<a GitHub token with write:packages permission>
-RAILS_MASTER_KEY=<the whole contents of config/master.key>
-POSTGRES_PASSWORD=<a long random password, your choice>
-```
-
-They are read from **your own computer** when you deploy.
-
-⚠️ Choose `POSTGRES_PASSWORD` now and do not change it later. PostgreSQL sets it the first time it starts on an empty disk and ignores it afterwards, so a changed password leaves the app unable to connect for reasons that point nowhere near the cause.
-
-**Back up `config/master.key` somewhere that is not the server and not the laptop that made it.**
-Without it, `credentials.yml.enc` can never be read again.
-
-Losing it is bad but not fatal. Almost nothing in that file is irreplaceable: you can issue fresh storage and SMTP keys from the providers' own consoles, re-authorise HMRC, and generate a new `secret_key_base` — which signs everyone out and does no other harm.
-
-But that recovery only works while you can still log in to the provider accounts. If one person holds both the master key and every provider login, and that person is gone, nobody can rebuild the installation. So write down who else can get into the hosting and storage accounts — that is the larger risk, not the file.
-
-### Deploying (step 5)
-
-Deployment uses [Kamal](https://kamal-deploy.org): it packages the app up, pushes it to a container registry, and installs it on your server over SSH. GitHub's `ghcr.io` is free and is what `config/deploy.yml` expects.
-
-⚠️ **Docker has to be running on your own computer** — Kamal builds the image here and sends the result. Installed in step 1; open Docker Desktop and leave it running. (The `installs Docker` below is about the *server*, which Kamal does handle.)
-
-**Run these from your own computer, in the project folder — not on the server.** `bundle` installed Kamal, which is why it is `bundle exec`:
-
-```bash
-bundle exec kamal setup      # first time: installs Docker, starts the database, deploys
-bundle exec kamal deploy     # every time after that
-```
-
-`setup` takes a while and says a lot. If it stops on the certificate, it is almost always DNS: the domain is not yet pointing at the server. That is part of step 1.
-
-Migrations and the tax catalogues load by themselves, from the pre-deploy hook — from the second deploy onwards. The first one is different, below.
-
-#### Before the first deploy: one line in `config/deploy.yml`
-
-`config/deploy.yml` is yours and is not in this repository, so nothing adds this for you. Under `builder:`, add `context: .` so it reads:
-
-```yaml
-builder:
-  arch: amd64
-  context: .
-```
-
-Kamal otherwise builds from a fresh copy of the repository, and `config/credentials.yml.enc` is not in the repository — it is yours, created on your own machine by `bin/rails credentials:edit`. Without `context: .` your secrets never reach the server, and the app stops on the first one it needs, saying `S3 object storage is not configured for production` even though your S3 settings are fine.
-
-`.kamal/hooks/pre-build` comes with this and is already in the repository. It refuses to build unless your work is committed and pushed, which is what Kamal was doing for you before. If it stops you: commit, push, deploy again.
-
-#### The first deploy, in four commands
-
-```bash
-bundle exec kamal accessory boot db          # the database, on its own volume
-bundle exec kamal deploy --skip-hooks        # the app, and the settings it needs on the server
-bundle exec kamal app exec "bin/rails db:migrate"
-bundle exec kamal app exec "bin/rails tax_categories:load"
-```
-
-The last two are what the pre-deploy hook does on its own every other time. It cannot do them now, because it needs a settings file on the server that only a finished deploy creates.
-
-From here on it is just:
-
-```bash
-bundle exec kamal deploy
-```
-
-⚠️ The first command reports success even if the database then fails to start. Check it before going on — [Check the database actually started](docs/provider-setup.md#check-the-database-actually-started).
-
-### Make your account on the server (step 6)
-
-The server has its own database and it is empty, so nothing can log in yet.
-
-**From your own computer, in the project folder** — not on the server:
-
-```bash
-bundle exec kamal app exec -i --reuse "bin/rails install:owner"
-```
-
-It asks for a username and password. Then open your domain and sign in; you will be asked to set up a second factor.
-
-### Backups (step 7)
-
-Nothing backs the database up on its own. `lib/scripts/backup_db.sh` is provided for it, and it needs three things set up first.
-
-**1. The bucket, with its lifecycle rules.** Both done during
-[provider setup](docs/provider-setup.md) — the third bucket, and a rule per prefix so old dumps
-expire instead of accumulating. Its name goes in credentials as `s3.backup_bucket`.
-
-**2. The AWS CLI, configured.** It is installed on the server already, from provider setup. Log into the server and give it your storage keys:
-
-```bash
-ssh root@<your server>
-aws configure --profile <a name you choose>
-```
-
-It asks four things: your **access key**, your **secret key**, a **region** (`fr-par` if you used Scaleway Paris), and an output format — type `json`.
-
-Use a profile name rather than the default, so that a server running two apps cannot upload one app's backup into the other's bucket. Remember the name; you need it in step 3.
-
-**3. The script, on the server.** It lives in this repository, and the server has no copy. **From your own computer, in the project folder:**
-
-```bash
-scp lib/scripts/backup_db.sh root@<your server>:/root/
-ssh root@<your server> chmod +x /root/backup_db.sh
-```
-
-**Run it once by hand before trusting it.** Back on the server:
-
-```bash
-ssh root@<your server>
-/root/backup_db.sh not-again-db not_again_user not_again_production <your backup bucket> <your profile>
-```
-
-Those five arguments, and where each comes from:
-
-| | |
-|---|---|
-| `not-again-db` | the database container — your `service:` name from `deploy.yml`, plus `-db` |
-| `not_again_user` | `POSTGRES_USER` in `deploy.yml` |
-| `not_again_production` | `POSTGRES_DB` in `deploy.yml` |
-| your backup bucket | `s3.backup_bucket` in credentials |
-| your profile | the name you chose in step 2 |
-
-It should print that it dumped, checked and uploaded. Look in the bucket and see the file. If it is not there, fix it now rather than discovering it in six months.
-
-**Then schedule it**, still on the server. `cron` is Linux's built-in scheduler:
-
-```bash
-crontab -e
-```
-
-The first time, it asks which editor to use — choose `nano` if you are unsure. Paste this at the bottom, with your own five arguments, then save with ctrl-O and close with ctrl-X:
-
-```
-0 3 * * * S3_ENDPOINT=https://s3.fr-par.scw.cloud /root/backup_db.sh not-again-db not_again_user not_again_production <bucket> <profile> >> /root/backup.log 2>&1
-```
-
-That runs it every night at 03:00. Change `S3_ENDPOINT` if your storage is not Scaleway Paris.
-
-With `s3.backup_bucket` set in credentials, the weekly report checks the backups are really there — their age, their size, and whether one has suddenly shrunk. See
-[docs/maintenance.md](docs/maintenance.md).
-
-⚠️ **This only covers the database.** Receipts, tax filings and the year-end/on-demand books archives all live in object storage, separately from what `pg_dump` reaches. Restore the database on its own and it points at documents that have to still be there.
-
-**Receipts are deliberately not backed up further — decided, not an oversight.** A receipt already exists in two independent places (the admin's own copy, and the live bucket), and keeping the source document for the statutory period is the admin's responsibility, not this app's — see [docs/self-hosting-legal.md](docs/self-hosting-legal.md). A third copy would not meaningfully reduce risk.
-
-**Tax filings and the archive CSVs are different — nobody but this app holds a copy of those.** An optional script, `lib/scripts/mirror_to_second_provider.sh`, mirrors the database backups, the tax filings, and the archives to a second provider under separate credentials — protecting against the primary account itself being lost or compromised, which a second bucket in the same account does not. See [docs/maintenance.md](docs/maintenance.md).
+The local install is a real way to keep books on your own computer, just for yourself. To make the
+app available to **other people**, it goes on a server you rent and maintain.
+
+**[docs/self-hosting.md](docs/self-hosting.md)** is that path, end to end: the accounts you need,
+the seven steps, and what each command is for. **[docs/provider-setup.md](docs/provider-setup.md)**
+is the click-by-click for the providers it assumes — server, DNS, storage, email, CDN, and the
+GitHub token the deploy needs.
+
+Budget an afternoon the first time. You need to be comfortable with ssh and a terminal; if you are
+not, the [hosted route](docs/scalingo.md) exists for exactly that reason.
 
 ---
 
@@ -560,6 +290,7 @@ extending it, or looking something up. The essentials:
 |---|---|
 | [docs/concepts.md](docs/concepts.md) | The model everything is built on — read this first |
 | [docs/scalingo.md](docs/scalingo.md) | Hosted on Scalingo — no terminal, no server, click by click |
+| [docs/self-hosting.md](docs/self-hosting.md) | Self-hosted: the seven steps from accounts to first sign-in |
 | [docs/provider-setup.md](docs/provider-setup.md) | Self-hosted: setting up the server, DNS, storage, email and CDN, click by click |
 | [docs/maintenance.md](docs/maintenance.md) | What has to keep happening once it is live, and by whom |
 | [docs/self-hosting-legal.md](docs/self-hosting-legal.md) | What EU product-liability and cyber-resilience law expects, and what changes if you charge |
@@ -579,7 +310,7 @@ git config core.hooksPath .githooks
 
 **The person running the server can read the books.** That is true of every hosted accounting product; the difference here is that you choose who that person is. Sudo can open any entity — see [Run it locally](#run-it-locally).
 
-**Encrypt the disk the database sits on, and do it before the first deploy** — see step 1. Kamal will otherwise happily put PostgreSQL on a plain volume. These are somebody's financial records kept for years: an encrypted volume and a firewall exposing only 22, 80 and 443 are the baseline.
+**Encrypt the disk the database sits on, and do it before the first deploy** — see [provider setup](docs/provider-setup.md#encrypting-that-volume). Kamal will otherwise happily put PostgreSQL on a plain volume. These are somebody's financial records kept for years: an encrypted volume and a firewall exposing only 22, 80 and 443 are the baseline.
 
 If you keep books for other people — even four friends, unpaid — you are a GDPR processor under Article 28, which wants a written agreement with each of them, reasonable security (Article 32) and breach notification (Article 33). The written-agreement part is built in: every admin, including the people whose books you keep, is shown the terms and has to agree the first time they sign in, and gets a copy by email. If you ever charge for hosting, there is more beyond this one document — see [docs/self-hosting-legal.md](docs/self-hosting-legal.md).
 

@@ -4,7 +4,7 @@
 
 The conventions here are deliberate and consistent, and a patch that ignores them will look wrong even where it works.
 
-**No framework JavaScript.** No Turbo, no Stimulus, no Bootstrap. Vanilla JS only, with TomSelect as the single exception. Listeners are centralised — `attachListeners` in `app/javascript/scripts/index.js`, using the delegate pattern — rather than scattered per page. Read `backend.js`, `scripts/index.js`, `scripts/utils.js` and `scripts/accounts.js` before writing any.
+**No framework JavaScript.** No Turbo, no Stimulus, no Bootstrap. Vanilla JS only, with TomSelect as the single exception. Listeners are centralised — `attachListeners` in `app/javascript/scripts/index.js`, using the delegate pattern — rather than scattered per page. Read `accounting.js`, `scripts/index.js`, `scripts/utils.js` and `scripts/accounts.js` before writing any.
 
 **No HTML in JavaScript.** Markup belongs in ERB. A script that needs new markup either fetches a server-rendered partial —
 
@@ -14,7 +14,7 @@ fetch(url, { headers: { Accept: 'text/html' } })
 
 — see the add-account modal in `accounts.js`, or clones a `<template>` written in ERB, see the posting template. Never build markup with template strings. The one exception is data with no server-side record yet, such as rows for an unsaved posting, and even then: build DOM nodes and set `textContent`, never `innerHTML`.
 
-**No utility classes.** An element gets a class or an id only when something actually uses it — an SCSS mixin, or a listener in `index.js`. Spacing and layout live in the SCSS, using the existing variables and mixins: `@new_edit_view_form` for forms, `@backend_table` for data tables, `@tom_select`, `@crud_navigation` and `@date_select` for those components. Prefer semantic elements (`<nav>`, `<main>`, `<section>`, `<header>`) over classed `<div>`s, and prefer a `role=` attribute over swapping a tag, because a tag swap silently changes what the SCSS and the JS are selecting.
+**No utility classes.** An element gets a class or an id only when something actually uses it — an SCSS mixin, or a listener in `index.js`. Spacing and layout live in the SCSS, using the existing variables and mixins in `app/assets/stylesheets/shared/_config.scss`: `new_edit_view_form` for forms, `backend_table` for data tables, `tomselect`, `crud_navigation` and `input_date` for those components. Prefer semantic elements (`<nav>`, `<main>`, `<section>`, `<header>`) over classed `<div>`s, and prefer a `role=` attribute over swapping a tag, because a tag swap silently changes what the SCSS and the JS are selecting.
 
 **Queries stay in the database.** Calculations and filtering are done in SQL or ActiveRecord, not by loading a collection into Ruby and iterating it. Reports here run over years of postings across several entities and currencies; the difference is not stylistic. `test/integration/query_budget_test.rb` pins the query count on the heaviest pages, so an accidental N+1 fails the suite rather than being noticed in production.
 
@@ -37,7 +37,7 @@ TomSelect and both halves of it:
 
 The JS is genuinely lazy: it is not in the layout, and `app/javascript/scripts/tomselect_helper.js` calls `await import('tom-select')` only when a page actually contains a select to enhance. The stylesheet is pulled in per view by a `content_for :head` block, in the six views that use it — bank entry, transfer entry, journal entry new/edit, the entity form, and the admin page.
 
-The Bootstrap5 theme is a structural base only; the visual styling is fully overridden by the project's own `@mixin tomselect` in `app/assets/stylesheets/backend/_config.scss`. Upgrading TomSelect therefore means replacing both vendored files and re-checking that mixin — there is no version number in a URL to bump.
+The Bootstrap5 theme is a structural base only; the visual styling is fully overridden by the project's own `@mixin tomselect` in `app/assets/stylesheets/shared/_config.scss`. Upgrading TomSelect therefore means replacing both vendored files and re-checking that mixin — there is no version number in a URL to bump.
 
 ---
 
