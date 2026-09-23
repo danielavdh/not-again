@@ -32,7 +32,7 @@ gem "rails-i18n", "~> 8.0"
 gem "bcrypt", "~> 3.1.7"
 
 gem "shrine", "~> 3.9"
-gem "image_processing", "~> 1.8", require: false
+gem "image_processing", "~> 2.1", require: false
 gem "fastimage" 
 # ⚠️ require: "zip", not the default guess — the gem is named rubyzip but its
 # own file is lib/zip.rb, so Bundler's naive `require "rubyzip"` silently
