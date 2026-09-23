@@ -115,6 +115,15 @@ jobs:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 postgresql-client imagemagick ghostscript
 
+      # The runner image ships its own chromedriver, pinned to the Chrome that
+      # image was built with. `google-chrome-stable` above installs whatever is
+      # current, so the two drift apart and every system test dies at session
+      # creation — 154 against a 152 driver on 2026-09-23. Selenium picks the
+      # driver on PATH over fetching the right one, so the fix is to take it off
+      # PATH: Selenium Manager then downloads the one matching this Chrome.
+      - name: Remove the runner's pre-installed chromedriver
+        run: sudo rm -f /usr/bin/chromedriver /usr/local/bin/chromedriver $(which chromedriver 2>/dev/null || true)
+
       - name: Checkout code
         uses: actions/checkout@v7
 

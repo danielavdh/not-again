@@ -28,6 +28,14 @@ module NotAgain
     config.autoload_lib(ignore: %w[assets tasks])
 
     config.time_zone = 'Berlin'
+
+    # Recurring jobs (config/recurring.yml) are scheduled in UTC, not in the
+    # line above. Solid Queue would otherwise read "4:30am" as Berlin time while
+    # the server, its cron and the nightly backup all run on UTC — the sweeps
+    # then land BEFORE the backup they are documented to follow, and the offset
+    # shifts by an hour twice a year with daylight saving. Everything a person
+    # reads still uses config.time_zone; this is only the scheduler.
+    config.solid_queue.time_zone = "UTC"
     # config.eager_load_paths << Rails.root.join("extras")
     
     config.session_store :cookie_store, 

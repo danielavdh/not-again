@@ -10,7 +10,7 @@ gem 'dartsass-rails' # needs to be set up with importmaps
 # Compile pg from source: the precompiled fat gem bundles its own libpq, which
 # segfaults on connect on macOS. Built against Postgres.app locally (build.pg
 # config) and libpq-dev in the Docker build.
-gem "pg", "~> 1.5", force_ruby_platform: true
+gem "pg", "~> 1.6", force_ruby_platform: true
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 7.0.3"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -31,7 +31,7 @@ gem "rails-i18n", "~> 8.0"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
-gem "shrine", "~> 3.0"
+gem "shrine", "~> 3.9"
 gem "image_processing", "~> 1.8", require: false
 gem "fastimage" 
 # ⚠️ require: "zip", not the default guess — the gem is named rubyzip but its
@@ -40,12 +40,12 @@ gem "fastimage"
 # looked loaded in test because selenium-webdriver (test-only) requires "zip"
 # itself as a side effect — development and production never had it.
 gem 'rubyzip', require: "zip"
-gem "aws-sdk-s3", "~> 1.14", require: false
+gem "aws-sdk-s3", "~> 1.232", require: false
 gem 'rack-cors', require: 'rack/cors'
 gem "rack-attack"
 
 gem 'csv'
-gem 'pagy', '~> 43.2'                      
+gem 'pagy', '~> 43.6'                      
 gem 'RedCloth'
 gem "recaptcha", require: 'recaptcha/rails' 
 # Two-factor authentication
