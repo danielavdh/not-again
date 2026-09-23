@@ -210,7 +210,7 @@ GEM
       net-smtp
     marcel (1.2.1)
     matrix (0.4.3)
-    mini_magick (5.3.1)
+    mini_magick (5.4.0)
       logger
     mini_mime (1.1.5)
     minitest (6.0.6)
@@ -398,7 +398,7 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
-    shrine (3.9.0)
+    shrine (3.10.0)
       content_disposition (~> 1.0)
       down (~> 5.1)
     solid_queue (1.7.0)
@@ -478,7 +478,7 @@ DEPENDENCIES
   image_processing (~> 2.1)
   importmap-rails
   kamal
-  mini_magick (~> 5.0)
+  mini_magick (~> 5.4)
   minitest (~> 6.0)
   minitest-mock
   mission_control-jobs
@@ -496,7 +496,7 @@ DEPENDENCIES
   rubocop-rails-omakase
   rubyzip
   selenium-webdriver
-  shrine (~> 3.9)
+  shrine (~> 3.10)
   solid_queue
   thruster
   tzinfo-data
