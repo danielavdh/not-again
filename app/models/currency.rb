@@ -45,7 +45,6 @@ class Currency < ApplicationRecord
                    format: { with: /\A[A-Z]{3}\z/, message: :invalid },
                    uniqueness: { case_sensitive: false }
   validates :symbol, presence: true
-  validates :position, numericality: { only_integer: true }
   validates :minor_unit, inclusion: { in: 0..3 }
 
   normalizes :code, with: ->(c) { c.to_s.strip.upcase }
@@ -68,8 +67,8 @@ class Currency < ApplicationRecord
   # it, so nobody hand-ranks a growing list and one admin cannot reorder every
   # other admin's report columns.
   #
-  # `position` is therefore NO LONGER READ. It should be dropped, but that is a
-  # migration of its own. Do not reintroduce it as a form field.
+  # An editable `position` column was dropped rather than left unread. Do not
+  # reintroduce it as a form field.
   def self.ordered
     used = used_codes
 

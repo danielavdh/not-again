@@ -91,6 +91,12 @@ production:
   sign_in_event_sweep:
     command: "SignInEvent.expired.delete_all"
     schedule: every day at 4:30am
+  # Same reasoning, same window: old crashes describe code that has since been
+  # fixed or has kept failing all week anyway, and the weekly report only ever
+  # looks at the last seven days.
+  error_event_sweep:
+    command: "ErrorEvent.expired.delete_all"
+    schedule: every day at 4:35am
   # Monday 07:00 — after the 03:00 backup and the 04:00 HMRC healthcheck, so it
   # reports on a night that has already happened.
   #

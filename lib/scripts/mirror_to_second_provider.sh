@@ -85,4 +85,17 @@ $AWS s3 sync --profile "$SRC_PROFILE" --endpoint-url "$SRC_ENDPOINT" "$SRC" "$ST
 echo "Pushing $STAGING -> $DST ..."
 $AWS s3 sync --profile "$DST_PROFILE" --endpoint-url "$DST_ENDPOINT" "$STAGING" "$DST"
 
-echo "Mirrored $SRC -> $DST ($(du -sh "$STAGING" | cut -f1))"
+SIZE=$(du -sh "$STAGING" | cut -f1)
+echo "Mirrored $SRC -> $DST ($SIZE)"
+
+# Heartbeat, so something can notice when this stops running. Written back to
+# the SOURCE provider with the credentials this script already holds: the app
+# reads its own buckets anyway, and must never be given the destination's keys
+# — the whole point of the second provider is that one leak cannot reach both.
+# Unset MIRROR_STATUS_BUCKET and nothing is written; the mirror still works.
+if [ -n "${MIRROR_STATUS_BUCKET:-}" ]; then
+  SLUG="${SRC_BUCKET}-$(printf '%s' "${PREFIX:-whole}" | tr -c 'A-Za-z0-9' '-')"
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $SRC -> $DST ($SIZE)" > "$STAGING/../.heartbeat"
+  $AWS s3 cp "$STAGING/../.heartbeat" "s3://${MIRROR_STATUS_BUCKET}/mirror-status/${SLUG}.txt" \
+    --profile "$SRC_PROFILE" --endpoint-url "$SRC_ENDPOINT" >/dev/null
+fi

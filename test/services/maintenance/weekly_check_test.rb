@@ -91,7 +91,7 @@ class Maintenance::WeeklyCheckTest < ActiveSupport::TestCase
     assert_includes backup.detail, "cannot read"
     # Named rather than counted: a bare number tells you something changed, but
     # not that the check you cared about is still running.
-    assert_equal [ "Backups", "Bucket privacy", "Exchange rates", "Background jobs", "Sign-ins" ],
+    assert_equal [ "Backups", "Second-provider mirror", "Bucket privacy", "Exchange rates", "Background jobs", "Runtime errors", "Sign-ins" ],
                  findings.map(&:area), "one failing check must not suppress the others"
   end
 
@@ -133,6 +133,107 @@ class Maintenance::WeeklyCheckTest < ActiveSupport::TestCase
 
     f = findings.find { |f| f.area == "Bucket privacy" }
     assert f.ok, "buckets answering 403 to an anonymous request should pass, got: #{f.detail}"
+  end
+
+  # ==================== runtime errors ====================
+
+  def errors_finding
+    Maintenance::WeeklyCheck.call(
+      s3: Aws::S3::Client.new(region: "fr-par", stub_responses: true),
+      backup_bucket: BUCKET, http_get: private_http_get).find { |f| f.area == "Runtime errors" }
+  end
+
+  test "a quiet week passes" do
+    assert errors_finding.ok
+  end
+
+  test "any unhandled error at all is a problem, and the mail says where" do
+    4.times { ErrorEvent.record(error_class: "NoMethodError", source: "ReportsController#show", message: "x") }
+
+    f = errors_finding
+    assert_not f.ok, "four 500s in a week must not report OK"
+    assert_includes f.detail, "NoMethodError ×4"
+    assert_includes f.detail, "ReportsController#show"
+  end
+
+  # The message is the one field that can quote the books back — a validation
+  # message carries the value it rejected — and this report is emailed.
+  test "the error MESSAGE never reaches the report" do
+    ErrorEvent.record(error_class: "ActiveRecord::RecordInvalid",
+                      source: "JournalEntriesController#create",
+                      message: "Memo Rent for Mueller, 1.200,00 EUR is invalid")
+
+    assert_not_includes errors_finding.detail, "Mueller"
+    assert_not_includes errors_finding.detail, "1.200,00"
+  end
+
+  test "errors older than the window are not counted" do
+    ErrorEvent.record(error_class: "NoMethodError", source: "ReportsController#show", at: 8.days.ago)
+
+    assert errors_finding.ok, "last week's errors are last week's report's business"
+  end
+
+  # ==================== the second-provider mirror ====================
+  #
+  # The mirror is watched through heartbeats it leaves in the backups bucket,
+  # because this app holds no credentials for the destination. The lie to guard
+  # against is the same shape as the backup one: reporting "all clear" over a
+  # second copy that stopped being written weeks ago.
+
+  def mirror_finding(heartbeats)
+    client = Aws::S3::Client.new(region: "fr-par", stub_responses: true)
+    client.stub_responses(:list_objects_v2, lambda { |context|
+      keys = context.params[:prefix] == "mirror-status/" ? heartbeats : [ dump ]
+      { contents: keys }
+    })
+
+    Maintenance::WeeklyCheck.call(s3: client, backup_bucket: BUCKET, http_get: private_http_get)
+      .find { |f| f.area == "Second-provider mirror" }
+  end
+
+  def beat(name: "not-again-db-backups-daily-.txt", age: 3.hours)
+    { key: "mirror-status/#{name}", size: 80, last_modified: age.ago }
+  end
+
+  test "mirrors that all ran last night pass" do
+    f = mirror_finding([ beat, beat(name: "not-again-tax-whole.txt", age: 4.hours) ])
+    assert f.ok, "two fresh heartbeats should pass, got: #{f.detail}"
+    assert_includes f.detail, "2 mirrors"
+  end
+
+  # The one that matters: three of four mirrors still running is still a broken
+  # mirror, and averaging or taking the newest would hide it.
+  test "ONE stale mirror fails the check, however fresh the others are" do
+    f = mirror_finding([ beat, beat(name: "not-again-shrine-archives-.txt", age: 9.days) ])
+    assert_not f.ok, "a mirror silent for nine days must not report OK, got: #{f.detail}"
+    assert_includes f.detail, "not-again-shrine-archives-"
+  end
+
+  # Not having a second provider is a supported choice, so it must not raise an
+  # alarm — but it must not read as "the mirror is fine" either.
+  test "no heartbeats at all reads as not in use, not as healthy" do
+    f = mirror_finding([])
+    assert f.ok
+    assert_includes f.detail, "not in use"
+  end
+
+  # Console-created folder objects are zero-byte keys ending in a slash. Counted
+  # as a heartbeat, the folder's own age would stand in for a mirror that never
+  # ran.
+  test "a folder placeholder is not a heartbeat" do
+    f = mirror_finding([ { key: "mirror-status/", size: 0, last_modified: 2.hours.ago } ])
+    assert f.ok
+    assert_includes f.detail, "not in use"
+  end
+
+  test "an unreadable bucket is reported, not treated as no mirror" do
+    client = Aws::S3::Client.new(region: "fr-par", stub_responses: true)
+    client.stub_responses(:list_objects_v2, Aws::S3::Errors::AccessDenied.new(nil, "denied"))
+
+    f = Maintenance::WeeklyCheck.call(s3: client, backup_bucket: BUCKET, http_get: private_http_get)
+      .find { |f| f.area == "Second-provider mirror" }
+    assert_not f.ok
+    assert_includes f.detail, "cannot read"
   end
 
   # A network failure while checking has to be reported as "could not tell",

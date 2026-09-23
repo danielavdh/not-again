@@ -54,7 +54,7 @@ class CurrencyTest < ActiveSupport::TestCase
 
   # The whole point of the feature.
   test "an admin adding one is visible at once, with no restart" do
-    Currency.create!(code: "UAH", symbol: "₴", position: 99)
+    Currency.create!(code: "UAH", symbol: "₴")
 
     assert_includes CurrencyConfig.available, "UAH"
     assert_equal "₴", CurrencyConfig.symbol_for("UAH")
@@ -64,7 +64,7 @@ class CurrencyTest < ActiveSupport::TestCase
   # is running would then fail to parse on paste until the next restart —
   # silently, as a blank field.
   test "a new currency parses on paste immediately" do
-    Currency.create!(code: "UAH", symbol: "₴", position: 99)
+    Currency.create!(code: "UAH", symbol: "₴")
 
     assert_equal 123_456, CurrencyConfig.parse_to_cents("1 234,56 ₴")
   end
@@ -142,7 +142,7 @@ class CurrencyTest < ActiveSupport::TestCase
 
   test "a write in this process expires the cache" do
     CurrencyConfig.available # prime
-    Currency.create!(code: "NOK", symbol: "kr", position: 50)
+    Currency.create!(code: "NOK", symbol: "kr")
 
     assert_includes CurrencyConfig.available, "NOK"
   end

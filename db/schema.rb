@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_20_094500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -81,11 +81,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_094500) do
     t.datetime "created_at", null: false
     t.integer "lock_version", default: 0, null: false
     t.integer "minor_unit", default: 2, null: false
-    t.integer "position", default: 0, null: false
     t.string "symbol", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_currencies_on_code", unique: true
-    t.index ["position"], name: "index_currencies_on_position"
   end
 
   create_table "documents", force: :cascade do |t|
@@ -133,6 +131,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_094500) do
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "error_events", force: :cascade do |t|
+    t.date "day", null: false
+    t.string "error_class", null: false
+    t.string "last_line"
+    t.string "last_message"
+    t.string "last_path"
+    t.datetime "last_seen_at", null: false
+    t.integer "occurrences", default: 1, null: false
+    t.string "source", null: false
+    t.index ["error_class", "source", "day"], name: "index_error_events_on_error_class_and_source_and_day", unique: true
+    t.index ["last_seen_at"], name: "index_error_events_on_last_seen_at"
   end
 
   create_table "exchange_rates", force: :cascade do |t|

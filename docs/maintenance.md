@@ -59,6 +59,7 @@ Already running, listed here so nobody rebuilds them or assumes they exist when 
 | `hmrc_sandbox_healthcheck` | Mondays 04:00 | exercises the HMRC sandbox and validates the fraud-prevention headers; returns immediately unless sandbox credentials are configured |
 | `session_sweep` | hourly at :42 | sessions never expire on their own; removes demo sessions quiet for an hour and upload-only ones quiet for a year |
 | `sign_in_event_sweep` | 04:30 daily | drops sign-in records older than 90 days — personal data, kept only while it serves its purpose |
+| `error_event_sweep` | 04:35 daily | drops crash records older than 90 days — see `ErrorEvent` |
 | `clear_solid_queue_finished_jobs` | hourly at :12 | queue table hygiene |
 | `maintenance_report` | Mondays 07:00 | the weekly check below — the only one of these that watches the others |
 
@@ -71,9 +72,11 @@ Already running, listed here so nobody rebuilds them or assumes they exist when 
 | Check | What it looks at |
 |---|---|
 | Backups | the newest object under `daily/` in `scaleway.backup_bucket`: its age, its size, and whether it suddenly shrank |
+| Second-provider mirror | the heartbeat each mirror run leaves under `mirror-status/` in the backups bucket: reports the age of the STALEST one, so three working mirrors cannot hide a fourth that stopped. No heartbeats at all reads as "not in use" — running without a second provider is a supported choice |
 | Bucket privacy | every configured bucket (receipts, tax archive, backups) refuses an anonymous, credential-less `ListObjectsV2` — flags any that answers instead of refusing |
 | Exchange rates | periods `Rates::GapFinder` still reports missing after 30 days of nightly fill attempts |
 | Background jobs | `SolidQueue::FailedExecution` — jobs that errored and gave up |
+| Runtime errors | unhandled exceptions — the 500s — in the last 7 days, by class and by controller action or job, counted. Anything at all is reported as a problem. The error MESSAGE is deliberately left out of the mail: it is the one field that can quote the books back (a validation message carries the value it rejected), and this report leaves the server. It is kept in `error_events` on the server, with the path and the line of code |
 | Sign-ins | attempts in the last 7 days: how many succeeded, how many failed, how many were stopped by the second factor |
 
 Three things about it are deliberate and should not be tidied away:
@@ -159,9 +162,16 @@ Any S3-compatible provider works — the script takes endpoint, profile and buck
 
 ⚠️ **These credentials do not go into `credentials.yml.enc`.** The Rails app never touches this bucket — only this standalone script does, via its own AWS CLI profile on whichever machine runs it.
 
+**On the machine that will run it** (the app's server, or any box that can reach both providers):
+
+1. Copy the script out of the repo and make it executable: `scp lib/scripts/mirror_to_second_provider.sh root@<server>:/root/` then `chmod 700 /root/mirror_to_second_provider.sh`. It is a standalone script — the app neither ships it to the server nor calls it.
+2. **Both** AWS CLI profiles have to exist on that machine: the destination one from step 6 above, and one that can READ the source buckets. `backup_db.sh` already needs the second, so on this app's own server it is there.
+3. Add the cron lines below, and `MIRROR_STATUS_BUCKET=<your backup bucket>` above them, so each run leaves the heartbeat the weekly check reads.
+
 **Cron, one line per (bucket, prefix) pair** — see the script's own header for the full example:
 
 ```
+MIRROR_STATUS_BUCKET=not-again-db-backups
 15 4 * * * /root/mirror_to_second_provider.sh not-again-db-backups scaleway https://s3.fr-par.scw.cloud not-again-mirror ovh https://s3.sbg.io.cloud.ovh.net/ daily/
 20 4 * * * /root/mirror_to_second_provider.sh not-again-db-backups scaleway https://s3.fr-par.scw.cloud not-again-mirror ovh https://s3.sbg.io.cloud.ovh.net/ yearly/
 25 4 * * * /root/mirror_to_second_provider.sh not-again-tax        scaleway https://s3.fr-par.scw.cloud not-again-mirror ovh https://s3.sbg.io.cloud.ovh.net/
@@ -170,10 +180,12 @@ Any S3-compatible provider works — the script takes endpoint, profile and buck
 
 Database backups mirror `daily/` and `yearly/` only — once a year closes, its yearly dump and that entity's archive CSV already describe it; the daily granularity from a now-closed year has no further recovery value, so `weekly/`/`monthly/` are left unmirrored on purpose.
 
+The app never reads the destination bucket, so the mirror is watched from the other side: with `MIRROR_STATUS_BUCKET` set, each successful run writes a one-line heartbeat to `mirror-status/<bucket>-<prefix>.txt` in **its own source provider's** bucket, using the credentials it already has. The weekly check reads those. Leave the variable unset and nothing is written and nothing is watched.
+
+**Wired on this install 2026-09-23**: script at `/root/mirror_to_second_provider.sh`, the four lines above in root's crontab at 04:15–04:30 UTC (the backups run at 03:00/03:05), logging to `/root/mirror.log`, with `MIRROR_STATUS_BUCKET=not-again-db-backups` set in the crontab. The source profile is named `not-again`, not `scaleway` — the profile name is whatever the machine calls it. First run mirrored the four `daily/` dumps; `yearly/`, the tax bucket and `archives/` were still empty at the source and so mirrored nothing.
+
 **Not yet done:**
 
-<!-- TODO: wire the four cron lines above onto the production server — waiting on first deploy -->
-- Wiring the actual cron lines above onto the production server (waiting on first deploy).
 <!-- TODO: add Object Lock retention (aws s3api put-object-retention, Governance mode) to mirror_to_second_provider.sh for the long-lived uploads, and verify put-object-retention's behaviour on OVH specifically -->
 - Adding Object Lock retention (`aws s3api put-object-retention`, Governance mode) to the script for the long-lived uploads — the sync itself is tested and working; that follow-up call's behaviour on OVH specifically has not been verified yet.
 

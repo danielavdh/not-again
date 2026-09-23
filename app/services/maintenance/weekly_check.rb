@@ -30,6 +30,13 @@ module Maintenance
     # one run was slow.
     BACKUP_MAX_AGE = 48.hours
 
+    # Where mirror_to_second_provider.sh leaves its heartbeats, and how long a
+    # mirror may go unheard from. Wider than the backups' own window: a mirror
+    # runs after the backup it copies, and one missed night still leaves the
+    # primary intact.
+    STATUS_PREFIX = "mirror-status/"
+    MIRROR_MAX_AGE = 72.hours
+
     # A dump that suddenly loses half its bytes is the classic silent
     # corruption: the upload succeeds, the archive is valid, and most of the
     # books are not in it. backup_db.sh already refuses an empty or non-PGDMP
@@ -53,6 +60,10 @@ module Maintenance
     # month as missing on purpose — always for a daily source, which is still
     # accruing days — so alarming on "any gap" would cry wolf every week.
     GAP_GRACE = 30.days
+
+    # The window the runtime-error figures cover — the report's own week, for
+    # the same reason as the sign-ins below.
+    ERROR_WINDOW = 7.days
 
     # The window the sign-in figures cover. One week, because the report is
     # weekly: anything longer double-counts across reports, anything shorter
@@ -80,7 +91,7 @@ module Maintenance
     end
 
     def call
-      [ backup, bucket_privacy, rates, failed_jobs, sign_ins ]
+      [ backup, mirror, bucket_privacy, rates, failed_jobs, errors, sign_ins ]
     end
 
     private
@@ -133,6 +144,45 @@ module Maintenance
       end
 
       ok("Backups", "newest #{(age / 3600).round}h old (#{when_s}, #{size}), #{objects.size} daily #{'copy'.pluralize(objects.size)} retained")
+    end
+
+    # The second-provider mirror (mirror_to_second_provider.sh) runs from cron on
+    # the server, not from this app, and writes to a bucket this app has no
+    # credentials for — deliberately, so one leaked key cannot reach both copies.
+    # So the mirror is watched the only way that keeps that separation: each run
+    # leaves a heartbeat in a bucket this app can already read, and this reports
+    # the age of the STALEST one. A missing heartbeat file says only that the
+    # mirror is not set up, which is a supported choice, not a fault.
+    def mirror
+      return ok("Second-provider mirror", "not checked — no :backup_bucket set in credentials") if @backup_bucket.blank?
+
+      begin
+        beats = heartbeats(@backup_bucket).reject { |o| o.key.end_with?("/") }
+      rescue BackupUnreadable => e
+        return bad("Second-provider mirror", "cannot read #{@backup_bucket} — #{e.message}")
+      end
+
+      if beats.empty?
+        return ok("Second-provider mirror", "not in use — no heartbeats under #{@backup_bucket}/#{STATUS_PREFIX}")
+      end
+
+      stalest = beats.min_by(&:last_modified)
+      age     = Time.current - stalest.last_modified
+      names   = beats.size == 1 ? "1 mirror" : "#{beats.size} mirrors"
+
+      if age > MIRROR_MAX_AGE
+        return bad("Second-provider mirror",
+          "#{File.basename(stalest.key, '.txt')} last succeeded #{(age / 3600).round}h ago " \
+          "(#{stalest.last_modified.utc.strftime('%Y-%m-%d %H:%M')} UTC) — the second copy is falling behind")
+      end
+
+      ok("Second-provider mirror", "#{names}, stalest ran #{(age / 3600).round}h ago")
+    end
+
+    def heartbeats(bucket)
+      s3.list_objects_v2(bucket: bucket, prefix: STATUS_PREFIX, max_keys: 1000).contents
+    rescue Aws::S3::Errors::ServiceError, Seahorse::Client::NetworkingError => e
+      raise BackupUnreadable, "#{e.class.name.split('::').last}: #{e.message}"
     end
 
     # The check that actually matters for path randomness. A random path segment
@@ -189,6 +239,26 @@ module Maintenance
       Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5) { |http|
         http.request_get(uri).code.to_i
       }
+    end
+
+    # The 500s. failed_jobs above sees jobs only, and a request that raised
+    # reaches nobody at all otherwise: the visitor saw an error page and the
+    # maintainer saw nothing.
+    #
+    # The MESSAGE is deliberately left out of the mail. It is the one field that
+    # can quote the books back — a validation message carries the value it
+    # rejected — and this report leaves the server by email. Class, where, and
+    # how often is enough to know something is wrong; the rest is on the server,
+    # in error_events, for whoever goes looking.
+    def errors
+      counts = ErrorEvent.summary_since(ERROR_WINDOW.ago)
+      return ok("Runtime errors", "none in #{ERROR_WINDOW.inspect}") if counts.empty?
+
+      total = counts.values.sum
+      worst = counts.sort_by { |_key, n| -n }.first(3)
+                    .map { |(klass, source), n| "#{klass} ×#{n} (#{source})" }
+
+      bad("Runtime errors", "#{total} in #{ERROR_WINDOW.inspect}, #{counts.size} kind(s): #{worst.join(', ')}")
     end
 
     # Asks the WORLD like the others: how many attempts happened, not whether

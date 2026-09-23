@@ -110,7 +110,7 @@ namespace :demo do
   def currency!
     return if Currency.exists?(code: "PLN")
 
-    Currency.create!(code: "PLN", symbol: "zł ", position: Currency.maximum(:position).to_i + 1, active: true)
+    Currency.create!(code: "PLN", symbol: "zł ", active: true)
     puts "  added PLN"
   end
 

@@ -118,7 +118,6 @@ class CurrenciesController < BaseController
 
   def currency_params
     # Not :active — retiring is a named action, never a submittable attribute.
-    # Not :position either: display order is a rule, not a field.
     params.require(:currency).permit(:code, :symbol, :lock_version)
   end
 end

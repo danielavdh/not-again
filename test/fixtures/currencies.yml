@@ -1,6 +1,5 @@
 # The currencies this installation supports. Kept in step with the SEED in
-# config/initializers/currency.rb — CurrencyConfig::SYMBOLS — including its
-# order, which `position` carries.
+# config/initializers/currency.rb — CurrencyConfig::SYMBOLS.
 #
 # ⚠️ Present so the tests exercise the TABLE, which is the real path in
 # production. Without them the table is empty and every test silently runs on
@@ -10,23 +9,19 @@
 gbp:
   code: GBP
   symbol: "£"
-  position: 1
   active: true
 
 eur:
   code: EUR
   symbol: "€"
-  position: 2
   active: true
 
 usd:
   code: USD
   symbol: "$"
-  position: 3
   active: true
 
 chf:
   code: CHF
   symbol: "CHF "
-  position: 4
   active: true

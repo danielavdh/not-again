@@ -31,14 +31,16 @@ body{
 					.flex1{
 					flex: 1;
 					}
-					label{ color: var(--light);}
+					label{ 
+					color: var(--light);
+					}
 					.accounts-filter{
 					display: flex;
 					flex: 1;
 					min-width: 30vw;
 						.filter-input {
-					    flex: 1;
-					    max-width: 35vw;
+						flex: 1;
+						max-width: 35vw;
 						font-size: 0.9rem;
 						padding: 0.5vw 0.75vw;
 						}
@@ -60,7 +62,7 @@ body{
 						font-size: var(--select-fontsize);
 						}
 					}
-					.controls-filter{
+					.date-filter{
 					flex: 1;
 					flex-basis: 100%;
 						form{
@@ -1956,7 +1958,7 @@ body.popup-mode {
 						nav.pagy{
 						margin-inline-start: auto;
 						}
-						.controls-filter form{
+						.date-filter form{
 						display: flex;
 						flex-wrap: wrap;	
 						}
@@ -2132,7 +2134,7 @@ body.popup-mode {
 				.backend_table{
 					.controls{
 					top: 0;
-						.controls-filter{
+						.date-filter{
 						min-width: 30vw;
 						flex-basis: auto;
 						}
