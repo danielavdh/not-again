@@ -31,9 +31,9 @@ gem "rails-i18n", "~> 8.0"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
-gem "shrine", "~> 3.9"
+gem "shrine", "~> 3.10"
 gem "image_processing", "~> 2.1", require: false
-gem "mini_magick", "~> 5.0"
+gem "mini_magick", "~> 5.4"
 gem "fastimage" 
 # ⚠️ require: "zip", not the default guess — the gem is named rubyzip but its
 # own file is lib/zip.rb, so Bundler's naive `require "rubyzip"` silently
