@@ -16,9 +16,10 @@ updates:
   open-pull-requests-limit: 5
   groups:
     # Everything routine in one PR. Majors stay separate: those are the ones
-    # that break things quietly — image_processing 1→2 in particular, where
-    # ReceiptUploader.compress_image rescues to nil and a green suite proves
-    # nothing.
+    # that break things quietly — image_processing 1→2 was the example, where
+    # ReceiptUploader.compress_image rescues to nil and a green suite proved
+    # nothing. Taken on 2026-09-23 with a test that asserts a real thumbnail
+    # comes out, not just that a key exists.
     bundler-minor-and-patch:
       patterns: [ "*" ]
       update-types: [ "minor", "patch" ]

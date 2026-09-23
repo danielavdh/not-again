@@ -32,7 +32,8 @@ gem "rails-i18n", "~> 8.0"
 gem "bcrypt", "~> 3.1.7"
 
 gem "shrine", "~> 3.9"
-gem "image_processing", "~> 1.8", require: false
+gem "image_processing", "~> 2.1", require: false
+gem "mini_magick", "~> 5.0"
 gem "fastimage" 
 # ⚠️ require: "zip", not the default guess — the gem is named rubyzip but its
 # own file is lib/zip.rb, so Bundler's naive `require "rubyzip"` silently
@@ -50,7 +51,7 @@ gem 'RedCloth'
 gem "recaptcha", require: 'recaptcha/rails' 
 # Two-factor authentication
 gem "rotp", "~> 6.3"
-gem "rqrcode", "~> 2.2"
+gem "rqrcode", "~> 3.2"
 
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
@@ -96,9 +97,9 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
-  # Held at 5 deliberately. Nothing asks for minitest by name, so a routine
-  # `bundle update rails` resolved it to 6, which drops `minitest/mock` —
-  # test_helper requires it, and the whole suite failed to load. Moving to 6 is
-  # its own job: extract the mock dependency first, then lift this pin.
-  gem "minitest", "~> 5.26"
+  gem "minitest", "~> 6.0"
+  # Minitest 6 dropped minitest/mock from the gem itself; this is the author's
+  # own extraction of exactly that file, so `stub` and Minitest::Mock keep
+  # working unchanged. Named explicitly because nothing else depends on it.
+  gem "minitest-mock"
 end

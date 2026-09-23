@@ -116,7 +116,13 @@ class CurrencyConfigTest < ActiveSupport::TestCase
 
   test "parses every row of the shared JS/Ruby parity table" do
     PARSE_PARITY_ROWS.each do |input, cents|
-      assert_equal cents, CurrencyConfig.parse_to_cents(input), input.inspect
+      # Two rows expect nil — "unreadable", not a value. assert_equal nil is
+      # deprecated and fails outright in Minitest 6.
+      if cents.nil?
+        assert_nil CurrencyConfig.parse_to_cents(input), input.inspect
+      else
+        assert_equal cents, CurrencyConfig.parse_to_cents(input), input.inspect
+      end
     end
   end
 

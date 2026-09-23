@@ -61,6 +61,25 @@ class ReceiptUploaderTest < ActiveSupport::TestCase
     assert_equal %i[thumbnail preview].sort, receipt.scan_derivatives.keys.sort
   end
 
+  # The image path, not just the PDF one — and asserting the derivative is a
+  # real, readable image of the right size, because the derivatives block
+  # rescues everything: a thumbnail that silently never gets built looks exactly
+  # like a passing test if you only count the keys.
+  test "a photographed receipt gets a thumbnail and a preview that are real images" do
+    receipt = Receipt.new(title: "photo", receipt_date: Date.current, entity_id: entities(:family_biz).id)
+    receipt.scan = File.open(Rails.root.join("test/fixtures/files/test_receipt.jpg"), "rb")
+    receipt.save!
+    receipt.scan_attacher.create_derivatives
+
+    assert_equal %i[thumbnail preview].sort, receipt.scan_derivatives.keys.sort
+
+    thumbnail = receipt.scan_derivatives[:thumbnail]
+    assert_equal "image/jpeg", thumbnail.mime_type
+    assert_operator thumbnail.size, :>, 0
+    assert_operator [ thumbnail.width, thumbnail.height ].max, :<=, 200,
+      "the thumbnail is capped at 200px on its long side"
+  end
+
   # A receipt PDF Ghostscript cannot render — encrypted, malformed, PDF 2.0 —
   # must NOT lose the upload: the derivative step returns nothing, promotion
   # still moves the original into permanent storage, and the preview falls back

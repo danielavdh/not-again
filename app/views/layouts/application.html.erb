@@ -1,47 +1,38 @@
 <!DOCTYPE html>
 <%# high-contrast rides on <html>: the custom properties live on :root, and only a class there reaches the root background, ::backdrop, and document.documentElement. %>
 <html lang="<%= I18n.locale %>" dir="<%= text_direction %>" class="<%= contrast_class %>">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <%# content_for first so a view can title itself, then @title for controllers, then the tagline. Without the content_for branch every `content_for :title` in a manual is dead. %>
-    <title><%= "not-again — #{content_for(:title).presence || @title || 'Bookkeeping. Not again.'}" %></title>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title><%= "not-again — #{content_for(:title).presence || @title }" %></title>
+		<meta name="description" content="<%= t('welcome.meta_description', default: 'Multi-currency double-entry bookkeeping with digital tax filing.') %>" />
+		<meta name="generator" content="rails 8.1" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="<%= request.original_url %>" />
+		<meta property="og:title" content="not-again" />
+		<meta property="og:description" content="<%= t('welcome.meta_description', default: 'Multi-currency double-entry bookkeeping with digital tax filing.') %>" />
+		<meta property="og:image" content="<%= image_url('social-preview.jpg') %>" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image" content="<%= image_url('social-preview.jpg') %>" />
+		<%= favicon_link_tag "favicon.png", type: "image/png" %>
+		<%= favicon_link_tag "apple-touch-icon.png", rel: "apple-touch-icon", type: "image/png" %>
+		<%= stylesheet_link_tag "application", media: "all" %>
+		<%= javascript_importmap_tags "application" %>
+		<%= csrf_meta_tags %>
+		<%= csp_meta_tag %>
+	</head>
 
-    <meta name="description" content="<%= t('welcome.meta_description', default: 'Multi-currency double-entry bookkeeping with digital tax filing.') %>" />
-    <meta name="generator" content="rails 8.1" />
-
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="<%= request.original_url %>" />
-    <meta property="og:title" content="not-again" />
-    <meta property="og:description" content="<%= t('welcome.meta_description', default: 'Multi-currency double-entry bookkeeping with digital tax filing.') %>" />
-    <%# Shown when a link is pasted into WhatsApp, Slack or Mastodon. social-preview.jpg is a placeholder — replace the file, nothing else. %>
-    <meta property="og:image" content="<%= image_url('social-preview.jpg') %>" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="<%= image_url('social-preview.jpg') %>" />
-
-    <%= favicon_link_tag "favicon.png", type: "image/png" %>
-    <%= favicon_link_tag "apple-touch-icon.png", rel: "apple-touch-icon", type: "image/png" %>
-
-    <%= stylesheet_link_tag "application", media: "all" %>
-    <%= javascript_importmap_tags "application" %>
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
-  </head>
-
-  <%# The PUBLIC face: front page, legal, demo. Everything behind a login uses the other layout. body.welcome.index is what the landing page's JS looks for. %>
-  <body class="<%= controller_name %> <%= action_name %>">
-
+	<body class="<%= controller_name %> <%= action_name %>">
 
 		<div id="page">
 			<%= render "shared/svg_icons" %>
-    		<%= render "shared/flash" %>
+			<%= render "shared/flash" %>
 			
-    		<div id="main" role="main" tabindex="-1">
+			<div id="main" role="main" tabindex="-1">
 				<%= yield %>
 			</div>
 			
 		</div>
 
-
-  </body>
+	</body>
 </html>

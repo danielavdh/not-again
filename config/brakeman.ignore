@@ -1,10 +1,6 @@
 {
-  "brakeman_version": "7.1.1",
+  "brakeman_version": "8.0.6",
   "ignored_warnings": [
-    {
-      "fingerprint": "2ff9190bbeffe382c1e58a2a084ccf3685802a76554145cbc68e32adfebe4690",
-      "note": "Weak. The rendered path is Filing::Base#panel_partial, which each connector class returns as a literal string; the connector is resolved through Filing::Base.for, which refuses anything not in CONNECTORS (see connector_class: const_get with `false`, so it cannot reach ::String either). params only ever choose BETWEEN registered connectors, never name a path. The indirection exists so the generic filing view cannot name an authority. Verified 2026-08-20. (app/views/acc/filing/periods.html.erb:33) Re-verified after the namespace and table renames, 2026-08-24."
-    },
     {
       "fingerprint": "4a06f648d466695ccdd9825deca8e1a31413a6472c72b117335556d6ecc57f02",
       "note": "Redirects to a receipt URL resolved from a SIGNED id (find_signed with an explicit purpose); the param cannot name an arbitrary host. Verified 2026-08-01. (app/controllers/receipts_controller.rb:117) Re-verified after the namespace and table renames, 2026-08-24."
