@@ -89,7 +89,17 @@ This app uses the **"web application via server"** connection method (16 headers
 | Collected in the browser (`scripts/tax.js` → `gov_client_data` cookie; Device-ID persisted in `localStorage`) | device ID, browser user-agent, timezone, screens, window size |
 | Set server-side (request + session + config) | connection method, public IP + port + timestamp, user IDs, multi-factor (`TOTP`, read from the OTP-verified session), and the `Gov-Vendor-*` set |
 
-Vendor identity lives in `Hmrc::Config` — `PRODUCT_NAME`, `SOFTWARE_VERSION` (bump per release), and two credentials:
+Vendor identity lives in `Hmrc::Config` — `PRODUCT_NAME`, `SOFTWARE_VERSION` (bump per release), and two credentials.
+
+⚠️ **The product name and the vendor key must match what HMRC has registered for YOUR software** —
+the name you gave under "Confirm the name of your software", not this repo's default. They are set
+per installation with `HMRC_PRODUCT_NAME` and `HMRC_VENDOR_KEY` (see `config/deploy.example.yml`),
+and they reach HMRC as `Gov-Vendor-Product-Name` and as the key namespacing `Gov-Client-User-IDs`,
+`Gov-Vendor-Version` and `Gov-Vendor-License-IDs`. Change them at the hub and in the deploy config
+**together**, then re-run the validator below: sending a name HMRC does not hold is worse than
+sending an old one.
+
+The two credentials:
 
 ```yaml
 hmrc:

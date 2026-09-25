@@ -35,8 +35,23 @@ module Reports
       )
     end
 
+    # The SAME SHAPE as #build returns, not a smaller one. A tax report whose
+    # scheme has no accounts left — every account retired, or moved off the
+    # scheme — is an ordinary state, and the view reads :net and :section_totals
+    # unconditionally. Returning a hash without them turned that into a 500 on a
+    # page whose only purpose was to be read or deleted.
     def empty_result
-      { report: report, display_currency: display_currency, currencies: [], category_groups: [] }
+      {
+        report:           report,
+        display_currency: display_currency,
+        currencies:       [],
+        category_groups:  [],
+        section_totals:   build_section_totals([]),
+        net:              net_line(build_section_totals([])),
+        last_section:     nil,
+        rate_unavailable: nil,
+        rate_sources:     []
+      }
     end
 
     def build(accounts)

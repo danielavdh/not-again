@@ -287,7 +287,14 @@ Use the same Scaleway project as your storage (§3).
 2. **Add the four records it shows** at your DNS provider, then wait for verification:
     - SPF — `TXT` at the domain: `v=spf1 include:_spf.tem.scaleway.com -all`
     - DKIM — `TXT` at `<id>._domainkey`
-    - MX — `blackhole.tem.scaleway.com`
+    - MX — `blackhole.tem.scaleway.com`, but ONLY if the domain receives no mail
+
+      ⚠️ **A domain with a real mailbox keeps its own MX.** The blackhole host accepts mail and
+      discards it, so adding it where mail is actually delivered destroys every incoming message.
+      Scaleway's check only asks that an MX exists: verified 2026-09-24 on a domain whose MX points
+      at Zoho — green in the console, and mail from it then passed DKIM, SPF and DMARC at the
+      receiving end, with its mailbox untouched. A send-only domain has no MX of its
+      own, which is why Scaleway offers the blackhole.
     - DMARC — `TXT` at `_dmarc`: `v=DMARC1; p=none` to start
 3. **Create a key that can only send mail.** IAM → **Applications** → create one, e.g. `<service>-mail`. IAM → **Policies** → give that application `TransactionalEmailFullAccess`, scoped to this project only. Then generate an API key for it and copy the **secret** — it is shown once.
 
