@@ -173,6 +173,27 @@ class TaxSchemeConfigTest < ActiveSupport::TestCase
     end
   end
 
+  # The country's own name comes from the catalogue header, not from the locale
+  # files — so adding a country cannot leave three languages naming it "NL".
+  # Same fallback trap as scheme_label: the code upper-cased reads as a label.
+  test "every country declares its own name, in every file that claims it" do
+    by_country = Hash.new { |h, k| h[k] = [] }
+    Dir.glob(Rails.root.join("db", "tax_categories", "*.yml")).each do |path|
+      header = YAML.safe_load_file(path)
+      code   = header["country_code"].to_s.downcase
+      assert header["country_label"].present?, "#{File.basename(path)} is missing country_label"
+      by_country[code] << [ File.basename(path), header["country_label"] ]
+    end
+
+    TaxSchemeConfig.countries.each do |code|
+      assert_not_equal code.upcase, TaxSchemeConfig.country_label(code),
+                       "#{code} falls back to its own code as a name"
+      labels = by_country[code].map(&:last).uniq
+      assert_equal 1, labels.size,
+                   "#{code} is named differently across its files: #{by_country[code].inspect}"
+    end
+  end
+
   # CurrencyConfig.symbol_for returns "" for a currency it does not know, so a
   # tax report would total into a column with no symbol at all — which is why
   # Filing::Base#submission_currency has no fallback either. Whether a rate

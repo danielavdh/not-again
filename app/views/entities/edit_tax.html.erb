@@ -29,7 +29,7 @@
 
       <% @schemes_by_country.each do |country, schemes| %>
         <fieldset>
-          <legend><%= t("tax.country.#{country}", default: country.upcase) %></legend>
+          <legend><%= TaxSchemeConfig.country_label(country) %></legend>
           <% schemes.each do |scheme| %>
             <% authority_key, authority_name = @authority_by_scheme[scheme] %>
             <div>

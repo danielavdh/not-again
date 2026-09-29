@@ -534,6 +534,7 @@ es:
       business_id_hint: "Se rellena automáticamente al conectar. Sobrescríbelo a mano si hace falta (formato UUID)."
       hmrc_record: "What %{authority} holds for this business"
       last_submitted: "Last submitted to %{authority}"
+      legal_html: "<p>Cuando presenta declaraciones a través del servicio Making Tax Digital de HMRC, las cifras pertinentes de ingresos y gastos — junto con los datos de prevención de fraude que HMRC exige con cada presentación — se transmiten a HM Revenue &amp; Customs siguiendo sus instrucciones. HMRC es un responsable del tratamiento independiente respecto a los datos que recibe. Los tokens de autorización OAuth que nos permiten presentar en su nombre se almacenan cifrados y se utilizan únicamente para ese fin.</p>"
       business:
         trading_name: "Trading name"
         trading_type: "Trading type"
@@ -549,7 +550,21 @@ es:
         compatible_software_link: "Find software compatible with Making Tax Digital for Income Tax"
         estimate: "This software does not show your tax estimate. HMRC's estimate of what you owe is in your HMRC online account:"
         hmrc_account_link: "Sign in to your HMRC online account"
-      legal_html: "<p>Cuando presenta declaraciones a través del servicio Making Tax Digital de HMRC, las cifras pertinentes de ingresos y gastos — junto con los datos de prevención de fraude que HMRC exige con cada presentación — se transmiten a HM Revenue &amp; Customs siguiendo sus instrucciones. HMRC es un responsable del tratamiento independiente respecto a los datos que recibe. Los tokens de autorización OAuth que nos permiten presentar en su nombre se almacenan cifrados y se utilizan únicamente para ese fin.</p>"
+      quarterly_period_type:
+        title: "Periodo trimestral (%{authority})"
+        explain: "Los trimestres empiezan el día 6 de un mes (estándar) o terminan con el mes (calendario). Solo puede establecerse en el software de contabilidad — en su cuenta de %{authority} no es posible — y solo antes del primer envío del año fiscal."
+        current: "Para %{tax_year} esta actividad presenta trimestres %{type}."
+        unset: "aún sin elegir"
+        standard: "estándar"
+        calendar: "de calendario"
+        set_standard: "Usar trimestres estándar"
+        set_calendar: "Usar trimestres de calendario"
+        confirm: "¿Cambiar el periodo trimestral para %{tax_year}? Solo es posible antes del primer envío del año."
+        saved: "%{tax_year} presenta ahora trimestres %{type}."
+        refused: "Ese cambio ya no es posible para este año fiscal."
+        locked:
+          submitted: "No se puede cambiar para %{tax_year}: ya se ha presentado, y %{authority} fija la elección a partir de entonces."
+          commencement_window: "No se puede cambiar ahora: la actividad comenzó entre el 1 y el 5 de abril, y %{authority} no permite el cambio en ese periodo."
     register:
       title: "Contribuyentes"
       intro: "Por quién presentas, y tu permiso para hacerlo en su nombre. Si llevas tus propios libros, tendrás uno por cada agencia tributaria ante la que presentes. Si llevas libros de otras personas, uno por cliente y agencia."
@@ -1082,11 +1097,6 @@ es:
     accountant_export_hint: "Un archivo adicional para tu asesoría, junto al CSV de transacciones que se envía siempre. Déjalo CSV estándar si no lo han pedido."
     schemes_hint: "¿Qué declaraciones fiscales presenta esta entidad?"
     reassign_note: "Cambiar esta asignación surte efecto a partir de tu próximo envío. Las presentaciones ya enviadas permanecen como estaban, pero en el próximo envío las entradas de la categoría anterior aparecerán en la nueva categoría."
-    country:
-      gb: "Reino Unido"
-      de: "Alemania"
-      ch: "Suiza"
-      nl: "Paises Bajos"
     section:
       income: "Ingresos"
       expenses: "Gastos"

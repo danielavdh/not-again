@@ -564,6 +564,7 @@ en:
       business_id_hint: "Auto-populated on connect. Override manually if needed (UUID format)."
       hmrc_record: "What %{authority} holds for this business"
       last_submitted: "Last submitted to %{authority}"
+      legal_html: "<p>When you file through HMRC's Making Tax Digital service, the relevant income and expense figures — together with the fraud-prevention data HMRC requires with every submission — are transmitted to HM Revenue &amp; Customs on your instruction. HMRC is a separate data controller for what it receives. The OAuth authorisation tokens that let us file on your behalf are stored encrypted, and used only for that purpose.</p>"
       business:
         trading_name: "Trading name"
         trading_type: "Trading type"
@@ -579,7 +580,21 @@ en:
         compatible_software_link: "Find software compatible with Making Tax Digital for Income Tax"
         estimate: "This software does not show your tax estimate. HMRC's estimate of what you owe is in your HMRC online account:"
         hmrc_account_link: "Sign in to your HMRC online account"
-      legal_html: "<p>When you file through HMRC's Making Tax Digital service, the relevant income and expense figures — together with the fraud-prevention data HMRC requires with every submission — are transmitted to HM Revenue &amp; Customs on your instruction. HMRC is a separate data controller for what it receives. The OAuth authorisation tokens that let us file on your behalf are stored encrypted, and used only for that purpose.</p>"
+      quarterly_period_type:
+        title: "Quarterly period dates (%{authority})"
+        explain: "Quarters either start on the 6th of a month (standard) or end with the month (calendar). This can only be set in bookkeeping software — there is no way to change it in your %{authority} online account — and only before the tax year's first submission."
+        current: "For %{tax_year} this business files %{type} quarters."
+        unset: "not yet chosen"
+        standard: "standard"
+        calendar: "calendar"
+        set_standard: "Use standard quarters"
+        set_calendar: "Use calendar quarters"
+        confirm: "Change the quarterly period dates for %{tax_year}? This can only be done before the first submission of the year."
+        saved: "%{tax_year} now files %{type} quarters."
+        refused: "That change is no longer possible for this tax year."
+        locked:
+          submitted: "This cannot be changed for %{tax_year}: a submission has already been made, and %{authority} fixes the choice from then on."
+          commencement_window: "This cannot be changed at the moment: the business commenced between 1 and 5 April, and %{authority} does not allow the choice to change inside that window."
     register:
       title: "Taxpayers"
       intro: "Who you file for, and your permission to file for them. Keeping your own books, you will have one per authority you file with. Keeping books for other people, one per client per authority."
@@ -1079,11 +1094,6 @@ en:
     accountant_export_hint: "An extra file for your accountant, alongside the transactions CSV that everyone gets. Leave Standard CSV if they haven't asked for one."
     schemes_hint: "Which tax returns does this entity file?"
     reassign_note: "Changing this assignment takes effect from your next submission. Filed reports stay as they were, but in the next submission the old categories' entries will be in the new category."
-    country:
-      gb: "United Kingdom"
-      de: "Germany"
-      ch: "Switzerland"
-      nl: "Netherlands"
     section:
       income: "Income"
       expenses: "Expenses"

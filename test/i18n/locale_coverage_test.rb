@@ -107,25 +107,15 @@ class LocaleCoverageTest < ActiveSupport::TestCase
   # from the source, so the enum is expanded and every value checked — this is
   # what would break if someone added an account type and stopped there.
   #
-  # ⚠️ tax.country is here for a second reason as well as interpolation: the
-  # call site passes a default.
-  #
-  #   t("tax.country.#{country}", default: country.upcase)
-  #
-  # So a country with no name does not render the grey "translation missing"
-  # that every other gap shows. It renders "NL" — which looks like a decision
-  # somebody made, sitting in a list beside "United Kingdom" and "Germany".
-  # The Netherlands shipped like that: its catalogue files gave it schemes, an
-  # authority and a tax year, because those live in the YAML header, and a
-  # country NAME does not.
-  #
-  # Adding a country is adding YAML. Nothing in that step asks for a name in
-  # four languages, so this is the thing that does.
+  # `tax.country.*` used to be expanded here too, because its call site passed a
+  # default and so rendered "NL" rather than a visible gap. It is gone: a country
+  # now declares its own name in its catalogue header (`country_label`), the way
+  # a scheme declares `scheme_label`, so adding a country cannot leave three
+  # languages naming it after its code. tax_scheme_config_test guards that.
   test "every enum value used as a translation key is translated in every language" do
     expansions = {
       "jargon"        => Account.account_types.keys,
       "access"        => AdminEntity.access_levels.keys,
-      "tax.country"   => TaxSchemeConfig.countries,
     }
 
     report = []

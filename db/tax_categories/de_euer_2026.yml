@@ -1,4 +1,7 @@
 country_code: de
+# The country's own name, shown as the heading over its schemes on the tax setup
+# page. Never translated — a name is not a UI string.
+country_label: "Deutschland"
 scheme: euer
 tax_year: 2026
 authority: ELSTER

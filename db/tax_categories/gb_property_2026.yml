@@ -1,4 +1,7 @@
 country_code: gb
+# The country's own name, shown as the heading over its schemes on the tax setup
+# page. Never translated — a name is not a UI string.
+country_label: "United Kingdom"
 scheme: property
 tax_year: 2026
 # The day the UK tax year ends, as MM-DD. A tax year is named by the year it

@@ -1,4 +1,10 @@
 country_code: ch
+# The country's own name, shown as the heading over its schemes on the tax setup
+# page. Never translated — a name is not a UI string.
+# Switzerland has four official languages; the German form leads because the catalogue itself transcribes OR art.
+# 959b in German.
+# Add the others as they matter.
+country_label: "Schweiz — Suisse — Svizzera"
 scheme: selbst
 tax_year: 2026
 # ESTV — Eidgenössische Steuerverwaltung. Abbreviated because that is what a

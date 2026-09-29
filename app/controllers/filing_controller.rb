@@ -4,7 +4,7 @@ class FilingController < BaseController
   # :view is reachable from the emailed confirmation link, so it authenticates
   # via a signed token rather than a session (see #authorize_view). The other
   # member actions require a logged-in admin with edit rights.
-  AUTHED_MEMBER_ACTIONS = [:connect, :disconnect, :periods, :submit, :report].freeze
+  AUTHED_MEMBER_ACTIONS = [:connect, :disconnect, :periods, :submit, :report, :quarterly_period_type].freeze
   FILING_MEMBER_ACTIONS = (AUTHED_MEMBER_ACTIONS + [:view]).freeze
   VIEW_TOKEN_TTL = 30.days
 
@@ -22,7 +22,7 @@ class FilingController < BaseController
   before_action :set_accessible_entity,  only: AUTHED_MEMBER_ACTIONS
   before_action :require_tax_edit_access, only: AUTHED_MEMBER_ACTIONS
   before_action :set_filing_service,      only: AUTHED_MEMBER_ACTIONS
-  before_action :prepare_authority_request, only: [:periods, :submit, :callback]
+  before_action :prepare_authority_request, only: [:periods, :submit, :callback, :quarterly_period_type]
   before_action :authorize_view,          only: :view
 
   # The stored submission is a self-contained document with its own inline
@@ -137,6 +137,27 @@ class FilingController < BaseController
   end
 
   # GET /entities/:entity_id/filing/periods?scheme=self_employment
+  # PATCH /entities/:entity_id/filing/quarterly_period_type
+  #
+  # Standard (6 April) or calendar (month-end) quarters, for the tax year the
+  # filing page is showing. Generic: which authority holds such an election, and
+  # what it is called there, is the connector's business. One that offers none
+  # raises NotImplementedError and never renders a control to reach this.
+  def quarterly_period_type
+    tax_year = @filing.set_quarterly_period_type(params[:type])
+    redirect_to filing_periods_entity_path(@entity, scheme: @scheme),
+                notice: t("#{@filing.i18n_scope}.quarterly_period_type.saved",
+                          type: t("#{@filing.i18n_scope}.quarterly_period_type.#{params[:type]}"),
+                          tax_year: tax_year)
+  rescue Filing::Base::SettingLocked, ArgumentError, NotImplementedError => e
+    Rails.logger.warn "quarterly period type refused for #{@entity.code} #{@scheme}: #{e.class}: #{e.message}"
+    redirect_to filing_periods_entity_path(@entity, scheme: @scheme),
+                alert: t("#{@filing.i18n_scope}.quarterly_period_type.refused")
+  rescue => e
+    Rails.logger.error "quarterly period type failed for #{@entity.code} #{@scheme}: #{e.class}: #{e.message}"
+    redirect_to filing_periods_entity_path(@entity, scheme: @scheme), alert: e.message
+  end
+
   def periods
     result       = @filing.periods
     @obligations    = result[:obligations]
@@ -146,6 +167,7 @@ class FilingController < BaseController
     @business       = result[:business]
     @filed          = result[:filed]
     @panel_partial  = @filing.panel_partial
+    @panel_locals   = @filing.panel_locals(result)
   end
 
   # Opens the scheme's tax report over the period the authority asked for, so

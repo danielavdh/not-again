@@ -1,7 +1,7 @@
 <% content_for :title, t("filing.title", authority: @authority, name: @entity.name) %>
 
 <%# Some of what the call carries can only be read in the browser. The connector says whether it wants anything; index.js starts the named collector. %>
-<div class="backend_table" data-browser-collector="<%= @browser_collector %>">
+<div class="backend_table filing-periods" data-browser-collector="<%= @browser_collector %>">
 
   <%= render "shared/flash" %>
 
@@ -28,8 +28,7 @@
 
   <%# Whatever this authority shows and others do not, declared by the connector. Outside the branches above because these are statements about the SOFTWARE, so they show even with no obligations. %>
   <% if @panel_partial %>
-    <%= render partial: @panel_partial,
-               locals: { authority: @authority, business: @business || [], filed: @filed } %>
+    <%= render partial: @panel_partial, locals: @panel_locals %>
   <% end %>
 
 </div>

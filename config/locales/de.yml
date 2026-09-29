@@ -569,6 +569,7 @@ de:
       business_id_hint: "Wird beim Verbinden automatisch gefüllt. Bei Bedarf manuell überschreiben (UUID-Format)."
       hmrc_record: "What %{authority} holds for this business"
       last_submitted: "Last submitted to %{authority}"
+      legal_html: "<p>Wenn Sie über den Making-Tax-Digital-Dienst von HMRC einreichen, werden die relevanten Einnahmen- und Ausgabenzahlen — zusammen mit den Betrugspräventionsdaten, die HMRC bei jeder Übermittlung verlangt — auf Ihre Anweisung hin an HM Revenue &amp; Customs übermittelt. HMRC ist für die von ihr empfangenen Daten ein eigenständiger Verantwortlicher. Die OAuth-Autorisierungstokens, mit denen wir in Ihrem Namen einreichen können, werden verschlüsselt gespeichert und ausschließlich zu diesem Zweck verwendet.</p>"
       business:
         trading_name: "Trading name"
         trading_type: "Trading type"
@@ -584,7 +585,21 @@ de:
         compatible_software_link: "Find software compatible with Making Tax Digital for Income Tax"
         estimate: "This software does not show your tax estimate. HMRC's estimate of what you owe is in your HMRC online account:"
         hmrc_account_link: "Sign in to your HMRC online account"
-      legal_html: "<p>Wenn Sie über den Making-Tax-Digital-Dienst von HMRC einreichen, werden die relevanten Einnahmen- und Ausgabenzahlen — zusammen mit den Betrugspräventionsdaten, die HMRC bei jeder Übermittlung verlangt — auf Ihre Anweisung hin an HM Revenue &amp; Customs übermittelt. HMRC ist für die von ihr empfangenen Daten ein eigenständiger Verantwortlicher. Die OAuth-Autorisierungstokens, mit denen wir in Ihrem Namen einreichen können, werden verschlüsselt gespeichert und ausschließlich zu diesem Zweck verwendet.</p>"
+      quarterly_period_type:
+        title: "Quartalszeitraum (%{authority})"
+        explain: "Quartale beginnen entweder am 6. eines Monats (Standard) oder enden mit dem Monat (Kalender). Das lässt sich nur in der Buchhaltungssoftware einstellen — im %{authority}-Konto gibt es dafür keine Möglichkeit — und nur vor der ersten Übermittlung des Steuerjahres."
+        current: "Für %{tax_year} übermittelt dieser Betrieb %{type} Quartale."
+        unset: "noch nicht gewählt"
+        standard: "Standard-"
+        calendar: "Kalender-"
+        set_standard: "Standard-Quartale verwenden"
+        set_calendar: "Kalender-Quartale verwenden"
+        confirm: "Quartalszeitraum für %{tax_year} ändern? Das ist nur vor der ersten Übermittlung des Jahres möglich."
+        saved: "%{tax_year} übermittelt jetzt %{type} Quartale."
+        refused: "Diese Änderung ist für dieses Steuerjahr nicht mehr möglich."
+        locked:
+          submitted: "Für %{tax_year} nicht mehr änderbar: es wurde schon übermittelt, und %{authority} legt die Wahl danach fest."
+          commencement_window: "Derzeit nicht änderbar: der Betrieb hat zwischen dem 1. und 5. April begonnen, und %{authority} lässt die Wahl in diesem Zeitraum nicht zu."
     register:
       title: "Steuerpflichtige"
       intro: "Für wen du einreichst und deine Berechtigung, das für sie zu tun. Führst du deine eigenen Bücher, hast du eine pro Steuerbehörde, bei der du einreichst. Führst du Bücher für andere, eine pro Mandant und Steuerbehörde."
@@ -1083,11 +1098,6 @@ de:
     accountant_export_hint: "Eine zusätzliche Datei für deine Steuerberatung, neben der Transaktions-CSV, die immer dabei ist. Standard-CSV lassen, wenn keine gewünscht wird."
     schemes_hint: "Welche Steuererklärungen gibt diese Entität ab?"
     reassign_note: "Das Ändern dieser Zuordnung wirkt sich ab deiner nächsten Einreichung aus. Bereits eingereichte Meldungen bleiben unverändert, aber in der nächsten Einreichung erscheinen die Einträge der alten Kategorie in der neuen Kategorie."
-    country:
-      gb: "Vereinigtes Königreich"
-      de: "Deutschland"
-      ch: "Schweiz"
-      nl: "Niederlande"
     section:
       income: "Einnahmen"
       expenses: "Ausgaben"

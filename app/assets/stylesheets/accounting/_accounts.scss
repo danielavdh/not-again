@@ -864,6 +864,53 @@ body{
 				margin-inline: 0.5vw 0;
 				}
 			}
+			.filing-periods{
+				section{
+				margin: 3vw 0.25vw;
+				padding: 1.5vw;
+				background-color: var(--green-l10);
+					h3{
+					margin-bottom: 1vw;
+					font-size: 1rem;
+					}
+					ul, li{
+					list-style-type: disc;
+					margin-inline-start: 0.75vw;
+					font-size: 0.9rem;
+						a{
+						color: var(--color);
+						font-style: italic;
+							&:hover{
+							text-decoration: underline;
+							}
+						}
+					}
+				} 
+				details.hmrc-record, details.hmrc-quarterly-type{
+				margin: 2vw;
+					summary{
+					color: var(--light);
+					margin-bottom: 1vw;
+					}
+					div{
+					margin-inline-start: -1.75vw;
+					width: 103%;
+					padding: 1.5vw;
+					background-color: var(--green-l10);
+					font-size: 0.9rem;
+						form{
+							button{
+							margin-inline-end: 1vw;
+							margin-top: 1vw;
+							}
+						}
+					}
+					table{
+					@include backend_table (50%);
+					margin-inline-start: -1.75vw;
+					}
+				}
+			}
 			.receipts.upload-standalone, .dashboard .speed-links th div{
 			width: 94vw;
 			font-weight: 400;

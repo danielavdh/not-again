@@ -181,6 +181,7 @@ class FilingControllerTest < ActionDispatch::IntegrationTest
     mock_filing = Object.new
     mock_filing.define_singleton_method(:authority) { "HMRC" }
     mock_filing.define_singleton_method(:panel_partial) { nil }
+    mock_filing.define_singleton_method(:panel_locals) { |_result| {} }
     mock_filing.define_singleton_method(:periods) do
       { obligations: [ ob ], preview: preview, error: nil }
     end
@@ -202,6 +203,7 @@ class FilingControllerTest < ActionDispatch::IntegrationTest
     mock_filing = Object.new
     mock_filing.define_singleton_method(:authority) { "HMRC" }
     mock_filing.define_singleton_method(:panel_partial) { nil }
+    mock_filing.define_singleton_method(:panel_locals) { |_result| {} }
     mock_filing.define_singleton_method(:periods) do
       { obligations: [], preview: nil, error: "token expired" }
     end
@@ -230,6 +232,7 @@ class FilingControllerTest < ActionDispatch::IntegrationTest
     mock_filing = Object.new
     mock_filing.define_singleton_method(:authority) { "HMRC" }
     mock_filing.define_singleton_method(:panel_partial) { nil }
+    mock_filing.define_singleton_method(:panel_locals) { |_result| {} }
     mock_filing.define_singleton_method(:submit) { |period_id:, view_url:, &_blk| }
 
     Filing::Base.stub(:for, mock_filing) do

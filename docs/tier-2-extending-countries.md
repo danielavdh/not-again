@@ -74,6 +74,7 @@ db/tax_categories/
 
 ```yaml
 country_code: de           # two letters, lowercased
+country_label: "Deutschland"   # the COUNTRY's own name — see below
 scheme: vermietung         # slug, unique across ALL countries — see below
 tax_year: 2026
 authority: ELSTER          # who you file with
@@ -97,10 +98,22 @@ It belongs to the **country**, so every file for one country must declare the sa
 
 **`form_code:`** is the authority's own reference for the form these figures feed — `SA103`, `SA105`, `AnlageV`. It names the [archived submission document](tier-3-extending-filing.md#submission-storage-layout), so a stored file says what it belongs to in the authority's language rather than in ours. Optional; a scheme without one is archived under its slug.
 
-**Four names.** It looks like duplication and is not:
+**`country_label:`** the country's name, in its own language: `Deutschland`, `Nederland`,
+`United Kingdom`. It is the heading over that country's schemes on the tax setup page. Declared in
+every file that claims the country, and a test refuses two files naming it differently.
+
+This was a locale key, `tax.country.<code>`, and it was the clearest possible argument for keeping
+names out of locale files: its call site passed `default: country.upcase`, so a country nobody had
+translated rendered as **"NL"** — which looks like a deliberate label sitting beside "United
+Kingdom" and "Germany", not like the gap it was. The Netherlands shipped exactly that way, because
+adding a country means adding YAML, and nothing in that step asked anyone for a name in four
+languages. Now it does, in the file where the country arrives.
+
+**Five names.** It looks like duplication and is not:
 
 | field | example | where it is used |
 |---|---|---|
+| `country_label` | `"United Kingdom"` | the country's own name, heading its schemes on the tax setup page |
 | `scheme_label` | `"UK Property (SA105)"` | the authority's name for its form/scheme |
 | `report_name` | `"GB-property"` | what we call the report group for this scheme |
 | `submission_name` | `"MTD property"` | the authority's programme name (MTD, VAT) plus what we send |

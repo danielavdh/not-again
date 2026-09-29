@@ -1,21 +1,21 @@
 <%# Required by HMRC's Production Approvals Checklist — three statements the software must make on screen: in-year updates only, income sources outside self-employment and UK property are not covered, and where to see the tax estimate. The estimate is SIGNPOSTED rather than displayed, which is why there is no Individual Calculations subscription on the production application. %>
 <section>
 	<h3><%= t("filing.hmrc.mtd.disclosures_title") %></h3>
+	
+	<ul>
+		<li><%= t("filing.hmrc.mtd.in_year_only") %></li>
+		<li><%= t("filing.hmrc.mtd.non_mandated") %></li>
+		<li>
+			<%= link_to t("filing.hmrc.mtd.compatible_software_link"),
+			            Filing::HmrcMtd::COMPATIBLE_SOFTWARE_URL,
+			            target: "_blank", rel: "noopener" %>
+		</li>
+		<li>
+			<%= t("filing.hmrc.mtd.estimate") %>
+			<%= link_to t("filing.hmrc.mtd.hmrc_account_link"),
+			            Filing::HmrcMtd::PERSONAL_TAX_ACCOUNT_URL,
+			            target: "_blank", rel: "noopener" %>
+		</li>
+	</ul>
 
-	<p><%= t("filing.hmrc.mtd.in_year_only") %></p>
-
-	<p><%= t("filing.hmrc.mtd.non_mandated") %></p>
-
-	<p>
-		<%= link_to t("filing.hmrc.mtd.compatible_software_link"),
-		            Filing::HmrcMtd::COMPATIBLE_SOFTWARE_URL,
-		            target: "_blank", rel: "noopener" %>
-	</p>
-
-	<p>
-		<%= t("filing.hmrc.mtd.estimate") %>
-		<%= link_to t("filing.hmrc.mtd.hmrc_account_link"),
-		            Filing::HmrcMtd::PERSONAL_TAX_ACCOUNT_URL,
-		            target: "_blank", rel: "noopener" %>
-	</p>
 </section>

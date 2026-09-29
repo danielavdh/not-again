@@ -1,13 +1,13 @@
 <%# locals: (business:, filed:, authority:) %>
 
 <%# HMRC's own record, read back from Business Details and the cumulative period summary — so the trade the figures land against is visible. The VALUES are HMRC's and deliberately untranslated; only the row labels are. %>
-<details>
+<details class="hmrc-record">
 	<summary><%= t("filing.hmrc.hmrc_record", authority: authority) %></summary>
 
 	<table>
 		<tbody>
 			<% business.each do |key, value| %>
-				<tr>
+				<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
 					<td><%= t("filing.hmrc.business.#{key}") %></td>
 					<td><%= value %></td>
 				</tr>

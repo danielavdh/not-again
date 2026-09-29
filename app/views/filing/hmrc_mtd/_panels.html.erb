@@ -1,9 +1,13 @@
-<%# locals: (authority:, business:, filed:) %>
+<%# locals: (authority:, business:, filed:, quarterly_choice:) %>
 
 <%# Everything shown ONLY because the authority is HMRC. Reached solely through Filing::HmrcMtd#panel_partial, so periods.html.erb never names an authority. %>
 
 <% if business.present? || filed.present? %>
 	<%= render "filing/hmrc_mtd/record", business: business, filed: filed, authority: authority %>
+<% end %>
+
+<% if quarterly_choice.present? %>
+	<%= render "filing/hmrc_mtd/quarterly_period_type", choice: quarterly_choice, authority: authority %>
 <% end %>
 
 <%= render "filing/hmrc_mtd/disclosures" %>

@@ -1,0 +1,37 @@
+<%# locals: (choice:, authority:) %>
+
+<%# The election of standard (6 April) or calendar (month-end) quarters. HMRC's
+    own online services cannot set this, so software is the only route — and it
+    is settable only before the tax year's first submission, which is what
+    choice[:locked_by] carries. Rendered only when there is something to say:
+    Filing::HmrcMtd#quarterly_choice returns nil without a chosen business. %>
+<details class="hmrc-quarterly-type">
+	<summary><%= t("filing.hmrc.quarterly_period_type.title", authority: authority) %></summary>
+
+	<div>
+		<p><%= t("filing.hmrc.quarterly_period_type.explain", authority: authority) %></p>
+
+		<p>
+			<%= t("filing.hmrc.quarterly_period_type.current",
+					type: choice[:current].present? ? t("filing.hmrc.quarterly_period_type.#{choice[:current]}") : t("filing.hmrc.quarterly_period_type.unset"),
+					tax_year: choice[:tax_year]) %>
+		</p>
+    	
+		<% unless choice[:locked_by] %>
+			<p><%= t("filing.hmrc.quarterly_period_type.locked.#{choice[:locked_by]}", 
+					tax_year: choice[:tax_year], 
+					authority: authority) %>
+			</p>
+		<% else %>
+			<%= form_with url: filing_quarterly_period_type_entity_path(@entity, scheme: @scheme),
+						  method: :patch do |f| %>
+				<% choice[:options].each do |type| %>
+					<%= f.button t("filing.hmrc.quarterly_period_type.set_#{type}"),
+							name: "type", value: type, class: "button green",
+							disabled: type == choice[:current],
+							data: { sure: t("filing.hmrc.quarterly_period_type.confirm", tax_year: choice[:tax_year]) } %>
+				<% end %>
+			<% end %>
+		<% end %>
+	</div>
+</details>

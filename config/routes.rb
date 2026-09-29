@@ -119,6 +119,10 @@ Rails.application.routes.draw do
         # for.
         post   'filing/report',     to: 'filing#report',     as: :filing_report
         delete 'filing/disconnect', to: 'filing#disconnect', as: :filing_disconnect
+        # An election an authority holds on its own record rather than in these
+        # books — only a connector that offers one renders the control for it.
+        patch  'filing/quarterly_period_type', to: 'filing#quarterly_period_type',
+               as: :filing_quarterly_period_type
       end
     end
 

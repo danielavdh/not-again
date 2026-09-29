@@ -35,6 +35,9 @@ module Filing
       commencementDate cessationDate
     ].freeze
 
+    # HMRC's two quarterly period types. Their vocabulary, so it lives here.
+    QUARTERLY_PERIOD_TYPES = %w[standard calendar].freeze
+
     # HMRC's Production Approvals Checklist requires software covering only part
     # of the obligation to say so on screen, and to link their list of
     # compatible software. Their URLs, so they sit with the connector rather
@@ -170,6 +173,30 @@ module Filing
       "filing/hmrc_mtd/panels"
     end
 
+    def panel_locals(result)
+      super.merge(quarterly_choice: result[:quarterly_choice])
+    end
+
+    # HMRC's "Create and Amend Quarterly Period Type for a Business" — the only
+    # route to calendar quarters, since their own online services cannot set it.
+    # The tax year is NOT a parameter: it is the one the page is about, so a
+    # stale form cannot elect for a year nobody was looking at.
+    #
+    # Refused here as well as by HMRC. They enforce it server-side, and meeting
+    # a live rejection is a worse way to learn than being told.
+    def set_quarterly_period_type(type)
+      state = quarterly_choice(client.obligations(scheme: hmrc_scheme_name))
+      raise ArgumentError, "unknown quarterly period type: #{type}" unless QUARTERLY_PERIOD_TYPES.include?(type.to_s)
+      raise Base::SettingLocked, state[:locked_by].to_s if state.nil? || state[:locked_by]
+
+      client.set_quarterly_period_type(
+        business_id: group.business_id,
+        tax_year:    state[:tax_year],
+        type:        type.to_s
+      )
+      state[:tax_year]
+    end
+
     def periods
       obs    = client.obligations(scheme: hmrc_scheme_name)
       sorted = obs.sort_by { |ob| ob[:start_date] }.reverse
@@ -192,11 +219,12 @@ module Filing
       }
 
       { obligations: sorted, preview: preview, error: nil, report_periods: report_periods,
-        business: business_details, filed: filed_summary(next_due) }
+        business: business_details, filed: filed_summary(next_due),
+        quarterly_choice: quarterly_choice(obs) }
     rescue => e
       Rails.logger.warn "HMRC obligations fetch failed for #{scheme}: #{e.message}"
       { obligations: [], preview: nil, error: e.message, report_periods: {},
-        business: nil, filed: nil }
+        business: nil, filed: nil, quarterly_choice: nil }
     end
 
     def submit(period_id:, view_url:, &renderer)
@@ -269,6 +297,53 @@ module Filing
       @group = entity.report_groups.find_by(tax_scheme: scheme)
     end
 
+    # Whether this business's quarterly period type can still be elected for the
+    # tax year the page is showing, and what it is now.
+    #
+    # nil when there is nothing to decide about: no business chosen yet, or
+    # HMRC's record could not be read. The panel then renders no control at all.
+    #
+    # HMRC's three rules, all answerable from data already in hand:
+    #   1. locked once any obligation in that tax year has been fulfilled;
+    #   2. locked when the business commenced between 1 and 5 April and today is
+    #      later within that same window;
+    #   3. self-employment and UK property only — every scheme this app files.
+    def quarterly_choice(obligations)
+      return nil if group&.business_id.blank?
+
+      details = raw_business_details
+      return nil if details.blank?
+
+      year_end = (obligations.map { |ob| ob[:end_date] }.max || Date.current)
+      tax_year = Hmrc::TaxYear.label(year_end)
+
+      {
+        tax_year:  tax_year,
+        current:   details.dig("quarterlyTypeChoice", "quarterlyPeriodType"),
+        options:   QUARTERLY_PERIOD_TYPES,
+        locked_by: locked_reason(obligations, details)
+      }
+    end
+
+    def locked_reason(obligations, details)
+      return :submitted if obligations.any? { |ob| ob[:status] == Base::STATUS_FULFILLED }
+      return :commencement_window if inside_april_commencement_window?(details["commencementDate"])
+      nil
+    end
+
+    # HMRC excludes a business that commenced 1-5 April while today is still in
+    # that window and past the commencement date — the days where the tax year
+    # of the first period is itself ambiguous.
+    def inside_april_commencement_window?(commencement)
+      date = Date.parse(commencement.to_s)
+      return false unless date.month == 4 && date.day.between?(1, 5)
+
+      today = Date.current
+      today.month == 4 && today.day.between?(1, 5) && today > date
+    rescue Date::Error, TypeError
+      false
+    end
+
     # HMRC's own record of the business we file for, so the trade the figures
     # land against is visible rather than assumed, and a wrong business id shows
     # up on screen instead of being filed against silently.
@@ -276,12 +351,21 @@ module Filing
     # Non-fatal on purpose: the obligations ARE the page. Losing this costs
     # context, and taking the page down with it would cost the filing.
     def business_details
+      normalise_business(raw_business_details)
+    end
+
+    # Fetched once per request and shared: the panel shows it and the quarterly
+    # election reads its current value and commencement date out of the same
+    # response, rather than asking HMRC the same question twice.
+    def raw_business_details
+      return @raw_business_details if defined?(@raw_business_details)
+
       id = group&.business_id
-      return [] if id.blank?
-      normalise_business(client.business_details(id))
+      @raw_business_details = id.blank? ? nil : client.business_details(id)
     rescue => e
+      @raw_business_details = nil
       Rails.logger.warn "HMRC business details fetch failed for #{scheme}: #{e.message}"
-      []
+      nil
     end
 
     # HMRC's field names, and the order they read best in, are facts about their

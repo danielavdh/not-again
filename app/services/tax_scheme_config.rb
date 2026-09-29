@@ -57,6 +57,18 @@ module TaxSchemeConfig
     config[:authorities][country_code.to_s.downcase]
   end
 
+  # The country's name, in its own language, from the catalogue header — the
+  # heading over its schemes on the tax setup page. Not translated, for the same
+  # reason scheme_label is not: it is a name, not a UI string, and a locale file
+  # is the wrong place for a fact that arrives with a YAML file.
+  #
+  # Falls back to the upper-cased code so a catalogue that forgot it still reads
+  # as something; a test names any country that relies on that.
+  def self.country_label(country_code)
+    code = country_code.to_s.downcase
+    config[:country_labels][code].presence || code.upcase
+  end
+
   # The day a tax year ENDS, as "MM-DD". Declared per country in the header of
   # its tax category files; "12-31" when none says otherwise.
   #
@@ -196,6 +208,7 @@ module TaxSchemeConfig
     form_codes   = {}
     sources      = {}
     tax_year_ends = {}
+    country_labels = {}
     positions    = Hash.new { |h, k| h[k] = {} }
     seen_headers = {}
 
@@ -234,6 +247,11 @@ module TaxSchemeConfig
       # calendar, and every scheme filed there shares it. A test enforces that a
       # country's files agree, so last-file-wins never silently decides it.
       tax_year_ends[country]      = data["tax_year_ends"].presence if data["tax_year_ends"].present?
+      # Per COUNTRY and in the country's OWN language, like scheme_label: a
+      # country's name is not a UI string, so it is declared once here instead of
+      # four times in the locale files — where a new country's absence would show
+      # as a plausible-looking "NL" rather than as a gap.
+      country_labels[country]     = data["country_label"].presence if data["country_label"].present?
     end
 
     schemes_by_country = positions.transform_values { |by_slug|
@@ -258,6 +276,7 @@ module TaxSchemeConfig
       authorities_by_connector: authorities_by_connector,
       sources:                  sources.freeze,
       tax_year_ends:            tax_year_ends.freeze,
+      country_labels:           country_labels.freeze,
       report_names:             report_names.freeze,
       scheme_labels:            scheme_labels.freeze,
       submission_names:         submission_names.freeze,

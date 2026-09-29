@@ -200,6 +200,37 @@ module Filing
       nil
     end
 
+    # Where this authority's own strings live: `filing.hmrc.…` for HMRC, the same
+    # convention as the identifier labels above. Interpolated by generic code so
+    # a flash message about an authority-specific setting can be translated
+    # without the controller naming an authority.
+    def i18n_scope
+      "filing.#{self.class::AUTHORITY_KEY}"
+    end
+
+    # What that partial needs. The connector decides, so the generic template
+    # passes a hash it never inspects — otherwise every authority-specific
+    # value would have to be named in generic code, which is the thing
+    # panel_partial exists to prevent.
+    def panel_locals(result)
+      { authority: authority, business: result[:business] || [], filed: result[:filed] }
+    end
+
+    # Raised when an authority will not accept a setting the software otherwise
+    # offers — for a quarterly period type, because a submission already exists
+    # for that tax year. Declared HERE, not on a connector: the generic
+    # controller rescues it, and naming a connector's class there would make the
+    # generic layer know an authority (authority_neutrality_test enforces that).
+    class SettingLocked < StandardError; end
+
+    # Elect a quarterly period type (standard or calendar) for a tax year.
+    # Raised rather than ignored: an authority whose connector does not offer
+    # this must not be reachable through the generic action at all — its panel
+    # simply never renders the control.
+    def set_quarterly_period_type(_type)
+      raise NotImplementedError, "#{self.class.name} does not support electing a quarterly period type"
+    end
+
     # The currency this scheme files in, declared in its catalogue header. The
     # user never picks it: a submission has one currency, and a tax report
     # totals into the same one so the two always agree.

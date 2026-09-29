@@ -568,6 +568,7 @@ nl:
       business_id_hint: "Wordt bij het verbinden automatisch ingevuld. Zo nodig handmatig overschrijven (UUID-formaat)."
       hmrc_record: "What %{authority} holds for this business"
       last_submitted: "Last submitted to %{authority}"
+      legal_html: "<p>Wanneer u via de Making Tax Digital-dienst van HMRC indient, worden de relevante inkomsten- en uitgavencijfers — samen met de fraudepreventiegegevens die HMRC bij elke indiening vereist — in uw opdracht verzonden naar HM Revenue &amp; Customs. HMRC is een afzonderlijke verwerkingsverantwoordelijke voor de gegevens die zij ontvangt. De OAuth-autorisatietokens waarmee wij namens u kunnen indienen, worden versleuteld opgeslagen en uitsluitend voor dat doel gebruikt.</p>"
       business:
         trading_name: "Trading name"
         trading_type: "Trading type"
@@ -583,7 +584,21 @@ nl:
         compatible_software_link: "Find software compatible with Making Tax Digital for Income Tax"
         estimate: "This software does not show your tax estimate. HMRC's estimate of what you owe is in your HMRC online account:"
         hmrc_account_link: "Sign in to your HMRC online account"
-      legal_html: "<p>Wanneer u via de Making Tax Digital-dienst van HMRC indient, worden de relevante inkomsten- en uitgavencijfers — samen met de fraudepreventiegegevens die HMRC bij elke indiening vereist — in uw opdracht verzonden naar HM Revenue &amp; Customs. HMRC is een afzonderlijke verwerkingsverantwoordelijke voor de gegevens die zij ontvangt. De OAuth-autorisatietokens waarmee wij namens u kunnen indienen, worden versleuteld opgeslagen en uitsluitend voor dat doel gebruikt.</p>"
+      quarterly_period_type:
+        title: "Kwartaalperiode (%{authority})"
+        explain: "Kwartalen beginnen op de 6e van een maand (standaard) of eindigen met de maand (kalender). Dit kan alleen in boekhoudsoftware worden ingesteld — in uw %{authority}-account is dat niet mogelijk — en alleen vóór de eerste inzending van het belastingjaar."
+        current: "Voor %{tax_year} dient dit bedrijf %{type} kwartalen in."
+        unset: "nog niet gekozen"
+        standard: "standaard"
+        calendar: "kalender"
+        set_standard: "Standaardkwartalen gebruiken"
+        set_calendar: "Kalenderkwartalen gebruiken"
+        confirm: "Kwartaalperiode voor %{tax_year} wijzigen? Dit kan alleen vóór de eerste inzending van het jaar."
+        saved: "%{tax_year} dient nu %{type} kwartalen in."
+        refused: "Deze wijziging is voor dit belastingjaar niet meer mogelijk."
+        locked:
+          submitted: "Niet meer te wijzigen voor %{tax_year}: er is al ingediend, en %{authority} zet de keuze daarna vast."
+          commencement_window: "Momenteel niet te wijzigen: het bedrijf is tussen 1 en 5 april begonnen, en %{authority} staat de keuze in die periode niet toe."
     register:
       title: "Belastingplichtigen"
       intro: "Voor wie je indient, en je toestemming om dat namens hen te doen. Voer je je eigen boeken, dan heb je er één per belastingdienst waarbij je indient. Voer je boeken voor anderen, dan één per klant per belastingdienst."
@@ -1083,11 +1098,6 @@ nl:
     accountant_export_hint: "Een extra bestand voor je accountant, naast de transactie-CSV die er altijd bij zit. Laat Standard-CSV als er niet om gevraagd is."
     schemes_hint: "Welke belastingaangiften doet deze entiteit?"
     reassign_note: "Het wijzigen van deze toewijzing geldt vanaf je volgende indiening. Reeds ingediende aangiften blijven ongewijzigd, maar in de volgende indiening staan de posten van de oude categorie in de nieuwe categorie."
-    country:
-      gb: "Verenigd Koninkrijk"
-      de: "Duitsland"
-      ch: "Zwitserland"
-      nl: "Nederland"
     section:
       income: "Inkomsten"
       expenses: "Uitgaven"
