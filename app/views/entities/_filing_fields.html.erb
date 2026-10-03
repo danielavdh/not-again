@@ -22,7 +22,7 @@
     </button>
 
     <%# Said here because nothing downstream can catch it: accounts carry no taxpayer, so two people's books in one entity would file under one number with no error anywhere. %>
-    <p class="hint">
+    <p>
       <%= t("filing.register.taxpayer_hint", authority: authority[:name]) %>
       <%= link_to t("filing.register.manage"), taxpayers_path(return_to: authority[:return_to]) %>
     </p>
