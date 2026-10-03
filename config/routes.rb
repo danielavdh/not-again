@@ -215,7 +215,7 @@ Rails.application.routes.draw do
         post :resend_claim_email
       end
       collection do
-        get :email_lookup
+        get :access_fields
       end
     end
 

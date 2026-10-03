@@ -43,23 +43,21 @@ module Reports
         if rate_gap
           csv << [ csv_label(:rate),
                    csv_label(:rate_unavailable,
-                             source: rate_gap.source.to_s.upcase,
+                             source: RateSourceConfig.label_for(rate_gap.source),
                              currency: rate_gap.from_currency,
                              date: rate_gap.date) ]
           csv << []
         end
 
-        sources = @data[:rate_sources].to_a
-        if sources.any?
-          csv << [ csv_label(:rate_source), sources.join(", ") ]
-          csv << []
+        total_col = translated ? [ csv_label(:total_of, name: @display_currency) ] : []
+        header = if @short_version
+          [ shared_label("attrs.code"), shared_label("jargon.account"), *currencies_with_data, *total_col ]
+        else
+          [ shared_label("attrs.code"), shared_label("attrs.date"), shared_label("jargon.account"), *currencies_with_data, *total_col, *(receipts_col ? [ "ReceiptURL" ] : []) ]
         end
 
-        if @short_version
-          csv << [ shared_label("attrs.code"), shared_label("jargon.account"), *currencies_with_data, *(translated ? [ @display_currency ] : []) ]
-        else
-          csv << [ shared_label("attrs.code"), shared_label("attrs.date"), shared_label("jargon.account"), *currencies_with_data, *(translated ? [ @display_currency ] : []), *(receipts_col ? [ "ReceiptURL" ] : []) ]
-        end
+        write_provenance(csv, translated, header.size)
+        csv << header
 
         last_type = nil
 
@@ -169,6 +167,40 @@ module Reports
     end
 
     private
+
+    # Whose books, what period, and what the last column is. The file travels on
+    # its own — an accountant opening the attachment has only what is inside it,
+    # and the period used to live in the filename alone.
+    def write_provenance(csv, translated, width)
+      rows = []
+      if @report
+        rows << [ csv_label(:report), @report.report_group.display_name ]
+        rows << [ csv_label(:period),
+                  csv_label(:period_range, from: @report.start_date, to: @report.end_date) ]
+      end
+
+      sources = @data[:rate_sources].to_a.map { |src| RateSourceConfig.label_for(src) }
+      rows << [ csv_label(:rate_source), sources.join(", ") ] if sources.any?
+
+      if translated && sources.any?
+        rows << [ csv_label(:display_currency), @display_currency ]
+        rows << [ "", csv_label(:total_explained, currency: @display_currency,
+                                source: sources.join(", ")) ]
+      end
+
+      return if rows.empty?
+
+      # A spreadsheet treats row 1 as the header row and styles it, which lands
+      # on the provenance rather than on the real header further down. Naming
+      # the last column there too means the sticky header still says what the
+      # right-hand figures are.
+      if translated
+        rows.first[width - 1] = csv_label(:total_of, name: @display_currency).upcase if width > rows.first.size
+      end
+
+      rows.each { |row| csv << row }
+      csv << []
+    end
 
     def receipt_links(entry)
       Array(@receipts && @receipts[entry[:posting_id]]).join("\n")

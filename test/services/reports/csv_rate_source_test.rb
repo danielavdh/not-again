@@ -44,12 +44,12 @@ class Reports::CsvRateSourceTest < ActiveSupport::TestCase
   end
 
   test "the source line names what actually answered" do
-    assert_equal "estv", source_line(profit_loss([ "estv" ]))
+    assert_equal "ESTV", source_line(profit_loss([ "estv" ]))
   end
 
   # A fallback shows as two entries rather than as one confident half-truth.
   test "a fallback is reported as both series" do
-    assert_equal "estv, ecb", source_line(profit_loss(%w[estv ecb]))
+    assert_equal "ESTV, ECB", source_line(profit_loss(%w[estv ecb]))
   end
 
   # NOTHING ANSWERED MEANS NO SOURCE LINE, not a guess.
@@ -73,7 +73,7 @@ class Reports::CsvRateSourceTest < ActiveSupport::TestCase
       display_currency: "GBP", short_version: true
     ).generate
 
-    assert_equal "hmrc", source_line(csv),
+    assert_equal "HMRC", source_line(csv),
                  "the saved-report export carried no source line at all"
   end
 
@@ -84,7 +84,7 @@ class Reports::CsvRateSourceTest < ActiveSupport::TestCase
       display_currency: "CHF", short_version: true
     ).generate
 
-    assert_equal "estv, ecb", source_line(csv)
+    assert_equal "ESTV, ECB", source_line(csv)
   end
 
   # TaxCsv is not given its sources — it works them out from the translators

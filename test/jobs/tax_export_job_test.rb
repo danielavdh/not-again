@@ -82,6 +82,21 @@ class TaxExportJobTest < ActiveSupport::TestCase
     assert_operator checked, :>, 0, "no accounts with activity to check"
   end
 
+  # An accountant opens the attachment, not the app, and may well open it apart
+  # from the email. The file used to carry neither the business nor the period —
+  # the period existed only in the filename. (The translating column's own label
+  # is asserted in standard_csv_test, which can set up two currencies; these
+  # books are GBP-only, so no such column is produced here.)
+  test "the emailed summary says whose books it is and what period it covers" do
+    rows = CSV.parse(attachment(run_job, containing: "-summary.csv").body.decoded,
+                     col_sep: CurrencyConfig.csv_separator)
+    labels = rows.map(&:first)
+
+    assert_includes labels, I18n.t("reports.csv.report"), "the file does not say whose books it is"
+    assert_includes labels, I18n.t("reports.csv.period"), "the period lived only in the filename"
+    assert rows.find { |r| r.first == I18n.t("attrs.code") }, "no header row"
+  end
+
   # ------------------------------------------------------------- receipts ----
 
   test "the detail file has a ReceiptURL column and the summary does not" do

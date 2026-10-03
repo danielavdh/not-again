@@ -34,7 +34,14 @@ module Reports
     end
 
     def fake_report
-      OpenStruct.new(name: "Q1 2026", start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 3, 31))
+      OpenStruct.new(name: "Q1 2026", start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 3, 31),
+                     report_group: OpenStruct.new(display_name: "Laura Music"))
+    end
+
+    # The file opens with provenance rows now, so the header is found rather
+    # than assumed to be first.
+    def header_of(rows)
+      rows.find { |r| r.first == I18n.t("attrs.code") }
     end
 
     # --- Short version ---
@@ -78,7 +85,8 @@ module Reports
         short_version: true
       ).generate
       rows = CSV.parse(csv)
-      assert_equal [I18n.t("attrs.code"), I18n.t("jargon.account"), "GBP", "EUR", "GBP"], rows.first
+      assert_equal [ I18n.t("attrs.code"), I18n.t("jargon.account"), "GBP", "EUR",
+                     I18n.t("reports.csv.total_of", name: "GBP") ], header_of(rows)
     end
 
     test "short version emits one row per account" do
@@ -128,6 +136,34 @@ module Reports
       assert total_rows.any?, "expected a parent total row"
     end
 
+    # Excel and Numbers style ROW 1 as the header row, which here is provenance,
+    # not the real header. So the total column is named there as well, or the
+    # sticky header sits over a column of figures saying nothing.
+    test "row 1 names the total column, because a spreadsheet treats it as the header" do
+      csv = StandardCsv.new(
+        report: fake_report,
+        data: build_data(currencies: ["GBP", "EUR"]),
+        display_currency: "GBP",
+        short_version: true
+      ).generate
+      rows = CSV.parse(csv)
+
+      assert_equal header_of(rows).size, rows.first.size,
+                   "row 1 must be as wide as the table for the label to land on the right column"
+      assert_equal I18n.t("reports.csv.total_of", name: "GBP").upcase, rows.first.last
+    end
+
+    # Single currency: no total column, so nothing to name.
+    test "row 1 is left alone when there is no total column" do
+      csv = StandardCsv.new(
+        report: fake_report,
+        data: build_data,
+        display_currency: "GBP",
+        short_version: true
+      ).generate
+      assert_equal [ I18n.t("reports.csv.report"), "Laura Music" ], CSV.parse(csv).first
+    end
+
     # --- Long version ---
 
     # The translating column is dropped when it would only repeat the column
@@ -141,7 +177,7 @@ module Reports
         short_version: false
       ).generate
       rows = CSV.parse(csv)
-      assert_equal [ I18n.t("attrs.code"), I18n.t("attrs.date"), I18n.t("jargon.account"), "GBP" ], rows.first
+      assert_equal [ I18n.t("attrs.code"), I18n.t("attrs.date"), I18n.t("jargon.account"), "GBP" ], header_of(rows)
     end
 
     test "the translating column stays when it translates something" do
@@ -153,7 +189,8 @@ module Reports
         display_currency: "EUR",
         short_version: false
       ).generate
-      assert_equal [ I18n.t("attrs.code"), I18n.t("attrs.date"), I18n.t("jargon.account"), "GBP", "EUR" ], CSV.parse(csv).first
+      assert_equal [ I18n.t("attrs.code"), I18n.t("attrs.date"), I18n.t("jargon.account"), "GBP",
+                     I18n.t("reports.csv.total_of", name: "EUR") ], header_of(CSV.parse(csv))
     end
 
     test "long version emits an entry row per transaction" do
@@ -180,7 +217,8 @@ module Reports
         short_version: true
       ).generate
       rows = CSV.parse(csv)
-      assert_equal 1, rows.size
+      assert_equal header_of(rows), rows.last,
+                   "with no figures, the header is the last row in the file"
     end
   end
 end

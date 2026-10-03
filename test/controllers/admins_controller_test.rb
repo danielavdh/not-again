@@ -267,6 +267,116 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
 
       others.each { |a| assert Admin.exists?(a.id) }
     end
+
+    # ---- Granting and revoking full access to someone who already exists ----
+    #
+    # The page does both jobs, and the email picks which: an address that
+    # belongs to an admin changes THEIR access and creates nobody.
+
+    test "an email that already belongs to an admin grants full access and creates nobody" do
+      reader = admins(:shared_reader)
+
+      assert_no_difference("Admin.count") do
+        post admins_url(locale: :en), params: {
+          admin: { email_address: reader.email_address },
+          entity_ids: [ entities(:standalone).id ]
+        }
+      end
+
+      assert reader.admin_entities.with_full_access.exists?(entity_id: entities(:standalone).id)
+      # Their existing read-only grants are nobody else's business.
+      assert_equal "read_only", reader.admin_entities.find_by(entity_id: entities(:personal).id).access_level
+    end
+
+    test "unticking revokes full access and leaves a lower grant standing" do
+      mixed = admins(:mixed) # full on family_biz, read_only on personal
+
+      post admins_url(locale: :en), params: { admin: { email_address: mixed.email_address } }
+
+      assert_not mixed.admin_entities.exists?(entity_id: entities(:family_biz).id),
+                 "the unticked full_access row should be gone"
+      assert_equal "read_only", mixed.admin_entities.find_by(entity_id: entities(:personal).id)&.access_level,
+                   "sudo must never destroy a grant a full-access admin made"
+    end
+
+    # admins(:two) is the ONLY admin on :daughter, so unticking it would freeze
+    # that business and email them about a deletion deadline. Recoverable in the
+    # data, not in the mail — so it asks first.
+    test "unticking the last admin of a business warns instead of orphaning it" do
+      two = admins(:two) # full on family_biz AND daughter
+
+      post admins_url(locale: :en), params: {
+        admin: { email_address: two.email_address },
+        entity_ids: [ entities(:family_biz).id ]
+      }
+
+      assert_response :unprocessable_entity
+      assert_select "#entity-access-fields input[name=?]", "confirm_orphan"
+      assert two.admin_entities.exists?(entity_id: entities(:daughter).id),
+             "nothing may be destroyed before the warning is confirmed"
+      assert_not entities(:daughter).reload.orphaned?
+    end
+
+    test "confirming the warning does remove it, and the business is then orphaned" do
+      two = admins(:two)
+
+      post admins_url(locale: :en), params: {
+        admin: { email_address: two.email_address },
+        entity_ids: [ entities(:family_biz).id ],
+        confirm_orphan: "1"
+      }
+
+      assert_not two.admin_entities.exists?(entity_id: entities(:daughter).id)
+      assert entities(:daughter).reload.orphaned?, "the last admin left, so the retention clock starts"
+    end
+
+    test "submitting the access an admin already has changes nothing and says so" do
+      post admins_url(locale: :en), params: {
+        admin: { email_address: admins(:mixed).email_address },
+        entity_ids: [ entities(:family_biz).id ]
+      }
+
+      assert_redirected_to new_admin_path(locale: :en)
+      assert_equal 1, admins(:mixed).admin_entities.with_full_access.count
+    end
+
+    # A read_only row and a full_access row for the same pair cannot both exist
+    # (AdminEntity uniqueness), and the form renders no box for an entity held
+    # at a lower level — so this is a crafted submission, and it must come back
+    # as an error rather than a 500 from create!.
+    test "ticking an entity the admin holds at a lower level fails as a form error" do
+      mixed = admins(:mixed) # read_only on personal
+
+      post admins_url(locale: :en), params: {
+        admin: { email_address: mixed.email_address },
+        entity_ids: [ entities(:family_biz).id, entities(:personal).id ]
+      }
+
+      assert_response :unprocessable_entity
+      assert_equal "read_only", mixed.admin_entities.find_by(entity_id: entities(:personal).id).access_level
+    end
+
+    test "access_fields starts the boxes at the target's current full access" do
+      get access_fields_admins_url(email: admins(:mixed).email_address, locale: :en)
+
+      assert_select "input[name=?][value=?][checked]", "entity_ids[]", entities(:family_biz).id.to_s
+      assert_select "input[name=?][value=?]", "entity_ids[]", entities(:personal).id.to_s, false,
+                    "an entity held at a lower level gets no box, so it cannot be unticked away"
+    end
+
+    test "the public demo account is never offered full access" do
+      demo = Admin.create!(username: "demo_person", email_address: "demo_person@example.com",
+                           password: "x" * 12, demo: true)
+
+      get access_fields_admins_url(email: demo.email_address, locale: :en)
+      assert_select "input[name=?]", "entity_ids[]", false
+
+      post admins_url(locale: :en), params: {
+        admin: { email_address: demo.email_address },
+        entity_ids: [ entities(:standalone).id ]
+      }
+      assert_not demo.admin_entities.with_full_access.exists?
+    end
   end
 
   # ==================== Full-Access Admin Tests ====================
@@ -275,6 +385,18 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @admin = admins(:one)  # full_access to personal and spouse
       sign_in_as(@admin)
+    end
+
+    # admins(:one) is full_access on :personal and :spouse. A full-access admin
+    # only ever ADDS a grant, so anything the target already holds is out of
+    # their reach and gets no box — there is nothing for them to untick, and so
+    # no way for this page to revoke on their behalf.
+    test "an entity the target already holds gets no checkbox for a full-access admin" do
+      get access_fields_admins_url(email: admins(:read_only).email_address, locale: :en)
+
+      assert_select "input[name=?][value=?]", "entity_ids[]", entities(:personal).id.to_s, false,
+                    "read_only already holds :personal, so it is out of reach here"
+      assert_select "input[name=?][value=?]", "entity_ids[]", entities(:spouse).id.to_s
     end
 
     test "index is sudo only - redirects full_access admin" do
@@ -376,25 +498,25 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       assert_select "details#new-person-fields[open]", 1
     end
 
-    test "email_lookup answers whether an email belongs to an existing admin" do
-      get email_lookup_admins_url(email: admins(:shared_reader).email_address, locale: :en)
-      assert_equal({ "exists" => true }, JSON.parse(response.body))
+    test "access_fields says on the block whether the email belongs to an existing admin" do
+      get access_fields_admins_url(email: admins(:shared_reader).email_address, locale: :en)
+      assert_select "#entity-access-fields[data-existing=?]", "true"
 
-      get email_lookup_admins_url(email: "nobody_at_all@example.com", locale: :en)
-      assert_equal({ "exists" => false }, JSON.parse(response.body))
+      get access_fields_admins_url(email: "nobody_at_all@example.com", locale: :en)
+      assert_select "#entity-access-fields[data-existing=?]", "false"
     end
 
-    test "email_lookup is refused to read_only, upload_receipts and signed-out visitors" do
+    test "access_fields is refused to read_only, upload_receipts and signed-out visitors" do
       sign_out
-      get email_lookup_admins_url(email: "x@example.com", locale: :en)
+      get access_fields_admins_url(email: "x@example.com", locale: :en)
       assert_response :redirect, "signed out must not reach it"
 
       sign_in_as(admins(:read_only))
-      get email_lookup_admins_url(email: "x@example.com", locale: :en)
+      get access_fields_admins_url(email: "x@example.com", locale: :en)
       assert_response :redirect
 
       sign_in_as(admins(:upload_only))
-      get email_lookup_admins_url(email: "x@example.com", locale: :en)
+      get access_fields_admins_url(email: "x@example.com", locale: :en)
       assert_response :redirect
     end
 

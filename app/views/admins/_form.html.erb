@@ -118,27 +118,9 @@
 			</div>
 		<% end %>
 		
-		<%# Sudo granting an entity IS granting full_access %>
-		<div class="field check-boxes">
-			<label>
-				<%= sudo? ? t(".sudo_entities_label") : t(".entities") %>
-			</label>
-			<% @manageable_entities.each do |entity| %>
-				<label>
-					<%= check_box_tag "entity_ids[]", entity.id,
-							Array(params[:entity_ids]).include?(entity.id.to_s),
-							id: "entity_#{entity.id}" %>
-					<%= entity.code %> — <%= entity.name %>
-					<% if sudo? %>
-						<% full_access_usernames = entity.admin_entities.select(&:full_access?).map { |ae| ae.admin.username } %>
-						<% if full_access_usernames.any? %>
-							— <%= t(".already_full_access", 
-								names: full_access_usernames.join(", ")) %>
-					  <% end %>
-					<% end %>
-				</label>
-			<% end %>
-		</div>
+		<%# Sudo ticking an entity IS granting full_access; unticking one revokes it. %>
+		<%= render "admins/entity_access_fields",
+				rows: @grant_rows, target: @grant_target, orphan_codes: @orphan_codes %>
 	<% end %>
 
 	<div class="actions">

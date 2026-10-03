@@ -552,7 +552,8 @@ const Receipts = {
   // Refresh receipt state for a posting after link/unlink/upload
   async refreshPostingReceipts(postingId) {
     try {
-      const response = await fetch(this.paths.forPosting.replace(':posting_id', postingId));
+      const response = await fetch(this.paths.forPosting.replace(':posting_id', postingId),
+                                   { headers: { Accept: 'application/json' } });
       const receipts = await response.json();
 
       const widget = document.querySelector(`.receipt-posting-widget[data-posting-id="${postingId}"]`);

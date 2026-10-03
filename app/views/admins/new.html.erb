@@ -8,6 +8,10 @@
 
     <h1><%= @mode == :invite ? t(".grant_access") : t(".new_h1") %></h1>
 
+    <%# The page does two jobs and the email picks which — so it says so, rather
+        than leaving it to be guessed from the heading. %>
+    <p class="info"><%= t(".mode_hint") %></p>
+
     <%= render 'form', admin: @admin %>
 
     <div class="crud_navigation">

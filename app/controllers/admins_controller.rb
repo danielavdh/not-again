@@ -38,7 +38,20 @@ class AdminsController < ApplicationController
   def new
     @admin = Admin.new
     @mode = sudo? ? :sudo : :invite
-    @manageable_entities = manageable_entities_for_grant
+    load_grant_data
+  end
+
+  # GET /admins/access_fields?email=… — the entity-access block for whoever that
+  # address belongs to. The form fetches it as the email is typed, so the ticks
+  # show that person's CURRENT access instead of a blank slate, and sudo can
+  # revoke here by unticking.
+  # No :id, so ensure_full_access_or_self's self branch cannot match — read_only,
+  # upload_receipts and demo are refused.
+  def access_fields
+    @mode = sudo? ? :sudo : :invite
+    load_grant_data(email: params[:email])
+    render partial: "admins/entity_access_fields",
+           locals: { rows: @grant_rows, target: @grant_target, orphan_codes: @orphan_codes }
   end
 
   # GET /admins/:id/edit
@@ -51,9 +64,15 @@ class AdminsController < ApplicationController
   end
 
   # POST /admins
-  # No entity checked means sudo creating a bare admin — a full-access admin's
-  # form can never submit zero.
+  # Three jobs behind one form, decided by the email: an address that already
+  # belongs to an admin changes THEIR access, never creates anything; otherwise
+  # a new person is created, and for sudo with nothing ticked that is a bare
+  # admin with no books.
   def create
+    if (existing = find_existing_coadmin_candidate)
+      return sudo? ? reconcile_full_access(existing) : grant_coadmin_access(existing)
+    end
+
     if sudo? && Array(params[:entity_ids]).blank?
       create_as_sudo
     else
@@ -144,14 +163,6 @@ class AdminsController < ApplicationController
     redirect_to admin_path(@admin), notice: t("admins.preferences_updated")
   end
 
-  # Live check for the grant form, JSON only. No :id, so
-  # ensure_full_access_or_self's self branch cannot match — read_only,
-  # upload_receipts and demo are refused.
-  def email_lookup
-    email = params[:email].to_s.strip.downcase
-    render json: { exists: email.present? && Admin.exists?(email_address: email) }
-  end
-
   # GET /verify_email/:token — no set_admin: the token is the authorisation.
   def verify_email
     admin = Admin.find_by_token_for(:email_verification, params[:token])
@@ -197,7 +208,7 @@ class AdminsController < ApplicationController
     # "whose password is it really" question the claim flow exists to settle.
     @admin = Admin.new(sudo_admin_params.merge(claimed_at: Time.current))
     @mode = :sudo
-    @manageable_entities = manageable_entities_for_grant
+    load_grant_data
 
     if @admin.save
       AdminMailer.with(admin: @admin, locale: I18n.locale).email_verification.deliver_later
@@ -211,27 +222,10 @@ class AdminsController < ApplicationController
   # entities they manage; sudo grants full_access on any entity.
   def create_or_grant_coadmin_access
     @mode = sudo? ? :sudo : :invite
-    @manageable_entities = manageable_entities_for_grant
+    load_grant_data
 
-    # Intersect in Ruby: @manageable_entities carries an includes that fans out
-    # duplicate rows under pluck, and .distinct collides with its own order.
-    allowed_ids = @manageable_entities.unscope(:order, :includes).pluck(:id)
-    entity_ids = allowed_ids & Array(params[:entity_ids]).map(&:to_i)
-    if entity_ids.empty?
-      @admin = Admin.new(coadmin_params)
-      @admin.errors.add(:base, "Please select at least one entity")
-      render :new, status: :unprocessable_entity
-      return
-    end
-
-    levels_by_entity_id = resolve_levels_by_entity_id(entity_ids)
-    if levels_by_entity_id.nil?
-      redirect_to new_admin_path, alert: t("admins.invalid_access_level")
-      return
-    end
-
-    existing = find_existing_coadmin_candidate
-    return grant_existing_admin_access(existing, levels_by_entity_id) if existing
+    levels_by_entity_id = submitted_grant_levels
+    return if levels_by_entity_id.nil?
 
     # An owner's email otherwise falls through to Admin.new and dies on the
     # email uniqueness constraint. Reuses already_linked deliberately — a
@@ -255,6 +249,150 @@ class AdminsController < ApplicationController
     else
       render :new, status: :unprocessable_entity
     end
+  end
+
+  # A full-access admin grants read_only/upload_receipts to someone who already
+  # has an account. Never a revoke: their own authorised table does that, and
+  # they may not touch a full_access row at all.
+  def grant_coadmin_access(existing)
+    @mode = :invite
+    load_grant_data
+
+    levels_by_entity_id = submitted_grant_levels
+    return if levels_by_entity_id.nil?
+
+    grant_existing_admin_access(existing, levels_by_entity_id)
+  end
+
+  # Sudo's half: the ticks ARE this admin's full access, so the submission is a
+  # reconciliation — tick to grant, untick to revoke. Only full_access rows are
+  # ever touched; a read_only or upload_receipts grant belongs to the admin who
+  # made it and is rendered without a box at all.
+  #
+  # Revoking the last admin of an entity orphans it, which freezes the books,
+  # starts the retention clock and emails the admin about it. Recoverable in the
+  # data (re-granting clears both columns) but not in the mail, so it is
+  # confirmed rather than silently done.
+  def reconcile_full_access(target)
+    @mode = :sudo
+    load_grant_data(email: target.email_address)
+    ticked = submitted_entity_ids
+
+    held      = target.admin_entities.with_full_access.pluck(:entity_id)
+    to_grant  = ticked - held
+    to_revoke = held - ticked
+
+    if to_grant.empty? && to_revoke.empty?
+      return redirect_to(new_admin_path, alert: t("admins.access_unchanged", username: identifier_for(target)))
+    end
+
+    orphan_codes = entities_left_unattended(target, to_revoke)
+    if orphan_codes.any? && params[:confirm_orphan].blank?
+      @orphan_codes = orphan_codes
+      @admin = Admin.new(email_address: target.email_address)
+      return render(:new, status: :unprocessable_entity)
+    end
+
+    ActiveRecord::Base.transaction do
+      to_grant.each { |eid| AdminEntity.create!(admin: target, entity_id: eid, access_level: :full_access) }
+      AdminEntity.where(admin_id: target.id, entity_id: to_revoke).with_full_access.destroy_all
+    end
+
+    if to_grant.any?
+      AdminMailer.with(admin: target, granter: current_admin, entities: Entity.where(id: to_grant).to_a,
+                       level: "full_access", locale: I18n.locale).access_granted.deliver_later
+    end
+
+    redirect_to admins_url, notice: t("admins.access_reconciled", username: identifier_for(target))
+  rescue ActiveRecord::RecordInvalid => e
+    @admin = Admin.new(email_address: target.email_address)
+    @admin.errors.add(:base, e.record.errors.full_messages.to_sentence)
+    render :new, status: :unprocessable_entity
+  end
+
+  # The codes of the entities among `entity_ids` that would be left with no
+  # admin at all once this admin's link goes. One query, a subselect rather than
+  # a count per entity.
+  def entities_left_unattended(target, entity_ids)
+    return [] if entity_ids.empty?
+
+    still_held = AdminEntity.where(entity_id: entity_ids).where.not(admin_id: target.id).select(:entity_id)
+    Entity.where(id: entity_ids).where.not(id: still_held).order(:code).pluck(:code)
+  end
+
+  # What every rendering of the grant form needs. `email` resolves the person
+  # the ticks are ABOUT; without one the form is a blank create.
+  def load_grant_data(email: nil, orphan_codes: [])
+    @manageable_entities = manageable_entities_for_grant
+    @grant_target        = resolve_grant_target(email)
+    @orphan_codes        = orphan_codes
+    @grant_rows          = grant_rows(@grant_target)
+  end
+
+  # Sudo is never a target (an owner holds no entity links), and nobody edits
+  # their own access here.
+  def resolve_grant_target(email)
+    address = email.to_s.strip.downcase
+    return nil if address.blank?
+
+    found = Admin.find_by(email_address: address)
+    return nil if found.nil? || found.sudo? || found == current_admin
+
+    found
+  end
+
+  # One row per entity this admin may grant, carrying what the view must not
+  # work out for itself: whether the box starts ticked, whether an existing
+  # grant puts the entity out of reach, and who else has full access to it.
+  #
+  # An entity with no box cannot be unticked away, which is how the levels stay
+  # in their own lanes: sudo may change a full_access row and nothing else,
+  # while a full-access admin only ever ADDS, so any grant the target already
+  # holds is out of their reach.
+  #
+  # A re-render after an error or an orphan warning takes the ticks from the
+  # submission — what they just chose — rather than from the database.
+  def grant_rows(target)
+    submitted = params.key?(:entity_ids) ? Array(params[:entity_ids]).map(&:to_s) : nil
+    links     = target ? target.admin_entities.index_by(&:entity_id) : {}
+
+    @manageable_entities.map do |entity|
+      link = links[entity.id]
+      mine = link.present? && sudo? && link.full_access?
+      {
+        entity:      entity,
+        checked:     submitted ? submitted.include?(entity.id.to_s) : mine,
+        lower_level: (link.present? && !mine) ? link.access_level : nil,
+        others:      entity.admin_entities.select { |ae| ae.full_access? && ae.admin_id != target&.id }
+                           .map { |ae| ae.admin.username }
+      }
+    end
+  end
+
+  # The ticked entities and the level to grant them at, or nil once this has
+  # already answered the request — no entity ticked, or a level the form does
+  # not offer, which means a crafted submission.
+  def submitted_grant_levels
+    entity_ids = submitted_entity_ids
+    if entity_ids.empty?
+      @admin = Admin.new(coadmin_params)
+      @admin.errors.add(:base, "Please select at least one entity")
+      render :new, status: :unprocessable_entity
+      return nil
+    end
+
+    levels = resolve_levels_by_entity_id(entity_ids)
+    return levels unless levels.nil?
+
+    redirect_to new_admin_path, alert: t("admins.invalid_access_level")
+    nil
+  end
+
+  # Intersect in Ruby: @manageable_entities carries an includes that fans out
+  # duplicate rows under pluck, and .distinct collides with its own order.
+  def submitted_entity_ids
+    allowed_ids = @manageable_entities.unscope(:order, :includes).pluck(:id)
+    allowed_ids & Array(params[:entity_ids]).map(&:to_i)
   end
 
   # Never full_access: that would let an inviter create an un-manageable peer at

@@ -32,8 +32,9 @@ module Reports
 
     def generate
       CSV.generate(col_sep: CurrencyConfig.csv_separator) do |csv|
-        write_metadata(csv)
-        csv << header_row
+        header = header_row
+        write_metadata(csv, header.size)
+        csv << header
 
         last_section = nil
         (@data[:category_groups] || []).each do |cat|
@@ -55,18 +56,26 @@ module Reports
 
     private
 
-    def write_metadata(csv)
-      csv << [ csv_label(:report), @report.report_group.display_name ]
+    def write_metadata(csv, width)
+      # Row 1 is what a spreadsheet styles as the header, so the total column is
+      # named there too — see StandardCsv#write_provenance.
+      first = [ csv_label(:report), @report.report_group.display_name ]
+      first[width - 1] = csv_label(:total_of, name: @display_currency).upcase if @translated && width > first.size
+      csv << first
       csv << [ csv_label(:period), csv_label(:period_range, from: @report.start_date, to: @report.end_date) ]
       csv << [ csv_label(:display_currency), @display_currency ]
       csv << [ csv_label(:form), @short_version ? csv_label(:form_summary) : csv_label(:form_detail) ]
       if @rate_gap
         csv << [ csv_label(:rate),
-                 csv_label(:rate_unavailable, source: @rate_gap.source.to_s.upcase,
+                 csv_label(:rate_unavailable, source: RateSourceConfig.label_for(@rate_gap.source),
                            currency: @rate_gap.from_currency, date: @rate_gap.date) ]
       end
-      sources = @data[:rate_sources].to_a
-      csv << [ csv_label(:rate_source), sources.join(", ") ] if sources.any?
+      sources = @data[:rate_sources].to_a.map { |src| RateSourceConfig.label_for(src) }
+      if sources.any?
+        csv << [ csv_label(:rate_source), sources.join(", ") ]
+        csv << [ "", csv_label(:total_explained, currency: @display_currency,
+                               source: sources.join(", ")) ] if @translated
+      end
       csv << []
     end
 
@@ -75,7 +84,7 @@ module Reports
       cells << shared_label("attrs.date") unless @short_version
       cells << I18n.t("reports.show.category")
       @currencies.each { |c| cells << c }
-      cells << @display_currency if @translated
+      cells << csv_label(:total_of, name: @display_currency) if @translated
       cells << "ReceiptURL" if @receipts_col
       cells
     end

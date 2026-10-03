@@ -109,9 +109,11 @@ en:
     preferences_updated: "Preference saved."
     draft_deleted: "%{username}'s draft account was deleted."
     claim_email_resent: "Confirmation email sent again."
+    access_reconciled: "Access updated for %{username}."
+    access_unchanged: "%{username} already has exactly that access — nothing changed."
     index:
       list_h1: "Listing Admins"
-      new: "New Admin"
+      new: "New admin or change access"
       show: "Show"
       edit: "Edit"
       sure: "Are you sure?"
@@ -155,8 +157,9 @@ en:
       resend_claim_email: "Resend confirmation"
       delete_draft_confirm: "Delete %{email}'s draft account? They have never logged in — this removes the account entirely, not just this entity."
     new:
-      new_h1: "New Admin"
+      new_h1: "New admin or change access"
       index: "Back to Admin List"
+      mode_hint: "Enter an email address. If it already belongs to an admin, you will change what they can reach. If it does not, you will create them."
       errors_on_page: "There are errors on this page (scroll down)."
       grant_access: "Grant Access"
     edit:
@@ -181,6 +184,11 @@ en:
       no_full_access_entities: "No full-access entities"
       remove_full_access_confirm: "Remove full access to %{entity}?"
       sudo_entities_label: "Tick entities this admin will get full access to"
+      existing_admin: "%{username} already has an account. The ticks below are their full access right now — tick to give it, untick to take it away."
+      held_lower: "has %{level} here — not yours to change"
+      demo_no_full_access: "This is the public demo account. It can never hold full access to real books."
+      orphan_warning: "This takes away the last admin of: %{codes}. Those books are then frozen, the retention clock starts, and the admin is emailed about the deletion deadline. Re-granting access undoes all of it except the email."
+      confirm_orphan: "Take it away anyway"
       submit: "Save Admin"
     website_update: "Last website update"
     header:
@@ -925,6 +933,7 @@ en:
       totals: "TOTALS"
       balanced: "BALANCED"
       not_balanced: "NOT BALANCED — difference: %{difference}"
+      total_explained: "Total %{currency}: non %{currency} amounts converted at %{source} rates."
       section: "Section"
       category_key: "Category key"
       label: "Label"

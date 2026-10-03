@@ -32,7 +32,7 @@ module Reports
       # line below says why: printing a derived source when nothing answered
       # produced a file with an empty converted column naming a source that was
       # never consulted.
-      source = @data[:rate_sources].to_a.join(", ").presence
+      source = @data[:rate_sources].to_a.map { |src| RateSourceConfig.label_for(src) }.join(", ").presence
       currencies_with_data = @data[:currencies_with_data]
       # The translating column only when it converts something — see
       # Reports::CurrencyColumns.
@@ -62,7 +62,7 @@ module Reports
         if rate_gap
           csv << [ csv_label(:rate),
                    csv_label(:rate_unavailable,
-                             source: rate_gap.source.to_s.upcase,
+                             source: RateSourceConfig.label_for(rate_gap.source),
                              currency: rate_gap.from_currency,
                              date: rate_gap.date) ]
         end

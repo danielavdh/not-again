@@ -45,7 +45,7 @@ module Reports
       assert_equal "Profit & Loss", rows[0][1]
       assert_match "2026-01-01", rows[1][1]
       assert_equal "GBP", rows[2][1]
-      assert_equal "hmrc", rows[3][1]
+      assert_equal "HMRC", rows[3][1]
     end
 
     test "includes INCOME section with account row" do
@@ -127,7 +127,7 @@ module Reports
         end_date: Date.new(2026, 3, 31)
       ).generate
       rows = CSV.parse(csv)
-      assert_equal "ecb", rows[3][1]
+      assert_equal "ECB", rows[3][1]
     end
   end
 end

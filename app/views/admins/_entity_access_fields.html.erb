@@ -1,0 +1,53 @@
+<%# locals: (rows:, target:, orphan_codes:) %>
+
+<%# Fetched live by index.js as the email is typed, so the ticks always show the
+    CURRENT access of whoever that address belongs to — tick to grant, untick to
+    revoke. data-existing tells the JS whether to open the username/password
+    fields. Keys are absolute because this block was lifted out of admins/_form
+    and keeps its siblings' names. %>
+<div id="entity-access-fields" data-existing="<%= target.present? %>">
+
+	<% if target&.demo? %>
+		<p class="info"><%= t("admins.form.demo_no_full_access") %></p>
+	<% else %>
+
+		<% if target %>
+			<p class="info"><%= t("admins.form.existing_admin", username: target.username) %></p>
+		<% end %>
+
+		<% if orphan_codes.any? %>
+			<div class="error_message">
+				<p><%= t("admins.form.orphan_warning", codes: orphan_codes.join(", ")) %></p>
+				<label>
+					<%= check_box_tag :confirm_orphan, "1", false %>
+					<%= t("admins.form.confirm_orphan") %>
+				</label>
+			</div>
+		<% end %>
+
+		<div class="field check-boxes">
+			<label>
+				<%= sudo? ? t("admins.form.sudo_entities_label") : t("admins.form.entities") %>
+			</label>
+			<% rows.each do |row| %>
+				<label>
+					<%# A lower grant is the inviting admin's business, never sudo's — no box, so an
+					    untick can never destroy it. %>
+					<% if row[:lower_level] %>
+						<%= row[:entity].code %> &mdash; <%= row[:entity].name %>
+						<span class="small info">
+							<%= t("admins.form.held_lower", level: t("access.#{row[:lower_level]}")) %>
+						</span>
+					<% else %>
+						<%= check_box_tag "entity_ids[]", row[:entity].id, row[:checked],
+								id: "entity_#{row[:entity].id}" %>
+						<%= row[:entity].code %> &mdash; <%= row[:entity].name %>
+						<% if sudo? && row[:others].any? %>
+							&mdash; <%= t("admins.form.already_full_access", names: row[:others].join(", ")) %>
+						<% end %>
+					<% end %>
+				</label>
+			<% end %>
+		</div>
+	<% end %>
+</div>

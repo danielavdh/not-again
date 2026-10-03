@@ -147,21 +147,27 @@ const vdh = {
 	if (/(profile|admins)/.test(location.pathname)) {
 		/* The password fields are a <details> now — the browser opens them, so
 		   there is nothing here to break and nothing to un-hide. */
-		/* Grant form: email decides whether username/password are needed at
-		   all — closed by default (server-rendered, safe), opened here only
-		   once the email is confirmed NOT to belong to an existing admin.
+		/* Grant form: the email decides what the page is for. The server renders
+		   the entity-access block for whoever that address belongs to — ticks
+		   showing their CURRENT access — and says on the block itself whether
+		   it found anybody, which is what opens or closes the username and
+		   password fields.
 		   focusout, not blur — blur does not bubble, so delegate() (which
 		   listens on document) would never see it. */
 		delegate(document, 'focusout', '#admin_email_address', (e, field) => {
+		  const container = document.getElementById('entity-access-fields');
 		  const details = document.getElementById('new-person-fields');
-		  if (!details) return;
+		  if (!container) return;
 		  const email = field.value.trim();
-		  if (!email) { details.open = false; return; }
-		  fetch(`/admins/email_lookup?email=${encodeURIComponent(email)}`, {
-		    headers: { Accept: 'application/json' }
+		  fetch(`/admins/access_fields?email=${encodeURIComponent(email)}`, {
+		    headers: { Accept: 'text/html' }
 		  })
-		    .then((r) => r.json())
-		    .then((data) => { details.open = !data.exists; })
+		    .then((r) => r.text())
+		    .then((html) => {
+		      container.outerHTML = html;
+		      const fresh = document.getElementById('entity-access-fields');
+		      if (details) details.open = email !== '' && fresh?.dataset.existing !== 'true';
+		    })
 		    .catch(() => {}); /* stays as server-rendered on any fetch failure */
 		});
 		/* journal entries preference: auto-submit on tick/untick */
