@@ -33,7 +33,7 @@ module Reports
     def generate
       CSV.generate(col_sep: CurrencyConfig.csv_separator) do |csv|
         header = header_row
-        write_metadata(csv, header.size)
+        write_metadata(csv, header)
         csv << header
 
         last_section = nil
@@ -56,11 +56,12 @@ module Reports
 
     private
 
-    def write_metadata(csv, width)
+    def write_metadata(csv, header)
       # Row 1 is what a spreadsheet styles as the header, so the total column is
       # named there too — see StandardCsv#write_provenance.
       first = [ csv_label(:report), @report.report_group.display_name ]
-      first[width - 1] = csv_label(:total_of, name: @display_currency).upcase if @translated && width > first.size
+      pos   = header.index(csv_label(:total_of, name: @display_currency))
+      first[pos] = csv_label(:total_of, name: @display_currency).upcase if pos && pos >= first.size
       csv << first
       csv << [ csv_label(:period), csv_label(:period_range, from: @report.start_date, to: @report.end_date) ]
       csv << [ csv_label(:display_currency), @display_currency ]

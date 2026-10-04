@@ -56,7 +56,7 @@ module Reports
           [ shared_label("attrs.code"), shared_label("attrs.date"), shared_label("jargon.account"), *currencies_with_data, *total_col, *(receipts_col ? [ "ReceiptURL" ] : []) ]
         end
 
-        write_provenance(csv, translated, header.size)
+        write_provenance(csv, header)
         csv << header
 
         last_type = nil
@@ -171,7 +171,7 @@ module Reports
     # Whose books, what period, and what the last column is. The file travels on
     # its own — an accountant opening the attachment has only what is inside it,
     # and the period used to live in the filename alone.
-    def write_provenance(csv, translated, width)
+    def write_provenance(csv, header)
       rows = []
       if @report
         rows << [ csv_label(:report), @report.report_group.display_name ]
@@ -181,6 +181,9 @@ module Reports
 
       sources = @data[:rate_sources].to_a.map { |src| RateSourceConfig.label_for(src) }
       rows << [ csv_label(:rate_source), sources.join(", ") ] if sources.any?
+
+      total_label = csv_label(:total_of, name: @display_currency)
+      translated  = header.include?(total_label)
 
       if translated && sources.any?
         rows << [ csv_label(:display_currency), @display_currency ]
@@ -192,10 +195,11 @@ module Reports
 
       # A spreadsheet treats row 1 as the header row and styles it, which lands
       # on the provenance rather than on the real header further down. Naming
-      # the last column there too means the sticky header still says what the
-      # right-hand figures are.
-      if translated
-        rows.first[width - 1] = csv_label(:total_of, name: @display_currency).upcase if width > rows.first.size
+      # the total column there too means the sticky header still says what those
+      # figures are. Found by position, not assumed last: the detail form ends
+      # with ReceiptURL.
+      if (pos = header.index(total_label)) && pos >= rows.first.size
+        rows.first[pos] = total_label.upcase
       end
 
       rows.each { |row| csv << row }

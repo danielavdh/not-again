@@ -148,9 +148,29 @@ module Reports
       ).generate
       rows = CSV.parse(csv)
 
-      assert_equal header_of(rows).size, rows.first.size,
-                   "row 1 must be as wide as the table for the label to land on the right column"
-      assert_equal I18n.t("reports.csv.total_of", name: "GBP").upcase, rows.first.last
+      total_at = header_of(rows).index(I18n.t("reports.csv.total_of", name: "GBP"))
+      assert_equal I18n.t("reports.csv.total_of", name: "GBP").upcase, rows.first[total_at],
+                   "the marker must sit in the total column's own position"
+    end
+
+    # The detail form ends with ReceiptURL, so the total column is second to
+    # last and the marker must not be parked on the links.
+    test "row 1 marks the total column, not the last column, when receipt links follow it" do
+      csv = StandardCsv.new(
+        report: fake_report,
+        data: build_data(currencies: ["GBP", "EUR"]),
+        display_currency: "GBP",
+        short_version: false,
+        receipts: { 1 => [ "https://example.test/r/1" ] }
+      ).generate
+      rows   = CSV.parse(csv)
+      header = header_of(rows)
+
+      assert_equal "ReceiptURL", header.last, "this form must end with the links"
+      total_at = header.index(I18n.t("reports.csv.total_of", name: "GBP"))
+      assert_equal header.size - 2, total_at, "the total column is second to last here"
+      assert_equal I18n.t("reports.csv.total_of", name: "GBP").upcase, rows.first[total_at]
+      assert_nil rows.first[header.size - 1], "nothing belongs over the receipt links"
     end
 
     # Single currency: no total column, so nothing to name.
