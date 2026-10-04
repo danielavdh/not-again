@@ -506,6 +506,28 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ledger_account_url(locale: :en, id: @account)
   end
 
+  # Editing an entry from inside a report opens the form in a popup, and a
+  # successful save renders a "you can close this" page instead of redirecting.
+  # Nothing covered that branch, and it named a layout the app does not have —
+  # so every popup save answered 500 while the entry itself saved fine.
+  test "saving from a popup renders the close-me page, not a 500" do
+    entry = journal_entries(:posted_withdrawal)
+    patch update_withdrawal_account_url(locale: :en, id: @account, journal_entry_id: entry.id), params: {
+      popup: "1",
+      journal_entry: {
+        entry_date: Date.current,
+        memo: "Updated from a report popup",
+        postings_attributes: {
+          "0" => { account_id: @expense.id, amount_display: "75.00", entry_type: "debit" }
+        }
+      },
+      amount_display: "75.00"
+    }
+
+    assert_response :success
+    assert_equal "Updated from a report popup", entry.reload.memo
+  end
+
   test "should get copy withdrawal" do
     entry = journal_entries(:posted_withdrawal)
     get copy_withdrawal_account_url(locale: :en, id: @account, journal_entry_id: entry.id)

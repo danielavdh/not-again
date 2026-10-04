@@ -101,7 +101,7 @@ module Reports
         else
           csv << amount_row(account[:code], nil, name, {}, nil)
           (account[:entries] || []).each do |e|
-            csv << amount_row(nil, e[:date], e[:description], { e[:currency] => e[:amount] }, e[:translated_amount],
+            csv << amount_row(nil, e[:date], described(e), { e[:currency] => e[:amount] }, e[:translated_amount],
                               receipt: receipt_links(e))
           end
           csv << amount_row(nil, nil, csv_label(:total_of, name: account[:name]),

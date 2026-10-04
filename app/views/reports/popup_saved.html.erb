@@ -1,4 +1,16 @@
+<%# The save response for an entry edited in a report's popup iframe. A whole
+    document rendered with no layout, carrying no chrome and no stylesheet: its
+    only job is the flag plus the script that reads it. Accounts.init sees
+    body[data-popup-saved], posts "saved" to the parent and stops — the parent
+    then closes the modal and refetches the report. Without the script tag the
+    flag is never read, the modal stays open and the report keeps the old
+    figures. %>
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body data-popup-saved="true"></body>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta charset="utf-8">
+    <%= csp_meta_tag %>
+    <%= javascript_importmap_tags "accounting" %>
+  </head>
+  <body data-popup-saved="true"></body>
 </html>

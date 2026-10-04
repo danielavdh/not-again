@@ -109,9 +109,11 @@ de:
     preferences_updated: "Einstellung gespeichert."
     draft_deleted: "Das Entwurfskonto von %{username} wurde gelöscht."
     claim_email_resent: "Bestätigungs-E-Mail erneut gesendet."
+    access_reconciled: "Zugriff für %{username} aktualisiert."
+    access_unchanged: "%{username} hat genau diesen Zugriff bereits — nichts geändert."
     index:
       list_h1: "Admin"
-      new: "Neue Admin"
+      new: "Neue Admin oder Zugriff ändern"
       show: "Zeigen"
       edit: "Anpassen"
       sure: "Bist Du sicher?"
@@ -155,10 +157,11 @@ de:
       resend_claim_email: "Bestätigung erneut senden"
       delete_draft_confirm: "Entwurfskonto von %{email} löschen? Es wurde noch nie verwendet — dies entfernt das gesamte Konto, nicht nur diese Einheit."
     new:
-      new_h1: "Neue Admin"
+      new_h1: "Neue Admin oder Zugriff ändern"
       index: "Zurück zu Admins-Übersicht"
       errors_on_page: "Auf dieser Seite hat es Fehler."
       grant_access: "Zugang gewähren"
+      mode_hint: "Gib eine E-Mail-Adresse ein. Gehört sie schon zu einer Admin, änderst du, worauf sie zugreifen kann. Gehört sie zu niemandem, legst du die Person neu an."
     edit:
       edit_h1: "%{admin} anpassen"
       index: "Zurück zu Admins-Übersicht"
@@ -181,6 +184,11 @@ de:
       no_full_access_entities: "Kein Vollzugriff auf irgendeine Einheit"
       remove_full_access_confirm: "Vollzugriff auf %{entity} entfernen?"
       sudo_entities_label: "Einheiten wählen, auf die diese Admin Vollzugriff erhält"
+      existing_admin: "%{username} hat bereits ein Konto. Die Haken unten zeigen den aktuellen Vollzugriff — anhaken, um ihn zu geben, abhaken, um ihn zu entziehen."
+      held_lower: "hat hier %{level} — nicht von dir zu ändern"
+      demo_no_full_access: "Das ist das öffentliche Demo-Konto. Es kann niemals Vollzugriff auf echte Bücher haben."
+      orphan_warning: "Damit wird die letzte Admin von %{codes} entfernt. Diese Bücher werden dann eingefroren, die Aufbewahrungsfrist beginnt, und die Admin wird über die Löschfrist benachrichtigt. Ein erneuter Zugriff macht alles davon wieder rückgängig, nur die E-Mail nicht."
+      confirm_orphan: "Trotzdem entziehen"
       submit: "Admin speichern"
     website_update: "Letzter Websiteupdate"
     header:
@@ -938,6 +946,7 @@ de:
       form_summary: "Zusammenfassung — die Summe je Zeile"
       form_detail: "Detail — jede Buchung hinter den Summen"
       unlinked_receipts: "Nicht zugeordnete Belege"
+      total_explained: "Summe %{currency}: Beträge, die nicht in %{currency} sind, umgerechnet zu %{source}-Kursen."
     rate_source:
       own: "eigener Kurs"
       own_title: "Dein selbst erfasster Kurs, kein veröffentlichter"

@@ -902,7 +902,8 @@ private
   
   def redirect_or_close_popup(path, notice:)
     if params[:popup].present?
-      render 'reports/popup_saved', layout: 'accounts'
+      # No layout: the template is a whole document of its own.
+      render 'reports/popup_saved', layout: false
     else
       redirect_to path, notice: notice
     end

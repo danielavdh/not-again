@@ -109,9 +109,11 @@ nl:
     preferences_updated: "Voorkeur opgeslagen."
     draft_deleted: "Het conceptaccount van %{username} is verwijderd."
     claim_email_resent: "Bevestigingsmail opnieuw verstuurd."
+    access_reconciled: "Toegang van %{username} bijgewerkt."
+    access_unchanged: "%{username} heeft precies die toegang al — niets gewijzigd."
     index:
       list_h1: "Beheerders"
-      new: "Nieuwe beheerder"
+      new: "Nieuwe beheerder of toegang wijzigen"
       show: "Tonen"
       edit: "Bewerken"
       sure: "Weet u het zeker?"
@@ -155,10 +157,11 @@ nl:
       resend_claim_email: "Bevestiging opnieuw versturen"
       delete_draft_confirm: "Conceptaccount van %{email} verwijderen? Er is nog nooit mee ingelogd — dit verwijdert het hele account, niet alleen deze entiteit."
     new:
-      new_h1: "Nieuwe beheerder"
+      new_h1: "Nieuwe beheerder of toegang wijzigen"
       index: "Terug naar beheerderslijst"
       errors_on_page: "Er zijn fouten op deze pagina (scroll omlaag)."
       grant_access: "Toegang verlenen"
+      mode_hint: "Vul een e-mailadres in. Hoort het al bij een beheerder, dan wijzig je waar die bij kan. Hoort het bij niemand, dan maak je de persoon aan."
     edit:
       edit_h1: "%{admin} bewerken"
       index: "Terug naar beheerderslijst"
@@ -181,6 +184,11 @@ nl:
       no_full_access_entities: "Geen volledige toegang tot een entiteit"
       remove_full_access_confirm: "Volledige toegang tot %{entity} intrekken?"
       sudo_entities_label: "Vink de entiteiten aan waarop deze admin volledige toegang krijgt"
+      existing_admin: "%{username} heeft al een account. De vinkjes hieronder zijn de huidige volledige toegang — aanvinken om te geven, uitvinken om in te trekken."
+      held_lower: "heeft hier %{level} — niet aan jou om te wijzigen"
+      demo_no_full_access: "Dit is het openbare demo-account. Het kan nooit volledige toegang tot echte boeken hebben."
+      orphan_warning: "Hiermee wordt de laatste beheerder van %{codes} verwijderd. Die boeken worden dan bevroren, de bewaartermijn begint en de beheerder krijgt bericht over de verwijderingsdatum. Opnieuw toegang geven draait alles terug, behalve de e-mail."
+      confirm_orphan: "Toch intrekken"
       submit: "Beheerder opslaan"
     website_update: "Laatste website-update"
     header:
@@ -938,6 +946,7 @@ nl:
       form_summary: "Samenvatting — het totaal per regel"
       form_detail: "Detail — elke boeking achter de totalen"
       unlinked_receipts: "Niet-gekoppelde bonnen"
+      total_explained: "Totaal %{currency}: bedragen die niet in %{currency} zijn, omgerekend tegen %{source}-koersen."
     rate_source:
       own: "eigen koers"
       own_title: "Je eigen ingevoerde koers, geen gepubliceerde"

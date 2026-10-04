@@ -97,6 +97,21 @@ class TaxExportJobTest < ActiveSupport::TestCase
     assert rows.find { |r| r.first == I18n.t("attrs.code") }, "no header row"
   end
 
+  # A mixed business/private cost is entered as a split, and the share it was
+  # split at lives on the POSTING — the pair's halves hold 70 and 30. Without it
+  # on the line, an accountant reading the detail file sees 70% of an invoice
+  # with nothing saying why it is not the whole amount.
+  test "a split posting carries its percentage behind the description" do
+    postings(:withdrawal_expense).update!(deduction_percentage: 70, description: "Office rent")
+
+    rows = CSV.parse(attachment(run_job, containing: "-detail.csv").body.decoded,
+                     col_sep: CurrencyConfig.csv_separator)
+    line = rows.find { |r| r.any? { |cell| cell.to_s.start_with?("Office rent") } }
+
+    assert line, "the split posting is missing from the detail file"
+    assert_includes line.join(" "), "Office rent (70%)"
+  end
+
   # ------------------------------------------------------------- receipts ----
 
   test "the detail file has a ReceiptURL column and the summary does not" do

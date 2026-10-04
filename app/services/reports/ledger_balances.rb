@@ -88,8 +88,13 @@ module Reports
     # Per-posting rows, signed, for a report that shows individual line items. A
     # separate query on purpose — the grouped one above is what every other
     # caller wants, and it must stay cheap.
+    # deduction_percentage is the split a posting was entered with — business
+    # use of a mixed cost. Carried per line because the pair's two halves hold
+    # different figures (70 and 30), so neither the account nor the entry can
+    # answer for it.
     Row = Struct.new(:account_id, :date, :currency, :amount, :memo,
-                     :description, :journal_entry_id, :posting_id, keyword_init: true)
+                     :description, :journal_entry_id, :posting_id,
+                     :deduction_percentage, keyword_init: true)
 
     def line_items
       base_scope
@@ -102,9 +107,10 @@ module Reports
           Arel.sql("journal_entries.memo"),
           :description,
           :journal_entry_id,
-          Arel.sql("postings.id")
+          Arel.sql("postings.id"),
+          :deduction_percentage
         )
-        .filter_map do |account_id, currency, entry_type, amount, date, memo, description, je_id, posting_id|
+        .filter_map do |account_id, currency, entry_type, amount, date, memo, description, je_id, posting_id, deduction_pct|
           next if currency.blank?
           is_debit     = entry_type == "debit" || entry_type == 0
           debit_normal = DEBIT_NORMAL_TYPES.include?(account_type_of(account_id))
@@ -114,7 +120,8 @@ module Reports
                      is_debit ? -amount : amount
                    end
           Row.new(account_id: account_id, date: date, currency: currency, amount: signed,
-                  memo: memo, description: description, journal_entry_id: je_id, posting_id: posting_id)
+                  memo: memo, description: description, journal_entry_id: je_id, posting_id: posting_id,
+                  deduction_percentage: deduction_pct)
         end
     end
 

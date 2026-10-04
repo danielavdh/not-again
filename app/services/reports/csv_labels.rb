@@ -23,5 +23,17 @@ module Reports
     def shared_label(key, **args)
       I18n.t(key, **args)
     end
+
+    # "Office rent (70%)" — the business share a mixed cost was split at. It
+    # lives on the POSTING, because a split pair's two halves hold different
+    # figures (70 and 30), so neither the account nor the entry can answer for
+    # it. Only the exported files carry it: on screen the row's own % button
+    # already shows it.
+    def described(entry)
+      pct = entry[:deduction_percentage]
+      return entry[:description] if pct.blank?
+
+      [ entry[:description].presence, "(#{pct}%)" ].compact.join(" ")
+    end
   end
 end

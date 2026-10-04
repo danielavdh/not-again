@@ -107,7 +107,7 @@ module Reports
                 csv << [
                   "",
                   entry[:date],
-                  entry[:description],
+                  described(entry),
                   *currencies_with_data.map { |c| entry[:currency] == c ? CurrencyConfig.format_cents_csv(entry[:amount]) : "" },
                   *(translated ? [ CurrencyConfig.format_cents_csv(entry[:translated_amount]) ] : []),
                   *(receipts_col ? [ receipt_links(entry) ] : [])

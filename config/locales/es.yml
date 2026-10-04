@@ -109,9 +109,11 @@ es:
     preferences_updated: "Preferencia guardada."
     draft_deleted: "Se eliminó la cuenta en borrador de %{username}."
     claim_email_resent: "Correo de confirmación reenviado."
+    access_reconciled: "Acceso de %{username} actualizado."
+    access_unchanged: "%{username} ya tiene exactamente ese acceso — no se ha cambiado nada."
     index:
       list_h1: "Listado de Administradores"
-      new: "Nuevo Admin"
+      new: "Nuevo Admin o cambiar acceso"
       show: "Mostrar"
       edit: "Editar"
       sure: "¿Estás seguro?"
@@ -155,10 +157,11 @@ es:
       resend_claim_email: "Reenviar confirmación"
       delete_draft_confirm: "¿Eliminar la cuenta en borrador de %{email}? Nunca se ha iniciado sesión con ella — esto elimina la cuenta por completo, no solo esta entidad."
     new:
-      new_h1: "Nuevo Admin"
+      new_h1: "Nuevo Admin o cambiar acceso"
       index: "Volver a la lista de Admins"
       errors_on_page: "Hay errores en esta página (ver abajo)."
       grant_access: "Conceder acceso"
+      mode_hint: "Introduce una dirección de correo. Si ya pertenece a un admin, cambiarás a qué puede acceder. Si no pertenece a nadie, crearás a esa persona."
     edit:
       edit_h1: "Editar %{admin}"
       index: "Volver a la lista de Admins"
@@ -181,6 +184,11 @@ es:
       no_full_access_entities: "Sin acceso completo a ninguna entidad"
       remove_full_access_confirm: "¿Retirar el acceso completo a %{entity}?"
       sudo_entities_label: "Marca las entidades a las que este admin tendrá acceso completo"
+      existing_admin: "%{username} ya tiene una cuenta. Las casillas de abajo son su acceso completo actual: marca para concederlo, desmarca para retirarlo."
+      held_lower: "tiene %{level} aquí: no te corresponde cambiarlo"
+      demo_no_full_access: "Esta es la cuenta de demostración pública. Nunca puede tener acceso completo a libros reales."
+      orphan_warning: "Esto retira el último admin de %{codes}. Esos libros quedarán congelados, empezará el plazo de conservación y se avisará al admin de la fecha de eliminación. Volver a conceder el acceso lo deshace todo, salvo el correo."
+      confirm_orphan: "Retirarlo de todos modos"
       submit: "Guardar Admin"
     website_update: "Última actualización web"
     header:
@@ -937,6 +945,7 @@ es:
       form_summary: "Resumen — el total de cada línea"
       form_detail: "Detalle — cada transacción tras los totales"
       unlinked_receipts: "Recibos sin vincular"
+      total_explained: "Total %{currency}: importes que no están en %{currency}, convertidos a tipos de %{source}."
     rate_source:
       own: "tipo propio"
       own_title: "Tu propio tipo introducido, no uno publicado"

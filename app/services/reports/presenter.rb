@@ -112,7 +112,8 @@ module Reports
           amount: row.amount,
           translated_amount: translated_amount,
           journal_entry_id: row.journal_entry_id,
-          posting_id: row.posting_id
+          posting_id: row.posting_id,
+          deduction_percentage: row.deduction_percentage
         }
       end
 
