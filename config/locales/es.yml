@@ -711,7 +711,6 @@ es:
     personal: "Personal"
   journal_entries:
     new: "Asiento contable nuevo"
-    edit: "Editar asiento contable"
     created: "Asiento contable creado."
     updated: "Asiento contable actualizado."
     deleted: "Asiento contable eliminado."
@@ -730,6 +729,7 @@ es:
     duplicate:
       beginner_warning: "Esta es una copia de un asiento más avanzado, con más de dos cuentas de balance. Mantener el débito y el crédito equilibrados depende de ti — si no estás seguro de cómo hacerlo, es más seguro consultarlo con quien configuró esto antes de guardar."
     edit:
+      title: "Editar asiento contable"
       beginner_warning: "Este es un asiento más avanzado, con más de dos cuentas de balance. Mantener el débito y el crédito equilibrados depende de ti — si no estás seguro de cómo hacerlo, es más seguro consultarlo con quien configuró esto antes de guardar."
     errors:
       no_postings: "Añada al menos dos asientos"
@@ -830,7 +830,6 @@ es:
     new:
       new_receipt: "Nuevo comprobante"
     title: "Comprobantes"
-    upload_receipt: "Subir Comprobante"
     edit_title: "Editar Comprobante"
     shared_receipt: "Recibo compartido" 
     created: "Comprobante subido correctamente"
@@ -1117,7 +1116,7 @@ es:
     category_none: "— ninguna —"
     accountant_export_field: "Formato de archivo para la asesoría"
     accountant_export_none: "CSV estándar"
-    accountant_export_add: "añadir %{{name}}"
+    accountant_export_add: "añadir %{name}"
     accountant_export_hint: "Un archivo adicional para tu asesoría, junto al CSV de transacciones que se envía siempre. Déjalo CSV estándar si no lo han pedido."
     schemes_hint: "¿Qué declaraciones fiscales presenta esta entidad?"
     reassign_note: "Cambiar esta asignación surte efecto a partir de tu próximo envío. Las presentaciones ya enviadas permanecen como estaban, pero en el próximo envío las entradas de la categoría anterior aparecerán en la nueva categoría."

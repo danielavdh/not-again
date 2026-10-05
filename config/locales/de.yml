@@ -275,7 +275,6 @@ de:
       greeting: "Hallo %{name},"
       body: "Dies bestätigt, dass du den unten stehenden Bedingungen, Version %{version}, auf dieser Installation zugestimmt hast. Bewahre diese E-Mail auf — sie ist deine eigene Kopie, unabhängig vom Server."
       plain_notice: "(Die HTML-Version dieser E-Mail enthält den vollständigen Text, dem du zugestimmt hast. Öffne sie in einem HTML-fähigen E-Mail-Programm, um ihn zu lesen.)"
-      plain_notice: "(Die HTML-Version dieser E-Mail enthält den vollständigen Text, dem Sie zugestimmt haben. Öffnen Sie sie in einem HTML-fähigen E-Mail-Programm, um ihn zu lesen.)"
     email_verification:
       subject: "Bestätige deine E-Mail-Adresse"
       instruction: "Klicke auf den Link unten, um deine E-Mail-Adresse zu bestätigen. Dieser Link läuft in 24 Stunden ab."
@@ -712,7 +711,6 @@ de:
     personal: "Persönlich"
   journal_entries:
     new: "Neuer Journaleintrag"
-    edit: "Journaleintrag bearbeiten"
     created: "Journaleintrag erstellt."
     updated: "Journaleintrag aktualisiert."
     deleted: "Journaleintrag gelöscht."
@@ -731,6 +729,7 @@ de:
     duplicate:
       beginner_warning: "Dies ist eine Kopie einer fortgeschritteneren Buchung mit mehr als zwei Bilanzkonten. Du bist hier selbst dafür verantwortlich, Soll und Haben im Gleichgewicht zu halten — wenn du dir nicht sicher bist, wie das geht, frag besser vorher die Person, die dies eingerichtet hat, bevor du speicherst."
     edit:
+      title: "Buchung bearbeiten"
       beginner_warning: "Dies ist eine fortgeschrittenere Buchung mit mehr als zwei Bilanzkonten. Du bist hier selbst dafür verantwortlich, Soll und Haben im Gleichgewicht zu halten — wenn du dir nicht sicher bist, wie das geht, frag besser vorher die Person, die dies eingerichtet hat, bevor du speicherst."
     errors:
       no_postings: "Bitte füge mindestens zwei Buchungen hinzu"
@@ -831,7 +830,6 @@ de:
     new:
       new_receipt: "Neuer Beleg"
     title: "Belege"
-    upload_receipt: "Beleg hochladen"
     edit_title: "Beleg bearbeiten"
     shared_receipt: "Hochgeladene Quittung" 
     created: "Beleg erfolgreich hochgeladen"
@@ -1118,7 +1116,7 @@ de:
     category_none: "— keine —"
     accountant_export_field: "Dateiformat für die Steuerberatung"
     accountant_export_none: "Standard-CSV"
-    accountant_export_add: "%{{name}} hinzufügen"
+    accountant_export_add: "%{name} hinzufügen"
     accountant_export_hint: "Eine zusätzliche Datei für deine Steuerberatung, neben der Transaktions-CSV, die immer dabei ist. Standard-CSV lassen, wenn keine gewünscht wird."
     schemes_hint: "Welche Steuererklärungen gibt diese Entität ab?"
     reassign_note: "Das Ändern dieser Zuordnung wirkt sich ab deiner nächsten Einreichung aus. Bereits eingereichte Meldungen bleiben unverändert, aber in der nächsten Einreichung erscheinen die Einträge der alten Kategorie in der neuen Kategorie."

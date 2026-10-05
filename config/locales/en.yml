@@ -708,7 +708,6 @@ en:
     personal: "Personal"
   journal_entries:
     new: "New Journal Entry"
-    edit: "Edit Journal Entry"
     created: "Journal entry created."
     updated: "Journal entry updated."
     deleted: "Journal entry deleted."
@@ -727,6 +726,7 @@ en:
     duplicate:
       beginner_warning: "This is a copy of a more advanced entry, involving more than two balance accounts. Keeping debits and credits in balance is up to you here — if you're not sure how, it may be safer to check with whoever set this up before saving."
     edit:
+      title: "Edit journal entry"
       beginner_warning: "This is a more advanced entry, involving more than two balance accounts. Keeping debits and credits in balance is up to you here — if you're not sure how, it may be safer to check with whoever set this up before saving."
     errors:
       no_postings: "You have not added any postings"
@@ -827,7 +827,6 @@ en:
     new:
       new_receipt: "New Receipt"
     title: "Receipts"
-    upload_receipt: "Upload Receipt"
     new_receipt: "New Receipt"
     edit_title: "Edit Receipt"
     shared_receipt: "Shared Receipt" 

@@ -711,7 +711,6 @@ nl:
     personal: "Persoonlijk"
   journal_entries:
     new: "Nieuwe journaalpost"
-    edit: "Journaalpost bewerken"
     created: "Journaalpost aangemaakt."
     updated: "Journaalpost bijgewerkt."
     deleted: "Journaalpost verwijderd."
@@ -730,6 +729,7 @@ nl:
     duplicate:
       beginner_warning: "Dit is een kopie van een geavanceerdere boeking met meer dan twee balansrekeningen. Het is aan jou om debet en credit in balans te houden — als je niet zeker weet hoe, is het veiliger dit eerst na te vragen bij wie dit heeft ingesteld, voordat je opslaat."
     edit:
+      title: "Boeking bewerken"
       beginner_warning: "Dit is een geavanceerdere boeking met meer dan twee balansrekeningen. Het is aan jou om debet en credit in balans te houden — als je niet zeker weet hoe, is het veiliger dit eerst na te vragen bij wie dit heeft ingesteld, voordat je opslaat."
     errors:
       no_postings: "Voeg ten minste twee boekingen toe"
@@ -831,7 +831,6 @@ nl:
     new:
       new_receipt: "Nieuwe bon"
     title: "Bonnen"
-    upload_receipt: "Bon uploaden"
     edit_title: "Bon bewerken"
     shared_receipt: "Gedeeld bonnetje" 
     created: "Bon succesvol geüpload"
@@ -1118,7 +1117,7 @@ nl:
     category_none: "— geen —"
     accountant_export_field: "Bestandsformaat voor de accountant"
     accountant_export_none: "Standard-CSV"
-    accountant_export_add: "%{{name}} toevoegen"
+    accountant_export_add: "%{name} toevoegen"
     accountant_export_hint: "Een extra bestand voor je accountant, naast de transactie-CSV die er altijd bij zit. Laat Standard-CSV als er niet om gevraagd is."
     schemes_hint: "Welke belastingaangiften doet deze entiteit?"
     reassign_note: "Het wijzigen van deze toewijzing geldt vanaf je volgende indiening. Reeds ingediende aangiften blijven ongewijzigd, maar in de volgende indiening staan de posten van de oude categorie in de nieuwe categorie."

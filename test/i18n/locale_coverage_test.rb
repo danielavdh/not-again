@@ -134,6 +134,58 @@ class LocaleCoverageTest < ActiveSupport::TestCase
     assert true
   end
 
+  # The same message must interpolate the same things in every language. A
+  # translation that drops a placeholder loses a name, a figure or a date and
+  # still reads perfectly — and one that mistypes it, `%{{name}}` for
+  # `%{name}`, prints the braces at the reader. Three languages did exactly
+  # that in tax.accountant_export_add, so a German admin was offered
+  # "%{{name}} hinzufügen" in a dropdown.
+  #
+  # Invisible to every other check here: the key exists everywhere, is a
+  # string, is defined once and is not blank. Only comparing the languages to
+  # each other finds it.
+  test "every language interpolates the same placeholders for a given key" do
+    report = []
+
+    self.class.wanted_keys.each do |key, where|
+      by_language = LANGUAGES.to_h do |_name, code|
+        value = translate_or_nil(key, code)
+        [ code, value.is_a?(String) ? value.scan(/%\{(\w+)\}/).flatten.uniq.sort : nil ]
+      end
+      # Only languages that HAVE the key — a missing one is the coverage test's
+      # business, not this one.
+      present = by_language.compact
+      next if present.size < 2 || present.values.uniq.size == 1
+
+      report << "  #{key}   (#{where.uniq.first})"
+      present.each { |code, names| report << "      #{code}: #{names.inspect}" }
+    end
+
+    flunk "\n#{report.join("\n")}\n" unless report.empty?
+    assert true
+  end
+
+  # YAML's last-one-wins, which is silent. A key written twice in the same
+  # mapping loses its first value and nothing says so: `journal_entries.edit`
+  # was a string AND, further down, a node — so the string was discarded and the
+  # edit page printed the node's Hash as its heading. A duplicate can also be
+  # two valid sentences, where the loser simply never appears (de's
+  # terms_agreed.plain_notice said "du" and was overridden by one saying "Sie").
+  #
+  # Psych reports no error for it, and neither can a test that reads the loaded
+  # Hash — by then one value is already gone. So this reads the parse tree.
+  test "no locale file defines the same key twice in one mapping" do
+    duplicates = []
+
+    LANGUAGES.each do |_name, code|
+      path = Rails.root.join("config/locales/#{code}.yml")
+      collect_duplicate_keys(Psych.parse_file(path), [], duplicates, code)
+    end
+
+    flunk "\n#{duplicates.join("\n")}\n" unless duplicates.empty?
+    assert true
+  end
+
   # A key can resolve perfectly and still be the wrong KIND of thing. `t` given
   # the name of a parent node hands back the Hash of its children, and the view
   # prints that: journal_entries/edit.html.erb asked for "journal_entries.edit",
@@ -165,6 +217,36 @@ class LocaleCoverageTest < ActiveSupport::TestCase
   # Keys with a SHAPE, not only a value. The two tests above ask whether a key
   # RESOLVES; these two keys resolve perfectly while being wrong, so they need
   # reading rather than looking up.
+
+  # nil for a key this language does not have; the raw String otherwise, so the
+  # caller can read its placeholders. `raise` so a missing one is not mistaken
+  # for the "translation missing" sentence.
+  def translate_or_nil(key, code)
+    I18n.t(key, locale: code, fallback: false, raise: true)
+  rescue StandardError
+    nil
+  end
+
+  # Walks the parse tree rather than the loaded Hash: a mapping's children are
+  # [key, value, key, value, ...], so a repeat is visible here and nowhere else.
+  def collect_duplicate_keys(node, path, found, code)
+    if node.is_a?(Psych::Nodes::Mapping)
+      seen = {}
+      node.children.each_slice(2) do |key, value|
+        name = key.value
+        if seen[name]
+          where = (path + [ name ]).join(".")
+          found << "  #{code}.yml: #{where} is defined twice " \
+                   "(lines #{seen[name]} and #{key.start_line + 1}) — the first value is lost"
+        else
+          seen[name] = key.start_line + 1
+        end
+        collect_duplicate_keys(value, path + [ name ], found, code)
+      end
+    elsif node.respond_to?(:children) && node.children
+      node.children.each { |child| collect_duplicate_keys(child, path, found, code) }
+    end
+  end
 
   # aliases: true — the locale files use YAML anchors (&errors_messages).
   def welcome_index(locale)
