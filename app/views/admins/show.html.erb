@@ -247,7 +247,7 @@
 	<%# Only on your OWN page: it is a general create/grant shortcut, not an action about whoever @admin is. %>
 	<% if @admin == current_admin && (sudo? || current_admin.full_access?) %>
 		<%= link_to t(".grant_access"),
-				new_admin_path,
+				grant_access_admins_path,
 				class: "backend_link button green" %>
 	<% end %>
 	<%# Never demo: leaving destroys the link to its sandbox entity, which is what keeps the public demo working. %>

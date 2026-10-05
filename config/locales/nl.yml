@@ -111,13 +111,19 @@ nl:
     claim_email_resent: "Bevestigingsmail opnieuw verstuurd."
     access_reconciled: "Toegang van %{username} bijgewerkt."
     access_unchanged: "%{username} heeft precies die toegang al — niets gewijzigd."
+    no_entity_selected: "Vink minstens één entiteit aan."
     index:
       list_h1: "Beheerders"
-      new: "Nieuwe beheerder of toegang wijzigen"
+      new: "Nieuwe beheerder"
       show: "Tonen"
       edit: "Bewerken"
       sure: "Weet u het zeker?"
       destroy: "Verwijderen"
+      grant_access: "Toegang verlenen"
+    grant_access:
+      title: "Toegang verlenen"
+      hint: "Vul een e-mailadres en een gebruikersnaam in om een beheerder toegang te verlenen."
+      hint_sudo: "Vul een e-mailadres en een gebruikersnaam in om een beheerder volledige toegang te verlenen."
     show:
       admin_label: "Beheerder"
       username: "Gebruikersnaam"
@@ -157,11 +163,9 @@ nl:
       resend_claim_email: "Bevestiging opnieuw versturen"
       delete_draft_confirm: "Conceptaccount van %{email} verwijderen? Er is nog nooit mee ingelogd — dit verwijdert het hele account, niet alleen deze entiteit."
     new:
-      new_h1: "Nieuwe beheerder of toegang wijzigen"
+      new_h1: "Nieuwe beheerder"
       index: "Terug naar beheerderslijst"
       errors_on_page: "Er zijn fouten op deze pagina (scroll omlaag)."
-      grant_access: "Toegang verlenen"
-      mode_hint: "Vul een e-mailadres in. Hoort het al bij een beheerder, dan wijzig je waar die bij kan. Hoort het bij niemand, dan maak je de persoon aan."
     edit:
       edit_h1: "%{admin} bewerken"
       index: "Terug naar beheerderslijst"
@@ -172,7 +176,6 @@ nl:
       email: "E-mailadres"
       entity_code: "Entiteitscode"
       change_password: "Wachtwoord wijzigen"
-      new_person_summary: "Voor een nieuw persoon — gebruikersnaam en wachtwoord instellen"
       access_level: "Toegangsniveau"
       read_only: "Alleen lezen"
       receipts_only: "Alleen bonnen uploaden"
@@ -185,10 +188,15 @@ nl:
       remove_full_access_confirm: "Volledige toegang tot %{entity} intrekken?"
       sudo_entities_label: "Vink de entiteiten aan waarop deze admin volledige toegang krijgt"
       existing_admin: "%{username} heeft al een account. De vinkjes hieronder zijn de huidige volledige toegang — aanvinken om te geven, uitvinken om in te trekken."
+      existing_admin_invite: "%{username} heeft al een account. Aanvinken verleent de de door jou gekozen toegang."
       held_lower: "heeft hier %{level} — niet aan jou om te wijzigen"
       demo_no_full_access: "Dit is het openbare demo-account. Het kan nooit volledige toegang tot echte boeken hebben."
       orphan_warning: "Hiermee wordt de laatste beheerder van %{codes} verwijderd. Die boeken worden dan bevroren, de bewaartermijn begint en de beheerder krijgt bericht over de verwijderingsdatum. Opnieuw toegang geven draait alles terug, behalve de e-mail."
       confirm_orphan: "Toch intrekken"
+      grant_submit: "Toegang opslaan"
+      raises_from: "nu %{level} — aanvinken verhoogt dit"
+      confirm_create_warning: "Geen beheerder gevonden voor %{identifier}. Aanmaken met dit e-mailadres en deze gebruikersnaam? De toegang hieronder wordt verleend, en het wachtwoord stelt die zelf in bij de eerste aanmelding."
+      confirm_create: "Aanmaken"
       submit: "Beheerder opslaan"
     website_update: "Laatste website-update"
     header:
@@ -230,6 +238,12 @@ nl:
       body: "Je was de laatste boekhouder gekoppeld aan %{entity}. De administratie is nu afgesloten en wordt gedurende de wettelijk verplichte bewaartermijn van %{years} jaar bewaard en daarna definitief verwijderd."
       deadline: "Geplande verwijderdatum: %{date}."
       closing: "Je hoeft verder niets te doen."
+    cross_entity_gift_returned:
+      subject: "Een gift van %{entity} is teruggegeven"
+      greeting: "Hallo %{name},"
+      body: "De andere entiteit heeft de %{amount} teruggegeven die jouw entiteit %{entity} op %{date} voor haar heeft betaald."
+      consequence: "Je eigen boeking (boeking #%{entry_id}) is ongewijzigd en nog steeds geboekt — maar heeft geen tegenhanger meer, dus niemand claimt wat jij hebt betaald. Misschien wil je die boeking heroverwegen."
+      closing: "Je ontvangt dit omdat jij de boekhouding van die entiteit doet."
     tax_categories_removed:
       subject: "Actie nodig: %{count} rekening(en) hebben een nieuwe belastingcategorie nodig"
       greeting: "Hallo %{name},"
@@ -708,6 +722,7 @@ nl:
     closing_entry_updated_suffix: "De afsluitboeking voor deze periode is bijgewerkt."
     confirm_delete: "Weet je zeker dat je deze boeking wilt verwijderen?"
     cross_entity_needs_both: "Deze boeking is door een ander bedrijf gemaakt en alleen dat bedrijf kan hem bewerken — je kunt hem verwijderen, maar dan verlies je de voordelen ervan."
+    cross_entity_needs_both_sides: "Deze boeking hoort bij twee entiteiten. Alleen een beheerder met toegang tot beide kan die wijzigen."
     index:
       search_placeholder: "Zoek memo, referentie, rekening, bedrag..."
       from_date: "Van"

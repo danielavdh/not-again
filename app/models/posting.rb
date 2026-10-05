@@ -284,12 +284,37 @@ private
   def handle_cross_entity_link_on_destroy
     return if cross_entity_link_id.blank?
     if account&.personal?
-      cross_entity_counterpart&.journal_entry&.destroy!
+      # The donor is withdrawing the gift, which takes the counterpart with it.
+      # That counterpart's capital posting severs on its way out and would
+      # otherwise email the donor about what the donor just did.
+      Current.cross_entity_withdrawn_by_donor = true
+      begin
+        cross_entity_counterpart&.journal_entry&.destroy!
+      ensure
+        Current.cross_entity_withdrawn_by_donor = false
+      end
     else
+      # Read the gift before the link goes: afterwards there is nothing left to
+      # say whose it was. The donor took a non-deductible hit for this, so them
+      # learning it was handed back should not depend on them looking.
+      gift = cross_entity_counterpart
       Posting.where(cross_entity_link_id: cross_entity_link_id)
                   .where.not(id: id)
                   .update_all(cross_entity_link_id: nil)
+      notify_donor_of_returned_gift(gift)
     end
+  end
+
+  # Only when the RECEIVER hands it back. Not when the donor withdraws it (they
+  # know), and a purge needs no exception at all: EntityPurgeService uses
+  # delete_all, so no callback of this kind runs when a whole business goes.
+  def notify_donor_of_returned_gift(gift)
+    return if gift.nil? || Current.cross_entity_withdrawn_by_donor
+
+    CrossEntity::GiftReturnedNotificationJob.perform_later(
+      gift_posting_id: gift.id, amount: amount, currency: gift.currency,
+      locale: I18n.locale.to_s
+    )
   end
 
   # A persisted link must bind this bridge posting to EXACTLY ONE counterpart,

@@ -212,8 +212,13 @@ module CrossEntityJournalEntries
     if accessible_journal_entries.exists?(origin.id)
       redirect_to edit_journal_entry_path(origin)
     else
-      # Holds JE₂'s entity but not JE₁'s → can't do the coupled edit.
-      redirect_to journal_entry_path(journal_entry), alert: t("journal_entries.cross_entity_needs_both")
+      # Holds JE₂'s entity but not JE₁'s → can't do the coupled edit. Carries
+      # `from`/`account_id` through, or the show page it lands on offers the
+      # journal-entry index as the way back instead of the ledger they came from
+      # — the only route into that page that dropped them.
+      redirect_to journal_entry_path(journal_entry,
+                                     from: params[:from], account_id: params[:account_id]),
+                  alert: t("journal_entries.cross_entity_needs_both")
     end
     true
   end

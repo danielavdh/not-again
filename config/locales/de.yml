@@ -111,13 +111,19 @@ de:
     claim_email_resent: "Bestätigungs-E-Mail erneut gesendet."
     access_reconciled: "Zugriff für %{username} aktualisiert."
     access_unchanged: "%{username} hat genau diesen Zugriff bereits — nichts geändert."
+    no_entity_selected: "Bitte wähle mindestens eine Einheit."
     index:
       list_h1: "Admin"
-      new: "Neue Admin oder Zugriff ändern"
+      new: "Neue Admin"
       show: "Zeigen"
       edit: "Anpassen"
       sure: "Bist Du sicher?"
       destroy: "Vernichten"
+      grant_access: "Zugang gewähren"
+    grant_access:
+      title: "Zugriff gewähren"
+      hint: "Gib eine E-Mail-Adresse und einen Benutzernamen ein, um einer Admin Zugriff zu gewähren."
+      hint_sudo: "Gib eine E-Mail-Adresse und einen Benutzernamen ein, um einer Admin Vollzugriff zu gewähren."
     show:
       admin_label: "Admin"
       username: "Benutzername"
@@ -157,11 +163,9 @@ de:
       resend_claim_email: "Bestätigung erneut senden"
       delete_draft_confirm: "Entwurfskonto von %{email} löschen? Es wurde noch nie verwendet — dies entfernt das gesamte Konto, nicht nur diese Einheit."
     new:
-      new_h1: "Neue Admin oder Zugriff ändern"
+      new_h1: "Neue Admin"
       index: "Zurück zu Admins-Übersicht"
       errors_on_page: "Auf dieser Seite hat es Fehler."
-      grant_access: "Zugang gewähren"
-      mode_hint: "Gib eine E-Mail-Adresse ein. Gehört sie schon zu einer Admin, änderst du, worauf sie zugreifen kann. Gehört sie zu niemandem, legst du die Person neu an."
     edit:
       edit_h1: "%{admin} anpassen"
       index: "Zurück zu Admins-Übersicht"
@@ -172,7 +176,6 @@ de:
       email: "Email-Adresse"
       entity_code: "Entitätscode"
       change_password: "Passwort ändern"
-      new_person_summary: "Für eine neue Person — Benutzername und Passwort festlegen"
       access_level: "Zugriffsebene"
       read_only: "Lesezugriff"
       receipts_only: "Nur Belege hochladen"
@@ -185,10 +188,15 @@ de:
       remove_full_access_confirm: "Vollzugriff auf %{entity} entfernen?"
       sudo_entities_label: "Einheiten wählen, auf die diese Admin Vollzugriff erhält"
       existing_admin: "%{username} hat bereits ein Konto. Die Haken unten zeigen den aktuellen Vollzugriff — anhaken, um ihn zu geben, abhaken, um ihn zu entziehen."
+      existing_admin_invite: "%{username} hat bereits ein Konto. Anhaken gewährt deinen gewählten Zugriff."
       held_lower: "hat hier %{level} — nicht von dir zu ändern"
       demo_no_full_access: "Das ist das öffentliche Demo-Konto. Es kann niemals Vollzugriff auf echte Bücher haben."
       orphan_warning: "Damit wird die letzte Admin von %{codes} entfernt. Diese Bücher werden dann eingefroren, die Aufbewahrungsfrist beginnt, und die Admin wird über die Löschfrist benachrichtigt. Ein erneuter Zugriff macht alles davon wieder rückgängig, nur die E-Mail nicht."
       confirm_orphan: "Trotzdem entziehen"
+      grant_submit: "Zugriff speichern"
+      raises_from: "derzeit %{level} — Anhaken hebt das an"
+      confirm_create_warning: "Für %{identifier} wurde keine Admin gefunden. Mit dieser E-Mail-Adresse und diesem Benutzernamen neu anlegen? Der Zugriff unten wird ihr gewährt, und ihr Passwort setzt sie bei der ersten Anmeldung selbst."
+      confirm_create: "Neu anlegen"
       submit: "Admin speichern"
     website_update: "Letzter Websiteupdate"
     header:
@@ -230,6 +238,12 @@ de:
       body: "Du warst die letzte mit %{entity} verknüpfte Person. Die Aufzeichnungen sind nun geschlossen und werden für die gesetzlich vorgeschriebene Aufbewahrungsfrist von %{years} Jahren gespeichert und danach endgültig gelöscht."
       deadline: "Geplantes Löschdatum: %{date}."
       closing: "Von Deiner Seite ist nichts weiter zu tun."
+    cross_entity_gift_returned:
+      subject: "Eine Zuwendung von %{entity} wurde zurückgegeben"
+      greeting: "Hallo %{name},"
+      body: "Die andere Einheit hat die %{amount} zurückgegeben, die Deine Einheit %{entity} am %{date} für sie bezahlt hat."
+      consequence: "Dein eigener Eintrag (Buchung #%{entry_id}) ist unverändert und weiterhin gebucht — hat aber kein Gegenstück mehr, sodass niemand das geltend macht, was Du bezahlt hast. Vielleicht möchtest Du die Buchung überdenken."
+      closing: "Du erhältst diese Nachricht, weil Du die Bücher dieser Einheit führst."
     tax_categories_removed:
       subject: "Bitte prüfen: %{count} Konto/Konten brauchen eine neue Steuerkategorie"
       greeting: "Hallo %{name},"
@@ -709,6 +723,7 @@ de:
     closing_entry_updated_suffix: "Die Abschlussbuchung für diesen Zeitraum wurde aktualisiert."
     confirm_delete: "Möchtest du diese Buchung wirklich löschen?"
     cross_entity_needs_both: "Diese Buchung wurde von einem anderen Unternehmen erstellt und nur dieses Unternehmen kann sie bearbeiten — du kannst sie löschen, aber dann verlierst du ihre Vorteile."
+    cross_entity_needs_both_sides: "Dieser Eintrag gehört zu zwei Einheiten. Nur eine Admin mit Zugriff auf beide kann ihn ändern."
     index:
       search_placeholder: "Memo, Referenz, Konto, Betrag suchen..."
       from_date: "Von"

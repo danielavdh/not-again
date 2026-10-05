@@ -143,6 +143,25 @@ class AdminMailer < ApplicationMailer
     end
   end
 
+  # The other business handed a cross-entity gift back: their half is gone and
+  # this entry now matches nothing. The donor paid for something they could not
+  # deduct themselves, so they are told rather than left to notice.
+  def cross_entity_gift_returned
+    @admin    = params[:admin]
+    @entity   = params[:entity]
+    @gift     = params[:gift]
+    @amount   = CurrencyConfig.format_cents(params[:amount], params[:currency])
+    @entry_id = @gift.journal_entry_id
+    @date     = @gift.journal_entry.entry_date
+
+    I18n.with_locale(params[:locale] || I18n.default_locale) do
+      mail(
+        to: @admin.email_address,
+        subject: t('.subject', entity: @entity.name)
+      )
+    end
+  end
+
   # A catalogue file dropped a category, and these accounts were tagged with it.
   # User-facing, so localised, unlike the sudo-only ops alerts below.
   #

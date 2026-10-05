@@ -1,0 +1,56 @@
+<%# "Give this person access to these entities." Either identifier finds someone
+    who already has an account; neither matching means they get drafted and
+    granted in the same submission, so both fields stay visible and neither is
+    revealed or hidden as you type. No password: one is generated and the claim
+    flow replaces it at their first login. %>
+<%= form_with model: admin,
+			  url: grant_access_admins_path,
+			  method: :post,
+			  id: "grant_admin",
+			  class: "form_admin",
+			  local: true do |f| %>
+
+	<% if admin.errors[:base].any? %>
+		<div class="error_message">
+			<% admin.errors[:base].each do |msg| %>
+				<p><%= msg %></p>
+			<% end %>
+		</div>
+	<% end %>
+
+	<div class="field">
+		<%= f.label :email_address, t("admins.form.email") %>
+		<span class="error_message"><%= admin.errors[:email_address].to_sentence %></span><br />
+		<%= f.text_field :email_address, id: :admin_email_address %>
+	</div>
+
+	<div class="field">
+		<%= f.label :username, t("admins.form.username") %>
+		<span class="error_message"><%= admin.errors[:username].to_sentence %></span><br />
+		<%= f.text_field :username, id: :admin_username %>
+	</div>
+
+	<%# Sudo grants full access and nothing else; the levels below it are the
+	    full-access admin's own business. %>
+	<% unless sudo? %>
+		<div class="field">
+			<label for="access_level"><%= t("admins.form.access_level") %></label><br />
+			<%= select_tag :access_level,
+					options_for_select(
+						[ [ t("admins.form.read_only"), "read_only" ],
+						  [ t("admins.form.receipts_only"), "upload_receipts" ] ],
+						params[:access_level] || "read_only"
+					),
+					id: "access_level" %>
+		</div>
+	<% end %>
+
+	<%= render "admins/entity_access_fields",
+			rows: @grant_rows, target: @grant_target, orphan_codes: @orphan_codes,
+			confirm_create: @confirm_create, identifier_conflict: @identifier_conflict,
+			form: f, create_prompt: @create_prompt %>
+
+	<div class="actions">
+		<%= f.submit t("admins.form.grant_submit") %>
+	</div>
+<% end %>

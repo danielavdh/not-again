@@ -11,8 +11,6 @@
 		</div>
 	<% end %>
 
-	<% grant_path = grant_path? %>
-
 	<%# EMAIL FIRST %>
 	<div class="field">
 		<%= f.label :email_address, t(".email") %>
@@ -22,48 +20,25 @@
 		<%= f.text_field :email_address, id: :admin_email_address %>
 	</div>
 
-	<%# USERNAME + PASSWORD — starts CLOSED by default . Opened by JS the moment #admin_email_lookup confirms the email does NOT belong to an existing admin.%>
-	<% if grant_path %>
-		<details id="new-person-fields"<%= " open" if show_new_person_fields? %>>
-			<summary><%= t(".new_person_summary") %></summary>
-			<div class="field">
-				<%= f.label :username, t(".username") %>
-				<span class="error_message">
-					<%= admin&.errors[:username].to_sentence %>
-				</span><br />
-				<%= f.text_field :username, id: :admin_username %>
-			</div>
-			<%= render "shared/password_fields", 
-					form: f, 
-					record: admin, 
-					id_prefix: "admin", 
+	<div class="field">
+		<%= f.label :username, t(".username") %>
+		<span class="error_message">
+			<%= admin&.errors[:username].to_sentence %>
+		</span><br />
+		<%= f.text_field :username, id: :admin_username %>
+	</div>
+
+	<%# A new account's password is generated — sudo sets a real one here
+	    afterwards, or the holder resets it. Nothing to type at creation. %>
+	<% if admin.persisted? %>
+		<details <%= " open" if admin.errors[:password].any? || admin.errors[:password_confirmation].any? %>>
+			<summary><%= t(".change_password") %></summary>
+			<%= render "shared/password_fields",
+					form: f,
+					record: admin,
+					id_prefix: "admin",
 					required: false %>
 		</details>
-	<% else %>
-		<div class="field">
-			<%= f.label :username, t(".username") %>
-			<span class="error_message">
-				<%= admin&.errors[:username].to_sentence %>
-			</span><br />
-			<%= f.text_field :username, id: :admin_username %>
-		</div>
-	
-		<% if admin.persisted? %>
-			<details <%= " open" if admin.errors[:password].any? || admin.errors[:password_confirmation].any? %>>
-				<summary><%= t(".change_password") %></summary>
-				<%= render "shared/password_fields", 
-					form: f, 
-					record: admin, 
-					id_prefix: "admin", 
-					required: false %>
-			</details>
-		<% else %>
-			<%= render "shared/password_fields", 
-					form: f, 
-					record: admin, 
-					id_prefix: "admin", 
-					required: true %>
-		<% end %>
 	<% end %>
 
   <%# ===== OTP — sudo only ===== %>
@@ -100,28 +75,7 @@
 		</div>
 	<% end %>
 
-	<%# ===== GRANTING ACCESS SURFACE ===== %>
-	
-	<% if grant_path %>
-		<% unless sudo? %>
-			<%# Access level, readonly or uploadonly. %>
-			<div class="field">
-				<label for="access_level">
-					<%= t(".access_level") %>
-				</label><br />
-				<%= select_tag :access_level,
-					options_for_select(
-						[[t(".read_only"), "read_only"], [t(".receipts_only"), "upload_receipts"]],
-					params[:access_level] || "read_only"
-					),
-					id: "access_level" %>
-			</div>
-		<% end %>
-		
-		<%# Sudo ticking an entity IS granting full_access; unticking one revokes it. %>
-		<%= render "admins/entity_access_fields",
-				rows: @grant_rows, target: @grant_target, orphan_codes: @orphan_codes %>
-	<% end %>
+	<%# Access is granted on its own page (admins/grant_access), never here. %>
 
 	<div class="actions">
 		<%= f.submit(t(".submit")) %>

@@ -111,13 +111,19 @@ en:
     claim_email_resent: "Confirmation email sent again."
     access_reconciled: "Access updated for %{username}."
     access_unchanged: "%{username} already has exactly that access — nothing changed."
+    no_entity_selected: "Please tick at least one business."
     index:
       list_h1: "Listing Admins"
-      new: "New admin or change access"
+      new: "New admin"
       show: "Show"
       edit: "Edit"
       sure: "Are you sure?"
       destroy: "Destroy"
+      grant_access: "Grant Access"
+    grant_access:
+      title: "Grant access"
+      hint: "Enter an email address and a username to grant access to an admin."
+      hint_sudo: "Enter an email address and a username to grant full access to an admin."
     show:
       admin_label: "Admin"
       username: "Username"
@@ -157,9 +163,8 @@ en:
       resend_claim_email: "Resend confirmation"
       delete_draft_confirm: "Delete %{email}'s draft account? They have never logged in — this removes the account entirely, not just this entity."
     new:
-      new_h1: "New admin or change access"
+      new_h1: "New admin"
       index: "Back to Admin List"
-      mode_hint: "Enter an email address. If it already belongs to an admin, you will change what they can reach. If it does not, you will create them."
       errors_on_page: "There are errors on this page (scroll down)."
       grant_access: "Grant Access"
     edit:
@@ -172,7 +177,6 @@ en:
       email: "Email Address"
       entity_code: "Entity Code"
       change_password: "Change password"
-      new_person_summary: "For a new person — set a username and password"
       access_level: "Access Level"
       read_only: "Read Only"
       receipts_only: "Upload Receipts Only"
@@ -185,10 +189,15 @@ en:
       remove_full_access_confirm: "Remove full access to %{entity}?"
       sudo_entities_label: "Tick entities this admin will get full access to"
       existing_admin: "%{username} already has an account. The ticks below are their full access right now — tick to give it, untick to take it away."
+      existing_admin_invite: "%{username} already has an account. Ticking adds the access chosen above."
       held_lower: "has %{level} here — not yours to change"
       demo_no_full_access: "This is the public demo account. It can never hold full access to real books."
       orphan_warning: "This takes away the last admin of: %{codes}. Those books are then frozen, the retention clock starts, and the admin is emailed about the deletion deadline. Re-granting access undoes all of it except the email."
       confirm_orphan: "Take it away anyway"
+      grant_submit: "Save access"
+      raises_from: "currently %{level} — ticking this raises it"
+      confirm_create_warning: "No admin was found for %{identifier}. Create one with this email and username? They will be granted your chosen access, and set their own password when they first log in."
+      confirm_create: "Create them"
       submit: "Save Admin"
     website_update: "Last website update"
     header:
@@ -230,6 +239,12 @@ en:
       body: "You were the last bookkeeper linked to %{entity}. Its records are now closed and will be kept for the legally required retention period of %{years} years, after which they will be permanently deleted."
       deadline: "Scheduled deletion date: %{date}."
       closing: "No further action is needed on your part."
+    cross_entity_gift_returned:
+      subject: "A gift from %{entity} was given back"
+      greeting: "Hello %{name},"
+      body: "The other business has given back the %{amount} your business %{entity} paid for them on %{date}."
+      consequence: "Your own entry (journal entry #%{entry_id}) is unchanged and still posted — but it no longer has a counterpart, so nobody is claiming what you paid for. You may want to reconsider how it is booked."
+      closing: "You are receiving this because you keep the books for that business."
     tax_categories_removed:
       subject: "Action needed: %{count} account(s) need a new tax category"
       greeting: "Hello %{name},"
@@ -704,6 +719,7 @@ en:
     closing_entry_updated_suffix: "The closing entry covering this period has been updated."
     confirm_delete: "Are you sure you want to delete this entry?"
     cross_entity_needs_both: "This entry was created by another business and only that business can edit it — you can delete it, but then you lose its advantages."
+    cross_entity_needs_both_sides: "This entry belongs to two businesses. Only an admin with access to both can change it."
     index:
       search_placeholder: "Search memo, reference, account, amount..."
       from_date: "From"

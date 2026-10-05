@@ -20,5 +20,10 @@ class Current < ActiveSupport::CurrentAttributes
   # users (JournalEntry#app_owned_close?), so every legitimate rewrite must
   # announce itself here.
   attribute :app_closing_entry_write
+  # Set while a cross-entity gift's own side is taking the whole pair down. The
+  # counterpart's capital posting severs on its way out, which normally emails
+  # the donor that the gift was handed back — and here the donor IS the one
+  # doing it. See Posting#handle_cross_entity_link_on_destroy.
+  attribute :cross_entity_withdrawn_by_donor
   delegate :admin, to: :session, allow_nil: true
 end

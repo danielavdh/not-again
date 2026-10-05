@@ -111,13 +111,19 @@ es:
     claim_email_resent: "Correo de confirmación reenviado."
     access_reconciled: "Acceso de %{username} actualizado."
     access_unchanged: "%{username} ya tiene exactamente ese acceso — no se ha cambiado nada."
+    no_entity_selected: "Marca al menos una entidad."
     index:
       list_h1: "Listado de Administradores"
-      new: "Nuevo Admin o cambiar acceso"
+      new: "Nuevo Admin"
       show: "Mostrar"
       edit: "Editar"
       sure: "¿Estás seguro?"
       destroy: "Eliminar"
+      grant_access: "Conceder acceso"
+    grant_access:
+      title: "Conceder acceso"
+      hint: "Introduce una dirección de correo y un nombre de usuario para conceder acceso a un admin."
+      hint_sudo: "Introduce una dirección de correo y un nombre de usuario para conceder acceso completo a un admin."
     show:
       admin_label: "Administrador"
       username: "Nombre de usuario"
@@ -157,11 +163,9 @@ es:
       resend_claim_email: "Reenviar confirmación"
       delete_draft_confirm: "¿Eliminar la cuenta en borrador de %{email}? Nunca se ha iniciado sesión con ella — esto elimina la cuenta por completo, no solo esta entidad."
     new:
-      new_h1: "Nuevo Admin o cambiar acceso"
+      new_h1: "Nuevo Admin"
       index: "Volver a la lista de Admins"
       errors_on_page: "Hay errores en esta página (ver abajo)."
-      grant_access: "Conceder acceso"
-      mode_hint: "Introduce una dirección de correo. Si ya pertenece a un admin, cambiarás a qué puede acceder. Si no pertenece a nadie, crearás a esa persona."
     edit:
       edit_h1: "Editar %{admin}"
       index: "Volver a la lista de Admins"
@@ -172,7 +176,6 @@ es:
       email: "Correo electrónico"
       entity_code: "Código de entidad"
       change_password: "Cambiar contraseña"
-      new_person_summary: "Para una persona nueva — establece un nombre de usuario y una contraseña"
       access_level: "Nivel de acceso"
       read_only: "Solo lectura"
       receipts_only: "Solo subir comprobantes"
@@ -185,10 +188,15 @@ es:
       remove_full_access_confirm: "¿Retirar el acceso completo a %{entity}?"
       sudo_entities_label: "Marca las entidades a las que este admin tendrá acceso completo"
       existing_admin: "%{username} ya tiene una cuenta. Las casillas de abajo son su acceso completo actual: marca para concederlo, desmarca para retirarlo."
+      existing_admin_invite: "%{username} ya tiene una cuenta. Marcar concede el acceso elegido."
       held_lower: "tiene %{level} aquí: no te corresponde cambiarlo"
       demo_no_full_access: "Esta es la cuenta de demostración pública. Nunca puede tener acceso completo a libros reales."
       orphan_warning: "Esto retira el último admin de %{codes}. Esos libros quedarán congelados, empezará el plazo de conservación y se avisará al admin de la fecha de eliminación. Volver a conceder el acceso lo deshace todo, salvo el correo."
       confirm_orphan: "Retirarlo de todos modos"
+      grant_submit: "Guardar acceso"
+      raises_from: "actualmente %{level} — marcar esto lo eleva"
+      confirm_create_warning: "No se encontró ningún admin para %{identifier}. ¿Crear uno con este correo y este nombre de usuario? Se le concederá el acceso de abajo, y establecerá su propia contraseña al iniciar sesión por primera vez."
+      confirm_create: "Crearlo"
       submit: "Guardar Admin"
     website_update: "Última actualización web"
     header:
@@ -230,6 +238,12 @@ es:
       body: "Eras la última persona vinculada a %{entity}. Sus registros están ahora cerrados y se conservarán durante el período legal de %{years} años, tras lo cual se eliminarán de forma permanente."
       deadline: "Fecha de eliminación prevista: %{date}."
       closing: "No necesitas hacer nada más."
+    cross_entity_gift_returned:
+      subject: "Una aportación de %{entity} ha sido devuelta"
+      greeting: "Hola %{name}:"
+      body: "La otra entidad ha devuelto los %{amount} que tu entidad %{entity} pagó por ella el %{date}."
+      consequence: "Tu propio asiento (asiento n.º %{entry_id}) no ha cambiado y sigue contabilizado, pero ya no tiene contrapartida, así que nadie está deduciendo lo que pagaste. Quizá quieras reconsiderar cómo está registrado."
+      closing: "Recibes este aviso porque llevas la contabilidad de esa entidad."
     tax_categories_removed:
       subject: "Acción necesaria: %{count} cuenta(s) necesitan una nueva categoría fiscal"
       greeting: "Hola %{name},"
@@ -708,6 +722,7 @@ es:
     closing_entry_updated_suffix: "El asiento de cierre que cubre este período ha sido actualizado."
     confirm_delete: "¿Seguro que quieres eliminar este asiento?"
     cross_entity_needs_both: "Este asiento lo creó otra empresa y solo esa empresa puede editarlo — puedes eliminarlo, pero entonces pierdes sus ventajas"
+    cross_entity_needs_both_sides: "Este asiento pertenece a dos entidades. Solo un admin con acceso a ambas puede modificarlo."
     index:
       search_placeholder: "Buscar memo, referencia, cuenta, importe..."
       from_date: "Desde"

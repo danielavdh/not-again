@@ -133,13 +133,25 @@
   <%# the linked entry/entries on the other business's side, read-only mirror. %>
   <% if @cross_entity_linked.present? %>
       <% @cross_entity_linked.each do |linked| %>
+        <% readable = @linked_readable.include?(linked.id) %>
         <h2>
 		  <%= t("entities.cross_entity.linked_entry") %>
           <% if @linked_entity_label[linked.id] %> &mdash; <%= @linked_entity_label[linked.id] %><% end %>
-          <%= link_to journal_entry_path(linked), class: "backend_link" do %>
+          <%# A link only where it would open: the show page is scoped, so for the
+              other family's entry it would 404. The business name and the number
+              stay, which is all this side needs to know the pair exists. %>
+          <% if readable %>
+            <%= link_to journal_entry_path(linked), class: "backend_link" do %>
+              (<%= t("jargon.journal_entry") %> #<%= linked.id %>)
+            <% end %>
+          <% else %>
             (<%= t("jargon.journal_entry") %> #<%= linked.id %>)
           <% end %>
         </h2>
+        <%# The postings themselves only to an admin who may read that entry.
+            Those are another family's account codes, names, descriptions and
+            amounts — see JournalEntriesController#show. %>
+        <% if readable %>
         <table class="table">
           <thead>
             <tr>
@@ -164,6 +176,7 @@
             <% end %>
           </tbody>
         </table>
+        <% end %>
       <% end %>
   <% end %>
 

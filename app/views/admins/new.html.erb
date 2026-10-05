@@ -6,11 +6,9 @@
     <p class="error_message"><%= t(".errors_on_page") %></p>
     <% end %>
 
-    <h1><%= @mode == :invite ? t(".grant_access") : t(".new_h1") %></h1>
-
-    <%# The page does two jobs and the email picks which — so it says so, rather
-        than leaving it to be guessed from the heading. %>
-    <p class="info"><%= t(".mode_hint") %></p>
+    <%# Sudo only, and one job: an account. Granting it access to books is
+        admins/grant_access. %>
+    <h1><%= t(".new_h1") %></h1>
 
     <%= render 'form', admin: @admin %>
 

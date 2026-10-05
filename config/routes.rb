@@ -216,6 +216,8 @@ Rails.application.routes.draw do
       end
       collection do
         get :access_fields
+        get :grant_access
+        post :grant_access, action: :create_grant
       end
     end
 

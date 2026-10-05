@@ -38,15 +38,6 @@ module Reports
     def build(ordered_accounts)
       @all_parents = ordered_accounts.map(&:parent).compact.index_by(&:id)
 
-      # Which parents have EVERY one of their children in this report. When one
-      # does not, its subtotal is only some of the parent's accounts, so naming
-      # it after the parent overstates what it covers — the label lists the
-      # codes it actually sums instead. One query for all the parents at once.
-      report_ids = ordered_accounts.map(&:id).to_set
-      @missing_children_of = Account.where(parent_id: @all_parents.keys)
-        .where.not(id: report_ids.to_a)
-        .distinct.pluck(:parent_id).to_set
-
       show_type_totals = types_contiguous?(ordered_accounts)
       parent_groups    = build_parent_groups_ordered(ordered_accounts)
       type_totals      = show_type_totals ? build_type_totals(ordered_accounts) : {}
@@ -147,19 +138,17 @@ module Reports
 
       parent_code = parent.respond_to?(:code) ? parent.code : accounts.first.code[0..3] + "00"
       parent_name = parent.respond_to?(:name) ? parent.name : "Unknown"
-      partial     = @missing_children_of.include?(parent_id)
 
       {
         parent_id: parent_id,
-        # Blank for a partial group — the parent's code would imply the whole
-        # parent, which this subtotal is not.
-        parent_code: partial ? "" : parent_code,
+        parent_code: parent_code,
         parent_name: parent_name,
-        # What the subtotal row is called: the parent, or — when the report
-        # leaves out some of the parent's children — the codes it does cover,
-        # "(504005, 504007)" or "(504002–504006)".
-        total_name: partial ? "(#{code_summary(account_data.map { |ad| ad[:code] })})"
-                            : "#{parent_code} - #{parent_name}",
+        # A report is a chosen set of accounts, and each subtotal has its own
+        # accounts listed directly above it — so the group is named after its
+        # parent whether or not every child happens to be in the report. It used
+        # to list the codes it covered instead whenever one was missing, which
+        # said the same thing as the rows above it, in digits.
+        total_name: "#{parent_code} - #{parent_name}",
         # Which of asset/liability/equity/income/expense this group belongs to.
         # Every account in a group shares a parent, so one answer.
         account_type: account_data.first[:account_type],
@@ -167,19 +156,6 @@ module Reports
         currency_totals: parent_currency_totals,
         translated_total: parent_translated_total
       }
-    end
-
-    # "504005–504007" for a contiguous run of three or more, otherwise "504005,
-    # 504007". Codes are entity-scoped 6-digit strings, compared as integers
-    # only to test adjacency.
-    def code_summary(codes)
-      sorted = codes.map(&:to_s).uniq.sort
-      nums   = sorted.map(&:to_i)
-      if sorted.size > 2 && nums.each_cons(2).all? { |a, b| b == a + 1 }
-        "#{sorted.first}–#{sorted.last}"
-      else
-        sorted.join(", ")
-      end
     end
 
     def build_type_totals(ordered_accounts)

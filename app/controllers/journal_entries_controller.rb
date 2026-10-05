@@ -6,6 +6,7 @@ class JournalEntriesController < BaseController
   # An entry may be READ wherever the admin has a link, but only changed where
   # that link says full_access — see Admin#writable_journal_entries.
   before_action :require_writable_journal_entry,      only: [:edit, :update, :destroy, :post, :unpost]
+  before_action :require_both_sides_of_a_pair,        only: [:edit, :update, :destroy, :post, :unpost]
   before_action :require_writable_submitted_accounts, only: [:create, :update]
 
   def index
@@ -54,6 +55,14 @@ class JournalEntriesController < BaseController
         code = je.postings.filter_map { |p| p.account&.entity_code }.first
         [je.id, code && (names[code].presence || code)]
       end
+      # Which of them this admin may actually READ. A cross-entity pair joins two
+      # separate consolidation groups by definition (postings_same_group), so the
+      # other side is another family's books: its account codes, names,
+      # descriptions and amounts are not this page's to print. Holding both sides
+      # is the ordinary case for one bookkeeper, and then the detail is useful —
+      # hence a per-entry answer rather than hiding it from everybody.
+      @linked_readable = accessible_journal_entries
+                           .where(id: @cross_entity_linked.map(&:id)).pluck(:id).to_set
     end
   end
 
@@ -124,10 +133,7 @@ class JournalEntriesController < BaseController
 
   def post
     if @journal_entry.post!
-      # A cross-entity pair moves together: post/unpost cascades to the linked
-      # entry/entries (both live or both draft), without touching the link
-      # itself.
-      @journal_entry.cross_entity_linked_entries.each(&:post!)
+      writable_linked_entries(@journal_entry).each(&:post!)
       base   = t("journal_entries.posted")
       notice = [base, refresh_affected_closing_entry(@journal_entry)].compact.join(" ")
       redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]), notice: notice
@@ -138,7 +144,7 @@ class JournalEntriesController < BaseController
 
   def unpost
     @journal_entry.unpost!
-    @journal_entry.cross_entity_linked_entries.each(&:unpost!) # keep the linked pair together
+    writable_linked_entries(@journal_entry).each(&:unpost!)
     base   = t("journal_entries.unposted")
     notice = [base, refresh_affected_closing_entry(@journal_entry)].compact.join(" ")
     redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]), notice: notice
@@ -209,6 +215,43 @@ class JournalEntriesController < BaseController
   end
 
   private
+
+  # A cross-entity pair is CREATED by someone holding both businesses — create
+  # refuses anything less — so it is never one side's to alter alone. Only an
+  # admin who could have made it may change or undo it.
+  #
+  # The receiving half is the one exception, and it is not an alteration: that
+  # entry is wholly inside their own books, and they may unpost it, post it
+  # again, or delete it and so give the gift back. Deleting it severs the link
+  # and leaves the donor's own entry exactly as it was.
+  #
+  # The donor's half gets no such exception, because every change to it reaches
+  # the other business: a delete destroys their entry outright, and an edit
+  # rewrites the shared transaction.
+  def require_both_sides_of_a_pair
+    return if @journal_entry.nil? || !@journal_entry.cross_entity?
+    return if whole_pair_writable?(@journal_entry)
+    return if !@journal_entry.cross_entity_origin? &&
+              action_name.in?(%w[post unpost destroy])
+
+    redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]),
+                alert: t("journal_entries.cross_entity_needs_both_sides")
+  end
+
+  def whole_pair_writable?(journal_entry)
+    linked = journal_entry.cross_entity_linked_entries
+    linked.count == writable_linked_entries(journal_entry).count
+  end
+
+  # A cross-entity pair moves together — but only as far as this admin may
+  # write. One bookkeeper holding both sides wants both halves to follow, which
+  # is what the cascade is for; somebody holding one side must not pull the
+  # other family's figures in or out of their own posted books. Nothing is
+  # severed either way: posted is a column and the link survives both, so the
+  # half left behind can be posted again whenever its own side says so.
+  def writable_linked_entries(journal_entry)
+    journal_entry.cross_entity_linked_entries.where(id: writable_journal_entries)
+  end
 
   def set_journal_entry
     @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account]).find(params[:id])

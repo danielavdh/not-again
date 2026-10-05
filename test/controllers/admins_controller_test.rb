@@ -70,7 +70,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     test "sudo grants are always full_access, with no level param at all" do
       entity = entities(:standalone)
       assert_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { username: "new_owner", password: "password", password_confirmation: "password",
                    email_address: "new_owner@example.com" },
           entity_ids: [ entity.id ]
@@ -85,7 +86,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       entity = entities(:standalone)
 
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: shared.email_address },
           entity_ids: [ entity.id ]
         }
@@ -98,7 +100,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     test "sudo's entity list reaches every active entity, not just sudo's own (sudo has none)" do
       all_ids = Entity.active.pluck(:id)
       assert_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { username: "all_entities_admin", password: "password", password_confirmation: "password",
                    email_address: "all_entities_admin@example.com" },
           entity_ids: all_ids
@@ -113,7 +116,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     # (which never submits access_level at all) must not work either.
     test "sudo cannot be downgraded to read_only by a crafted access_level param" do
       entity = entities(:standalone)
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { username: "cannot_downgrade", password: "password", password_confirmation: "password",
                  email_address: "cannot_downgrade@example.com" },
         entity_ids: [ entity.id ],
@@ -147,10 +151,10 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     # it never was.
     test "Grant Access shows on sudo's own page but not while viewing another admin's" do
       get admin_url(@admin, locale: :en)
-      assert_select "a[href=?]", new_admin_path, text: "Grant Access"
+      assert_select "a[href=?]", grant_access_admins_path, text: "Grant Access"
 
       get admin_url(admins(:one), locale: :en)
-      assert_select "a[href=?]", new_admin_path, text: "Grant Access", count: 0
+      assert_select "a[href=?]", grant_access_admins_path, text: "Grant Access", count: 0
     end
 
     # This page is about the ADMIN — identity, access, family. Tax setup and
@@ -277,7 +281,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       reader = admins(:shared_reader)
 
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: reader.email_address },
           entity_ids: [ entities(:standalone).id ]
         }
@@ -291,7 +296,13 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     test "unticking revokes full access and leaves a lower grant standing" do
       mixed = admins(:mixed) # full on family_biz, read_only on personal
 
-      post admins_url(locale: :en), params: { admin: { email_address: mixed.email_address } }
+      # shown_entity_ids is what the rendered block says it drew a box for; the
+      # real form sends every one. Without it an untick is not a revoke.
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
+        admin: { email_address: mixed.email_address },
+        shown_entity_ids: entities(:family_biz).id.to_s
+      }
 
       assert_not mixed.admin_entities.exists?(entity_id: entities(:family_biz).id),
                  "the unticked full_access row should be gone"
@@ -305,9 +316,11 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     test "unticking the last admin of a business warns instead of orphaning it" do
       two = admins(:two) # full on family_biz AND daughter
 
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: two.email_address },
-        entity_ids: [ entities(:family_biz).id ]
+        entity_ids: [ entities(:family_biz).id ],
+        shown_entity_ids: [ entities(:family_biz).id, entities(:daughter).id ].join(",")
       }
 
       assert_response :unprocessable_entity
@@ -320,9 +333,11 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     test "confirming the warning does remove it, and the business is then orphaned" do
       two = admins(:two)
 
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: two.email_address },
         entity_ids: [ entities(:family_biz).id ],
+        shown_entity_ids: [ entities(:family_biz).id, entities(:daughter).id ].join(","),
         confirm_orphan: "1"
       }
 
@@ -330,38 +345,198 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       assert entities(:daughter).reload.orphaned?, "the last admin left, so the retention clock starts"
     end
 
+    # Both identifiers filled in and pointing at different people: the email used
+    # to win silently, which meant a submission naming one person could act on
+    # another. Refused instead.
+    test "identifiers that disagree are refused rather than resolved by one of them" do
+      reader = admins(:shared_reader)
+
+      assert_no_difference("AdminEntity.count") do
+        post grant_access_admins_url(locale: :en), params: {
+          admin: { email_address: reader.email_address, username: admins(:mixed).username },
+          entity_ids: [ entities(:standalone).id ]
+        }
+      end
+      assert_response :unprocessable_entity
+
+      # And an unknown email paired with someone else's username is the same
+      # contradiction: it would have granted to the username's owner.
+      assert_no_difference("Admin.count") do
+        post grant_access_admins_url(locale: :en), params: {
+          confirm_create: "1",
+          admin: { email_address: "somebody_new@example.com", username: reader.username },
+          entity_ids: [ entities(:standalone).id ]
+        }
+      end
+      assert_response :unprocessable_entity
+    end
+
+    # The address is the identity. A username nobody holds, left in the field
+    # beside a real address, names no second person — so it is simply not read,
+    # and granting touches nobody's username either way.
+    test "a stray username beside a real address is ignored, not an error" do
+      reader = admins(:shared_reader)
+
+      post grant_access_admins_url(locale: :en), params: {
+        admin: { email_address: reader.email_address, username: "not_anybodys_name" },
+        entity_ids: [ entities(:standalone).id ]
+      }
+
+      assert reader.admin_entities.with_full_access.exists?(entity_id: entities(:standalone).id)
+      assert_equal "shared_reader", reader.reload.username, "their own username must not change"
+      assert_nil Admin.find_by(username: "not_anybodys_name"), "and nobody is created"
+    end
+
+    # A typo in an existing admin's address looks exactly like a new colleague.
+    # The lookup coming back empty is not consent to create a person, so nothing
+    # is created until that is confirmed on its own.
+    test "an unknown identifier creates nobody until the creation is confirmed" do
+      assert_no_difference("Admin.count") do
+        post grant_access_admins_url(locale: :en), params: {
+          admin: { email_address: "typo@nowhere.example", username: "typo_person" },
+          entity_ids: [ entities(:standalone).id ]
+        }
+      end
+      assert_response :unprocessable_entity
+      assert_select "#entity-access-fields input[type=checkbox][name=?]", "confirm_create"
+
+      assert_difference("Admin.count") do
+        post grant_access_admins_url(locale: :en), params: {
+          confirm_create: "1",
+          admin: { email_address: "typo@nowhere.example", username: "typo_person" },
+          entity_ids: [ entities(:standalone).id ]
+        }
+      end
+      created = Admin.find_by(email_address: "typo@nowhere.example")
+      assert created.draft?, "an invited person claims their own account"
+      assert created.admin_entities.with_full_access.exists?(entity_id: entities(:standalone).id)
+    end
+
+    # The ticks are fetched as the address is typed. A submit that beats that
+    # fetch carries no ticks at all, which must NOT read as "take everything
+    # away" — the rendered block says which entities it drew, and only those
+    # can be revoked.
+    test "a submission that never drew the boxes revokes nothing" do
+      two = admins(:two) # full on family_biz AND daughter
+
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1", admin: { email_address: two.email_address } }
+
+      assert_equal 2, two.admin_entities.with_full_access.count,
+                   "an unloaded form must not be able to strip an admin's access"
+      assert_not entities(:daughter).reload.orphaned?
+    end
+
     test "submitting the access an admin already has changes nothing and says so" do
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: admins(:mixed).email_address },
         entity_ids: [ entities(:family_biz).id ]
       }
 
-      assert_redirected_to new_admin_path(locale: :en)
+      assert_redirected_to grant_access_admins_path(locale: :en)
       assert_equal 1, admins(:mixed).admin_entities.with_full_access.count
     end
 
-    # A read_only row and a full_access row for the same pair cannot both exist
-    # (AdminEntity uniqueness), and the form renders no box for an entity held
-    # at a lower level — so this is a crafted submission, and it must come back
-    # as an error rather than a 500 from create!.
-    test "ticking an entity the admin holds at a lower level fails as a form error" do
-      mixed = admins(:mixed) # read_only on personal
+    # Sudo may give full access to anyone, on any entity, including one they only
+    # had read access to. One row per admin per entity, so that RAISES the
+    # existing row rather than adding a second — the pair is unique.
+    test "sudo raises a read-only grant to full access in place" do
+      mixed = admins(:mixed) # read_only on personal, full on family_biz
+      before = mixed.admin_entities.count
 
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: mixed.email_address },
-        entity_ids: [ entities(:family_biz).id, entities(:personal).id ]
+        entity_ids: [ entities(:family_biz).id, entities(:personal).id ],
+        shown_entity_ids: [ entities(:family_biz).id, entities(:personal).id ].join(",")
       }
 
-      assert_response :unprocessable_entity
-      assert_equal "read_only", mixed.admin_entities.find_by(entity_id: entities(:personal).id).access_level
+      assert_equal "full_access", mixed.admin_entities.find_by(entity_id: entities(:personal).id).access_level
+      assert_equal before, mixed.admin_entities.count, "raised, not joined by a second row"
+    end
+
+    # And unticking it takes the access away entirely rather than dropping back
+    # to read-only: sudo may not grant read_only, so there is nothing to fall
+    # back to. The full-access admin re-grants it if they want to.
+    test "sudo unticking a raised grant removes it rather than restoring read-only" do
+      mixed = admins(:mixed)
+      mixed.admin_entities.find_by(entity_id: entities(:personal).id).update!(access_level: :full_access)
+
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
+        admin: { email_address: mixed.email_address },
+        entity_ids: [ entities(:family_biz).id ],
+        shown_entity_ids: [ entities(:family_biz).id, entities(:personal).id ].join(",")
+      }
+
+      assert_nil mixed.admin_entities.find_by(entity_id: entities(:personal).id)
     end
 
     test "access_fields starts the boxes at the target's current full access" do
       get access_fields_admins_url(email: admins(:mixed).email_address, locale: :en)
 
       assert_select "input[name=?][value=?][checked]", "entity_ids[]", entities(:family_biz).id.to_s
-      assert_select "input[name=?][value=?]", "entity_ids[]", entities(:personal).id.to_s, false,
-                    "an entity held at a lower level gets no box, so it cannot be unticked away"
+      # A box, because sudo may raise it — but unticked, because they do not
+      # hold full access to it yet.
+      assert_select "input[name=?][value=?]", "entity_ids[]", entities(:personal).id.to_s
+      assert_select "input[name=?][value=?][checked]", "entity_ids[]", entities(:personal).id.to_s, false,
+                    "a read-only grant must not look like full access"
+    end
+
+    # Two things missing means two messages. This used to answer "select at
+    # least one entity" and say nothing at all about the address, which is the
+    # field that actually identifies anybody.
+    test "a submission with no address and no entity says both" do
+      post grant_access_admins_url(locale: :en), params: {
+        admin: { email_address: "", username: "someone_new" }
+      }
+
+      assert_response :unprocessable_entity
+      # On the field, not in the summary block: Rails then wraps the label in
+      # .field_with_errors, which is what draws the red frame the other fields
+      # get. On :base it only ever appeared at the top of the page.
+      assert_select "div.field_with_errors label[for=?]", "admin_entity_ids"
+      assert_match I18n.t("admins.no_entity_selected"), response.body
+      assert_match(/#{Admin.human_attribute_name(:email_address)}/i, response.body,
+                   "the missing address must be reported too")
+      assert_select "#entity-access-fields input[type=checkbox][name=?]", "confirm_create", false,
+                    "nothing is offered for creation while the form is invalid"
+    end
+
+    # Emptying a field must not move the form onto a different person. A
+    # username belonging to somebody identifies nobody here — it only says that
+    # name is not available to a new person.
+    test "a username alone identifies nobody, whatever it belongs to" do
+      get access_fields_admins_url(locale: :en, username: admins(:mixed).username)
+
+      assert_select "#entity-access-fields[data-existing=?]", "false"
+      assert_select "#entity-access-fields input[name=?]", "entity_ids[]", false
+      assert_select "#entity-access-fields .error_message", 1,
+                    "it says the name is taken, not who has it"
+    end
+
+    # The live block and the save ask ONE method who a pair of identifiers is
+    # about. They used to disagree: the block fell back to the username when the
+    # address was unknown, so it announced "daniela already has an account" over
+    # a submission the server then refused.
+    test "an unknown address with somebody else's username names nobody, on the page and on save" do
+      get access_fields_admins_url(locale: :en, email: "brand_new@example.com",
+                                   username: admins(:mixed).username)
+
+      assert_select "#entity-access-fields[data-existing=?]", "false"
+      assert_select "#entity-access-fields input[name=?]", "entity_ids[]", false,
+                    "no ticks for a pair that names nobody"
+      assert_select "#entity-access-fields .error_message", 1
+
+      assert_no_difference([ "Admin.count", "AdminEntity.count" ]) do
+        post grant_access_admins_url(locale: :en), params: {
+          confirm_create: "1",
+          admin: { email_address: "brand_new@example.com", username: admins(:mixed).username },
+          entity_ids: [ entities(:standalone).id ]
+        }
+      end
+      assert_response :unprocessable_entity
     end
 
     test "the public demo account is never offered full access" do
@@ -371,7 +546,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       get access_fields_admins_url(email: demo.email_address, locale: :en)
       assert_select "input[name=?]", "entity_ids[]", false
 
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: demo.email_address },
         entity_ids: [ entities(:standalone).id ]
       }
@@ -385,6 +561,21 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @admin = admins(:one)  # full_access to personal and spouse
       sign_in_as(@admin)
+    end
+
+    # Sudo's sentence says the ticks ARE this person's full access and that
+    # unticking takes it away. Neither is true here: the boxes start empty and a
+    # full-access admin can only add, so saying so would describe the opposite
+    # of what this page does.
+    test "the existing-admin note is the adding one, not sudo's tick-untick one" do
+      get access_fields_admins_url(email: admins(:read_only).email_address, locale: :en)
+
+      # Asserted as "not sudo's sentence" rather than "is this exact string", so
+      # it holds whatever the wording becomes and in every language.
+      assert_select "p.info", 1, "the page still says who this is"
+      assert_no_match(/#{Regexp.escape(I18n.t("admins.form.existing_admin", username: admins(:read_only).username))}/,
+                      response.body,
+                      "tick/untick is sudo's: these boxes start empty and add only")
     end
 
     # admins(:one) is full_access on :personal and :spouse. A full-access admin
@@ -460,42 +651,25 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action=?]", admin_entity_path(link), count: 1
     end
 
-    test "should get new for co-admin invite" do
-      get new_admin_url(locale: :en)
+    test "the grant page is reachable, making an account is not" do
+      get grant_access_admins_url(locale: :en)
       assert_response :success
-    end
 
-    # Username and password sit in a <details> closed by default, opened by JS
-    # only once the email is confirmed to belong to nobody. This is the fresh-
-    # load state: no email submitted, so the server has nothing to go on and
-    # stays closed rather than guessing.
-    test "on a fresh load, username/password are closed by default" do
       get new_admin_url(locale: :en)
-      assert_select "details#new-person-fields[open]", 0
-      assert_select "details#new-person-fields", 1
+      assert_redirected_to dashboard_path, "making an account is sudo's job"
     end
 
-    # The server-rendered state on an error reload: it already knows the
-    # submitted email, so it computes the correct open/closed state directly
-    # rather than defaulting closed and waiting for JS.
-    test "on an error reload, an existing email keeps the details closed" do
-      post admins_url(locale: :en), params: {
-        admin: { email_address: admins(:shared_reader).email_address },
-        access_level: "bogus", # forces the unprocessable_entity re-render
-        entity_ids: [ entities(:daughter).id ]
-      }
-      assert_response :unprocessable_entity
-      assert_select "details#new-person-fields[open]", 0
-    end
+    # Nothing on this page appears or disappears as you type: both identifiers
+    # are always visible and there is no password to reveal, which is what the
+    # <details> used to hide. A field that is sometimes there cannot be timed
+    # wrongly against the lookup.
+    test "the grant page asks for both identifiers and no password, always" do
+      get grant_access_admins_url(locale: :en)
 
-    test "on an error reload, a genuinely new email opens the details" do
-      post admins_url(locale: :en), params: {
-        admin: { email_address: "genuinely_new_person@example.com" },
-        access_level: "bogus",
-        entity_ids: [ entities(:daughter).id ]
-      }
-      assert_response :unprocessable_entity
-      assert_select "details#new-person-fields[open]", 1
+      assert_select "input#admin_email_address", 1
+      assert_select "input#admin_username", 1
+      assert_select "details#new-person-fields", 0
+      assert_select "input[type=password]", 0
     end
 
     test "access_fields says on the block whether the email belongs to an existing admin" do
@@ -521,17 +695,10 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     end
 
     # The password field must not be client-side required on this page: when the
-    # email resolves to an EXISTING admin the password is never read at all
-    # (grant_existing_admin_access ignores it), and there is no way to know
-    # which case it will be before the request is sent.
-    test "the password field is not required client-side on the grant form" do
-      get new_admin_url(locale: :en)
-      assert_select "input#admin_password[required]", 0
-    end
-
     test "should create co-admin with upload_receipts access" do
       assert_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: {
             username: "new_coadmin",
             password: "password",
@@ -548,7 +715,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
 
     test "should create co-admin with read_only access" do
       assert_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: {
             username: "new_reader",
             password: "password",
@@ -565,7 +733,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
 
     test "cannot create co-admin with full_access" do
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: {
             username: "hacker",
             password: "password",
@@ -575,12 +744,13 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
           entity_ids: [ entities(:personal).id ]
         }
       end
-      assert_redirected_to new_admin_path
+      assert_redirected_to grant_access_admins_path
     end
 
     test "cannot create co-admin with invalid access level" do
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: {
             username: "hacker2",
             password: "password",
@@ -590,13 +760,14 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
           entity_ids: [ entities(:personal).id ]
         }
       end
-      assert_redirected_to new_admin_path
+      assert_redirected_to grant_access_admins_path
     end
 
     test "create co-admin with specific entities" do
       entity = entities(:personal)
       assert_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: {
             username: "specific_coadmin",
             password: "password",
@@ -613,7 +784,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
 
     test "create co-admin fails without entities" do
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: {
             username: "no_entities",
             password: "password",
@@ -639,8 +811,11 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       sign_in_as(admins(:two))
 
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
-          admin: { username: "ignored", password: "ignored123", email_address: shared.email_address },
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
+          # No username: naming one that is not theirs is a contradiction the
+          # form now refuses. A submitted password is still ignored.
+          admin: { password: "ignored123", email_address: shared.email_address },
           access_level: "upload_receipts",
           entity_ids: [ daughter.id ]
         }
@@ -663,7 +838,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
 
       assert_enqueued_email_with AdminMailer, :access_granted,
         params: { admin: shared, granter: admins(:two), entities: [ daughter ], level: "upload_receipts", locale: :en } do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: shared.email_address },
           access_level: "upload_receipts",
           entity_ids: [ daughter.id ]
@@ -676,7 +852,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       sign_in_as(admins(:one))
 
       assert_no_enqueued_emails do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: shared.email_address },
           access_level: "upload_receipts",
           entity_ids: [ entities(:personal).id ]
@@ -688,13 +865,14 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       shared = admins(:shared_reader)
       sign_in_as(admins(:two))
 
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: shared.email_address },
         access_level: "full_access",
         entity_ids: [ entities(:daughter).id ]
       }
 
-      assert_redirected_to new_admin_path
+      assert_redirected_to grant_access_admins_path
       assert_not AdminEntity.exists?(admin_id: shared.id, entity_id: entities(:daughter).id)
     end
 
@@ -703,7 +881,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       sign_in_as(admins(:two))
 
       assert_no_difference([ "Admin.count", "AdminEntity.count" ]) do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: shared.email_address },
           access_level: "upload_receipts",
           entity_ids: [ entities(:family_biz).id ]
@@ -718,12 +897,13 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       shared = admins(:shared_reader)
       sign_in_as(admins(:two))
 
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: shared.email_address },
         access_level: "upload_receipts",
         entity_ids: [ entities(:family_biz).id ]
       }
-      assert_redirected_to new_admin_path
+      assert_redirected_to grant_access_admins_path
       follow_redirect!
       assert_match I18n.t("admins.already_linked", username: shared.email_address), response.body
     end
@@ -732,7 +912,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       sign_in_as(admins(:two))
 
       assert_no_difference("AdminEntity.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: admins(:sudo).email_address },
           access_level: "read_only",
           entity_ids: [ entities(:daughter).id ]
@@ -749,13 +930,14 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       sign_in_as(admins(:two))
 
       assert_no_difference([ "AdminEntity.count", "Admin.count" ]) do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { email_address: admins(:sudo).email_address },
           access_level: "read_only",
           entity_ids: [ entities(:daughter).id ]
         }
       end
-      assert_redirected_to new_admin_path
+      assert_redirected_to grant_access_admins_path
       follow_redirect!
       assert_no_match(/already been taken/i, response.body)
       assert_match I18n.t("admins.already_linked", username: admins(:sudo).email_address), response.body
@@ -767,7 +949,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       # through to the ordinary "create a new admin" path and fails there on a
       # duplicate email, exactly as it would for anyone else's.
       assert_no_difference("Admin.count") do
-        post admins_url(locale: :en), params: {
+        post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
           admin: { username: "should_not_exist", password: "password1", email_address: admins(:two).email_address },
           access_level: "read_only",
           entity_ids: [ entities(:daughter).id ]
@@ -892,7 +1075,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     end
 
     test "granting a brand-new email creates a draft" do
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { username: "coadmin_draft", password: "grantergiven1",
                  password_confirmation: "grantergiven1", email_address: "coadmin_draft@example.com" },
         access_level: "read_only",
@@ -918,7 +1102,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
       sign_in_as(admins(:sudo))
       target = admins(:upload_only)
       assert_not target.draft?
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { email_address: target.email_address },
         entity_ids: [ entities(:daughter).id ]
       }
@@ -1007,7 +1192,8 @@ class AdminsControllerTest < ActionDispatch::IntegrationTest
     private
 
     def create_draft(granter:, entity:, level: "read_only")
-      post admins_url(locale: :en), params: {
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
         admin: { username: "draft_#{SecureRandom.hex(4)}", password: "grantergiven1",
                  password_confirmation: "grantergiven1", email_address: "draft_#{SecureRandom.hex(4)}@example.com" },
         access_level: level,

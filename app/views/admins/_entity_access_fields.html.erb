@@ -1,18 +1,56 @@
-<%# locals: (rows:, target:, orphan_codes:) %>
+<%# locals: (rows:, target:, orphan_codes:, confirm_create: nil, identifier_conflict: nil, form: nil, create_prompt: nil) %>
 
-<%# Fetched live by index.js as the email is typed, so the ticks always show the
-    CURRENT access of whoever that address belongs to — tick to grant, untick to
-    revoke. data-existing tells the JS whether to open the username/password
-    fields. Keys are absolute because this block was lifted out of admins/_form
-    and keeps its siblings' names. %>
-<div id="entity-access-fields" data-existing="<%= target.present? %>">
+<%# Fetched live by index.js as the identifier is typed, so the ticks always
+    show the CURRENT access of whoever it belongs to — tick to grant, untick to
+    revoke. data-existing tells the JS whether anybody was found. Keys are
+    absolute because this block was lifted out of admins/_form and keeps its
+    siblings' names. %>
+<%# data-username lets the form fill the username in once the address resolves,
+    so the two fields agree without the sender having to know it. %>
+<%# data-create-prompt is set only when submitting would CREATE somebody: no
+    conflict, nobody found, and an address to create them with. index.js arms the
+    submit button's confirm from it, so the sentence is written and interpolated
+    here and never assembled in JS. %>
+<div id="entity-access-fields" data-existing="<%= target.present? %>"
+     data-username="<%= target&.username %>"
+     data-create-prompt="<%= create_prompt %>">
 
-	<% if target&.demo? %>
+	<%# The answer lands here, so the server has the consent too rather than
+	    trusting the browser to have asked. %>
+	<%= hidden_field_tag :confirm_create, "", id: "confirm_create" %>
+
+	<%# The two fields name two different people. No boxes: there is nobody this
+	    submission could be about, and offering ticks would invite a save the
+	    server has to refuse. Rails' own wording for a taken unique column, so
+	    this and the refusal say the same thing. %>
+	<% if identifier_conflict.present? %>
+		<p class="error_message"><%= identifier_conflict %></p>
+	<% elsif target&.demo? %>
 		<p class="info"><%= t("admins.form.demo_no_full_access") %></p>
 	<% else %>
 
+		<%# Sudo's ticks ARE this person's full access, so theirs says tick/untick.
+		    A full-access admin only ever ADDS, at the level chosen above, and the
+		    boxes start empty for them — so the same sentence would describe the
+		    opposite of what their page does. %>
 		<% if target %>
-			<p class="info"><%= t("admins.form.existing_admin", username: target.username) %></p>
+			<p class="info">
+				<%= sudo? ? t("admins.form.existing_admin", username: target.username)
+				          : t("admins.form.existing_admin_invite", username: target.username) %>
+			</p>
+		<% end %>
+
+		<%# Reached only without JavaScript: with it, the submit button asks first
+		    and fills the hidden field in. Kept so the server's refusal is
+		    explained rather than being a bare 422. %>
+		<% if confirm_create.present? %>
+			<div class="error_message">
+				<p><%= t("admins.form.confirm_create_warning", identifier: confirm_create) %></p>
+				<label>
+					<%= check_box_tag :confirm_create, "1", false, id: nil %>
+					<%= t("admins.form.confirm_create") %>
+				</label>
+			</div>
 		<% end %>
 
 		<% if orphan_codes.any? %>
@@ -25,23 +63,46 @@
 			</div>
 		<% end %>
 
+		<%# Which entities this block drew a box for, so the server can tell an
+		    untick from a block that never loaded. Without it a submit that beat
+		    the lookup would carry no ticks and read as "take everything away". %>
+		<%= hidden_field_tag "shown_entity_ids",
+				rows.reject { |r| r[:locked_level] }.map { |r| r[:entity].id }.join(","),
+				id: nil %>
+
 		<div class="field check-boxes">
-			<label>
-				<%= sudo? ? t("admins.form.sudo_entities_label") : t("admins.form.entities") %>
-			</label>
+			<% label = sudo? ? t("admins.form.sudo_entities_label") : t("admins.form.entities") %>
+			<%# Through the form builder so an error on :entity_ids gets Rails' own
+			    .field_with_errors wrapper, the same red frame the email and the
+			    username get. The live lookup renders this block on its own, with no
+			    builder and never an error, so it falls back to a plain label. %>
+			<% if form %>
+				<%= form.label :entity_ids, label %>
+				<span class="error_message"><%= form.object.errors[:entity_ids].to_sentence %></span>
+			<% else %>
+				<label><%= label %></label>
+			<% end %>
 			<% rows.each do |row| %>
 				<label>
-					<%# A lower grant is the inviting admin's business, never sudo's — no box, so an
-					    untick can never destroy it. %>
-					<% if row[:lower_level] %>
+					<%# No box at all: a full-access admin only ever ADDS, so a grant the
+					    person already holds is not theirs to change — and cannot be
+					    unticked away. %>
+					<% if row[:locked_level] %>
 						<%= row[:entity].code %> &mdash; <%= row[:entity].name %>
 						<span class="small info">
-							<%= t("admins.form.held_lower", level: t("access.#{row[:lower_level]}")) %>
+							<%= t("admins.form.held_lower", level: t("access.#{row[:locked_level]}")) %>
 						</span>
 					<% else %>
 						<%= check_box_tag "entity_ids[]", row[:entity].id, row[:checked],
 								id: "entity_#{row[:entity].id}" %>
 						<%= row[:entity].code %> &mdash; <%= row[:entity].name %>
+						<%# Sudo may raise a lower grant to full access, so the box is drawn and
+						    says what it would be raising from. %>
+						<% if row[:current_level] %>
+							<span class="small info">
+								<%= t("admins.form.raises_from", level: t("access.#{row[:current_level]}")) %>
+							</span>
+						<% end %>
 						<% if sudo? && row[:others].any? %>
 							&mdash; <%= t("admins.form.already_full_access", names: row[:others].join(", ")) %>
 						<% end %>

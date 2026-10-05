@@ -72,13 +72,17 @@ class GatesControllerTest < ActionDispatch::IntegrationTest
     setup do
       granter = admins(:one) # full_access on personal
       sign_in_as(granter)
-      post admins_url(locale: :en), params: {
-        admin: { username: "claim_draft", password: "grantergiven1",
-                 password_confirmation: "grantergiven1", email_address: "claim_draft@example.com" },
+      post grant_access_admins_url(locale: :en), params: {
+        confirm_create: "1",
+        admin: { username: "claim_draft", email_address: "claim_draft@example.com" },
         access_level: "read_only",
         entity_ids: [ entities(:personal).id ]
       }
       @draft = Admin.find_by(username: "claim_draft")
+      # An invite generates a password nobody is told — that is the point of the
+      # claim flow. These tests need a session, so they set one they know; it
+      # leaves claimed_at alone, so the draft is still a draft.
+      @draft.update!(password: "grantergiven1")
       sign_out
     end
 

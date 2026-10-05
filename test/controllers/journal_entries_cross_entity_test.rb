@@ -516,6 +516,180 @@ class JournalEntriesCrossEntityTest < ActionDispatch::IntegrationTest
     assert je1.reload.posted?, "JE₁ re-posted with it"
   end
 
+  # ---- what the counterpart's own side may see of the other family's books ----
+  #
+  # A cross-entity pair joins two SEPARATE consolidation groups, so the entry on
+  # the far side belongs to books this admin has no relationship with. The mirror
+  # band used to print its postings — account codes, names, descriptions and
+  # amounts — to whoever could open either half.
+
+  # admins(:one) holds personal and spouse, never family_biz, so JE₁ is not
+  # theirs to read; a link to 04 makes JE₂ theirs.
+  def admin_on_the_receiving_side_only
+    AdminEntity.create!(admin: admins(:one), entity: entities(:daughter), access_level: :full_access)
+    admins(:one)
+  end
+
+  test "the far side's postings are not printed to an admin who cannot read that entry" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je2 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:daughter_capital).id).journal_entry
+
+    sign_in_as(admin_on_the_receiving_side_only)
+    get journal_entry_url(locale: :en, id: je2)
+    assert_response :success
+
+    # It still SAYS there is a pair, and names the business and the number.
+    assert_match I18n.t("entities.cross_entity.linked_entry"), response.body
+    # But nothing of the other family's ledger.
+    assert_no_match(/610001/, response.body, "the donor's gift account leaked")
+    assert_no_match(/110001/, response.body, "the donor's bank account leaked")
+    assert_select "a[href=?]", journal_entry_path(locale: :en, id: je2.cross_entity_linked_entries.first),
+                  false, "and no link, which would 404 anyway"
+  end
+
+  test "an admin holding both sides still gets the detail, which is the useful case" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je2 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:daughter_capital).id).journal_entry
+
+    get journal_entry_url(locale: :en, id: je2) # still admins(:two), holds 10 and 04
+    assert_match(/610001/, response.body, "one bookkeeper holding both sides wants to see it")
+  end
+
+  # Editing JE₂ without JE₁ is refused and lands on JE₂'s show page. That
+  # redirect was the one route into that page which dropped `from`/`account_id`,
+  # so the way back offered the journal-entry index instead of the ledger.
+  test "the refusal to edit a counterpart keeps the way back to the ledger" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je2 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:daughter_capital).id).journal_entry
+
+    sign_in_as(admin_on_the_receiving_side_only)
+    get edit_journal_entry_url(locale: :en, id: je2,
+                               from: "ledger", account_id: accounts(:daughter_expenses).id)
+
+    assert_redirected_to journal_entry_path(locale: :en, id: je2,
+                                            from: "ledger",
+                                            account_id: accounts(:daughter_expenses).id)
+  end
+
+  # ---- whose figures an unpost may move ----
+
+  test "unposting one side leaves the other family's figures posted, and the link intact" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    cap = Posting.find_by!(cross_entity_link_id: link, account_id: accounts(:daughter_capital).id)
+    je2 = cap.journal_entry
+    je1 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:personal_drawings).id).journal_entry
+
+    sign_in_as(admin_on_the_receiving_side_only)
+    patch unpost_journal_entry_url(locale: :en, id: je2)
+
+    assert_not je2.reload.posted?, "their own half is theirs to unpost"
+    assert je1.reload.posted?,
+           "the donor's gift must stay in the donor's posted figures"
+    # Nothing severed: posted is a column, so posting again restores the pair.
+    assert_equal link, cap.reload.cross_entity_link_id
+    patch post_journal_entry_url(locale: :en, id: je2)
+    assert je2.reload.posted?, "and it can be posted again"
+  end
+
+  test "a bookkeeper holding both sides still moves the pair together" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je2 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:daughter_capital).id).journal_entry
+    je1 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:personal_drawings).id).journal_entry
+
+    patch unpost_journal_entry_url(locale: :en, id: je2) # admins(:two) holds 10 and 04
+
+    assert_not je2.reload.posted?
+    assert_not je1.reload.posted?, "both halves are theirs, so both follow"
+  end
+
+  # ---- who may change a pair at all ----
+  #
+  # It takes both businesses to CREATE one (create refuses less), so it is never
+  # one side's to alter alone. The receiving half is the exception, and not an
+  # alteration: it is wholly inside their own books.
+
+  # admins(:mixed) holds family_biz (10, the donor side) and nothing on 04.
+  def admin_on_the_donor_side_only
+    admins(:mixed)
+  end
+
+  test "the donor's half cannot be edited or deleted by someone without the other side" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je1 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:personal_drawings).id).journal_entry
+    je2 = je1.cross_entity_linked_entries.first
+
+    sign_in_as(admin_on_the_donor_side_only)
+
+    get edit_journal_entry_url(locale: :en, id: je1)
+    assert_redirected_to journal_entry_path(locale: :en, id: je1)
+    # And so the other family's accounts never reach the page either.
+    follow_redirect!
+    assert_no_match(/304001/, response.body)
+
+    je1.unpost!
+    assert_no_difference("JournalEntry.count") do
+      delete journal_entry_url(locale: :en, id: je1)
+    end
+    assert JournalEntry.exists?(je2.id), "and it cannot take the other business's entry with it"
+  end
+
+  test "the donor's half cannot be unposted by someone without the other side" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je1 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:personal_drawings).id).journal_entry
+
+    sign_in_as(admin_on_the_donor_side_only)
+    patch unpost_journal_entry_url(locale: :en, id: je1)
+
+    assert je1.reload.posted?, "half of a joint transaction is not theirs alone to unpost"
+  end
+
+  # Giving the gift back: wholly inside the receiver's own books.
+  test "the receiving half can be given back by its own side, and the donor keeps theirs" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je2 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:daughter_capital).id).journal_entry
+    gift = Posting.find_by!(cross_entity_link_id: link,
+                            account_id: accounts(:personal_drawings).id)
+
+    sign_in_as(admin_on_the_receiving_side_only)
+    patch unpost_journal_entry_url(locale: :en, id: je2)
+    assert_difference("JournalEntry.count", -1) do
+      delete journal_entry_url(locale: :en, id: je2)
+    end
+
+    assert JournalEntry.exists?(gift.journal_entry_id), "the donor's own entry stands"
+    assert gift.journal_entry.reload.posted?, "and stays in their posted figures"
+    assert_nil gift.reload.cross_entity_link_id, "the link dies with the half that was given back"
+  end
+
+  # But still not an EDIT: that would rewrite the shared transaction.
+  test "the receiving half cannot be edited by its own side alone" do
+    link = SecureRandom.uuid
+    post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
+    je2 = Posting.find_by!(cross_entity_link_id: link,
+                           account_id: accounts(:daughter_capital).id).journal_entry
+
+    sign_in_as(admin_on_the_receiving_side_only)
+    get edit_journal_entry_url(locale: :en, id: je2)
+    assert_response :redirect
+  end
+
   test "a plain JE with no cross-entity entries still saves normally" do
     assert_difference("JournalEntry.count", 1) do
       post journal_entries_url(locale: :en), params: { journal_entry: {

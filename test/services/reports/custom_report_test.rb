@@ -45,25 +45,23 @@ module Reports
       assert_equal 30_00, g[:currency_totals]["GBP"]
     end
 
-    test "some children left out: the subtotal lists the codes it actually covers" do
+    # A report is a chosen set of accounts, and each subtotal lists its own
+    # accounts directly above it — so leaving a sibling out changes nothing
+    # about what to call the group. The label used to become a list of the codes
+    # it covered, "(571001, 571003)", which repeated the rows above it in
+    # digits; and the parent code was blanked, so the row lost its only
+    # identifier.
+    test "leaving a sibling out changes nothing but the figure" do
       g = only_group(report_over(@a, @c)) # 571002 omitted
-      assert_equal "(571001, 571003)", g[:total_name]
-      assert_equal "", g[:parent_code], "the parent code would imply the whole parent"
+
+      assert_equal "571000 - Premises", g[:total_name]
+      assert_equal "571000", g[:parent_code]
       assert_equal 20_00, g[:currency_totals]["GBP"], "and it sums only the two that are in"
     end
 
-    test "a contiguous run of three or more is shown as a range" do
-      d = Account.create!(code: "571004", name: "Security", account_type: :expense, parent: @parent)
-      Account.create!(code: "571005", name: "Insurance", account_type: :expense, parent: @parent) # exists, not in report
-      post(d, 10_00)
-
-      g = only_group(report_over(@a, @b, @c, d)) # 571001–571004, but 571005 exists
-      assert_equal "(571001–571004)", g[:total_name]
-    end
-
-    test "a child in the report but with no activity does not make the subtotal 'partial'" do
+    test "a child in the report with no activity is no different" do
       idle = Account.create!(code: "571009", name: "Idle", account_type: :expense, parent: @parent)
-      g = only_group(report_over(@a, @b, @c, idle)) # every child is in the report; idle just has £0
+      g = only_group(report_over(@a, @b, @c, idle)) # idle just has £0
       assert_equal "571000 - Premises", g[:total_name]
     end
   end

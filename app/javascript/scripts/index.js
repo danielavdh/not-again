@@ -1,5 +1,5 @@
 import Accounts from "scripts/accounts";
-import { setupFlashMessages, delegate, isTouchDevice, showElementSmoothly, hideElementSmoothly, showTransientStatus, initModals, toggleLanguageBar } from "scripts/utils";
+import { setupFlashMessages, delegate, isTouchDevice, showElementSmoothly, hideElementSmoothly, showTransientStatus, initModals, toggleLanguageBar, debounce } from "scripts/utils";
 import { TaxMapping, TaxSetup, HmrcFraudPrevention } from "scripts/tax";
 import TomSelectHelper from "scripts/tomselect_helper";
 import CellSum from "scripts/cell-sum";
@@ -145,30 +145,88 @@ const vdh = {
 		});
 	}
 	if (/(profile|admins)/.test(location.pathname)) {
-		/* The password fields are a <details> now — the browser opens them, so
-		   there is nothing here to break and nothing to un-hide. */
-		/* Grant form: the email decides what the page is for. The server renders
-		   the entity-access block for whoever that address belongs to — ticks
-		   showing their CURRENT access — and says on the block itself whether
-		   it found anybody, which is what opens or closes the username and
-		   password fields.
-		   focusout, not blur — blur does not bubble, so delegate() (which
-		   listens on document) would never see it. */
-		delegate(document, 'focusout', '#admin_email_address', (e, field) => {
+		/* Grant form: the server renders the entity-access block for whoever the
+		   identifier belongs to — ticks showing their CURRENT access — and the
+		   block says on itself whether anybody was found and what their username
+		   is, so the form can fill that in and the two fields agree without the
+		   sender having to know it.
+		   As it is TYPED, not on leaving the field: both fields are the only
+		   things on the page, so there is nothing to move focus to and no reason
+		   to click away. `input` rather than keyup so a paste or an autofill
+		   counts. The debounce is the shared one, so a long address is one
+		   request.
+		   ONLY on the address, never on the username. The address is the
+		   identity, so nothing about the block depends on the username — and
+		   re-fetching replaces the whole block, which would wipe entity ticks
+		   already made. A username that is somebody else's is reported by the
+		   save instead. The username is still SENT, so a conflict already typed
+		   shows up when the address changes. */
+		delegate(document, 'input', '#admin_email_address', debounce((e) => {
 		  const container = document.getElementById('entity-access-fields');
-		  const details = document.getElementById('new-person-fields');
 		  if (!container) return;
-		  const email = field.value.trim();
-		  fetch(`/admins/access_fields?email=${encodeURIComponent(email)}`, {
-		    headers: { Accept: 'text/html' }
-		  })
+		  const emailField = document.getElementById('admin_email_address');
+		  const nameField  = document.getElementById('admin_username');
+		  const email = emailField?.value.trim() || '';
+		  const name  = nameField?.value.trim() || '';
+		  /* Ticks already made ride along: swapping the block in would otherwise
+		     wipe them if the lookup lands after a quick hand. Sent only when
+		     there are some — an empty list would read as "none ticked" and
+		     override the ones the server derives from what this person holds. */
+		  const ticked = Array.from(
+		    document.querySelectorAll('input[name="entity_ids[]"]:checked')
+		  ).map((box) => `entity_ids[]=${encodeURIComponent(box.value)}`);
+		  const query = [
+		    `email=${encodeURIComponent(email)}`,
+		    `username=${encodeURIComponent(name)}`,
+		    ...ticked
+		  ].join('&');
+		  fetch(`/admins/access_fields?${query}`, { headers: { Accept: 'text/html' } })
 		    .then((r) => r.text())
 		    .then((html) => {
 		      container.outerHTML = html;
-		      const fresh = document.getElementById('entity-access-fields');
-		      if (details) details.open = email !== '' && fresh?.dataset.existing !== 'true';
+		      /* The address is the identity, so once it resolves THEIR username is
+		         the only value this form can submit: it is filled in and locked.
+		         Granting changes somebody's access, never their name — a field
+		         that cannot be acted on should not invite typing. Unlocked again
+		         as soon as the address stops naming anybody, which is when the
+		         username becomes a new person's to be given.
+		         Not overwritten while they are typing into it, so an unlock
+		         followed by typing is never fought. */
+		      const found = document.getElementById('entity-access-fields')?.dataset.username;
+		      if (!nameField) return;
+		      if (found && e.target !== nameField && nameField.value !== found) {
+		        nameField.value = found;
+		      }
+		      nameField.readOnly = !!found;
 		    })
 		    .catch(() => {}); /* stays as server-rendered on any fetch failure */
+		}, 350));
+		/* Submitting the grant form will CREATE somebody when the block says so —
+		   worth being told before it happens rather than after. Asked HERE
+		   rather than armed on the button while typing, because a flag set then
+		   is stale as soon as a box is ticked.
+		   Only once the form could actually succeed: a username and at least one
+		   business. Those are presence checks on the form's own fields, not a
+		   copy of any rule — everything else is the server's to judge, and it
+		   refuses to create before its own validations pass anyway.
+		   The sentence is the server's, already interpolated; the answer goes in
+		   a hidden field so the server has the consent too rather than trusting
+		   the browser to have asked. */
+		delegate(document, 'submit', '#grant_admin', (e, form) => {
+		  const block  = document.getElementById('entity-access-fields');
+		  const prompt = block?.dataset.createPrompt;
+		  if (!prompt) return;
+
+		  const named  = form.querySelector('#admin_username')?.value.trim();
+		  const ticked = form.querySelector('input[name="entity_ids[]"]:checked');
+		  if (!named || !ticked) return;
+
+		  if (!confirm(prompt)) {
+		    e.preventDefault();
+		    return;
+		  }
+		  const consent = document.getElementById('confirm_create');
+		  if (consent) consent.value = '1';
 		});
 		/* journal entries preference: auto-submit on tick/untick */
 		delegate(document, 'change', '#admin_show_journal_entries', (e, checkbox) => {

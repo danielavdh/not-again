@@ -40,7 +40,10 @@ class EntityPurgeService
       # free.
       counts[:receipts] = Receipt.where(entity_id: @entity.id).delete_all
 
-      # 2. Postings on this entity's accounts.
+      # 2. Postings on this entity's accounts. delete_all, so NO callbacks: in
+      # particular a severed cross-entity gift does not email the donor that it
+      # was handed back, which is right — the business is gone, nobody returned
+      # anything. Switching this to destroy_all would start sending those.
       counts[:postings] = Posting.where(id: posting_ids).delete_all
 
       # Journal entries that are now empty. In normal data every entry is
