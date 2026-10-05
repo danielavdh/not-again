@@ -210,7 +210,7 @@ module CrossEntityJournalEntries
     origin = journal_entry.cross_entity_counterpart_origin
     return false unless origin
     if accessible_journal_entries.exists?(origin.id)
-      redirect_to edit_journal_entry_path(origin)
+      redirect_to origin_edit_path(origin)
     else
       # Holds JE₂'s entity but not JE₁'s → can't do the coupled edit. Carries
       # `from`/`account_id` through, or the show page it lands on offers the
@@ -221,6 +221,27 @@ module CrossEntityJournalEntries
                   alert: t("journal_entries.cross_entity_needs_both")
     end
     true
+  end
+
+  # The form JE₁ was MADE in. A gift paid out of a bank account is a bank entry,
+  # and its own maker arriving from the other side's ledger should get that form
+  # back — not the journal-entry form, which is harder, shows a warning about an
+  # entry shape this is not, and is hidden from a non-pro everywhere else.
+  #
+  # Same question `Posting.balance_account_edit_type` answers for a ledger row,
+  # asked of the entry itself: one balance leg means it was entered against that
+  # account, and its side says which of the two forms. More than one (a transfer,
+  # an opening balance) genuinely belongs to the journal-entry form.
+  def origin_edit_path(origin)
+    balance = origin.postings.select { |p| p.account&.balance_account? }
+    return edit_journal_entry_path(origin) unless balance.one?
+
+    bank = balance.first
+    if bank.debit?
+      edit_deposit_account_path(bank.account_id, journal_entry_id: origin.id)
+    else
+      edit_withdrawal_account_path(bank.account_id, journal_entry_id: origin.id)
+    end
   end
 
   # For JE₁'s EDIT page (#4): rebuild the mirror-row band from the PERSISTED

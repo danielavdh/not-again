@@ -134,6 +134,34 @@ class LocaleCoverageTest < ActiveSupport::TestCase
     assert true
   end
 
+  # A key can resolve perfectly and still be the wrong KIND of thing. `t` given
+  # the name of a parent node hands back the Hash of its children, and the view
+  # prints that: journal_entries/edit.html.erb asked for "journal_entries.edit",
+  # whose only child is a beginner warning, and so headed the page
+  # {beginner_warning: "This is a more advanced entry..."} for as long as it has
+  # existed.
+  #
+  # The coverage test above cannot see it — the key resolves, which is all it
+  # asks. This asks what came back.
+  # A pluralised key IS a Hash — `one:`/`other:` — and `t(..., count:)` picks the
+  # branch. Those are correct; anything else with children is not.
+  PLURAL_KEYS = %i[zero one two few many other].freeze
+
+  test "no key the code renders resolves to a node instead of a string" do
+    nodes = self.class.wanted_keys.select do |key, _|
+      value = begin
+        I18n.t(key, locale: :en, fallback: false)
+      rescue StandardError
+        nil # an interpolation complaint means a String with placeholders
+      end
+      value.is_a?(Hash) && (value.keys.map(&:to_sym) - PLURAL_KEYS).any?
+    end
+
+    report = nodes.map { |key, where| "  #{key} is a node, not a string   (#{where.uniq.first})" }
+    flunk "\n#{report.join("\n")}\n" unless report.empty?
+    assert true
+  end
+
   # Keys with a SHAPE, not only a value. The two tests above ask whether a key
   # RESOLVES; these two keys resolve perfectly while being wrong, so they need
   # reading rather than looking up.

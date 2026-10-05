@@ -1,11 +1,13 @@
-<% content_for :title, t("journal_entries.edit") %>
+<% content_for :title, t(".title") %>
 <% content_for :head do %>
   <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all" %>
 <% end %>
 
 <div id="new_edit_view">
 
-    <h2><%= t("journal_entries.edit") %> (<%= @journal_entry.id %>)</h2>
+    <%# A heading of its own: "journal_entries.edit" is the NODE this page's keys
+        live under, so asking for it printed the Hash of its children. %>
+    <h2><%= t(".title") %> (<%= @journal_entry.id %>)</h2>
 
     <% if @journal_entry.errors.any? %>
     <p class="error_message"><%= @journal_entry.errors[:base].to_sentence %></p>

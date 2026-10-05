@@ -407,24 +407,38 @@ class JournalEntriesCrossEntityTest < ActionDispatch::IntegrationTest
     assert_match(/ce-mirror-row/, response.body, "mirror rows re-rendered from id-bearing params, no 500")
   end
 
-  test "editing a JE₂ redirects to JE₁'s edit (the single edit surface)" do
+  # JE₂ is edited from ONE surface: JE₁'s. And JE₁ opens in the form it was MADE
+  # in — a gift paid out of a bank account is a bank entry, so arriving from the
+  # other side's ledger gives that form back rather than the journal-entry form,
+  # which is harder, warns about an entry shape this is not, and is hidden from a
+  # non-pro everywhere else.
+  #
+  # There is no case here for the journal-entry fallback in #origin_edit_path: a
+  # gift is a 6xx nominal, and `single_balance_account_with_nominals` then allows
+  # exactly one balance leg, so an origin always has one. The fallback is the
+  # correct general answer to a question today's validations do not ask — and it
+  # is the very rule under discussion for VAT.
+  test "editing a JE₂ reopens JE₁ in the bank form it was entered from" do
     link = SecureRandom.uuid
     post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
     je1 = Posting.find_by!(cross_entity_link_id: link, account_id: accounts(:personal_drawings).id).journal_entry
     je2 = Posting.find_by!(cross_entity_link_id: link, account_id: accounts(:daughter_capital).id).journal_entry
 
     get edit_journal_entry_url(locale: :en, id: je2)
-    assert_redirected_to edit_journal_entry_url(locale: :en, id: je1)
+    # The bank leg is a credit — money out — so the withdrawal form.
+    assert_redirected_to edit_withdrawal_account_url(accounts(:bank_gbp), locale: :en,
+                                                     journal_entry_id: je1.id)
   end
 
-  test "editing a JE₂ via the BANK route (equity capital as balance acct) also redirects to JE₁" do
+  test "the BANK route into JE₂ (equity capital as balance acct) lands in the same place" do
     link = SecureRandom.uuid
     post_cross_entity(link, nominal: accounts(:daughter_expenses).id)
     je1 = Posting.find_by!(cross_entity_link_id: link, account_id: accounts(:personal_drawings).id).journal_entry
     je2 = Posting.find_by!(cross_entity_link_id: link, account_id: accounts(:daughter_capital).id).journal_entry
 
     get edit_withdrawal_account_url(accounts(:daughter_capital), locale: :en, journal_entry_id: je2.id)
-    assert_redirected_to edit_journal_entry_url(locale: :en, id: je1)
+    assert_redirected_to edit_withdrawal_account_url(accounts(:bank_gbp), locale: :en,
+                                                     journal_entry_id: je1.id)
   end
 
   # --- #7 show-page mirror + index cue ------------------------------------
