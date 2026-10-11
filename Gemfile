@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 ruby "3.4.7"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.1"
+gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 gem 'dartsass-rails' # needs to be set up with importmaps
@@ -10,7 +10,7 @@ gem 'dartsass-rails' # needs to be set up with importmaps
 # Compile pg from source: the precompiled fat gem bundles its own libpq, which
 # segfaults on connect on macOS. Built against Postgres.app locally (build.pg
 # config) and libpq-dev in the Docker build.
-gem "pg", "~> 1.6", force_ruby_platform: true
+gem "pg", "~> 1.7", force_ruby_platform: true
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 7.0.3"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -31,9 +31,9 @@ gem "rails-i18n", "~> 8.0"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
-gem "shrine", "~> 3.9"
-gem "image_processing", "~> 2.1", require: false
-gem "mini_magick", "~> 5.0"
+gem "shrine", "~> 3.10"
+gem "image_processing", "~> 2.2", require: false
+gem "mini_magick", "~> 5.4"
 gem "fastimage" 
 # ⚠️ require: "zip", not the default guess — the gem is named rubyzip but its
 # own file is lib/zip.rb, so Bundler's naive `require "rubyzip"` silently
@@ -41,12 +41,12 @@ gem "fastimage"
 # looked loaded in test because selenium-webdriver (test-only) requires "zip"
 # itself as a side effect — development and production never had it.
 gem 'rubyzip', require: "zip"
-gem "aws-sdk-s3", "~> 1.232", require: false
+gem "aws-sdk-s3", "~> 1.233", require: false
 gem 'rack-cors', require: 'rack/cors'
 gem "rack-attack"
 
 gem 'csv'
-gem 'pagy', '~> 43.6'                      
+gem 'pagy', '~> 43.7'                      
 gem 'RedCloth'
 gem "recaptcha", require: 'recaptcha/rails' 
 # Two-factor authentication
