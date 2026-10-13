@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_06_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
     t.datetime "created_at", null: false
     t.string "currency", limit: 3
     t.integer "deduction_percentage"
+    t.bigint "default_tax_code_id"
     t.text "description"
     t.boolean "locked", default: false, null: false
     t.string "name", null: false
@@ -31,12 +32,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
     t.integer "tax_position"
     t.string "tax_scheme"
     t.datetime "updated_at", null: false
+    t.integer "vat_role"
     t.index ["account_type"], name: "index_accounts_on_account_type"
     t.index ["active"], name: "index_accounts_on_active"
     t.index ["code"], name: "index_accounts_on_code", unique: true
     t.index ["currency"], name: "index_accounts_on_currency"
+    t.index ["default_tax_code_id"], name: "index_accounts_on_default_tax_code_id"
     t.index ["parent_id"], name: "index_accounts_on_parent_id"
     t.index ["tax_scheme", "tax_category_key"], name: "index_accounts_on_tax_tag"
+    t.index ["tax_scheme", "vat_role"], name: "index_accounts_on_tax_scheme_and_vat_role"
   end
 
   create_table "admin_entities", force: :cascade do |t|
@@ -215,6 +219,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
     t.integer "entry_type", null: false
     t.bigint "journal_entry_id", null: false
     t.string "reference"
+    t.bigint "tax_code_id"
+    t.bigint "tax_for_posting_id"
     t.datetime "updated_at", null: false
     t.index ["account_id", "journal_entry_id"], name: "index_postings_on_account_id_and_journal_entry_id"
     t.index ["account_id"], name: "index_postings_on_account_id"
@@ -225,6 +231,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
     t.index ["entry_type"], name: "index_postings_on_entry_type"
     t.index ["journal_entry_id"], name: "index_postings_on_journal_entry_id"
     t.index ["reference"], name: "index_postings_on_reference"
+    t.index ["tax_code_id"], name: "index_postings_on_tax_code_id"
+    t.index ["tax_for_posting_id"], name: "index_postings_on_tax_for_posting_id"
   end
 
   create_table "receipts", force: :cascade do |t|
@@ -435,6 +443,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
     t.string "country_code", limit: 2, null: false
     t.datetime "created_at", null: false
     t.string "export_column"
+    t.string "includes", default: [], null: false, array: true
     t.string "key", null: false
     t.string "keywords", default: [], array: true
     t.string "label"
@@ -446,6 +455,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
     t.datetime "updated_at", null: false
     t.index ["country_code", "scheme", "tax_year", "key"], name: "index_tax_categories_lookup", unique: true
     t.index ["country_code", "scheme", "tax_year"], name: "index_tax_categories_on_country_code_and_scheme_and_tax_year"
+  end
+
+  create_table "tax_codes", force: :cascade do |t|
+    t.string "country_code", limit: 2, null: false
+    t.datetime "created_at", null: false
+    t.string "datev_bu"
+    t.string "direction", null: false
+    t.string "key", null: false
+    t.string "label"
+    t.string "net_category_key"
+    t.integer "position", default: 0, null: false
+    t.integer "rate_bps", null: false
+    t.boolean "reverse_charge", default: false, null: false
+    t.string "reverse_tax_category_key"
+    t.string "scheme", null: false
+    t.string "tax_category_key"
+    t.datetime "updated_at", null: false
+    t.date "valid_from", null: false
+    t.date "valid_to"
+    t.index ["country_code", "scheme", "key", "valid_from"], name: "index_tax_codes_lookup", unique: true
+    t.index ["scheme", "valid_from", "valid_to"], name: "index_tax_codes_on_scheme_and_valid_from_and_valid_to"
   end
 
   create_table "taxpayers", force: :cascade do |t|
@@ -463,6 +493,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
   end
 
   add_foreign_key "accounts", "accounts", column: "parent_id"
+  add_foreign_key "accounts", "tax_codes", column: "default_tax_code_id"
   add_foreign_key "admin_entities", "admins"
   add_foreign_key "admin_entities", "entities"
   add_foreign_key "documents", "admins", column: "uploaded_by_id", on_delete: :nullify
@@ -473,6 +504,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_150100) do
   add_foreign_key "languages", "admins", column: "released_by_admin_id"
   add_foreign_key "postings", "accounts"
   add_foreign_key "postings", "journal_entries"
+  add_foreign_key "postings", "postings", column: "tax_for_posting_id", on_delete: :cascade
+  add_foreign_key "postings", "tax_codes"
   add_foreign_key "receipts", "admins", column: "uploaded_by_id"
   add_foreign_key "receipts", "entities"
   add_foreign_key "receipts", "postings"

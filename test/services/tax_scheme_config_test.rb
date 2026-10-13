@@ -10,7 +10,7 @@ class TaxSchemeConfigTest < ActiveSupport::TestCase
   end
 
   test "schemes are grouped by country and ordered by their position header" do
-    assert_equal %w[gb_self_employment gb_property], TaxSchemeConfig.schemes_for("gb")
+    assert_equal %w[gb_self_employment gb_property gb_vat], TaxSchemeConfig.schemes_for("gb")
     assert_equal %w[de_euer de_vermietung],             TaxSchemeConfig.schemes_for("de")
     assert_equal %w[ch_selbst],                      TaxSchemeConfig.schemes_for("ch")
   end
@@ -84,7 +84,7 @@ class TaxSchemeConfigTest < ActiveSupport::TestCase
   end
 
   test "all_schemes lists every scheme, country then declared position" do
-    assert_equal %w[ch_selbst de_euer de_vermietung gb_self_employment gb_property nl_winst],
+    assert_equal %w[ch_selbst de_euer de_vermietung gb_self_employment gb_property gb_vat nl_winst],
                  TaxSchemeConfig.all_schemes
   end
 

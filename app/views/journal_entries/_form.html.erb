@@ -10,15 +10,26 @@
 
   <h2><%= t("page.postings") %></h2>
 
-  <table class="postings-table" id="postings-table">
+  <%# with-vat: there is a VAT column to make room for. Only set when the
+      business actually files VAT, so a business that does not keeps the wider
+      account and description columns. %>
+  <table class="<%= class_names("postings-table", "with-vat" => @tax_code_options.present?) %>"
+         id="postings-table">
     <thead>
       <tr>
         <th class="account"><%= t("jargon.account") %></th>
         <th class="currency"></th>
         <th class="type"><%= t("attrs.type") %></th>
         <th class="right amount"><%= t("attrs.amount") %></th>
-        <th class="desc no-phone"><%= t("attrs.description") %></th>
-        <th class="ref no-phone"><%= t("attrs.reference") %></th>
+        <%# Abbreviated at every width, not only where the columns are tight:
+            this form has nine columns and a pro reading it knows what Desc and
+            Ref are. The bank forms keep the full words — fewer columns, and
+            their readers are not bookkeepers. %>
+        <th class="desc no-phone"><%= t("attrs.description_short") %></th>
+        <th class="ref no-phone"><%= t("attrs.reference_short") %></th>
+        <% if @tax_code_options.present? %>
+          <th class="tax-col"><%= t("tax.vat.code") %></th>
+        <% end %>
         <th class="receipt no-phone" title="<%= t("crud.receipt") %>">
 			<span>
 				<svg class="stroke s30"><use xlink:href='#receipt'></use></svg>
@@ -80,7 +91,10 @@
 		          data-deduction-pct="<%= html_attrs&.dig('data-deduction-pct') %>"
 		          data-entity="<%= html_attrs&.dig('data-entity') %>"
 		          data-group="<%= html_attrs&.dig('data-group') %>"
-		          data-type="<%= html_attrs&.dig('data-type') %>"><%= label %></option>
+		          data-type="<%= html_attrs&.dig('data-type') %>"
+		          data-default-tax-code="<%= html_attrs&.dig('data-default-tax-code') %>"
+		          data-files-vat="<%= html_attrs&.dig('data-files-vat') %>"
+		          data-save-tax-code-url="<%= html_attrs&.dig('data-save-tax-code-url') %>"><%= label %></option>
 		<% end %>
       </select>
     </td>
@@ -89,8 +103,9 @@
     </td>
     <td class="input-cell entry_type">
       <select name="journal_entry[postings_attributes][NEW_INDEX][entry_type]" aria-label="<%= t('attrs.type') %>">
-        <option value="debit"><%= t("jargon.debit") %></option>
-        <option value="credit"><%= t("jargon.credit") %></option>
+        <%# Short forms — keep in step with _posting_fields. %>
+        <option value="debit"><%= t("jargon.debit_short") %></option>
+        <option value="credit"><%= t("jargon.credit_short") %></option>
       </select>
     </td>
     <td class="input-cell right">
@@ -118,6 +133,10 @@
              aria-label="<%= t('attrs.reference') %>"
              placeholder='<%= t("attrs.posting_placeholder") %>'>
     </td>
+    <%# After reference — keep in step with _posting_fields. %>
+    <% if @tax_code_options.present? %>
+      <%= render "journal_entries/tax_code_template_cell" %>
+    <% end %>
 	<td class="posting-receipt no-phone">
 	  <div class="receipt-posting-widget" data-posting-id="">
 	    <button type="button"

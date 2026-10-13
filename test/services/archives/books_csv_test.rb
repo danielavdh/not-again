@@ -12,7 +12,8 @@ class Archives::BooksCsvTest < ActiveSupport::TestCase
     csv = Archives::BooksCsv.new(scope_key: scope_of(entity), year: Date.current.year).generate
     rows = CSV.parse(csv, col_sep: ",", headers: true)
 
-    assert_equal %w[EntryID Date Entity AccountCode AccountName DebitMinor CreditMinor Currency Memo JournalReference], rows.headers
+    assert_equal %w[EntryID Date Entity AccountCode AccountName DebitMinor CreditMinor Currency
+                    Memo JournalReference TaxCode DerivedVat], rows.headers
 
     bank_debit = rows.find { |r| r["AccountCode"] == accounts(:bank_gbp).code && r["DebitMinor"] == "10000" }
     assert bank_debit, "the posted deposit's debit leg should appear, got: #{rows.map(&:to_h)}"

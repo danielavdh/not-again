@@ -1,0 +1,39 @@
+<%# The same cell for the <template> new rows are cloned from — plain markup
+    with NEW_INDEX, which the JS substitutes. Keep in step with _tax_code_cell. %>
+<td class="tax-col">
+  <div class="tax-fields">
+    <select name="journal_entry[postings_attributes][NEW_INDEX][tax_code_id]"
+            class="form-select posting-tax-code"
+            data-tax-code-field="true"
+            data-tomselect="true"
+            data-tomselect-placeholder="<%= @tax_code_blank_label %>"
+            data-tomselect-sort="order"
+            aria-label="<%= t('tax.vat.code') %>">
+      <option value=""><%= @tax_code_blank_label %></option>
+      <% @tax_code_options.each do |group_label, options| %>
+        <optgroup label="<%= group_label %>">
+          <% options.each do |label, id, html_attrs| %>
+            <option value="<%= id %>"
+                    data-rate-bps="<%= html_attrs&.dig(:data, :rate_bps) %>"
+                    data-reverse-charge="<%= html_attrs&.dig(:data, :reverse_charge) %>"><%= label %></option>
+          <% end %>
+        </optgroup>
+      <% end %>
+    </select>
+
+    <div class="tax-figures hidden">
+      <div class="tax-amount">
+        <label for="tax_amount_NEW_INDEX"><%= t("tax.vat.amount") %></label>
+        <input type="text"
+               id="tax_amount_NEW_INDEX"
+               name="journal_entry[postings_attributes][NEW_INDEX][tax_amount_display]"
+               inputmode="decimal"
+               class="posting-tax-amount right"
+               aria-label="<%= t('tax.vat.amount') %>"
+               data-tax-amount-field="true">
+      </div>
+      <span class="posting-tax-net" data-tax-net
+            data-net-label="<%= t('tax.vat.net') %>"></span>
+    </div>
+  </div>
+</td>

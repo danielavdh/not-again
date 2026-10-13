@@ -130,7 +130,10 @@ class TaxExportJob < ApplicationJob
       .where(account_id: report.accounts.pluck(:id))
       .where(journal_entries: { posted: true, entry_date: report.start_date..report.end_date })
       .where("journal_entries.closing_entry IS NOT TRUE")
-      .includes(:account, :receipts, journal_entry: { postings: :account })
+      # tax_legs and tax_code are what the DATEV row's gross amount and
+      # BU-Schlüssel are read from — without them that is a query per row.
+      .includes(:account, :receipts, :tax_code, :tax_legs,
+                journal_entry: { postings: :account })
       .order("journal_entries.entry_date")
   end
 

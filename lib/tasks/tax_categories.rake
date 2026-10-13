@@ -9,13 +9,17 @@ namespace :tax_categories do
     files = Dir.glob(dir.join('*.yml')).sort
     abort "No YAML files in #{dir}" if files.empty?
 
-    total = 0
+    categories = 0
+    codes      = 0
     files.each do |path|
-      count = TaxCategoryLoader.call(path)
-      puts "  #{File.basename(path)}: #{count} categories"
-      total += count
+      result = TaxCategoryLoader.call(path)
+      line = "  #{File.basename(path)}: #{result.categories} categories"
+      line << ", #{result.codes} tax codes" if result.codes.positive?
+      puts line
+      categories += result.categories
+      codes      += result.codes
     end
-    puts "Loaded #{total} categories from #{files.size} files."
+    puts "Loaded #{categories} categories and #{codes} tax codes from #{files.size} files."
   end
 
   desc "Preview tax category suggestions for an entity (never saves — confirm via dashboard)"

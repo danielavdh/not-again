@@ -162,6 +162,89 @@ Labels are never translated, deliberately. A box has one name — the one printe
 
 **Accounts vs tax categories.** Where the form puts several kinds of cost in one box, that is one category with several accounts pointing at it — Grundsteuer, Hausversicherung and Hausgeld are all Kennzahl 52. Where the *API* is finer than the paper, follow the API, because that is what actually gets filed: SA103F box 24 is one box, but HMRC wants advertising and business entertainment as separate fields, so you have to add two categories (two rows in the yml files, and 2 accounts in your books) sharing a box number.
 
+### A VAT scheme: the `tax_codes:` section
+
+A VAT return is an ordinary scheme file — its `categories:` are the boxes of the
+return — plus two header lines and one extra section.
+
+```yaml
+kind: vat             # its boxes are filled from posting codes, not account tags
+vat_accounts: nominal # OPTIONAL: VAT belongs in the P&L, not on the balance sheet
+                      # (German EÜR). Omit for a balance-sheet control account.
+```
+
+`kind: vat` is what keeps the boxes of a VAT return out of the account-tagging
+dropdown. Tagging the phone-bill account "VAT due on sales" would be nonsense
+the app then reported as fact.
+
+Then the codes a posting may carry:
+
+```yaml
+tax_codes:
+  - key: purchase_standard
+    label: "Purchase, standard rate"
+    rate_bps: 2000                            # basis points: 2000 is 20%
+    direction: input                          # input = we paid it; output = we charged it
+    valid_from: "2011-01-04"                  # quoted — bare dates do not load
+    valid_to: "2030-12-31"                    # optional; omit while it is current
+    net_category_key: total_purchases_ex_vat  # the box the NET goes in
+    tax_category_key: vat_reclaimed           # the box the TAX goes in
+    datev_bu: "9"                             # optional, German accountants' import
+    position: 110
+```
+
+Four things worth knowing:
+
+**Versioned by DATE, not by tax year.** A rate changes on a date: German VAT fell
+19→16 on 1 July 2020, so one tax year held two rates. A rate change is a **second
+row** with the same `key` and a later `valid_from` — and give the old row a
+`valid_to`. Because of this, `tax_codes:` may appear in **one file per scheme**
+only; two year files declaring them would prune each other on load, and the
+loader says so.
+
+**Two box fields, because a rate cannot say which box.** A domestic zero-rated
+supply and an export are both 0% and belong on different lines of the return. A
+code with no box at all is legitimate too — "outside the scope of VAT" is a
+decision worth recording even though it reaches no box.
+
+**A box that totals other boxes says so itself.** HMRC's box 6 includes the
+dispatches already reported in box 8, box 7 the acquisitions in box 9, and box 3
+the VAT in boxes 1 and 2. Declare that on the box, in `categories:`:
+
+```yaml
+  - key: total_purchases_ex_vat
+    label: "Total value of purchases and all other inputs excluding any VAT"
+    export_column: "7"
+    includes: [ total_acquisitions_ni ]
+```
+
+It goes on the **box**, not on each code, because it is a fact about the form —
+so a code added later that feeds box 9 reaches box 7 with nobody having to
+remember. Nest as deep as the form does; the loader refuses an `includes` naming
+a box that is not in the file, and a figure in an included box is deliberately
+counted twice, once in its own line and once in the total above it.
+
+**`reverse_charge: true`** makes one code produce two legs — you owe the VAT and
+reclaim it in the same breath. Those go in two different boxes, so such a code
+also needs `reverse_tax_category_key`: `tax_category_key` is the box for the
+code's own direction, and that one is the box for the opposite leg. The UK puts
+the output half in box 1 and the input half in box 4.
+
+**Box keys are checked against the file's own categories.** A typo there would
+fail nowhere — the figure would simply never reach the return, for every user of
+the scheme, silently. The loader refuses it instead.
+
+Removing a code from the file deletes it, like a category — unless postings use
+it, and then the load **refuses**. A code with postings is history: end its
+validity with `valid_to` instead.
+
+**Do not offer a choice the return cannot see.** Two codes that reach the same
+boxes at the same rate ask the user a question with no consequence, and put two
+near-identical lines in one dropdown. GB shipped separate reverse-charge codes
+for services-from-abroad and for construction before anyone noticed they were
+identical in every box; they are one code now. An EU acquisition into Northern
+Ireland stays separate because it genuinely reaches boxes 9 and 2.
+
 ### Provenance, and watching for changes
 
 A catalogue is a **transcription of a real document**, so it records which one:

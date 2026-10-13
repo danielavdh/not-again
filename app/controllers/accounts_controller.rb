@@ -2,9 +2,10 @@
 
 class AccountsController < BaseController
   include CrossEntityJournalEntries
+  include TaxLegDerivation
   before_action :set_account, only: [
     :show, :edit, :update, :destroy, :ledger, :balance_at,
-    :quick_map_tax, :save_deduction_percentage,
+    :quick_map_tax, :save_deduction_percentage, :save_default_tax_code,
     :new_deposit, :create_deposit, :edit_deposit, :update_deposit, :copy_deposit,
     :new_withdrawal, :create_withdrawal, :edit_withdrawal, :update_withdrawal, :copy_withdrawal,
     :new_transfer, :create_transfer, :edit_transfer, :update_transfer, :copy_transfer]
@@ -14,6 +15,7 @@ class AccountsController < BaseController
   # points at — including a transfer's far end and a cross-entity leg.
   WRITE_ACTIONS = [
     :edit, :update, :destroy, :quick_map_tax, :save_deduction_percentage,
+    :save_default_tax_code,
     :new_deposit, :create_deposit, :edit_deposit, :update_deposit, :copy_deposit,
     :new_withdrawal, :create_withdrawal, :edit_withdrawal, :update_withdrawal, :copy_withdrawal,
     :new_transfer, :create_transfer, :edit_transfer, :update_transfer, :copy_transfer
@@ -84,7 +86,7 @@ class AccountsController < BaseController
     @account = Account.new(account_params)
     # The model re-checks this (Account#entity_code_matches_creator), so a
     # controller that forgets cannot open the door again.
-    @account.creating_admin = current_admin
+    @account.acting_admin = current_admin
     ok = @account.save
 
     if ok
@@ -111,6 +113,10 @@ class AccountsController < BaseController
 
   def update
     explode_tax_combined!
+    # require_writable_account has cleared where the account IS. The code being
+    # submitted says where it is GOING — digits 2 and 3 are the entity — and
+    # that has to be a business this admin runs too.
+    @account.acting_admin = current_admin
     if @account.update(account_params)
       redirect_to accounts_path, notice: t("accounts.updated")
     else
@@ -180,7 +186,7 @@ class AccountsController < BaseController
     end
   end
   def edit_deposit
-    @journal_entry = accessible_journal_entries.includes(postings: :receipts).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
     return if redirect_cross_entity_counterpart_to_origin(@journal_entry) # JE₂ → JE₁'s edit
     @entry_type = 'deposit'
     load_form_data(account_types: [:income, :expense, :personal])
@@ -189,8 +195,9 @@ class AccountsController < BaseController
   end
   def update_deposit
     @entry_type = 'deposit'
-    @journal_entry = accessible_journal_entries.includes(postings: :receipts).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
     @journal_entry.assign_attributes(bank_entry_params)
+    derive_tax_legs_for(@journal_entry)
     recalculate_bank_posting
 
     if entry_emptied?(@journal_entry, balance_account_id: @account.id)
@@ -199,7 +206,7 @@ class AccountsController < BaseController
     end
     if save_with_cross_entity_entries(@journal_entry)
       base   = t("accounts.#{@account.equity? ? 'drawing_updated' : 'deposit_updated'}")
-      notice = [base, refresh_affected_closing_entry(@journal_entry)].compact.join(" ")
+      notice = [base, refresh_affected_closing_entry(@journal_entry), vat_accounts_notice].compact.join(" ")
       redirect_or_close_popup ledger_account_path(@account), notice: notice
     else
       load_form_data(account_types: [:income, :expense, :personal])
@@ -217,11 +224,15 @@ class AccountsController < BaseController
     )
     pair_id_map = {}
     copy = build_cross_entity_copy(original) # fresh links + JE₂′ mirror (#8)
-    original.postings.where.not(account_id: @account.id).each do |p|
+    original.postings.not_tax_legs.where.not(account_id: @account.id)
+            .includes(:tax_legs, :tax_code).each do |p|
       @journal_entry.postings.build(
         account_id: p.account_id,
         entry_type: p.entry_type,
-        amount: p.amount,
+        # The gross as typed; the legs are re-derived at the copy's own date, so
+        # a copy into a new rate period gets the new rate.
+        amount: p.gross_amount,
+        tax_code_id: p.tax_code_id,
         currency: p.currency,
         description: p.description,
         reference: p.reference,
@@ -267,7 +278,7 @@ class AccountsController < BaseController
     end
   end
   def edit_withdrawal
-    @journal_entry = accessible_journal_entries.includes(postings: :receipts).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
     return if redirect_cross_entity_counterpart_to_origin(@journal_entry) # JE₂ → JE₁'s edit
     @entry_type = 'withdrawal'
     load_form_data(account_types: [:income, :expense, :personal])
@@ -276,9 +287,10 @@ class AccountsController < BaseController
   end
   def update_withdrawal
     @entry_type = 'withdrawal'
-    @journal_entry = accessible_journal_entries.includes(postings: :receipts).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
     
     @journal_entry.assign_attributes(bank_entry_params)
+    derive_tax_legs_for(@journal_entry)
     recalculate_bank_posting
 
     if entry_emptied?(@journal_entry, balance_account_id: @account.id)
@@ -287,7 +299,7 @@ class AccountsController < BaseController
     end
     if save_with_cross_entity_entries(@journal_entry)
       base   = t("accounts.#{@account.equity? ? 'contribution_updated' : 'withdrawal_updated'}")
-      notice = [base, refresh_affected_closing_entry(@journal_entry)].compact.join(" ")
+      notice = [base, refresh_affected_closing_entry(@journal_entry), vat_accounts_notice].compact.join(" ")
       redirect_or_close_popup ledger_account_path(@account), notice: notice
     else
       load_form_data(account_types: [:income, :expense, :personal])
@@ -305,11 +317,15 @@ class AccountsController < BaseController
     )
     pair_id_map = {}
     copy = build_cross_entity_copy(original) # fresh links + JE₂′ mirror (#8)
-    original.postings.where.not(account_id: @account.id).each do |p|
+    original.postings.not_tax_legs.where.not(account_id: @account.id)
+            .includes(:tax_legs, :tax_code).each do |p|
       @journal_entry.postings.build(
         account_id: p.account_id,
         entry_type: p.entry_type,
-        amount: p.amount,
+        # The gross as typed; the legs are re-derived at the copy's own date, so
+        # a copy into a new rate period gets the new rate.
+        amount: p.gross_amount,
+        tax_code_id: p.tax_code_id,
         currency: p.currency,
         description: p.description,
         reference: p.reference,
@@ -481,6 +497,29 @@ class AccountsController < BaseController
       render json: { ok: true }
     else
       render json: { error: 'invalid' }, status: :unprocessable_entity
+    end
+  end
+
+  # Prefilled on this account's next row, last-used-wins. A convenience: the
+  # posting's own tax_code_id is what the books are built from. A blank is a
+  # real instruction — it stops the app assuming a code here.
+  def save_default_tax_code
+    id = params[:default_tax_code_id].presence
+
+    # A default the account could never use is worse than none: it is offered on
+    # every new row. A private 6xx account remembered a purchase code this way
+    # and handed it to the private half of every split.
+    if id.present?
+      code = TaxCode.find_by(id: id)
+      unless code && usable_default_tax_code?(code)
+        return render json: { error: "unusable" }, status: :unprocessable_entity
+      end
+    end
+
+    if @account.update(default_tax_code_id: id)
+      render json: { ok: true }
+    else
+      render json: { error: "invalid" }, status: :unprocessable_entity
     end
   end
 
@@ -694,6 +733,14 @@ private
     date&.strftime('%Y-%m-%d')
   end    
 
+  # The same rule a POSTING's code has to satisfy — Account#tax_code_problem,
+  # which the entry's validation also asks.
+  def usable_default_tax_code?(code)
+    entity   = Entity.find_by(code: @account.entity_code)
+    schemes, = TaxSchemeConfig.vat_schemes(Array(entity&.tax_schemes))
+    @account.tax_code_problem(code, filed_schemes: schemes).nil?
+  end
+
   def load_tax_category_options
     @tax_category_options = []
     return unless @account&.tax_taggable?
@@ -775,6 +822,9 @@ private
     # Discard any bank account postings that came through form params on re-
     # submit after failure
     @journal_entry.postings.select { |p| p.account_id == @account.id }.each(&:mark_for_destruction)
+
+    # Before the sum below, never after: the bank leg has to come to the GROSS.
+    derive_tax_legs_for(@journal_entry)
 
     # Calculate net balance from counter account postings
     default_currency = @account.currency# || 'GBP'

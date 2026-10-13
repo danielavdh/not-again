@@ -23,7 +23,9 @@
   </h2>
   
   <%# The fixed bank's group/entity/currency — the cross-entity trigger compares a selected account against these. %>
-  <table class="bank-postings-table" id="bank-postings-table"
+  <%# with-vat: see journal_entries/_form. %>
+  <table class="<%= class_names("bank-postings-table", "with-vat" => @tax_code_options.present?) %>"
+         id="bank-postings-table"
          data-home-group="<%= @home_group_key %>"
          data-home-entity="<%= account.entity_code %>"
          data-bank-currency="<%= account.currency %>">
@@ -34,6 +36,9 @@
         <th class="amount"><%= t("attrs.amount") %></th>
         <th class="desc"><%= t("attrs.description") %></th>
         <th class="ref no-phone"><%= t("attrs.reference") %></th>
+        <% if @tax_code_options.present? %>
+          <th class="tax-col"><%= t("tax.vat.code") %></th>
+        <% end %>
         <th class="receipt no-phone" title="<%= t("crud.receipt") %>">
 			<span>
 				<svg class="stroke s30"><use xlink:href='#receipt'></use></svg>
@@ -77,7 +82,8 @@
 			id="balance-amount" 
 			data-balance-row>—
 		</td>
-		<td colspan="4"></td>
+		<%# The VAT column now follows the amount, so it is one more cell to span. %>
+		<td colspan="<%= @tax_code_options.present? ? 5 : 4 %>"></td>
       </tr>
     </tfoot>
   </table>
@@ -121,7 +127,10 @@
 		          data-deduction-pct="<%= html_attrs&.dig('data-deduction-pct') %>"
 		          data-entity="<%= html_attrs&.dig('data-entity') %>"
 		          data-group="<%= html_attrs&.dig('data-group') %>"
-		          data-type="<%= html_attrs&.dig('data-type') %>"><%= label %></option>
+		          data-type="<%= html_attrs&.dig('data-type') %>"
+		          data-default-tax-code="<%= html_attrs&.dig('data-default-tax-code') %>"
+		          data-files-vat="<%= html_attrs&.dig('data-files-vat') %>"
+		          data-save-tax-code-url="<%= html_attrs&.dig('data-save-tax-code-url') %>"><%= label %></option>
 		<% end %>
       </select>
     </td>
@@ -161,6 +170,10 @@
       <input type="text" 
              name="journal_entry[postings_attributes][NEW_INDEX][reference]" aria-label="<%= t('attrs.reference') %>">
     </td>
+    <%# After reference — keep in step with _bank_posting_fields. %>
+    <% if @tax_code_options.present? %>
+      <%= render "journal_entries/tax_code_template_cell" %>
+    <% end %>
 	<td class="posting-receipt no-phone">
 	  <div class="receipt-posting-widget" data-posting-id="">
 	    <button type="button"

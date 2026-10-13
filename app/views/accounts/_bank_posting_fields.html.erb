@@ -1,4 +1,9 @@
-<% if pf.object.account_id == account_id %>
+<%# A derived VAT leg is not a row the user owns: it is computed from the net
+    row's code, and the account select here offers income/expense/personal only,
+    so it rendered with nothing selected. Nothing is emitted for it at all, so
+    no params come back and derive_tax_legs reconciles it from the database. %>
+<% if pf.object.tax_leg? %>
+<% elsif pf.object.account_id == account_id %>
 	<%# Bank posting: render as hidden fields only, no visible row %>
 	<tr class="posting-row hidden">
 	  <%= pf.hidden_field :id %>
@@ -50,12 +55,18 @@
 	                  data: { amount_field: true } %>
 	    <span class="error_message"><%= pf.object.errors[:amount_display].to_sentence %></span>
 	  </td>
+
 	  <td class="input-cell">
 	    <%= pf.text_field :description, aria: { label: t("attrs.description") } %>
 	  </td>
 	  <td class="input-cell no-phone">
 	    <%= pf.text_field :reference, aria: { label: t("attrs.reference") } %>
 	  </td>
+
+	  <%# After reference — see journal_entries/_posting_fields. %>
+	  <% if @tax_code_options.present? %>
+	    <%= render "journal_entries/tax_code_cell", pf: pf %>
+	  <% end %>
   	  <td class="posting-receipt no-phone">
 		<%= render partial: 'receipts/posting_receipt_widget',
 		           locals: { pf: pf } %>

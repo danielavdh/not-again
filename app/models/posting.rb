@@ -10,6 +10,18 @@ class Posting < ApplicationRecord
              foreign_key: :journal_entry_id
   belongs_to :account, class_name: 'Account', 
              foreign_key: :account_id
+  # Carried by the NET posting.
+  belongs_to :tax_code, optional: true
+  # Set only on a DERIVED leg, pointing at the net posting it came from. Never
+  # permitted from a form: one typed by hand would sit in the control account
+  # without reaching the return.
+  belongs_to :tax_for_posting, class_name: 'Posting', optional: true
+  # One, or two for a reverse charge. The database cascade covers the paths that
+  # bypass callbacks.
+  has_many :tax_legs, class_name: 'Posting',
+           foreign_key: :tax_for_posting_id,
+           inverse_of: :tax_for_posting,
+           dependent: :destroy
 
   has_many :receipts, class_name: "Receipt", 
            foreign_key: :posting_id, 
@@ -35,12 +47,50 @@ class Posting < ApplicationRecord
   before_destroy :handle_cross_entity_link_on_destroy
   after_create :link_existing_receipt, if: -> { existing_receipt_id.present? }
 
+  # Derived, as against typed. Matters to the balance-account rule, to ledger
+  # routing, and to the DATEV export.
+  # The in-memory link as well as the column: a newly built leg has no foreign
+  # key yet, and validation runs before the save. Reads the association's target
+  # rather than the reader, so it never queries.
+  def tax_leg?
+    tax_for_posting_id.present? || association(:tax_for_posting).target.present?
+  end
+
+  # What the row is worth on the statement: net plus its derived VAT. The amount
+  # itself for an uncoded row, and for a reverse charge, where the legs cancel.
+  # What the form shows and what a copy carries.
+  def gross_amount
+    return amount if amount.nil? || tax_code_id.blank?
+    return amount if tax_code&.reverse_charge?
+    amount + tax_legs.reject(&:marked_for_destruction?).sum { |leg| leg.amount.to_i }
+  end
+
+  # Nil when there is no code, so the field renders empty and hidden.
+  def vat_display_formatted(locale: I18n.locale)
+    return nil if tax_code_id.blank?
+    total = tax_legs.reject(&:marked_for_destruction?).sum { |leg| leg.amount.to_i }
+    return nil if total.zero?
+    CurrencyConfig.format_display(total / 100.0, locale: locale)
+  end
+
+  def tax_amount_from_form
+    return nil if tax_amount_display.nil? || tax_amount_display.to_s.strip.empty?
+    CurrencyConfig.parse_to_cents(tax_amount_display)
+  end
+
+  scope :tax_legs,     -> { where.not(tax_for_posting_id: nil) }
+  scope :not_tax_legs, -> { where(tax_for_posting_id: nil) }
   scope :by_currency, ->(curr) { where(currency: curr) }
   scope :for_account, ->(account_id) { where(account_id: account_id) }
   scope :debit, -> { where(entry_type: :debit) }
   scope :credit, -> { where(entry_type: :credit) }
   
   attr_accessor :amount_display, :existing_receipt_id
+  # The user's own VAT figure, where an invoice rounded differently from us.
+  attr_accessor :tax_amount_display
+  # Derivation rewrites `amount` from gross to net, so without this a second
+  # pass over the same object would take the VAT off twice.
+  attr_accessor :gross_for_tax
 
   # One row of a ledger page. The query plucks columns rather than loading
   # Posting objects, and the Struct names them; it is still indexable by
@@ -99,9 +149,20 @@ class Posting < ApplicationRecord
 
     counter_scope = where(journal_entry_id: journal_entry_ids)
                       .where.not(account_id: account.id)
+                      # A derived VAT leg is not a counter account anywhere. On
+                      # a bank ledger it would be a second balance counter and
+                      # turn an ordinary withdrawal into "Journal Entry"; on a
+                      # nominal ledger it would be a second balance counter and
+                      # break the edit link to the form the entry was made in.
+                      .not_tax_legs
                       .joins(:account)
 
-    if account.income? || account.expense? || account.personal?
+    # A VAT control account's ledger reads like a nominal one: the entry was
+    # made from the bank's side, and the row's one balance counter IS that
+    # bank, so the edit link opens the form the entry was typed in. Without
+    # this filter the counters are bank AND expense, and the link would offer
+    # the VAT account itself as the bank.
+    if account.income? || account.expense? || account.personal? || account.vat_role?
       counter_scope = counter_scope.where(accounts: { account_type: [:asset, :liability, :equity] })
     end
 
@@ -158,16 +219,20 @@ class Posting < ApplicationRecord
     ledger_data_from_scope(scope, account)
   end
 
+  # The amount FIELD means the GROSS, both ways: the stored amount of a coded
+  # row is the net, but the user types what the statement says and
+  # derive_tax_legs splits it. Only the posting forms and the cross-entity modal
+  # read these — no ledger or report does.
   def amount_display=(value)
     self.amount = CurrencyConfig.parse_to_cents(value)
   end
   def amount_display
     return nil if amount.nil?
-    amount / 100.0
+    gross_amount / 100.0
   end    
   def amount_display_for(expected_type)
     return nil if amount.nil? || amount == 0
-    val = amount / 100.0
+    val = gross_amount / 100.0
     if entry_type == expected_type
       val.abs
     else

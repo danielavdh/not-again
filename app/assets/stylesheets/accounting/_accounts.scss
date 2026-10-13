@@ -17,6 +17,9 @@ body{
 /************** DIV.backend_table (Index, Show) ****************/
 /***************************************************************/
 			.backend_table{
+				h2 span{
+				color: inherit;
+				}
 				.controls {
 				position: sticky;
 				top: 10vw;
@@ -479,8 +482,8 @@ body{
 				column-rule: 0.2vw solid var(--green-l25);
 				margin: 2vw 0 1vw;
 				padding: 1vw;
-			    background-color: var(--green-l5);
-			    border: 0.2vw solid var(--green-l15);
+				background-color: var(--green-l5);
+				border: 0.2vw solid var(--green-l15);
 					li{
 					color: var(--light);
 					break-inside: avoid;
@@ -514,60 +517,60 @@ body{
 					gap: 2vw;
 					flex-direction: row;
 						.selected-accounts, .available-accounts {
-				    	flex: 1;
+						flex: 1;
 						min-width: 0;
-				    	background-color: var(--green-l5);
-				    	padding: 1vw;
-				    	border: 0.2vw solid var(--green-l15);
-				    		h4 {
-				    		margin: 0 0 1vw;
-				    		font-size: 0.9em; //TODO em or rem?
-				    		}
+						background-color: var(--green-l5);
+						padding: 1vw;
+						border: 0.2vw solid var(--green-l15);
+							h4 {
+							margin: 0 0 1vw;
+							font-size: 0.9em; //TODO em or rem?
+							}
 							p.hint{
 							font-size: 0.85rem;
 							margin-bottom: 1vw;
 							color: black;
 							}
-					  		.sortable-list, .tax-assigned, .tax-unassigned {
-					    	list-style: none;
-					    	padding: 0;
-					    	margin: 0;
-					    	min-height: 10vw;
-					    		li {
-					    		display: flex;
-					    		align-items: center;
-					    		gap: 0.5vw;
-					    		padding: 0.5vw;
-					    		margin: 0.25vw 0;
-					    		background-color: var(--green-l15);
-					    		cursor: grab;
-					    	  		&.dragging {
-					    	    	opacity: 0.5;
-					    	  		}
-					    		}
+							.sortable-list, .tax-assigned, .tax-unassigned {
+							list-style: none;
+							padding: 0;
+							margin: 0;
+							min-height: 10vw;
+								li {
+								display: flex;
+								align-items: center;
+								gap: 0.5vw;
+								padding: 0.5vw;
+								margin: 0.25vw 0;
+								background-color: var(--green-l15);
+								cursor: grab;
+									&.dragging {
+									opacity: 0.5;
+									}
+								}
 								.drag-handle {
-					    		cursor: grab;
-					    		color: var(--green-l40);
-					    		}
-					    		.account-code {
-					    		font-family: monospace;
-					    		font-size: 0.85em;
-					    		}
-					    		.account-name {
-					    		flex: 1;
-					    		font-size: 0.85em;
-					    		}
-					    		.remove-account {
-					    		background: none;
-					    		border: none;
-					    		color: #cc3333;
-					    		cursor: pointer;
-					    		font-size: 1.2em;
-					    		padding: 0 0.5vw;
+								cursor: grab;
+								color: var(--green-l40);
+								}
+								.account-code {
+								font-family: monospace;
+								font-size: 0.85em;
+								}
+								.account-name {
+								flex: 1;
+								font-size: 0.85em;
+								}
+								.remove-account {
+								background: none;
+								border: none;
+								color: #cc3333;
+								cursor: pointer;
+								font-size: 1.2em;
+								padding: 0 0.5vw;
 									&:hover {
-					    		    color: #ff3333;
-					    			}
-					    		}
+								    color: #ff3333;
+									}
+								}
 							}
 							.tax-assigned, .tax-unassigned{
 								li{
@@ -579,23 +582,23 @@ body{
 									min-width: 0;
 									}
 									.add-account {
-							        background: none;
-							        border: 0.1vw solid var(--be-link);
-							        color: var(--be-link);
-							        cursor: pointer;
-							        padding: 0 0.4vw;
+									background: none;
+									border: 0.1vw solid var(--be-link);
+									color: var(--be-link);
+									cursor: pointer;
+									padding: 0 0.4vw;
 									margin-inline-end: 0.5vw;
-							        font-size: 0.9em; 
-							        	&:hover:not([disabled]) {
-							        	background-color: var(--be-link);
-							          	color: var(--be-link);
-							        	}
+									font-size: 0.9em; 
+										&:hover:not([disabled]) {
+										background-color: var(--be-link);
+										color: var(--be-link);
+										}
 										&[disabled] {
-							          	border-color: var(--green-l30);
-							        	color: var(--green-l30);
-							        	cursor: default;
-							        	}
-							      	}
+										border-color: var(--green-l30);
+										color: var(--green-l30);
+										cursor: default;
+										}
+									}
 									p.tax-note{
 									font-size: 0.8rem;
 									color: var(--accent-l20);
@@ -935,6 +938,13 @@ body{
 					height: auto;
 					}
 				}
+			}
+			.vat_return{
+				.controls .date-filter form{
+				justify-content: flex-start;
+				}
+				h3{color: var(--light); margin: 1vw 0;}
+				p{color: var(--light);}
 			}
 /***************************************************************/
 /*********** DIV#new_edit_view .form_xxx (new, edit) ***********/
@@ -1294,8 +1304,8 @@ body{
 								&:hover { 
 								background: var(--green); 
 								color: white; 
-								}                                            
-							} 
+								}
+							}
 							.split-btn:disabled { 
 							background-color: var(--green-l22); 
 							} 
@@ -1306,6 +1316,43 @@ body{
 							color: var(--dark);
 							background-color: var(--light);
 							border: none;
+							}
+						}
+						td.tax-col{
+							.ts-wrapper .ts-control{
+							font-size: 0.8rem;
+							color: var(--green);
+							}
+							.tax-figures{
+							display: flex;
+							flex-wrap: nowrap;
+							justify-content: space-between;
+							align-items: center;
+							padding: 0 0.5vw;
+							font-size: 0.75rem;
+							&.hidden { display: none; }
+								.tax-amount{
+								display: flex;
+								align-items: center;
+								flex: 1 1 0;
+								min-width: 0;
+								gap: 0.5vw;
+									label {
+									flex: 0 0 auto; 
+									white-space: nowrap; 
+									}
+									input.posting-tax-amount{
+									width: 100%;
+									min-width: 0;
+									font-size: 0.75rem;
+									}
+								}
+								.posting-tax-net{
+								flex: 0 0 auto;
+								white-space: nowrap;
+								overflow: hidden;
+								text-overflow: ellipsis;
+								}
 							}
 						}
 						td input.posting-amount{
@@ -1374,6 +1421,14 @@ body{
 								padding-inline-end: 0;
 								}
 							}
+						}
+					}
+					table.bank-postings-table.with-vat, table.postings-table.with-vat{
+						th.account{
+						width: 22%;	
+						}
+						th.tax-col{
+						width: 20%;	
 						}
 					}
 				}
@@ -2321,6 +2376,11 @@ body.popup-mode {
 							--svg-width: 1.25vw;
 							--svg-height: 1.25vw;
 							}
+							td.tax-col{
+								.tax-figures{
+								padding: 0 0.6vw;
+								}
+							}
 							td.input-cell{
 								input::placeholder{
 								color: #999;
@@ -2336,6 +2396,15 @@ body.popup-mode {
 								} 
 							}
 						}
+						table.bank-postings-table.with-vat, table.postings-table.with-vat{
+							th.account{
+							width: 25%;	
+							}
+							th.tax-col{
+							width: initial;	
+							}
+						}
+						
 					}
 					.form_entity, .form_account, .form_report, .form_receipt, .form_year_end{
 					--field-width: 50vw;

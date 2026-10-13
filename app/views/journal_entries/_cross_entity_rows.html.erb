@@ -35,6 +35,10 @@
         <td class="input-cell no-phone"><%= pf.text_field :description, aria: { label: t("attrs.description") } %></td>
         <%# Reference placeholder follows the host form: JE postings show it, bank postings don't. %>
         <td class="input-cell no-phone"><%= pf.text_field :reference, aria: { label: t("attrs.reference") }, placeholder: (t("attrs.posting_placeholder") unless local_assigns[:context] == "bank") %></td>
+        <%# A mirror row never carries a VAT code — a gift is not a sale — but
+            the cell has to be there or the columns shift. After reference,
+            like the real rows. %>
+        <% if @tax_code_options.present? %><td class="tax-col"></td><% end %>
         <td class="posting-receipt no-phone">
           <% unless capital %>
             <%= render "receipts/posting_receipt_widget", pf: pf %>

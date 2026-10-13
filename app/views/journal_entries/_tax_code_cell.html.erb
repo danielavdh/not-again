@@ -1,0 +1,45 @@
+<%# Rendered only when a business in this entry's family files VAT. Three boxes
+    so the cell can be laid out as flex; .tax-figures carries .hidden as one
+    element, so the "VAT" label goes with its field. %>
+<td class="tax-col">
+  <%# A 601 gift bridge is neither a sale nor a purchase. %>
+  <% if pf.object.cross_entity_link_id.blank? %>
+    <%# Hidden from the start where the account already cannot carry a code: a
+        balance-sheet row, a 6xx private row, or one whose business files no
+        VAT. The JS does the same on CHANGE; this is for rows the server renders
+        with an account on them, where no change event fires. A row with no
+        account yet keeps it — nothing has been chosen. %>
+    <% account = pf.object.account %>
+    <% blocked = account.present? &&
+                 (!(account.income? || account.expense?) ||
+                  !@vat_entity_codes.include?(account.entity_code)) %>
+    <%= tag.div class: class_names("tax-fields", hidden: blocked) do %>
+      <%= pf.select :tax_code_id,
+                    grouped_options_for_select(@tax_code_options, pf.object.tax_code_id),
+                    { include_blank: @tax_code_blank_label },
+                    class: 'form-select posting-tax-code',
+                    aria: { label: t("tax.vat.code") },
+                    data: { tax_code_field: true, tomselect: true,
+                            tomselect_placeholder: @tax_code_blank_label,
+                            tomselect_sort: "order" } %>
+
+      <%= tag.div class: class_names("tax-figures", hidden: pf.object.tax_code_id.blank?) do %>
+        <div class="tax-amount">
+          <%# Decorative: the input carries its own aria-label, so this can be
+              hidden in CSS without leaving the field nameless. %>
+          <%= pf.label :tax_amount_display, t("tax.vat.amount") %>
+          <%# Editable: an invoice may have rounded differently. The amount
+              column is the GROSS and never moves; the net absorbs it. %>
+          <%= pf.text_field :tax_amount_display,
+                        value: pf.object.vat_display_formatted,
+                        class: 'posting-tax-amount right',
+                        inputmode: 'decimal',
+                        aria: { label: t("tax.vat.amount") },
+                        data: { tax_amount_field: true } %>
+        </div>
+        <span class="posting-tax-net" data-tax-net
+              data-net-label="<%= t("tax.vat.net") %>"></span>
+      <% end %>
+    <% end %>
+  <% end %>
+</td>

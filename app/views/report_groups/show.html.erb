@@ -10,31 +10,31 @@
 	
 	<ul class="report-list">
 		<% if @reports.any? %>
-        	<% @reports.each do |report| %>
+			<% @reports.each do |report| %>
 				<li>
 					<span class="flex">
-		            <%= link_to report.name, 
+					<%= link_to report.name, 
 						report_path(report), 
 						class: "backend_link button green" %>
 						<span>
-		            		<%=l report.start_date, :format => :short_date %> - 
-					 	   	<%=l report.end_date, :format => :short_date %>
+							<%=l report.start_date, :format => :short_date %> - 
+							<%=l report.end_date, :format => :short_date %>
 						</span>
 					</span>
 				</li>
 			<% end %>
-	    <% else %>
+		<% else %>
 			<li><%= t(".empty", model: "reports") %></li>
-	    <% end %>
+		<% end %>
 		<%# Outside the branch above, so a group with no reports still offers a way to make one. %>
 		<li>
 			<span class="flex">
 				<span></span>
 				<%= button_tag t(".add_report"), 
-	     			type: "button", 
-	     			data: { action: "open-modal", 
+					type: "button", 
+					data: { action: "open-modal", 
 							modal: "reportModal-#{@report_group.id}" }, 
-	     			class: "button green" %>
+					class: "button green" %>
 			</span>
 		</li>
 	</ul>
@@ -42,7 +42,11 @@
 	<%= render partial: "reports/report-modal", locals: {group: @report_group} %>
 	
 
-	<% if @report_group.tax_report? %>
+	<%# A VAT group has nothing to assign: its boxes come from the codes on
+	    postings, not from tagged accounts. So its page is the list of periods
+	    above, and the return itself is on each period's report page. %>
+	<% if @report_group.vat_report? %>
+	<% elsif @report_group.tax_report? %>
 		<%= render "tax_assignment" %>
 	<% else %>
 		<%= render "custom_assignment" %>

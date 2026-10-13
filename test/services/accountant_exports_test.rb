@@ -85,4 +85,34 @@ class AccountantExportsTest < ActiveSupport::TestCase
     rows = CSV.parse(datev_csv, col_sep: ";")
     assert_equal 3, rows.size, "header, column names, and only the bankable entry"
   end
+
+  # DATEV works the VAT out itself from the BU-Schlüssel, so it wants the GROSS
+  # and the key. Sending it our net would make it deduct the tax a second time,
+  # and the accountant's books would be short by it.
+  test "a VAT entry goes to DATEV as the gross with its BU-Schlüssel" do
+    TaxSchemeConfig.reload!
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/gb_vat_2026.yml"))
+    @entity.update!(tax_schemes: [ "gb_vat" ])
+    # DATEV is a German format, but the VAT mechanism is the same whichever
+    # catalogue supplies the code; gb_vat is the one that ships.
+    code = TaxCode.resolve(scheme: "gb_vat", key: "sale_standard", on: Date.new(2026, 3, 14))
+    code.update!(datev_bu: "3")
+    gbp_bank = Account.create!(code: "1#{@entity.code}971", name: "GBP Bank",
+                               account_type: :asset, currency: "GBP")
+
+    je = JournalEntry.new(entry_date: Date.new(2026, 3, 14), posted: true, memo: "A VAT sale")
+    je.postings.build(account: @sales, entry_type: :credit, amount: 12_000, tax_code_id: code.id)
+    je.derive_tax_legs
+    je.postings.build(account: gbp_bank, entry_type: :debit, amount: 12_000, currency: "GBP")
+    je.save!
+
+    rows = CSV.parse(datev_csv, col_sep: ";")
+    vat_row = rows.find { |r| r[13] == "A VAT sale" }
+
+    assert vat_row, "the sale should be exported, got #{rows.map { |r| r[13] }.inspect}"
+    assert_equal "120,00", vat_row[0], "the gross, not the 100.00 net we store"
+    assert_equal "3",      vat_row[8], "the BU-Schlüssel DATEV computes the VAT from"
+    assert_equal gbp_bank.code, vat_row[7], "the BANK faces it, never the VAT control account"
+    assert_equal 1, rows.count { |r| r[13] == "A VAT sale" }, "no row of its own for the VAT leg"
+  end
 end

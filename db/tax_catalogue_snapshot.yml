@@ -1,6 +1,6 @@
 # Where every tax category files its figure. Generated — do not hand-edit:
 #
-#   bin/rails acc:tax_categories:snapshot
+#   bin/rails tax_categories:snapshot
 #
 # TaxCatalogueSnapshotTest fails when a catalogue file disagrees with
 # this. That is the point: editing a filing field in place rewrites history,
@@ -550,6 +550,52 @@ gb_self_employment_2026.yml:
     api_section: income
     export_column: '82'
     api_field: taxTakenOffTradingIncome
+gb_vat_2026.yml:
+  vat_due_sales:
+    section:
+    api_section:
+    export_column: '1'
+    api_field:
+  vat_due_acquisitions:
+    section:
+    api_section:
+    export_column: '2'
+    api_field:
+  total_vat_due:
+    section:
+    api_section:
+    export_column: '3'
+    api_field:
+  vat_reclaimed:
+    section:
+    api_section:
+    export_column: '4'
+    api_field:
+  net_vat:
+    section:
+    api_section:
+    export_column: '5'
+    api_field:
+  total_sales_ex_vat:
+    section:
+    api_section:
+    export_column: '6'
+    api_field:
+  total_purchases_ex_vat:
+    section:
+    api_section:
+    export_column: '7'
+    api_field:
+  total_dispatches_ni:
+    section:
+    api_section:
+    export_column: '8'
+    api_field:
+  total_acquisitions_ni:
+    section:
+    api_section:
+    export_column: '9'
+    api_field:
 nl_winst_2025.yml:
   netto_omzet:
     section: income

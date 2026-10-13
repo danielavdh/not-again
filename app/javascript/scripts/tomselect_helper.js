@@ -121,10 +121,13 @@ const TomSelectHelper = {
             allowEmptyOption: true,
             create: select.dataset.tomselectCreate === 'true',
             maxOptions: parseInt(select.dataset.tomselectMaxOptions) || 100,
-            sortField: {
-                field: "text",
-                direction: "asc"
-            }
+            /* Alphabetical by default, which is what a list of accounts wants.
+               A list whose ORDER carries meaning — a VAT catalogue, commonest
+               rates first — opts out with data-tomselect-sort="order" and keeps
+               the order the server sent. */
+            sortField: select.dataset.tomselectSort === 'order'
+                ? { field: "$order" }
+                : { field: "text", direction: "asc" }
         };
         
         // Handle multiple selection

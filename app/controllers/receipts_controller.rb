@@ -5,7 +5,12 @@ class ReceiptsController < BaseController
   skip_before_action :ensure_admin, only: [:download]
   skip_before_action :require_accounts_access, only: [:download]
   skip_before_action :require_otp_verification, only: [:download]
-  skip_before_action :require_write_access, only: [:download, :upload_standalone, :create, :index, :delete_own, :show, :download_selected]
+  # share_receive belongs here with upload_standalone and create: an
+  # upload-only admin IS the share target's audience, and without the skip the
+  # write guard bounced them to the uploader with the shared file lost — and,
+  # because a browser follows a redirect with the original Accept header, into
+  # a MissingTemplate 500 as well.
+  skip_before_action :require_write_access, only: [:download, :upload_standalone, :create, :index, :delete_own, :show, :download_selected, :share_receive]
   before_action :set_receipt, only: [:show, :edit, :update, :destroy, :unlink]
   before_action :require_receipt_access, only: [:new, :create, :upload_standalone, :share_receive]
   # NOT covered by require_write_access — the line above skips it for :create
@@ -226,7 +231,11 @@ class ReceiptsController < BaseController
                      .where(uploaded_by: current_admin)
                      .recent_first
                      .limit(20)
-    render :upload_standalone
+    # formats: [:html] because these are pages with one template: a bare
+    # `render :action` renders in the REQUEST's format, so Accept:
+    # application/json, a .json path or a turbo-stream Accept each raised
+    # MissingTemplate — a 500 on the landing page of every upload-only admin.
+    render :upload_standalone, formats: [ :html ]
   end
 
   def share_receive
@@ -240,7 +249,9 @@ class ReceiptsController < BaseController
       @receipt.scan = params[:scan]
     end
 
-    render :share_receive
+    # See upload_standalone. This one arrives from the OS share sheet, so its
+    # Accept header is whatever the sharing app sent.
+    render :share_receive, formats: [ :html ]
   end
 
   private

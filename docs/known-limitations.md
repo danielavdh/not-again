@@ -145,3 +145,51 @@ notice eats into it.
 <!-- TODO: build the breach-notice mailer — sudo-triggered, one confirmation step so it can't fire by accident, a record of what was sent/when/to whom -->
 Not built: a sudo-triggered mailer to the affected admin(s), with a
 confirmation step and a record of what was sent, when, and to whom.
+
+## 16. VAT: what is deliberately not built
+
+The VAT mechanism records and reports; it does not file, and four things are out
+of scope rather than unfinished.
+
+**VAT on the private half of a split.** A `%` split's private row carries no VAT
+code. The Dutch return has `privégebruik` boxes and Germany has *unentgeltliche
+Wertabgabe*; both need rules this app does not hold. Book the private portion
+gross.
+
+**Invoice-basis tax points.** The app records payments, not invoices, so the
+entry date is the tax point. That is correct for a cash-basis scheme (UK cash
+accounting, German Ist-Versteuerung, EÜR) and wrong for an invoice-basis one. If
+you file on an invoice basis, this app's VAT return is not your return.
+
+**Partial exemption and pro-rata recovery.** Input VAT is either reclaimable or
+it is not. A business that recovers a fraction of its input VAT has to compute
+the restriction itself and adjust the return.
+
+**Foreign-currency invoices.** A VAT code may only be used on an entry in the
+scheme's own currency, because a control account holds one currency and the
+authority is paid in one currency. A UK VAT invoice paid from a euro account
+gets no code: convert and pay from a sterling account, or book the gross and
+reclaim nothing. The app does not record an invoice currency, so the expense
+already carries this limitation — VAT inherits it.
+
+**VAT on a cross-entity gift.** The receiving side of a cross-entity
+transaction cannot carry a VAT code. That is not an arbitrary restriction: the
+app models the transaction as a **gift / capital contribution**, which is not a
+taxable supply, so no VAT arises on it. The receiver holds no invoice in their
+own name and so has nothing to reclaim.
+
+A **recharge** is a different transaction in law — an onward supply, with the
+payer issuing their own VAT invoice to the receiver — and the receiver *does*
+recover the VAT on it. The app cannot record that through the cross-entity
+button, because it models a gift, not a sale between two of your businesses.
+Record it as what it is: an ordinary sale in the paying business (income +
+output VAT) and an ordinary purchase in the receiving one (expense + input
+VAT), settled by a transfer. Two normal entries, no special mechanism — two
+entities never shared one entry anyway.
+
+Which of the two a given payment actually is, and whether it is instead a
+disbursement, is a facts-and-circumstances question for an accountant. The app
+takes no view.
+
+**Filing.** The return is a screen and a CSV. HMRC VAT MTD and Dutch Digipoort
+are separate connectors, not built.

@@ -76,10 +76,16 @@ class EntitiesController < BaseController
         removed = Array(before) - Array(after)
         added   = Array(after)  - Array(before)
 
-        # Subscribing to a scheme is only half the job — the accounts still have
-        # to be assigned to it — so land on the scheme's own page, where that is
-        # done. Several schemes at once is rare, so the first one added wins.
-        new_group = added.any? && @entity.report_groups.find_by(tax_scheme: added.first)
+        # Subscribing to an income-tax scheme is only half the job — the accounts
+        # still have to be assigned to it — so land on the scheme's own page,
+        # where that is done. Several at once is rare, so the first wins.
+        #
+        # A VAT scheme has nothing to assign: its boxes are filled from the
+        # codes on postings. So it lands on the dashboard, where its group row
+        # now sits with a button for the return and a way to add periods.
+        vat_added, taggable_added = TaxSchemeConfig.vat_schemes(added)
+        new_group = taggable_added.any? &&
+                    @entity.report_groups.find_by(tax_scheme: taggable_added.first)
 
         notice =
           if removed.any? && added.empty?
@@ -87,6 +93,10 @@ class EntitiesController < BaseController
             # removal.
             t("entities.edit_tax.unsubscribed",
               schemes: removed.map { |s| TaxSchemeConfig.scheme_label(s) }.to_sentence)
+          elsif taggable_added.empty? && vat_added.any?
+            # VAT only: the next step is an entry, not an account.
+            t("entities.edit_tax.vat_subscribed",
+              schemes: vat_added.map { |s| TaxSchemeConfig.scheme_label(s) }.to_sentence)
           elsif Account.unmapped_for_tax(entity_codes: [@entity.code]).exists?
             t("entities.edit_tax.updated")
           else

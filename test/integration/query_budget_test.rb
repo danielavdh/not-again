@@ -29,7 +29,16 @@ class QueryBudgetTest < ActionDispatch::IntegrationTest
     "reports#balance_sheet" => 20,
     "admins#index"          => 15,
     # The authorised-access table renders a row per (coadmin, shared entity).
-    "admins#show"           => 14
+    "admins#show"           => 14,
+    # VAT, 2026-10-07. A posting row asks its account whether it can carry VAT,
+    # its code whether it is a reverse charge, and its legs for the gross — all
+    # preloaded, so these do not move with the number of rows (the test below).
+    "accounts#new_withdrawal"  => 26,
+    "accounts#edit_withdrawal" => 32,
+    "journal_entries#new"      => 20,
+    "journal_entries#edit"     => 36,
+    "reports#show (VAT)"       => 18,
+    "accounts#ledger (VAT)"    => 15
   }.freeze
 
   # Above this, one statement shape in one request is a loop until proven
@@ -122,6 +131,72 @@ class QueryBudgetTest < ActionDispatch::IntegrationTest
 
     assert_equal before, after,
       "admins#show went from #{before} to #{after} queries when 10 coadmins were added — it is looping over rows"
+  end
+
+  # --- VAT ------------------------------------------------------------------
+
+  def with_vat
+    TaxSchemeConfig.reload!
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/gb_vat_2026.yml"))
+    entities(:family_biz).update!(tax_schemes: [ "gb_vat" ])
+    TaxCode.resolve(scheme: "gb_vat", key: "purchase_standard", on: Date.new(2026, 5, 1))
+  end
+
+  # Rows + their derived legs + the bank leg, saved.
+  def vat_entry(code, rows)
+    je = JournalEntry.new(entry_date: Date.new(2026, 5, 1), memo: "vat", posted: true)
+    rows.times { je.postings.build(account: accounts(:expenses_general), entry_type: :debit,
+                                   amount: 12_000, tax_code_id: code.id) }
+    je.derive_tax_legs
+    total = je.postings.reject(&:marked_for_destruction?)
+              .sum { |p| p.debit? ? p.amount.to_i : -p.amount.to_i }
+    je.postings.build(account: accounts(:bank_gbp), entry_type: :credit,
+                      amount: total.abs, currency: "GBP")
+    je.save!
+    je
+  end
+
+  test "the VAT forms and the return stay within budget" do
+    code = with_vat
+    sign_in_as(admins(:two))
+    je = vat_entry(code, 3)
+    group = entities(:family_biz).report_groups.create!(tax_scheme: "gb_vat", name: "GB-VAT")
+    report = group.reports.create!(name: "Q2", start_date: Date.new(2026, 4, 1),
+                                   end_date: Date.new(2026, 6, 30))
+
+    assert_within_budget "accounts#new_withdrawal",
+      count_queries { get new_withdrawal_account_url(accounts(:bank_gbp), locale: :en) }
+    assert_within_budget "accounts#edit_withdrawal",
+      count_queries { get edit_withdrawal_account_url(accounts(:bank_gbp), journal_entry_id: je.id, locale: :en) }
+    assert_within_budget "journal_entries#new",
+      count_queries { get new_journal_entry_url(locale: :en) }
+    assert_within_budget "journal_entries#edit",
+      count_queries { get edit_journal_entry_url(je, locale: :en) }
+    assert_within_budget "reports#show (VAT)",
+      count_queries { get report_url(report, locale: :en) }
+    assert_within_budget "accounts#ledger (VAT)",
+      count_queries { get ledger_account_url(Account.vat_accounts.first, locale: :en) }
+  end
+
+  # The one that matters: a form showing ten coded rows must cost what one
+  # costs. Both forms loaded an account per row, and the pro form a tax code
+  # per row, until the preloads went in (55 and 48 queries, measured).
+  test "a VAT form costs the same for ten coded rows as for one" do
+    code = with_vat
+    sign_in_as(admins(:two))
+    one = vat_entry(code, 1)
+    ten = vat_entry(code, 10)
+
+    %w[bank pro].each do |form|
+      counts = [ one, ten ].map { |je|
+        url = form == "bank" ?
+          edit_withdrawal_account_url(accounts(:bank_gbp), journal_entry_id: je.id, locale: :en) :
+          edit_journal_entry_url(je, locale: :en)
+        count_queries { get url }.size
+      }
+      assert_equal counts.first, counts.last,
+        "#{form} form went from #{counts.first} to #{counts.last} queries between 1 and 10 coded rows"
+    end
   end
 
   # --- the real test: cost must not follow data ----------------------------

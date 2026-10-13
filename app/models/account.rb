@@ -5,8 +5,14 @@ class Account < ApplicationRecord
   include AccountCoding
 
   enum :account_type, { asset: 1, liability: 2, equity: 3, income: 4, expense: 5, personal: 6 }
+  # Read with tax_scheme: gb_vat + output is the entity's UK output-VAT account.
+  # Prefixed, because bare `input?` would read as a question about the type.
+  enum :vat_role, { input: 0, output: 1 }, prefix: :vat
 
   belongs_to :parent, class_name: 'Account', optional: true
+  # Prefilled on a new row, last-used-wins. The posting's own tax_code_id is
+  # what the books and the return are built from.
+  belongs_to :default_tax_code, class_name: 'TaxCode', optional: true
   has_many :children, class_name: 'Account', foreign_key: :parent_id, dependent: :nullify
   has_many :postings, class_name: 'Posting', foreign_key: :account_id, dependent: :restrict_with_error
   has_many :report_group_accounts, class_name: 'ReportGroupAccount', foreign_key: :account_id, dependent: :destroy
@@ -25,9 +31,23 @@ class Account < ApplicationRecord
   validate :currency_must_be_active, if: :currency_changed?
   validate :code_prefix_immutable_with_postings, if: :code_changed?
   validate :not_deactivated_with_a_balance, if: -> { persisted? && active_changed? && !active? }
-  validate :entity_code_matches_creator, on: :create, if: :creating_admin
+  # On update too: digits 2 and 3 ARE the entity, so changing them MOVES the
+  # account. require_writable_account only asks where it is now.
+  validate :entity_code_is_writable, if: :acting_admin
   validate :parent_cannot_be_grandparent
   validate :code_not_in_retained_earnings_range, unless: :locked?
+  validate :vat_role_needs_a_vat_scheme,        if: :vat_role?
+  validate :one_vat_account_per_scheme_and_role, if: -> { vat_role? && active? }
+  validate :vat_currency_matches_the_scheme,    if: -> { vat_role? && currency_required? }
+  validate :vat_code_prefix_immutable,          if: -> { persisted? && vat_role? && code_changed? }
+
+  # Deactivating a VAT account does NOT strip its role. It used to, and that
+  # broke real books (2026-10-07): the role is how the app RECOGNISES the
+  # account, so an unrecognised one still holding VAT got a duplicate, its
+  # postings became orphans, and the one-balance-account rule refused the entry.
+  #
+  # Nothing is needed instead — resolve_vat_account and the one-per-role rule
+  # both look at ACTIVE accounts only.
 
   before_update :prevent_locked_update
   before_destroy :prevent_locked_destroy
@@ -35,6 +55,7 @@ class Account < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :locked, -> { where(locked: true) }
   scope :retained_earnings, -> { locked.where(account_type: :equity) }
+  scope :vat_accounts, -> { where.not(vat_role: nil) }
   scope :by_type, ->(type) { where(account_type: type) }
   scope :balance_accounts, -> { where(account_type: [:asset, :liability, :equity]) }
   scope :by_currency, ->(curr) { where(currency: curr) }
@@ -50,8 +71,10 @@ class Account < ApplicationRecord
   }
   scope :for_entity_codes, ->(codes) { where("SUBSTRING(code, 2, 2) IN (?)", Array(codes)) }
   
-  # Validation to ensure new accounts use creator's entity code
-  attr_accessor :creating_admin
+  # The admin performing this write, if any. The app's own account creation (VAT
+  # control accounts, year-end retained earnings) leaves it unset, which is how
+  # those stay exempt from the entity check below.
+  attr_accessor :acting_admin
 
   def balance_account?
     asset? || liability? || equity?
@@ -185,6 +208,70 @@ class Account < ApplicationRecord
     (income? || expense?) && leaf?
   end
 
+  # One account per entity, per scheme, per direction — never per bank currency:
+  # an authority accepts one currency, and a code may only be used on an entry
+  # in it.
+  #
+  # Created behind a save, as year-end creates retained earnings; the caller
+  # says so. Saved here rather than by the posting, because Posting validates
+  # account_id and an unsaved account fails "account must be selected". The cost
+  # is an empty account left by a refused save — see todo 26.
+  def self.resolve_vat_account(entity_code:, scheme:, direction:)
+    existing = active.vat_accounts
+                     .for_entity_codes([ entity_code ])
+                     .find_by(tax_scheme: scheme, vat_role: direction)
+    return existing if existing
+
+    nominal = TaxSchemeConfig.vat_accounts_nominal?(scheme)
+    type    = if nominal
+                direction.to_s == TaxCode::INPUT ? :expense : :income
+              else
+                direction.to_s == TaxCode::INPUT ? :asset : :liability
+              end
+
+    create!(
+      code:         next_vat_code(type, entity_code),
+      name:         vat_account_name(scheme, direction),
+      account_type: type,
+      # A nominal account must have no currency (clear_currency_for_nominal_accounts
+      # would strip it anyway); a balance one takes the scheme's.
+      currency:     nominal ? nil : TaxSchemeConfig.currency_for(scheme),
+      tax_scheme:   scheme,
+      vat_role:     direction,
+      active:       true
+    )
+  end
+
+  # The top of the entity's range for that type, taken downward from 999. No
+  # band is RESERVED: a rule refusing a code pattern would newly refuse accounts
+  # that already exist in live books.
+  def self.next_vat_code(type, entity_code)
+    prefix = "#{account_types[type.to_s]}#{entity_code}"
+    taken  = where("code LIKE ?", "#{prefix}9%").pluck(:code)
+    free   = (900..999).reverse_each.map { |n| "#{prefix}#{n}" }.find { |c| taken.exclude?(c) }
+    free or raise "No free account code left in #{prefix}9xx for a VAT account"
+  end
+  private_class_method :next_vat_code
+
+  # Names the authority, not the scheme: two of these exist side by side only
+  # when the entity files in two places.
+  def self.vat_account_name(scheme, direction)
+    authority = TaxSchemeConfig.authority_for(scheme)
+    base      = I18n.t("accounts.vat_role.#{direction}")
+    authority.present? ? "#{base} — #{authority}" : base
+  end
+  private_class_method :vat_account_name
+
+  # Why this account could not carry this code, or nil. Asked by the entry's
+  # validation and by the remembered default, which were drifting apart. Takes
+  # the filed schemes so a caller checking many rows pays one query.
+  def tax_code_problem(code, filed_schemes:)
+    return :not_nominal unless income? || expense?
+    return :direction   unless code.output? == income?
+    return :scheme      unless filed_schemes.include?(code.scheme)
+    nil
+  end
+
   # Releases one entity's accounts from a scheme: the account keeps its balances
   # and everything else, it just stops being tagged.
   #
@@ -290,11 +377,16 @@ private
   # An account may only be created inside an entity its creator may WRITE to — a
   # read_only or upload_receipts link is not enough, even when the same admin
   # holds full access somewhere else. Sudo is unrestricted.
-  def entity_code_matches_creator
-    return unless creating_admin
-    return if creating_admin.sudo?
+  # The code's entity must be one this admin may write to. Asked of the code
+  # being SAVED, so it covers both making an account somewhere you have no
+  # business and moving one of yours there — which was possible until
+  # 2026-10-06, for an account with no postings yet. (With postings,
+  # code_prefix_immutable_with_postings refuses any move at all.)
+  def entity_code_is_writable
+    return unless acting_admin
+    return if acting_admin.sudo?
 
-    writable_codes = creating_admin.writable_entity_codes
+    writable_codes = acting_admin.writable_entity_codes
     account_entity = entity_code if code.present? && code.length >= 3
     unless writable_codes.include?(account_entity)
       errors.add(:code, I18n.t("accounts.errors.entity_code_mismatch", codes: writable_codes.join(', ')))
@@ -311,6 +403,41 @@ private
     return unless code =~ /\A3\d{2}9\d{2}\z/
     reserved = "#{code[0..3]}00–#{code[0..3]}99"
     errors.add(:code, I18n.t("accounts.errors.reserved_for_retained_earnings", range: reserved))
+  end
+
+  def vat_role_needs_a_vat_scheme
+    return if tax_scheme.present? && TaxSchemeConfig.vat_scheme?(tax_scheme)
+    errors.add(:vat_role, I18n.t("accounts.errors.vat_role_without_scheme"))
+  end
+
+  # Two live input-VAT accounts for one scheme would split the control account,
+  # and the return would be short by whatever landed in the wrong one.
+  def one_vat_account_per_scheme_and_role
+    clash = self.class.active.vat_accounts
+                .for_entity_codes([ entity_code ])
+                .where(tax_scheme: tax_scheme, vat_role: vat_role)
+                .where.not(id: id)
+                .exists?
+    errors.add(:vat_role, I18n.t("accounts.errors.vat_role_taken")) if clash
+  end
+
+  # Not a choice: the balance IS what is owed to the authority.
+  def vat_currency_matches_the_scheme
+    wanted = TaxSchemeConfig.currency_for(tax_scheme)
+    return if wanted.blank? || currency == wanted
+    errors.add(:currency, I18n.t("accounts.errors.vat_currency", currency: wanted))
+  end
+
+  # The TYPE digit is the scheme's decision, not the user's: the type is read
+  # back off the code, so renumbering 1xx to 5xx would move what the authority
+  # owes into the P&L, silently.
+  #
+  # code_prefix_immutable_with_postings says this for every account but only
+  # once there ARE postings — and one created by a refused save has none, which
+  # is exactly when it would go unnoticed. The last three digits stay free.
+  def vat_code_prefix_immutable
+    return if code_was&.first(3) == code&.first(3)
+    errors.add(:code, I18n.t("accounts.errors.vat_code_prefix_immutable"))
   end
 
   def prevent_locked_update

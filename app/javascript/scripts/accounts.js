@@ -1,4 +1,4 @@
-import { showElementSmoothly, hideElementSmoothly, showTransientStatus, delegate, parseAmountToCents, formatAmountFromCents, csrfToken} from "scripts/utils";
+import { showElementSmoothly, hideElementSmoothly, showTransientStatus, delegate, parseAmountToCents, formatAmountFromCents, csrfToken, isTouchDevice} from "scripts/utils";
 import TomSelectHelper from "scripts/tomselect_helper";
 import Receipts from "scripts/receipts";
 import { setupReportGroupAccountSelector } from "scripts/accounts-drag-drop";
@@ -37,6 +37,9 @@ const Accounts = {
 		    this.updateTransferCurrencies();
 		}
 		this.groupPairedPostings();
+		document.querySelectorAll('.posting-row .posting-tax-code').forEach(
+			select => this.showRowNet(select.closest('tr'))
+		);
 		if (/(ledger|withdrawal|deposit|journal_entries|receipts)/.test(location.pathname) || document.getElementById('receipt-upload-modal')) {
 		  Receipts.init();
 		}
@@ -84,21 +87,35 @@ const Accounts = {
 		delegate(document, 'change', '#account_parent_id', (e, select) => {
 			this.lockCurrencyFromParent(select);
 		});
-		/* Split transaction hover - show details */
-		delegate(document, 'mouseover', '.transaction-type-split', (e, span) => {
-			const jeId = span.getAttribute('data-je-id');
-			const details = document.getElementById(`split-${jeId}`);
-			if (details) {
-				showElementSmoothly(details);
-			}
-		});
-		delegate(document, 'mouseout', '.transaction-type-split', (e, span) => {
-			const jeId = span.getAttribute('data-je-id');
-			const details = document.getElementById(`split-${jeId}`);
-			if (details) {
-				hideElementSmoothly(details);
-			}
-		});
+		/* Hover on a pointer, tap on a touch screen — ONE of the two, never both:
+		   iOS synthesises a mouseover on the first tap, BEFORE the click, so with
+		   both registered the click would close what the mouseover just opened
+		   and nothing would ever appear. Without the tap half a tablet cannot
+		   open these at all. Same shape as .obscured in index.js. */
+		if (isTouchDevice) {
+			delegate(document, 'click', '.transaction-type-split', (e, span) => {
+				const details = document.getElementById(`split-${span.getAttribute('data-je-id')}`);
+				if (!details) return;
+				/* The panel sits INSIDE its trigger: a tap on it closes, any other
+				   tap on the cell toggles. */
+				if (e.target.closest('.split-details')) {
+					hideElementSmoothly(details);
+				} else if (details.classList.contains('hidden')) {
+					showElementSmoothly(details);
+				} else {
+					hideElementSmoothly(details);
+				}
+			});
+		} else {
+			delegate(document, 'mouseover', '.transaction-type-split', (e, span) => {
+				const details = document.getElementById(`split-${span.getAttribute('data-je-id')}`);
+				if (details) showElementSmoothly(details);
+			});
+			delegate(document, 'mouseout', '.transaction-type-split', (e, span) => {
+				const details = document.getElementById(`split-${span.getAttribute('data-je-id')}`);
+				if (details) hideElementSmoothly(details);
+			});
+		}
 		/* Add Posting Button Listener */
 		delegate(document, 'click', '#add-posting, #add-bank-posting', (e, btn) => {
 			e.preventDefault();
@@ -170,6 +187,57 @@ const Accounts = {
 		    if (!pairId) return;
 		    e.preventDefault();
 		    row.querySelector('.split-btn[data-action="open-split-modal"]')?.click();
+		});
+		/* Picking a code reveals the VAT field with what the rate works out to.
+		   Changing the gross or the code recomputes it; typing in it keeps that
+		   figure until one of those changes. The server recomputes the net from
+		   whatever arrives, so nothing here can reach the books wrong. */
+		delegate(document, 'change', '.posting-tax-code', (e, select) => {
+			this.recalculateRowTax(select.closest('tr'));
+			this.saveDefaultTaxCode(select);
+		});
+		/* Picking an account offers the code it was last used with, so the common
+		   case needs no second choice. Only when the row has none yet — never
+		   over the top of something already chosen. */
+		delegate(document, 'change', '.posting-account', (e, select) => {
+			const row = select.closest('tr');
+			const codeSelect = row?.querySelector('.posting-tax-code');
+			if (!codeSelect) return;
+
+			const option = select.options[select.selectedIndex];
+			const type = option?.dataset.type;
+
+			/* Three reasons a row cannot carry VAT, all the account's: a
+			   balance-sheet row, a 6xx private row, or one whose business files no
+			   VAT. The model refuses a code in all three, and offering the control
+			   anyway invited worse than a correction — a private account ended up
+			   REMEMBERING a code and handing it to every later split. */
+			const canCarry = (type === 'income' || type === 'expense') &&
+			                 option?.dataset.filesVat === '1';
+			this.setRowTaxVisible(row, canCarry);
+			if (!canCarry) {
+				const ts = TomSelectHelper.getInstance(codeSelect);
+				if (ts) { ts.setValue('', true); } else { codeSelect.value = ''; }
+				this.recalculateRowTax(row);
+				return;
+			}
+			if (codeSelect.value) return;
+
+			const remembered = option?.dataset.defaultTaxCode;
+			if (!remembered) return;
+
+			const ts = TomSelectHelper.getInstance(codeSelect);
+			/* Silently: a change would save the account's own default back to it. */
+			if (ts) { ts.setValue(remembered, true); } else { codeSelect.value = remembered; }
+			this.recalculateRowTax(row);
+		});
+		delegate(document, 'input', '.posting-amount', (e, input) => {
+			this.recalculateRowTax(input.closest('tr'));
+		});
+		delegate(document, 'input', '.posting-tax-amount', (e, input) => {
+			/* Only the NET display moves; recalculateRowTax overwrites the figure
+			   when the gross or the code changes, because it is a new sum. */
+			this.showRowNet(input.closest('tr'));
 		});
 		/* Bank Entry: Calculate running balance on input change */
 		delegate(document, 'input', '.posting-amount, .posting-type, .posting-currency, .posting-destroy', (e, input) => {
@@ -968,6 +1036,90 @@ const Accounts = {
 	},
 
 	/* Calculate and display bank balance from counter account postings */
+	/* The VAT inside a gross amount — the same half-up split TaxCode makes on the
+	   server, so the field agrees with what gets saved. Reverse charge is the one
+	   case where the rate does NOT come out of the amount: the invoice carried
+	   none. floor((2n + d) / 2d) is half-up without meeting a float. */
+	rowTaxFromGross(grossCents, rateBps, reverseCharge) {
+		if (!rateBps || grossCents <= 0) return 0;
+		const divisor = reverseCharge ? 10000 : 10000 + rateBps;
+		return Math.floor((grossCents * rateBps * 2 + divisor) / (divisor * 2));
+	},
+	/* Rate and shape, off the selected <option>. */
+	rowTaxCode(row) {
+		const select = row?.querySelector('.posting-tax-code');
+		if (!select) return null;
+		const option = select.options[select.selectedIndex];
+		return {
+			select,
+			chosen:  !!select.value,
+			rateBps: parseInt(option?.dataset.rateBps || '0', 10),
+			reverse: option?.dataset.reverseCharge === 'true'
+		};
+	},
+	recalculateRowTax(row) {
+		const code  = this.rowTaxCode(row);
+		const field = row?.querySelector('.posting-tax-amount');
+		if (!code || !field) return;
+
+		/* One wrapper, or the "VAT" label stays behind with nothing under it. */
+		const figures = row.querySelector('.tax-figures');
+		if (figures) {
+			code.chosen ? showElementSmoothly(figures) : hideElementSmoothly(figures);
+		}
+		if (!code.chosen) {
+			field.value = '';
+			this.showRowNet(row);
+			return;
+		}
+		/* A new sum, so our figure is the one to show again. */
+		const gross = parseAmountToCents(row.querySelector('.posting-amount')?.value || '');
+		field.value = gross === null ? ''
+			: formatAmountFromCents(this.rowTaxFromGross(gross, code.rateBps, code.reverse));
+		this.showRowNet(row);
+	},
+	/* What will actually hit the P&L. The label comes from the markup, so this
+	   writes text and never HTML. */
+	showRowNet(row) {
+		const netEl = row?.querySelector('[data-tax-net]');
+		const code  = this.rowTaxCode(row);
+		const field = row?.querySelector('.posting-tax-amount');
+		if (!netEl || !code || !field) return;
+
+		/* Visibility belongs to .tax-figures, which holds this and the field. */
+		if (!code.chosen) { netEl.textContent = ''; return; }
+
+		const gross = parseAmountToCents(row.querySelector('.posting-amount')?.value || '');
+		const vat   = parseAmountToCents(field.value || '');
+		if (gross === null) { netEl.textContent = ''; return; }
+
+		/* Reverse charge leaves the net alone: the legs are extra. */
+		const net = code.reverse ? gross : gross - (vat === null ? 0 : vat);
+		netEl.textContent = `${netEl.dataset.netLabel || ''} ${formatAmountFromCents(net)}`.trim();
+	},
+	/* The select is wrapped by TomSelect, so .hidden goes on the container. */
+	setRowTaxVisible(row, visible) {
+		const fields = row?.querySelector('.tax-fields');
+		if (!fields) return;
+		visible ? showElementSmoothly(fields) : hideElementSmoothly(fields);
+	},
+	/* Last-used-wins, as the % split already saves its percentage. Silent on
+	   failure: the posting carries its own tax_code_id, so the cost is re-picking
+	   the code next time. */
+	saveDefaultTaxCode(select) {
+		const row = select.closest('tr');
+		const accountSelect = row?.querySelector('.posting-account');
+		if (!accountSelect?.value) return;
+
+		const url = accountSelect.options[accountSelect.selectedIndex]?.dataset.saveTaxCodeUrl;
+		if (!url) return;
+
+		fetch(url, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
+			body: JSON.stringify({ default_tax_code_id: select.value })
+		}).catch(() => {});
+	},
 	calculateBankBalance() {
 	  const balanceEl = document.querySelector('[data-balance-row]');
 	  if (!balanceEl) return;
@@ -1057,6 +1209,10 @@ const Accounts = {
 			ts?.setValue(sel1.value, true);
 			const amountInput = sourceRow.querySelector('.posting-amount, input[data-amount-field]');
 			if (amountInput) amountInput.value = amount1;
+			/* Assigning .value fires no input event, and the server honours a
+			   submitted VAT figure as an override — so a stale one gets SAVED.
+			   120.00 split 70/30 booked a net of 64.00 instead of 70.00. */
+			this.recalculateRowTax(sourceRow);
 
 			// Freeze pair ID and percentage on the expense (source) posting
 			const pairIdInput = sourceRow.querySelector('.posting-deduction-pair-id');
@@ -1083,6 +1239,7 @@ const Accounts = {
 				ts2?.setValue(sel2.value, true);
 				const amountInput2 = pairedRow.querySelector('.posting-amount, input[data-amount-field]');
 				if (amountInput2) amountInput2.value = amount2;
+				this.recalculateRowTax(pairedRow);
 			} else {
 				await this.injectSplitRow(sourceRow, sel2.value, amount2, pairId);
 			}
@@ -1139,6 +1296,8 @@ const Accounts = {
 
 		const amountInput = newRow.querySelector('.posting-amount, input[data-amount-field]');
 		if (amountInput) amountInput.value = amount;
+		/* The private row carries no code; this just settles the cell's state. */
+		this.recalculateRowTax(newRow);
 
 		const descInput = newRow.querySelector('input[name*="[description]"]');
 		if (descInput && description) descInput.value = description;

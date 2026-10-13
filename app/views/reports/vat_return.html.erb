@@ -1,0 +1,121 @@
+<% content_for :title, @report.name %>
+
+<div class="backend_table vat_return">
+
+	<h2><%= @report.name %>
+		<span><%= @report.report_group.display_name %> &mdash;
+			<%= @report.report_group.entity&.name %></span>
+	</h2>
+
+	<p><%= l(@report.start_date, format: :short_date) %> &ndash;
+		<%= l(@report.end_date, format: :short_date) %></p>
+
+	<%= render partial: 'shared/flash' %>
+
+	<% if @vat_return[:lines].empty? %>
+		<p><%= t(".nothing",
+		          from: l(@report.start_date, format: :short_date),
+		          to:   l(@report.end_date, format: :short_date)) %></p>
+	<% else %>
+
+		<h3><%= t("tax.vat.boxes") %></h3>
+		<table>
+			<thead>
+				<tr>
+					<th><%= t("tax.vat.box") %></th>
+					<th><%= t("attrs.description") %></th>
+					<th class="right"><%= @vat_return[:currency] %></th>
+				</tr>
+			</thead>
+			<tbody>
+				<% @vat_return[:boxes].each do |box| %>
+					<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+						<td><%= box.reference %></td>
+						<td><%= box.label %></td>
+						<td class="right"><%= format_cents_with_currency(box.amount, @vat_return[:currency], show_zero: true) %></td>
+					</tr>
+				<% end %>
+			</tbody>
+		</table>
+
+		<h3><%= t("tax.vat.summary") %></h3>
+		<table>
+			<tbody>
+				<tr class="list-line-odd">
+					<td><%= t("tax.vat.due") %></th>
+					<td class="right"><%= format_cents_with_currency(@vat_return[:vat_due], @vat_return[:currency], show_zero: true) %></td>
+				</tr>
+				<tr class="list-line-odd">
+					<td><%= t("tax.vat.reclaimed") %></th>
+					<td class="right"><%= format_cents_with_currency(@vat_return[:vat_reclaimed], @vat_return[:currency], show_zero: true) %></td>
+				</tr>
+				<tr class="total list-line-even">
+					<td><%= t("tax.vat.payable") %></th>
+					<td class="right"><%= format_cents_with_currency(@vat_return[:net_payable], @vat_return[:currency], show_zero: true) %></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<%# VAT in the control accounts that no code put there: a posting typed by
+		    hand. It is on the account and in none of the boxes above, so the
+		    return is short by it and nothing else would say so. Under a nominal
+		    scheme this is the ONLY thing that catches it. %>
+		<% unless @vat_return[:unassigned].zero? %>
+			<p class="warning"><%= t("tax.vat.unassigned_warning",
+						amount: format_cents_with_currency(@vat_return[:unassigned], @vat_return[:currency], show_zero: true)) %>
+			</p>
+		<% end %>
+
+		<h3><%= t("tax.vat.by_code") %></h3>
+		<table>
+			<thead>
+				<tr>
+					<%# The direction, because the labels dropped "Purchase," and
+					    "Sale," — in the dropdown the group heading says which, but
+					    here the label stands alone and "Standard rate" is both. %>
+					<th><%= t("tax.vat.direction_label") %></th>
+					<th><%= t("tax.vat.code") %></th>
+					<th><%= t("attrs.rate") %></th>
+					<th class="right"><%= t("tax.vat.net") %></th>
+					<th class="right"><%= t("tax.vat.amount") %></th>
+				</tr>
+			</thead>
+			<tbody>
+				<% @vat_return[:lines].each do |line| %>
+					<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+						<td><%= t("tax.vat.direction_short.#{line.code.direction}") %></td>
+						<td><%= line.code.label %></td>
+						<td><%= line.code.rate_label %></td>
+						<td class="right"><%= format_cents_with_currency(line.net, @vat_return[:currency], show_zero: true) %></td>
+						<td class="right">
+							<%= format_cents_with_currency(line.tax, @vat_return[:currency], show_zero: true) %>
+							<%# A reverse charge owes and reclaims the same amount under one
+							    code: both halves are reported, and they cancel. %>
+							<% if line.code.reverse_charge? %>
+								<span><%= t("tax.vat.reverse_charge_note",
+								             amount: format_cents_with_currency(line.reverse_tax, @vat_return[:currency], show_zero: true)) %></span>
+							<% end %>
+						</td>
+					</tr>
+				<% end %>
+			</tbody>
+		</table>
+	<% end %>
+</div>
+
+<div class="crud_navigation">
+	<%= link_to t("crud.dashboard"),
+		dashboard_path,
+		class: "backend_link button green no-halfpad" %>
+
+	<%= link_to t("crud.back_to", name: @report.report_group.display_name),
+		report_group_path(@report.report_group),
+		class: "backend_link button no-phone" %>
+
+	<%# No short/long toggle: a return is the return. %>
+	<%= link_to t("crud.csv"),
+			report_path(@report, format: :csv),
+			target: "_blank", rel: "noopener",
+			class: 'button green',
+			data: { sure: t("crud.csv_confirm") } %>
+</div>

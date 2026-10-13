@@ -25,7 +25,9 @@ class TaxCategoryAutoAssigner
     entity = Entity.find_by(code: @entity_code)
     abort_with "Entity #{@entity_code} not found" unless entity
 
-    schemes = Array(entity.tax_schemes)
+    # Income-tax schemes only: a VAT return's boxes are filled from posting
+    # codes, so there is nothing about an account to guess.
+    schemes = TaxSchemeConfig.vat_schemes(entity.tax_schemes).last
     abort_with "Entity #{@entity_code} files no tax schemes — pick them first" if schemes.empty?
 
     result = Result.new(assigned: 0, skipped_non_taggable: 0, skipped_no_guess: 0,

@@ -8,7 +8,9 @@
 
 	<div class="controls">
 	<%# The reserved 3EE9xx retained-earnings range is written only by the year-end flow. %>
-		<% if @account.balance_account? && !@account.locked? %>
+		<%# A VAT control account is not a bank: it is cleared by paying the
+		    authority from one, which is a withdrawal on the BANK's ledger. %>
+		<% if @account.balance_account? && !@account.locked? && !@account.vat_role? %>
 			<%= link_to @account.equity? ? t(".new_drawing") : t(".new_deposit"),
 					new_deposit_account_path(@account),
 					class: 'backend_link button green' %>
@@ -74,7 +76,10 @@
 				<% elsif row.counter_accounts.size > 1 %>
 					<span class="transaction-type-split" 
 						  data-je-id="<%= row.journal_entry_id %>">
-						  Split (<%= row.counter_accounts.size %>)
+						  <%# `number`, not `count`: with `count` Rails would look for a
+						      pluralisation and there is never one here — a split cell only
+						      exists where there are two or more counter accounts. %>
+						  <%= t(".split", number: row.counter_accounts.size) %>
 						<span id="split-<%= row.journal_entry_id %>" 
 							  class="split-details hidden">
 							<% row.counter_accounts.each do |ca| %>
@@ -116,7 +121,8 @@
 			  <% end %>
 
 			<%# actions — none on a locked account: the year-end flow writes it, users don't %>
-			  <% if @account.balance_account? %>
+			  <%# A VAT account takes the nominal branch: see Posting.ledger_data_from_scope. %>
+			  <% if @account.balance_account? && !@account.vat_role? %>
 				<td class="actions no-phone">
 					<% case @account.locked? ? nil : row.transaction_type %>
 					<% when 'Deposit' %>

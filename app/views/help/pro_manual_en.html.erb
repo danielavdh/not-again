@@ -23,6 +23,7 @@
       <li><a href="#cross-entity">Cross-entity entries between separate businesses</a></li>
       <li><a href="#add-currency">Adding a Currency</a></li>
       <li><a href="#tax-setup">Tax schemes and categories</a></li>
+      <li><a href="#vat">VAT</a></li>
     </ul>
   </nav>
 
@@ -59,7 +60,7 @@
   <p>Two further rules apply, and neither is negotiable:</p>
   <ul>
     <li><strong>Every entry needs at least one balance-sheet line</strong> &thinsp;&mdash;&thinsp; asset, liability or equity. A reclass purely between two expense accounts is refused; move it through the balance-sheet account it came from, or correct the original entry.</li>
-    <li><strong>Once an entry contains any income, expense or personal line, it may contain only ONE balance-sheet account.</strong> &laquo;The bank paid the rent and petty cash paid the stamps&raquo; is two entries, not one.</li>
+    <li><strong>Once an entry contains any income, expense or personal line, it may contain only ONE balance-sheet account.</strong> &laquo;The bank paid the rent and petty cash paid the stamps&raquo; is two entries, not one. The VAT lines the app derives from a tax code do not count towards this &thinsp;&mdash;&thinsp; see <a href="#vat">VAT</a>.</li>
   </ul>
   <p>An entry made only of balance-sheet lines is not subject to the second rule, and may name as many accounts as you like. That is what makes opening balances possible &thinsp;&mdash;&thinsp; see below.</p>
 
@@ -128,5 +129,23 @@ Under a cumulative regime such as UK MTD corrections reach the authority with th
     <p>Downloading gives you one CSV matching what's on screen &thinsp;&mdash;&thinsp; summary or detail. Emailing a report gives you both: a <strong>summary</strong> (category totals, what goes in the boxes) and a <strong>detail</strong> (category totals and their individual entries, with receipt links; unlinked receipts are listed separately). If the entity has an accountant's file format set (DATEV, for instance), that comes along too. Nothing to report for the period gives you a short email saying so instead. The summary CSV is also saved  each time it changes, so you always have a dated backup of what a period's boxes looked like.</p>
     <p>Setting up a taxpayer, connecting to the tax authority and sending a period &thinsp;&mdash;&thinsp; see <%= link_to "Setting up tax reporting", easy_manual_path(anchor: "tax") %> and <%= link_to "Filing quarterly figures yourself", easy_manual_path(anchor: "filing") %>.</p>
 
+
+  <h2 id="vat">VAT</h2>
+
+  <h3>Where the VAT lands, and what the rule then allows</h3>
+  <p>The scheme&rsquo;s file says whether its authority treats VAT as a <strong>balance-sheet</strong> control account (e.g. UK), or as <strong>income and expense</strong> lines in the P&amp;L, (e.g. German EÜR). That decides whether the one-balance-account-if-nominals-present rule needs to be relaxed.</p>
+  <p>With a balance-sheet control account, a VAT purchase would otherwise hold two balance accounts (expense, input VAT, bank), so the <em>derived</em> line is exempted from the rule &thinsp;&mdash;&thinsp; while one <strong>typed by hand</strong> is refused: a VAT line with no code behind it would sit in the control account and never reach the return.</p>
+  <p>Where the control accounts are nominal, the entry has one balance account anyway. A hand-typed line there is not refused &thinsp;&mdash;&thinsp; but it still shows on the return as <em>unassigned VAT</em>, which is how either shape is caught.</p>
+  <p>Otherwise the rule stays in place: a loan repayment split into principal and interest is still two entries.</p>
+
+  <h3>Clearing the control account</h3>
+  <p>Any difference between what the account holds and what the codes account for appears on the return as <em>unassigned VAT</em> &thinsp;&mdash;&thinsp; which is what a hand-typed VAT posting shows up as.</p>
+
+  <h3>Dates, rates and copies</h3>
+  <p>Codes are versioned by <strong>date</strong>, not by tax year: if a rate changes, it changes on a date. Move an entry across a rate change and the VAT is re-derived at the rate in force on the new date.</p>
+  <p>A VAT code can only be used on an entry in its scheme&rsquo;s own currency. An invoice paid from an account in another currency gets no code: convert first, or book the gross and reclaim nothing.</p>
+
+  <h3>VAT is not a split</h3>
+  <p>A <code>%</code> split divides one amount at a percentage <em>you</em> chose; a VAT code adds a further line at a rate fixed by <em>law</em>. Different mechanisms, and they do not interact.</p>
 </div>
 <%= render "help/back" %>

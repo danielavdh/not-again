@@ -1,9 +1,17 @@
 # frozen_string_literal: true
 
 class TaxCategoryLoader
+  # Two catalogues in one file: the boxes, and a VAT scheme's codes.
+  Result = Struct.new(:categories, :codes, keyword_init: true)
+
   REQUIRED_HEADER_KEYS = %w[country_code scheme tax_year].freeze
   REQUIRED_ROW_KEYS    = %w[key].freeze
-  ALLOWED_ROW_KEYS     = %w[key section api_section label export_column api_field position notes keywords].freeze
+  ALLOWED_ROW_KEYS     = %w[key section api_section label export_column api_field position notes
+                            keywords includes].freeze
+  REQUIRED_CODE_KEYS   = %w[key rate_bps direction valid_from].freeze
+  ALLOWED_CODE_KEYS    = %w[key label rate_bps direction valid_from valid_to reverse_charge
+                            net_category_key tax_category_key reverse_tax_category_key
+                            datev_bu position].freeze
 
   def self.call(path) = new(path).call
 
@@ -74,6 +82,9 @@ class TaxCategoryLoader
         # such as tax_taken_off, which is reported at final declaration instead.
         api_field:    row['api_field'],
         position:     row['position'].to_i,
+        # Boxes of the same form this one totals up — a fact about the form, so
+        # a code feeding box 8 reaches box 6 without naming both.
+        includes:     Array(row['includes']).map(&:to_s),
         notes:        row['notes'],
         # Words that mean this box, in the FORM'S own language — never the
         # user's. Matching a translated word against an account name written in
@@ -81,6 +92,16 @@ class TaxCategoryLoader
         # so the matcher never has to.
         keywords:     Array(row['keywords']).map { |w| TaxCategoryGuesser.normalise(w) }.reject(&:empty?)
       }
+    end
+
+    # A box totalling boxes that do not exist would just report less than it
+    # should, silently.
+    declared = rows.map { |r| r[:key] }
+    rows.each do |row|
+      unknown = row[:includes] - declared
+      next if unknown.empty?
+      raise "Category #{row[:key]} says it includes #{unknown.inspect}, which is not a " \
+            "category in #{@path}. A box can only total boxes of its own form."
     end
 
     TaxCategory.upsert_all(
@@ -110,10 +131,109 @@ class TaxCategoryLoader
       )
     end
 
-    rows.size
+    Result.new(
+      categories: rows.size,
+      codes:      load_tax_codes(data, country_code, scheme, rows.map { |r| r[:key] })
+    )
   end
 
   private
+
+  # Versioned by DATE, so these rows do NOT belong to the file's tax_year the
+  # way the categories do — one key may have two rows a decade apart. Hence one
+  # file per scheme (TaxSchemeConfig enforces it), pruned against the scheme.
+  def load_tax_codes(data, country_code, scheme, category_keys)
+    codes = data['tax_codes']
+    return 0 if codes.nil?
+    raise "'tax_codes:' must be an array in #{@path}" unless codes.is_a?(Array)
+
+    seen = Set.new
+    rows = codes.each_with_index.map do |row, i|
+      raise "Tax code #{i} must be a Hash in #{@path}" unless row.is_a?(Hash)
+      unknown = row.keys - ALLOWED_CODE_KEYS
+      raise "Tax code #{i} has unknown keys: #{unknown.inspect} in #{@path}" if unknown.any?
+      REQUIRED_CODE_KEYS.each do |k|
+        raise "Tax code #{i} missing '#{k}' in #{@path}" if row[k].to_s.empty?
+      end
+      check_direction!(row['direction'], i)
+
+      key = row['key'].to_s
+      # A rate change is a second row; a second row with the same start date is
+      # a copy-paste mistake.
+      raise "Duplicate tax code '#{key}' from #{row['valid_from']} in #{@path}" \
+        unless seen.add?([ key, row['valid_from'].to_s ])
+
+      # A box key that does not exist would fail nowhere: the figure would never
+      # reach the return, for every user of the scheme, silently.
+      %w[net_category_key tax_category_key reverse_tax_category_key].each do |field|
+        box = row[field]
+        next if box.blank? || category_keys.include?(box.to_s)
+        raise "Tax code #{key} names #{field}: #{box.inspect}, which is not a category " \
+              "in #{@path}. The boxes a code feeds must be boxes of its own scheme."
+      end
+
+      {
+        country_code:     country_code,
+        scheme:           scheme,
+        key:              key,
+        label:            row['label'],
+        # Basis points: 1900 is 19%.
+        rate_bps:         row['rate_bps'].to_i,
+        # Which control account the leg goes to, and which side.
+        direction:        row['direction'].to_s,
+        valid_from:       row['valid_from'],
+        valid_to:         row['valid_to'],
+        # One code, two legs netting to zero.
+        reverse_charge:   row['reverse_charge'] ? true : false,
+        # Two fields because a rate cannot say which box: a zero-rated supply
+        # and an export are both 0% and belong on different lines.
+        net_category_key: row['net_category_key'],
+        tax_category_key: row['tax_category_key'],
+        # The box for the OTHER leg of a reverse charge.
+        reverse_tax_category_key: row['reverse_tax_category_key'],
+        # What a DATEV import expects.
+        datev_bu:         row['datev_bu'],
+        position:         row['position'].to_i
+      }
+    end
+
+    TaxCode.upsert_all(
+      rows.map { |r| r.merge(created_at: Time.current, updated_at: Time.current) },
+      unique_by: %i[country_code scheme key valid_from]
+    )
+
+    prune_tax_codes(scheme, rows)
+    rows.size
+  end
+
+  # A code with postings is HISTORY: deleting it would orphan the VAT on entries
+  # already filed. Retiring a rate means giving it a valid_to.
+  def prune_tax_codes(scheme, rows)
+    live   = rows.map { |r| [ r[:key], r[:valid_from].to_s ] }
+    doomed = TaxCode.where(scheme: scheme).reject { |c|
+      live.include?([ c.key, c.valid_from.to_s ])
+    }
+    return if doomed.empty?
+
+    in_use = TaxCode.where(id: doomed.map(&:id)).joins(:postings).distinct.pluck(:key)
+    if in_use.any?
+      raise "#{@path} no longer declares tax code(s) #{in_use.sort.join(', ')}, but postings " \
+            "use them. A code with postings is history — give it a valid_to instead of " \
+            "removing it."
+    end
+
+    TaxCode.where(id: doomed.map(&:id)).delete_all
+    Rails.logger.info("TaxCategoryLoader: removed #{doomed.size} unused tax code row(s) " \
+                      "from #{scheme} — no longer in #{File.basename(@path)}")
+  end
+
+  def check_direction!(value, index)
+    return if TaxCode::DIRECTIONS.include?(value.to_s)
+
+    raise "Tax code #{index} has direction: #{value.inspect} in #{@path}. " \
+          "Must be one of #{TaxCode::DIRECTIONS.join(', ')} — input is VAT we paid and " \
+          "reclaim, output is VAT we charged and owe."
+  end
 
   # `section` is a FIXED vocabulary of three, and this is the only thing that
   # enforces it — TaxCategory validates it too, but the loader writes through

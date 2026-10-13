@@ -11,7 +11,10 @@ class ReportGroupsController < BaseController
   def show
     @report_group = accessible_report_groups.includes(:reports).find(params[:id])
     @reports = @report_group.reports.order(start_date: :desc)
-    return load_tax_assignment if @report_group.tax_report?
+    # A VAT group needs neither: no accounts to assign, and the return lives on
+    # each period's own report page.
+    return render :show         if @report_group.vat_report?
+    return load_tax_assignment  if @report_group.tax_report?
     #@selected_accounts = @report_group.accounts.order('report_group_accounts.position')
     #@selected_account_ids = @selected_accounts.pluck(:id)
     @selected_accounts = @report_group.accounts.order('report_group_accounts.position').to_a

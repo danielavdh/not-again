@@ -1,3 +1,8 @@
+<%# A derived VAT leg is never an editable row — see accounts/_bank_posting_fields.
+    The coded row above it already shows the GROSS, so the entry still reads as
+    balanced on screen. %>
+<% if pf.object.tax_leg? %>
+<% else %>
 <tr class="posting-row <%= cycle('list-line-odd', 'list-line-even') %>">
   <%= pf.hidden_field :id %>
   <%= pf.hidden_field :deduction_pair_id, class: 'posting-deduction-pair-id' %>
@@ -29,10 +34,18 @@
   </td>
 
   <td class="input-cell entry_type">
-    <%= pf.select :entry_type, [[t("jargon.debit"), 'debit'], [t("jargon.credit"), 'credit']], {}, aria: { label: t("attrs.type") } %>
+    <%# Abbreviated, in each language's own terms: Dr/Cr, S/H for Soll and
+        Haben — the pair the DATEV export already writes. The full words are on
+        the bank forms, which are the ones for non-bookkeepers. %>
+    <%= pf.select :entry_type,
+                  [[t("jargon.debit_short"), 'debit'], [t("jargon.credit_short"), 'credit']],
+                  {},
+                  aria: { label: t("attrs.type") } %>
   </td>
 
   <td class="input-cell right">
+    <%# The GROSS, as the invoice reads. A pro balances by hand against gross
+        figures, which is what they have in front of them. %>
     <%# A 601 gift bridge amount is set only via the modal — locked here. %>
     <%= pf.text_field :amount_display,
                   value: pf.object.amount_display_formatted,
@@ -54,6 +67,15 @@
     <%= pf.text_field :reference, aria: { label: t("attrs.reference") }, placeholder: t("attrs.posting_placeholder") %>
   </td>
 
+  <%# Last of the detail columns, after reference. The amount column holds ONE
+      figure and is the most important thing on the row; this cell holds a code,
+      a VAT figure and a net, so sitting beside the amount it simply had more
+      content and pulled the eye off it — even reading "No VAT". Out here the
+      receipt column's colour balances it. %>
+  <% if @tax_code_options.present? %>
+    <%= render "journal_entries/tax_code_cell", pf: pf %>
+  <% end %>
+
   <td class="posting-receipt no-phone">
 	<%= render partial: 'receipts/posting_receipt_widget',
 	           locals: { pf: pf } %>
@@ -63,3 +85,4 @@
     <%= pf.check_box :_destroy, class: 'posting-destroy', aria: { label: t("crud.remove_posting") } %>
   </td>
 </tr>
+<% end %>

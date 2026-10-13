@@ -20,6 +20,15 @@
 # submission_name: what is actually SENT, for schemes with a connector
 # form_code:       the authority's reference for the form (names the archive)
 # currency:        what the scheme's figures are denominated in
+# kind:            "vat" for a VAT scheme, whose boxes are filled from tax
+# codes on postings rather than from account tags. Omit for an income-tax
+# scheme, which is the normal case.
+# vat_accounts:    "nominal" where the scheme wants VAT in the P&L rather than
+# on the balance sheet (German EÜR). Omit for a balance-sheet control account.
+# no_tax_label:    what "no VAT here" is CALLED in this scheme's own language —
+# "No VAT", "Geen btw", "Keine USt". Never translated, for the same reason
+# scheme_label is not: it names this country's tax. "Keine MwSt" on a British
+# return is wrong even when the app is being read in German.
 # tax_year_ends:   "MM-DD" — omit for a calendar year
 # position:        display order of the scheme within its country (optional)
 #
@@ -158,6 +167,30 @@ module TaxSchemeConfig
     config[:submission_names][scheme.to_s].presence || report_name(scheme)
   end
 
+  # A VAT return's boxes are filled from posting codes, so its categories must
+  # never be offered as account tags: an expense account tagged "VAT due on
+  # sales" would be nonsense the app then reported.
+  def self.vat_scheme?(scheme)
+    config[:kinds][scheme.to_s] == "vat"
+  end
+
+  # The VAT schemes and the rest: every caller wanting one wants the other.
+  def self.vat_schemes(schemes)
+    Array(schemes).partition { |s| vat_scheme?(s) }
+  end
+
+  # In the scheme's own language, so a German reader of a British return sees
+  # "No VAT" and not "Keine MwSt".
+  def self.no_tax_label(scheme)
+    config[:no_tax_labels][scheme.to_s].presence || "No VAT"
+  end
+
+  # The balance sheet, or the P&L. German EÜR is the reason: a cash-basis return
+  # has no balance sheet to put a control account on.
+  def self.vat_accounts_nominal?(scheme)
+    config[:vat_accounts][scheme.to_s] == "nominal"
+  end
+
   # The currency the scheme files in, and the one a tax report totals into. The
   # user does not choose it — unlike a custom report, where they may.
   def self.currency_for(scheme)
@@ -209,6 +242,10 @@ module TaxSchemeConfig
     sources      = {}
     tax_year_ends = {}
     country_labels = {}
+    kinds        = {}
+    vat_accounts = {}
+    no_tax_labels = {}
+    code_files   = {}
     positions    = Hash.new { |h, k| h[k] = {} }
     seen_headers = {}
 
@@ -234,6 +271,20 @@ module TaxSchemeConfig
       end
       seen_headers[header] = path
 
+      # Codes are date-versioned, so two year files declaring them would prune
+      # each other on load. Enforced here because the loader sees one file.
+      if data["tax_codes"].present?
+        if (earlier = code_files[slug])
+          raise "#{path} and #{earlier} both declare tax_codes: for #{slug}. " \
+                "VAT codes are versioned by date, not by tax year — declare them " \
+                "in one file for the scheme and give a retired rate a valid_to."
+        end
+        code_files[slug] = path
+      end
+
+      kinds[slug]                 = data["kind"].presence
+      vat_accounts[slug]          = data["vat_accounts"].presence
+      no_tax_labels[slug]         = data["no_tax_label"].presence
       connectors[slug]            = data["connector"].presence
       authorities[country]        = data["authority"].presence if data["authority"].present?
       report_names[slug]          = data["report_name"].presence
@@ -271,6 +322,9 @@ module TaxSchemeConfig
     end.freeze
 
     {
+      kinds:                    kinds.freeze,
+      vat_accounts:             vat_accounts.freeze,
+      no_tax_labels:            no_tax_labels.freeze,
       connectors:               connectors.freeze,
       authorities:              authorities.freeze,
       authorities_by_connector: authorities_by_connector,

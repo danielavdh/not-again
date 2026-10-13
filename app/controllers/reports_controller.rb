@@ -116,6 +116,9 @@ class ReportsController < BaseController
   end
 
   def show
+    # A VAT return needs none of what follows — see #show_vat_return.
+    return show_vat_return if @report.vat_report?
+
     # A tax report totals into the currency its scheme files in — not the
     # admin's preference, and not theirs to change.
     #
@@ -709,6 +712,31 @@ class ReportsController < BaseController
   end
 
   private
+
+  # A VAT return for the report's own period. Its own path, because everything
+  # #show does before building the data is about currency translation, and a
+  # VAT return has none to do: a code may only be used on an entry in its
+  # scheme's currency, so every figure is already in it. No display choice, no
+  # source to resolve, no missing-rate column, no fx variance.
+  def show_vat_return
+    group = @report.report_group
+    @display_currency = group.display_currency
+    @vat_return = Reports::VatReturn.new(
+      entity: group.entity, scheme: group.tax_scheme,
+      from:   @report.start_date, to: @report.end_date
+    ).call
+
+    respond_to do |format|
+      format.html { render :vat_return }
+      format.csv do
+        send_data Reports::VatReturnCsv.new(data: @vat_return).generate,
+                  filename: "#{group.tax_scheme}-#{group.entity.code}-" \
+                            "#{@report.start_date}-#{@report.end_date}.csv",
+                  type: "text/csv", disposition: "attachment"
+      end
+    end
+  end
+
 
   # Distinct closed periods for this entity, newest first. One period may hold
   # several closing entries — one per currency — so they are counted as one.

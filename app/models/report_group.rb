@@ -42,6 +42,13 @@ class ReportGroup < ApplicationRecord
     tax_scheme.present?
   end
 
+  # A VAT group. Its page is the return itself, not an account-tagging page:
+  # a VAT return's boxes are filled from the codes on postings, so there is
+  # nothing about an account to assign.
+  def vat_report?
+    tax_scheme.present? && TaxSchemeConfig.vat_scheme?(tax_scheme)
+  end
+
   # Which authority this group's scheme files with — "hmrc". Nil for a custom
   # group, or a scheme that stops at tagging and export.
   def authority_key

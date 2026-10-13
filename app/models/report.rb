@@ -5,7 +5,7 @@ class Report < ApplicationRecord
   belongs_to :report_group, 
              class_name: 'ReportGroup', 
              foreign_key: :report_group_id
-  delegate :account_ids_ordered, :tax_report?, :tax_scheme, to: :report_group
+  delegate :account_ids_ordered, :tax_report?, :vat_report?, :tax_scheme, to: :report_group
 
   # A tax report's accounts are derived from its scheme; a custom report's are
   # the curated list. Both answer here, so callers need not know which they

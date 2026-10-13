@@ -27,6 +27,8 @@ all_blank || new_record_zero
   validate :postings_must_balance
   validate :must_have_balance_sheet_posting
   validate :single_balance_account_with_nominals
+  validate :vat_leg_currency_matches_the_balance_leg
+  validate :tax_codes_are_usable, if: :tax_coded?
   validate :transfer_accounts_valid, if: :transfer_mode?
   validate :postings_same_group
   validate :cross_entity_real_leg_is_nominal
@@ -245,7 +247,181 @@ all_blank || new_record_zero
     posts_to_locked_retained_earnings?
   end
 
+  # Builds, updates and removes this entry's derived VAT legs, in place.
+  # Returns any control accounts it had to create, so the caller can say so.
+  #
+  # Called explicitly and always BEFORE the caller works out the bank leg: that
+  # leg is the sum of the others and must come to the GROSS, which it only does
+  # once the legs are among them. A callback would hide that ordering, and would
+  # also fire on post! and the year-end paths, which never touch VAT.
+  def derive_tax_legs
+    rows  = postings.reject { |p| p.marked_for_destruction? || p.tax_leg? }
+    codes = TaxCode.lookup(rows.map(&:tax_code_id), on: entry_date)
+    # Whatever is left here at the end belongs to a row that was deleted or
+    # decoded. Keyed by the net posting ITSELF where the link is only in memory:
+    # a leg built moments ago has no foreign key, and keying on the id alone
+    # made a second pass build a second leg.
+    orphans = postings.select(&:tax_leg?).group_by { |leg|
+      leg.association(:tax_for_posting).target || leg.tax_for_posting_id
+    }
+    created = []
+
+    rows.each do |row|
+      mine = orphans.delete(row) || (row.id.present? ? orphans.delete(row.id) : nil) || []
+      code = codes[row.tax_code_id]
+      reconcile_tax_legs(row, mine, code ? tax_legs_wanted(row, code, created) : [])
+    end
+
+    orphans.each_value { |legs| legs.each(&:mark_for_destruction) }
+    created
+  end
+
+  # Whether anything in this entry carries a VAT code — the cheap test the
+  # controllers use before asking for the work.
+  def tax_coded?
+    postings.any? { |p| !p.marked_for_destruction? && p.tax_code_id.present? }
+  end
+
 private
+
+  # What this row's legs should be, and the net it is left with. Gross is the
+  # invariant: edit the VAT figure and the net moves, never the gross, so the
+  # bank leg goes on matching the statement.
+  def tax_legs_wanted(row, code, created)
+    account = account_for_posting(row)
+    return [] if account.nil? || account.entity_code.blank?
+
+    row.gross_for_tax ||= row.amount.to_i
+    gross = row.gross_for_tax
+    return [] if gross <= 0
+
+    # Reverse charge: the invoice carried no VAT, so nothing is split — two legs
+    # on opposite sides that cancel, and the bank leg untouched.
+    if code.reverse_charge?
+      row.amount = gross
+      tax = row.tax_amount_from_form || code.tax_from_net(gross)
+      return [] unless tax.positive?
+
+      [ vat_leg(account, code, TaxCode::OUTPUT, tax, flip(row.entry_type), created),
+        vat_leg(account, code, TaxCode::INPUT,  tax, row.entry_type,       created) ]
+    else
+      tax = row.tax_amount_from_form || code.tax_from_gross(gross)
+      tax = 0 if tax.negative? || tax >= gross
+      row.amount = gross - tax
+      return [] unless tax.positive?
+
+      # Same side as the net row: a purchase debits both, the bank carries both.
+      [ vat_leg(account, code, code.direction, tax, row.entry_type, created) ]
+    end
+  end
+
+  # One query per (scheme, direction), however many rows share it.
+  def vat_leg(net_account, code, direction, amount, entry_type, created)
+    @_vat_accounts ||= {}
+    key = [ net_account.entity_code, code.scheme, direction ]
+    account = @_vat_accounts[key] ||= begin
+      resolved = Account.resolve_vat_account(entity_code: net_account.entity_code,
+                                             scheme: code.scheme, direction: direction)
+      created << resolved if resolved.previously_new_record?
+      resolved
+    end
+
+    { account: account, amount: amount, entry_type: entry_type, currency: account.currency }
+  end
+
+  # Matched by ACCOUNT, not position: a reverse charge has two legs and only the
+  # account says which. Updated rather than replaced, so the id survives an edit.
+  def reconcile_tax_legs(row, existing, wanted)
+    by_account = existing.group_by(&:account_id)
+
+    wanted.each do |spec|
+      leg = (by_account[spec[:account].id] || []).shift
+      if leg
+        leg.assign_attributes(spec)
+      else
+        postings.build(spec).tax_for_posting = row
+      end
+    end
+
+    by_account.each_value { |legs| legs.each(&:mark_for_destruction) }
+  end
+
+  def flip(entry_type) = entry_type.to_s == "debit" ? :credit : :debit
+
+  # What a posting alone cannot check: the entry's date, currency and shape.
+  # One query for the codes, one for the entities, however many rows.
+  def tax_codes_are_usable
+    rows = postings.reject { |p| p.marked_for_destruction? || p.tax_leg? }
+                   .select { |p| p.tax_code_id.present? }
+    return if rows.empty?
+
+    codes    = TaxCode.where(id: rows.map(&:tax_code_id)).index_by(&:id)
+    accounts = rows.index_with { |row| account_for_posting(row) }
+    schemes  = filed_schemes_by_entity(accounts.values.compact.map(&:entity_code).uniq)
+    # The currency every leg of an entry with nominals is in, by construction.
+    entry_currency = postings.reject { |p| p.marked_for_destruction? }
+                             .find { |p| !p.tax_leg? && account_for_posting(p)&.balance_account? }
+                             &.currency
+
+    rows.each do |row|
+      account = accounts[row]
+      next if account.nil?
+      code = codes[row.tax_code_id]
+      name = "#{account.code} #{account.name}"
+
+      # A rate that had not started, or was withdrawn. Moving the date does it.
+      if code.nil? || !code.on?(entry_date)
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_date",
+                                 account: name, date: I18n.l(entry_date, format: :short_date)))
+        next
+      end
+
+      case account.tax_code_problem(code, filed_schemes: schemes.fetch(account.entity_code, []))
+      when :not_nominal
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_not_nominal", account: name))
+      when :direction
+        # A sale code on an expense derived its leg into the OUTPUT VAT account,
+        # so the return showed tax owed on money that had been spent.
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_direction",
+                                 account: name, code: code.label))
+      when :scheme
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_scheme",
+                                 account: name,
+                                 scheme: TaxSchemeConfig.scheme_label(code.scheme)))
+      end
+
+      # A control account holds one currency, the one the authority is paid in.
+      wanted = TaxSchemeConfig.currency_for(code.scheme)
+      if entry_currency.present? && wanted.present? && entry_currency != wanted
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_currency",
+                                 scheme: TaxSchemeConfig.scheme_label(code.scheme),
+                                 scheme_currency: wanted, entry_currency: entry_currency))
+      end
+
+      # JE₂ only. cross_entity_real_leg_is_nominal already refuses a balance VAT
+      # leg there; this says it in VAT's words and also catches the EÜR case,
+      # where the control account IS nominal and that rule would let it through.
+      #
+      # NOT the donor's side: a gift in the entry does not stop them reclaiming
+      # VAT on their own expense row beside it.
+      if cross_entity_counterpart?
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_cross_entity", account: name))
+      end
+    end
+  end
+
+  # The receiving side, identified as cross_entity_real_leg_is_nominal does it:
+  # it holds the equity bridge, where the origin holds the personal gift.
+  def cross_entity_counterpart?
+    postings.any? { |p| p.cross_entity_linked? && p.account&.equity? }
+  end
+
+  # One query. Accounts have no entity_id — digits 2 and 3 of the code are it.
+  def filed_schemes_by_entity(entity_codes)
+    return {} if entity_codes.empty?
+    Entity.where(code: entity_codes).pluck(:code, :tax_schemes).to_h
+  end
+
 
   # A pro may mark a hand-built entry as closing a financial year, so it counts
   # towards the dashboard's "closed up to" note. They should not have to work
@@ -342,16 +518,58 @@ private
     end
   end
 
+  # An entry with nominal postings may hold exactly ONE balance-sheet account.
+  # Nominals carry no currency and borrow the balance leg's; "exactly one" is
+  # also what keeps a bank entry self-balancing.
+  #
+  # A DERIVED VAT leg does not count — it is computed into the control account
+  # for the scheme, in the scheme's currency, so it cannot break the currency
+  # guarantee. One typed BY HAND still does, and should: a VAT leg with no code
+  # behind it would never reach the return.
+  #
+  # Only bites where the control account is on the balance sheet. Under a
+  # nominal scheme (vat_accounts: nominal, German EÜR) it is an income or
+  # expense account, so this rule never sees it and a hand-typed one is not
+  # refused — Reports::VatReturn's `unassigned` is what catches that.
   def single_balance_account_with_nominals
     active_postings = postings.reject(&:marked_for_destruction?)
     return if active_postings.empty?
 
-    accounts = active_postings.filter_map { |p| account_for_posting(p) }
-    has_nominal = accounts.any? { |a| a.income? || a.expense? || a.personal? }
-    balance_count = accounts.count { |a| a.balance_account? }
+    nominal, balance = [], []
+    active_postings.each do |posting|
+      account = account_for_posting(posting)
+      next if account.nil?
+      nominal << account if account.income? || account.expense? || account.personal?
+      balance << account if account.balance_account? && !posting.tax_leg?
+    end
 
-    if has_nominal && balance_count > 1
-      errors.add(:base, I18n.t("journal_entries.errors.multiple_balance_accounts"))
+    return if nominal.empty? || balance.size <= 1
+
+    # Named, because the message left the user to work out which of six rows.
+    errors.add(:base, I18n.t("journal_entries.errors.multiple_balance_accounts",
+                             accounts: balance.map { |a| "#{a.code} #{a.name}" }.to_sentence))
+  end
+
+  # Backstop for the exemption above. Nothing a user can do should reach it:
+  # the leg is derived into an account in the scheme's currency, and a code may
+  # only be used on an entry in that currency. If those two ever drift apart the
+  # entry is refused with both currencies named, rather than going unbalanced.
+  def vat_leg_currency_matches_the_balance_leg
+    active_postings = postings.reject(&:marked_for_destruction?)
+    legs = active_postings.select { |p| p.tax_leg? && account_for_posting(p)&.balance_account? }
+    return if legs.empty?
+
+    real = active_postings.find { |p|
+      !p.tax_leg? && account_for_posting(p)&.balance_account?
+    }
+    return if real.nil? || real.currency.blank?
+
+    legs.each do |leg|
+      next if leg.currency.blank? || leg.currency == real.currency
+      errors.add(:base, I18n.t("journal_entries.errors.vat_leg_currency",
+                               account: account_for_posting(leg)&.code,
+                               currency: leg.currency,
+                               bank_currency: real.currency))
     end
   end
 

@@ -18,6 +18,11 @@ module CrossEntityJournalEntries
     :id, :account_id, :amount, :amount_display, :currency, :entry_type,
     :description, :reference, :_destroy, :existing_receipt_id,
     :deduction_pair_id, :deduction_percentage, :cross_entity_link_id,
+    # The VAT code the user picked, and their own figure for the VAT where they
+    # overrode ours. tax_for_posting_id is deliberately NOT here: a derived leg
+    # is the app's to build, and one typed by hand would sit in the control
+    # account without ever reaching the return.
+    :tax_code_id, :tax_amount_display,
     { receipts_attributes: [:id, :title, :receipt_date, :description,
                             :scan, :entity_id, :_destroy] }
   ].freeze
@@ -233,7 +238,7 @@ module CrossEntityJournalEntries
   # account, and its side says which of the two forms. More than one (a transfer,
   # an opening balance) genuinely belongs to the journal-entry form.
   def origin_edit_path(origin)
-    balance = origin.postings.select { |p| p.account&.balance_account? }
+    balance = origin.postings.select { |p| p.account&.balance_account? && !p.tax_leg? }
     return edit_journal_entry_path(origin) unless balance.one?
 
     bank = balance.first

@@ -48,7 +48,9 @@ Six objects, and one invariant that ties them together.
 
 **Report group** (`ReportGroup`) a set of accounts saved to report on. A `Report` is a report group plus a date range. There are standard reports (balance sheet, P&L and trial balance), custom reports (choose any accounts from a family or entity and arrange them as you please) and tax reports (carry a `tax_scheme`).
 
-**The invariant:** any entry that touches the P&L has exactly one balance-sheet account (`single_balance_account_with_nominals`). That is what lets a nominal posting have no currency of its own — there is always exactly one balance leg to borrow it from (`Posting.currency_join_sql`).
+**The invariant:** any entry that touches the P&L has exactly one balance-sheet account (`single_balance_account_with_nominals`). That is what lets a nominal posting have no currency of its own — there is always exactly one balance leg to borrow it from (`Posting.currency_join_sql`). It is also what makes the guided forms work: a bank entry balances itself, because there is one bank leg and it is the sum of the others.
+
+One thing does not count towards it: a **derived VAT leg** (a posting carrying `tax_for_posting_id`), because the app computes it into a control account in the scheme's own currency and so cannot break the currency guarantee. One typed by hand still counts, and is refused — where the scheme puts VAT on the balance sheet at all. See [VAT](#vat-for-someone-changing-the-code).
 
 Reports are assembled live from postings over any date range — nothing is stored as a "balance". On top of the ledger sit three optional layers: **tax categories** tag accounts and roll up into **schemes** and **connectors** (below); **exchange rates** translate multi-currency figures; **receipts** hang off postings.
 
@@ -95,8 +97,6 @@ If there are nominal postings only 1 balance account is allowed (and required) i
 ## Splitting a posting
 
 Use of home, car, phone: a mixed business/private cost, split at entry time the way a careful accountant does it by hand. Every non-balance posting row has a `%` button that opens a modal: it takes the account, a business-use percentage (pre-filled from the account's `deduction_percentage`, sets and resets automatically), and a destination account for the private portion (usually a type-6 drawings account). Apply writes the business amount back to the row and injects a second row for the private portion. Both sides are real postings; the P&L shows only the business portion. Re-opening the `%` button edits the split but does not remove the injected row — tick its destroy box first. Doing it by hand (two accounts, book each portion) is always available; the feature just automates a fixed, recurring ratio.
-
-**VAT** is designed, not built. Similar idea.
 
 ---
 
@@ -213,6 +213,32 @@ Where a scheme sits is one fact: whether its YAML carries a `connector:` key. `g
 **Category** — one *box* on that form. A row under `categories:` in the YAML. Accounts are tagged with a category; a report sums each box. `section:` is the one field in the app's own vocabulary rather than the form's, and is one of `income`, `expenses`, `other`.
 
 **Connector** — the code that *submits* to one service (auth, client, payload). A class in `app/services/filing/`, e.g. `Filing::HmrcMtd`. Named in the scheme's header, stored nowhere else.
+
+**Tax code** — a VAT rate a *posting* can carry, under `tax_codes:` in a VAT scheme's YAML. Unlike a category, it is versioned by **date**, not by tax year: a rate changes mid-year (DE 19→16 on 1 July 2020), so one key may have several rows with `valid_from`/`valid_to` spans. Because of that they live in exactly **one** file per scheme — `TaxSchemeConfig` raises if two declare them, since loading one would prune the other.
+
+### VAT, for someone changing the code
+
+A scheme is a VAT scheme when its header says `kind: vat`. That is load-bearing: a VAT return's boxes are filled from posting codes, so its categories must never reach the account-tagging dropdown.
+
+**What is stored where.** The code goes on the **net** posting (`postings.tax_code_id`); the derived leg carries `tax_for_posting_id` back to it (FK, `ON DELETE CASCADE`). `tax_for_posting_id` is never in `POSTING_PARAMS`, so a leg cannot be typed. A control account is an ordinary `Account` identified by `tax_scheme` + `vat_role`, one per entity per scheme per direction, resolved or created by `Account.resolve_vat_account`. `accounts.default_tax_code_id` is a form convenience only.
+
+**`amount` is the NET.** `amount_display` and `Posting#gross_amount` give the gross, and only the posting forms and the cross-entity modal read them — no ledger or report does. A copy carries the gross, so re-derivation at the copy's date produces the current rate.
+
+**Derivation ordering is the thing that breaks silently.** `JournalEntry#derive_tax_legs` is called explicitly by every save path and always *before* the controller sums the bank leg — that leg is the sum of the other postings, so it only comes to the gross once the legs are among them. Deliberately not a callback: ordering would stop being visible at the call site, and it would fire on `post!` and the year-end paths, which never touch VAT. It is idempotent through `Posting#gross_for_tax`.
+
+**Where the leg lands follows the scheme, not the user.** `vat_accounts: nominal` in the header puts the control accounts in the P&L (input → expense, output → income); without it they are balance-sheet (input → asset, output → liability). The header follows the authority's own treatment — German EÜR is cash-basis and has no balance sheet to put them on.
+
+**So the relaxed invariant only bites on balance-sheet schemes.** There a derived leg would be a second balance account, and is exempted from `single_balance_account_with_nominals`; one typed by hand still counts and is refused. Under a nominal scheme the entry has one balance leg anyway and the rule never applies, so a hand-typed line is *not* refused — `Reports::VatReturn`'s `unassigned` figure is what catches it, and that selects on `vat_role` rather than account type, so it works for both shapes. Do not write a guard that assumes the control account is on the balance sheet.
+
+`Posting#tax_leg?` has to consult the in-memory association as well as the column, because a freshly built leg has no foreign key when validation runs.
+
+**One account-level rule, one place.** `Account#tax_code_problem` answers "could this account carry this code" (`:not_nominal` / `:direction` / `:scheme` / nil). The entry's validation maps it to messages; the remembered default and `vat:defaults` just check for nil. It takes the filed schemes as an argument so a caller checking many rows pays one query.
+
+**Three layers decide whether the VAT control appears**, narrowing: the column exists if any business in the entry's *family* files VAT; the control on a row appears only if that row's account can carry a code; and the save-back refuses to remember one an account could never use.
+
+**The return is neither a `Reports::Presenter` nor `LedgerBalances`.** Both group postings by account; a return groups them by code, because one expense account carries several rates and several boxes. It also needs no currency translation (a code may only be used on an entry in its scheme's currency), no date buckets and no debit-normal rule — a box's sign is the code's direction. Boxes that total other boxes say so themselves, via `tax_categories.includes`.
+
+**Not built:** filing (the return is a screen and a CSV), VAT group registrations, and inter-entity recharge. See `docs/gitignored/todo.md` items 27 and 28, and [known-limitations.md](known-limitations.md).
 
 **Taxpayer** — a taxpayer *as one authority knows them*: their number and their permission for the app to act. Owned by an admin, chosen per tax report group.
 

@@ -91,12 +91,27 @@ class TaxCategory < ApplicationRecord
   # older year.
   def self.for_period(scheme:, keys:, year:)
     keys = Array(keys).compact.uniq
-    return {} if scheme.blank? || keys.empty? || year.blank?
+    return {} if keys.empty?
+
+    catalogue_for(scheme: scheme, year: year).slice(*keys)
+  end
+
+  # The WHOLE catalogue as it stood for a period, keyed by key. Same
+  # effective-year rule as .for_period, which now reads it: contributors skip
+  # years in which nothing changed, so "the 2027 catalogue" means the newest
+  # file at or before 2027.
+  #
+  # Needed whole, not key by key, by anything that reads a box's structure
+  # rather than its figure — a box that only TOTALS other boxes is named by no
+  # account and by no tax code, so a lookup built from the keys in use would
+  # not contain it (Reports::VatReturn).
+  def self.catalogue_for(scheme:, year:)
+    return {} if scheme.blank? || year.blank?
 
     effective = where(scheme: scheme).where("tax_year <= ?", year.to_i).maximum(:tax_year)
     return {} unless effective
 
-    where(scheme: scheme, tax_year: effective, key: keys).index_by(&:key)
+    where(scheme: scheme, tax_year: effective).index_by(&:key)
   end
 
   # NOT translated, deliberately. A tax category is a box on a particular
@@ -142,7 +157,11 @@ class TaxCategory < ApplicationRecord
   # page — and they had already drifted apart once. Each option is a triple, so
   # the note travels to the browser as a data attribute on the <option>.
   def self.grouped_options(schemes)
-    schemes = Array(schemes)
+    # A VAT scheme's categories are boxes of a VAT return, filled from the tax
+    # codes on postings. They are not things an account can BE: tagging the
+    # phone-bill account "VAT due on sales" would be nonsense the app then
+    # reported as fact. One filter here covers all three selects.
+    schemes = TaxSchemeConfig.vat_schemes(schemes).last
     return [] if schemes.empty?
 
     # The catalogue's newest year. Contributors skip years in which nothing

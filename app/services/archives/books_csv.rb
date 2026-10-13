@@ -20,7 +20,12 @@ module Archives
   # shape would record who or what generated the file rather than anything
   # about the books.
   class BooksCsv
-    HEADER = %w[EntryID Date Entity AccountCode AccountName DebitMinor CreditMinor Currency Memo JournalReference].freeze
+    # TaxCode is the code's KEY, not its id — an archive meant to outlive this
+    # app must not point at a row in a table it no longer has. DerivedVat marks
+    # the legs the app computed rather than the user typing, which is what tells
+    # a reader why a VAT line has no counterpart on the bank statement.
+    HEADER = %w[EntryID Date Entity AccountCode AccountName DebitMinor CreditMinor Currency
+                Memo JournalReference TaxCode DerivedVat].freeze
 
     def initialize(scope_key:, year:, through: nil)
       @scope_key = scope_key
@@ -46,6 +51,7 @@ module Archives
 
       rows = Posting.joins(:account, :journal_entry)
         .joins(Posting.currency_join_sql)
+        .joins("LEFT JOIN tax_codes ON tax_codes.id = postings.tax_code_id")
         .where(journal_entries: { posted: true })
         .where([ conditions.join(" OR "), *binds ])
         .order("journal_entries.entry_date, journal_entries.id, accounts.code")
@@ -53,7 +59,8 @@ module Archives
           "journal_entries.id", "journal_entries.entry_date",
           Arel.sql("SUBSTRING(accounts.code, 2, 2)"), "accounts.code", "accounts.name",
           "postings.entry_type", "postings.amount", Arel.sql(Posting.effective_currency_sql),
-          "journal_entries.memo", "journal_entries.journal_reference"
+          "journal_entries.memo", "journal_entries.journal_reference",
+          "tax_codes.key", Arel.sql("(postings.tax_for_posting_id IS NOT NULL)")
         )
 
       csv_with(rows)
@@ -73,10 +80,12 @@ module Archives
         csv << HEADER
         # entry_type comes back as the string enum key ("debit"/"credit"), not
         # the raw integer: pluck on a joined query casts it.
-        rows.each do |id, date, entity_code, code, name, entry_type, amount, currency, memo, ref|
+        rows.each do |id, date, entity_code, code, name, entry_type, amount, currency, memo, ref,
+                      tax_code, derived_vat|
           debit  = entry_type == "debit" ? amount : ""
           credit = entry_type == "debit" ? "" : amount
-          csv << [ id, date.strftime("%Y-%m-%d"), entity_code, code, name, debit, credit, currency, memo, ref ]
+          csv << [ id, date.strftime("%Y-%m-%d"), entity_code, code, name, debit, credit, currency,
+                   memo, ref, tax_code, derived_vat ? "1" : "" ]
         end
       end
     end

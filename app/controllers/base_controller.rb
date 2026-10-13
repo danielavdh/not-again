@@ -248,6 +248,10 @@ class BaseController < ApplicationController
   end
 
   def load_form_data(account_types: nil)
+    # FIRST: build_account_options tags each account with whether its business
+    # files VAT.
+    load_tax_code_data
+
     base  = accessible_accounts.active.leaf_accounts.order(:code)
     scope = account_types ? base.where(account_type: account_types) : base
     @account_options = build_account_options(scope)
@@ -266,15 +270,62 @@ class BaseController < ApplicationController
     @currencies = report_currencies
   end
 
+  # The codes the rows of this form may carry, in force on the entry's date.
+  # Move the date across a rate change and the options are stale — the save is
+  # refused, naming the code and the date, rather than booking the old rate.
+  def load_tax_code_data
+    # Whose accounts could legitimately appear on THIS entry. An entry's rows
+    # reach one FAMILY only (postings_same_group), so a registered business puts
+    # the column on its family's forms too.
+    codes =
+      if @account
+        [ @account.entity_code ]
+      elsif @journal_entry&.persisted?
+        @journal_entry.postings.filter_map { |p| p.account&.entity_code }.uniq
+      end
+
+    in_scope =
+      if codes.present?
+        Entity.where(code: Entity.family_codes_for(codes))
+      else
+        # A new entry has no family yet: offer the column and let the per-row
+        # rule hide it once an account is chosen.
+        accessible_entities
+      end
+
+    schemes, = TaxSchemeConfig.vat_schemes(
+      in_scope.pluck(:tax_schemes).flatten.compact.uniq
+    )
+    @tax_code_options = schemes.empty? ? [] :
+      TaxCode.options_for(schemes: schemes, on: @journal_entry&.entry_date || Date.current)
+
+    # In the SCHEME's own language, not the reader's. Two authorities in play
+    # has no single country's word for it, so that falls back to a translation.
+    @tax_code_blank_label =
+      schemes.one? ? TaxSchemeConfig.no_tax_label(schemes.first) : t("tax.vat.none")
+
+    # WHICH businesses file, not just whether any do: the entity is a property
+    # of the account on the row, so one entry can mix registered and not.
+    @vat_entity_codes = vat_filing_entity_codes
+  end
+
+  def vat_filing_entity_codes
+    accessible_entities.pluck(:code, :tax_schemes).filter_map { |code, schemes|
+      vat, = TaxSchemeConfig.vat_schemes(Array(schemes))
+      code if vat.any?
+    }.to_set
+  end
+
   # Builds [label, id, data-attrs] select options, including the cross-entity
   # trigger attributes data-entity, data-group and data-type. See
   # Entity.group_key_for_codes.
   def build_account_options(scope)
-    accounts     = scope.pluck(:id, :code, :name, :account_type, :currency, :deduction_percentage)
+    accounts     = scope.pluck(:id, :code, :name, :account_type, :currency,
+                               :deduction_percentage, :default_tax_code_id)
     entity_codes = accounts.map { |_id, code, *| code[1, 2] }.uniq
     group_keys   = Entity.group_key_for_codes(entity_codes)
 
-    accounts.map { |id, code, name, _type, currency, deduction_pct|
+    accounts.map { |id, code, name, _type, currency, deduction_pct, default_tax_code_id|
       entity_code = code[1, 2]
       attrs = {
         'data-currency' => currency,
@@ -283,6 +334,11 @@ class BaseController < ApplicationController
         'data-type'     => AccountCoding::ACCOUNT_TYPES[code[0].to_i]
       }
       attrs['data-deduction-pct'] = deduction_pct if deduction_pct
+      # The code to assume for a row here, and where to write a new one back.
+      attrs['data-default-tax-code'] = default_tax_code_id if default_tax_code_id
+      # Whether THIS account's business files VAT.
+      attrs['data-files-vat'] = '1' if @vat_entity_codes.include?(entity_code)
+      attrs['data-save-tax-code-url'] = save_default_tax_code_account_path(id)
       ["#{code} - #{name}", id, attrs]
     }
   end

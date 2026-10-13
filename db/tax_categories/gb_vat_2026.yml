@@ -1,0 +1,223 @@
+country_code: gb
+country_label: "United Kingdom"
+scheme: vat
+tax_year: 2026
+# Declared because tax_year_ends is a fact about the COUNTRY's calendar, shared
+# by every scheme filed there — a file that omitted it would make the UK's
+# files contradict each other. The VAT return itself is quarterly and never
+# asks which tax year it falls in.
+tax_year_ends: "04-05"
+authority: HMRC
+position: 30
+scheme_label: "VAT (VAT100)"
+report_name: "GB-VAT"
+currency: GBP
+form_code: VAT100
+# A VAT scheme: its boxes are filled from the tax codes below, carried on
+# postings, NOT from account tags. See TaxSchemeConfig.vat_scheme?.
+kind: vat
+# What "no VAT" is called here, in this form's own language. Not a locale key:
+# a German reader of a BRITISH return should see "No VAT", not "Keine MwSt" —
+# the tax being named is VAT.
+no_tax_label: "No VAT"
+# No connector. The return is a screen and a CSV; VAT MTD is a separate
+# connector, later.
+#
+# UK VAT return — the nine boxes, as HMRC numbers them.
+#
+# Since 2021 boxes 2, 8 and 9 concern Northern Ireland only: goods moved
+# between NI and the EU. A business in Great Britain selling to the EU reports
+# those sales in box 6 and nothing else, and its reverse-charge purchases of
+# services from abroad in boxes 1 and 4.
+#
+# section is the app's own three-value vocabulary and none of these three
+# answers fits: a VAT box is neither income nor expenditure, it is tax. So
+# every box is left blank, which TaxCategory reads as "other" wherever a
+# section is wanted.
+categories:
+  - key: vat_due_sales
+    label: "VAT due in this period on sales and other outputs"
+    export_column: "1"
+    position: 10
+  - key: vat_due_acquisitions
+    label: "VAT due in this period on acquisitions of goods made in Northern Ireland from EU Member States"
+    export_column: "2"
+    position: 20
+  - key: total_vat_due
+    label: "Total VAT due (the sum of boxes 1 and 2)"
+    export_column: "3"
+    # The form says so itself. Declared here, so no code has to name box 3.
+    includes: [ vat_due_sales, vat_due_acquisitions ]
+    position: 30
+  - key: vat_reclaimed
+    label: "VAT reclaimed in this period on purchases and other inputs (including acquisitions in Northern Ireland from EU Member States)"
+    export_column: "4"
+    position: 40
+  - key: net_vat
+    label: "Net VAT to pay to HMRC or reclaim (difference between boxes 3 and 4)"
+    export_column: "5"
+    position: 50
+  - key: total_sales_ex_vat
+    label: "Total value of sales and all other outputs excluding any VAT"
+    export_column: "6"
+    # "All other outputs" includes the dispatches reported in box 8, so a
+    # figure there is counted again here. HMRC's own instruction.
+    includes: [ total_dispatches_ni ]
+    position: 60
+  - key: total_purchases_ex_vat
+    label: "Total value of purchases and all other inputs excluding any VAT"
+    export_column: "7"
+    # Likewise box 9: an acquisition counts in both.
+    includes: [ total_acquisitions_ni ]
+    position: 70
+  - key: total_dispatches_ni
+    label: "Total value of dispatches of goods and related costs (excluding VAT) from Northern Ireland to EU Member States"
+    export_column: "8"
+    position: 80
+  - key: total_acquisitions_ni
+    label: "Total value of acquisitions of goods and related costs (excluding VAT) made in Northern Ireland from EU Member States"
+    export_column: "9"
+    position: 90
+
+# The codes a posting may carry under this scheme.
+#
+# rate_bps is basis points: 2000 is 20%, 500 is 5%. An integer, so the split of
+# a gross amount is exact and no float ever touches an amount.
+#
+# direction says which VAT account the derived leg goes to: output is VAT we
+# charged and owe, input is VAT we paid and reclaim.
+#
+# net_category_key and tax_category_key are the two boxes the net and the tax
+# land in — two fields because a rate cannot say which box. zero_rated_sale and
+# export_sale are both 0% and belong in different lines.
+#
+# valid_from is 1996-08-01, when the 20% standard rate's predecessor regime
+# settled, except where a rate genuinely changed later. The app refuses a code
+# on an entry dated before its valid_from, so these are deliberately early
+# enough to cover any books a user brings with them.
+tax_codes:
+  # --- Sales -------------------------------------------------------------
+  - key: sale_standard
+    label: "Standard rate"
+    rate_bps: 2000
+    direction: output
+    # 20% from 4 January 2011. 17.5% before that, and a user with books that
+    # old adds the older row here.
+    valid_from: "2011-01-04"
+    net_category_key: total_sales_ex_vat
+    tax_category_key: vat_due_sales
+    position: 110
+  - key: sale_reduced
+    label: "Reduced rate"
+    rate_bps: 500
+    direction: output
+    valid_from: "1997-09-01"
+    net_category_key: total_sales_ex_vat
+    tax_category_key: vat_due_sales
+    position: 120
+  - key: sale_zero
+    label: "Zero rate"
+    rate_bps: 0
+    direction: output
+    valid_from: "1996-08-01"
+    net_category_key: total_sales_ex_vat
+    tax_category_key: vat_due_sales
+    position: 130
+  # Outside the scope of UK VAT, so it reaches no box at all — but it is still
+  # a code, so the user records the decision rather than leaving the row blank
+  # and wondering later.
+  - key: sale_outside_scope
+    label: "Outside the scope of VAT"
+    rate_bps: 0
+    direction: output
+    valid_from: "1996-08-01"
+    position: 150
+  - key: sale_export
+    label: "Export outside the UK"
+    rate_bps: 0
+    direction: output
+    valid_from: "2021-01-01"
+    net_category_key: total_sales_ex_vat
+    position: 140
+  - key: sale_dispatch_ni_eu
+    label: "Northern Ireland: dispatch to the EU"
+    rate_bps: 0
+    direction: output
+    valid_from: "2021-01-01"
+    net_category_key: total_dispatches_ni
+    position: 170
+
+  # --- Purchases ---------------------------------------------------------
+  - key: purchase_standard
+    label: "Standard rate"
+    rate_bps: 2000
+    direction: input
+    valid_from: "2011-01-04"
+    net_category_key: total_purchases_ex_vat
+    tax_category_key: vat_reclaimed
+    position: 10
+  - key: purchase_reduced
+    label: "Reduced rate"
+    rate_bps: 500
+    direction: input
+    valid_from: "1997-09-01"
+    net_category_key: total_purchases_ex_vat
+    tax_category_key: vat_reclaimed
+    position: 20
+  - key: purchase_zero
+    label: "Zero rate"
+    rate_bps: 0
+    direction: input
+    valid_from: "1996-08-01"
+    net_category_key: total_purchases_ex_vat
+    tax_category_key: vat_reclaimed
+    position: 30
+  - key: purchase_no_vat
+    label: "Supplier not VAT registered"
+    rate_bps: 0
+    direction: input
+    valid_from: "1996-08-01"
+    net_category_key: total_purchases_ex_vat
+    position: 40
+
+  # --- Reverse charge ----------------------------------------------------
+  # One code, two legs. The supplier charges no VAT; we account for it as if we
+  # had charged ourselves, and reclaim the same amount in the same breath. Both
+  # legs are derived, they net to zero, and the point is the REPORT: the figures
+  # appear in boxes 1 and 4, which is what HMRC asks for.
+  #
+  # ONE code covers both cases that reach those same boxes: services bought from
+  # outside the UK, and the domestic reverse charge for construction. The return
+  # cannot tell them apart — same net box, same tax box, same other half — so
+  # asking the user to choose between them was a question with no consequence,
+  # and put two "reverse charge" lines a keystroke apart.
+  #
+  # An EU acquisition into Northern Ireland is NOT one of these: it reaches
+  # boxes 9 and 2 instead, so it keeps its own code.
+  - key: purchase_reverse_charge
+    label: "Reverse charge"
+    rate_bps: 2000
+    direction: input
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: total_purchases_ex_vat
+    tax_category_key: vat_reclaimed
+    reverse_tax_category_key: vat_due_sales
+    position: 50
+  - key: purchase_acquisition_ni_eu
+    label: "Northern Ireland: EU acquisition"
+    rate_bps: 2000
+    direction: input
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: total_acquisitions_ni
+    tax_category_key: vat_reclaimed
+    reverse_tax_category_key: vat_due_acquisitions
+    position: 70
+  - key: sale_reverse_charge_construction
+    label: "Construction, reverse charge"
+    rate_bps: 0
+    direction: output
+    valid_from: "2021-03-01"
+    net_category_key: total_sales_ex_vat
+    position: 160

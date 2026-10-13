@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       member do
         patch :quick_map_tax
         patch :save_deduction_percentage
+        patch :save_default_tax_code
         get :ledger
         get :balance_at
         # deposits

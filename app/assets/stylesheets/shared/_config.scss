@@ -335,6 +335,8 @@ width: $width;
 	.field.flex, .field.flex.controls{
 	display: flex;
 	justify-content: space-between;
+	align-items: center;
+	gap: 1vw;
 	}
 	.field.check-boxes{
 		@include label-checkbox;

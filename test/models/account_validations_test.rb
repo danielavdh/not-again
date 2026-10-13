@@ -3,7 +3,7 @@
 require "test_helper"
 
 # Account rules not covered in account_test.rb: parent_cannot_be_grandparent,
-# entity_code_matches_creator, inherit_parent_currency_for_balance_accounts,
+# entity_code_is_writable, inherit_parent_currency_for_balance_accounts,
 # clear_currency_for_nominal_accounts, unmapped_for_tax.
 class AccountValidationsTest < ActiveSupport::TestCase
   setup do
@@ -88,29 +88,29 @@ class AccountValidationsTest < ActiveSupport::TestCase
     assert_nil account.currency
   end
 
-  # ==================== entity_code_matches_creator ====================
+  # ==================== entity_code_is_writable ====================
 
-  test "valid when creating admin's entity code matches account code" do
+  test "valid when the acting admin's entity code matches the account code" do
     admin = admins(:two) # entity_code: "10"
     # Entity 10 accounts have code starting with X10XXX
     account = Account.new(
       code: "410005", name: "New Income", account_type: :income
     )
-    account.creating_admin = admin
+    account.acting_admin = admin
     assert account.valid?, account.errors.full_messages.join(", ")
   end
 
-  test "invalid when creating admin's entity code does not match" do
+  test "invalid when the acting admin's entity code does not match" do
     admin = admins(:two) # entity_code: "10"
     account = Account.new(
       code: "401005", name: "Wrong Entity Income", account_type: :income
     )
-    account.creating_admin = admin
+    account.acting_admin = admin
     assert_not account.valid?
     assert account.errors[:code].any? { |e| e.include?("entity codes") }
   end
 
-  test "skips entity code check when no creating_admin set" do
+  test "skips entity code check when no acting_admin set" do
     account = Account.new(
       code: "410006", name: "No Admin", account_type: :income
     )

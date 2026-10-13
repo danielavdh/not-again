@@ -55,18 +55,25 @@ module AccountantExports
     # account facing it. An entry without one cannot be expressed, and is
     # skipped rather than guessed at.
     def row_for(posting)
-      counter = posting.journal_entry.postings.find { |p| p.account&.balance_account? }
+      # THE balance account facing this nominal — never a derived VAT leg,
+      # which is a balance posting too and would be picked instead of the bank.
+      counter = posting.journal_entry.postings.find { |p|
+        p.account&.balance_account? && !p.tax_leg?
+      }
       return nil unless counter
 
       je = posting.journal_entry
       [
-        format("%.2f", posting.amount / 100.0).tr(".", ","),
+        # The GROSS, and the BU-Schlüssel below. DATEV works the VAT out
+        # itself from the key, so sending it the net would make it deduct the
+        # tax a second time.
+        format("%.2f", posting.gross_amount / 100.0).tr(".", ","),
         posting.debit? ? "S" : "H",
         counter.currency || "",
         "", "", "",
         posting.account.code,
         counter.account.code,
-        "",
+        posting.tax_code&.datev_bu || "",
         je.entry_date.strftime("%d%m"),
         je.journal_reference || "",
         posting.reference || "",

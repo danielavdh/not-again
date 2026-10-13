@@ -21,7 +21,7 @@ class TaxCategoryLoaderTest < ActiveSupport::TestCase
           section: income
           position: 10
     YML
-    count = TaxCategoryLoader.call(path)
+    count = TaxCategoryLoader.call(path).categories
     assert_equal 1, count
     # Loader downcases country_code, so resolve with lowercase
     tc = TaxCategory.resolve(country_code: "gb", scheme: "gb_self_employment",
@@ -79,7 +79,7 @@ class TaxCategoryLoaderTest < ActiveSupport::TestCase
       categories:
         - { key: informativ, position: 10 }
     YML
-    assert_equal 1, TaxCategoryLoader.call(path)
+    assert_equal 1, TaxCategoryLoader.call(path).categories
     assert_nil TaxCategory.find_by(country_code: "ro", key: "informativ").section
   end
 

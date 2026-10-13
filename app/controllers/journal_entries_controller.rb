@@ -2,6 +2,7 @@
 
 class JournalEntriesController < BaseController
   include CrossEntityJournalEntries
+  include TaxLegDerivation
   before_action :set_journal_entry, only: [:show, :edit, :update, :destroy, :post, :unpost, :duplicate]
   # An entry may be READ wherever the admin has a link, but only changed where
   # that link says full_access — see Admin#writable_journal_entries.
@@ -37,7 +38,7 @@ class JournalEntriesController < BaseController
   end
 
   def show
-    @journal_entry = accessible_journal_entries.includes(postings: [:account, :receipts]).find(params[:id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account]).find(params[:id])
     @sorted_postings = @journal_entry.postings.sort_by { |p| p.account&.code.to_s }
     @display_currency = @journal_entry.display_currency
     # The linked entry/entries on the OTHER side (symmetric: JE₁→JE₂(s),
@@ -45,7 +46,7 @@ class JournalEntriesController < BaseController
     # shown inline as a read-only mirror band (#7).
     if @journal_entry.cross_entity?
       @cross_entity_linked = @journal_entry.cross_entity_linked_entries
-                                           .includes(postings: [:account, :receipts]).to_a
+                                           .includes(postings: [:receipts, :account]).to_a
       codes = @cross_entity_linked.flat_map { |je| je.postings.filter_map { |p| p.account&.entity_code } }.uniq
       names = Entity.where(code: codes).pluck(:code, :name).to_h
       # What to call each linked entry's business, keyed by entry id — an entry
@@ -76,8 +77,10 @@ class JournalEntriesController < BaseController
 
   def create
     @journal_entry = JournalEntry.new(journal_entry_params)
+    derive_tax_legs_for(@journal_entry)
     if save_with_cross_entity_entries(@journal_entry)
-      redirect_to journal_entry_path(@journal_entry), notice: t("journal_entries.created")
+      redirect_to journal_entry_path(@journal_entry),
+                  notice: [t("journal_entries.created"), vat_accounts_notice].compact.join(" ")
     else
       while @journal_entry.postings.size < 2
         @journal_entry.postings.build(entry_type: :credit)
@@ -89,7 +92,7 @@ class JournalEntriesController < BaseController
   end
 
   def edit
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account]).find(params[:id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:id])
     return if redirect_cross_entity_counterpart_to_origin(@journal_entry) # JE₂ → JE₁'s edit
     @journal_entry.postings.build if @journal_entry.postings.empty?
     @entity = nil
@@ -101,12 +104,14 @@ class JournalEntriesController < BaseController
 
   def update
     @journal_entry.assign_attributes(journal_entry_params)
+    derive_tax_legs_for(@journal_entry)
     if entry_emptied?(@journal_entry)
       @journal_entry.destroy # all postings marked → delete the entry (cascades a cross-entity JE₂ if the gift was among them)
       return redirect_to journal_entries_path, notice: t("journal_entries.deleted")
     end
     if save_with_cross_entity_entries(@journal_entry)
-      redirect_to journal_entry_path(@journal_entry), notice: t("journal_entries.updated")
+      redirect_to journal_entry_path(@journal_entry),
+                  notice: [t("journal_entries.updated"), vat_accounts_notice].compact.join(" ")
     else
       load_form_data
       @cross_entity_rerender = cross_entity_rerender_entries
@@ -164,8 +169,12 @@ class JournalEntriesController < BaseController
     @journal_entry.period_end    = nil
     pair_id_map = {}
     copy = build_cross_entity_copy(@original) # fresh links + the JE₂′ mirror (#8)
-    @original.postings.each do |p|
-      attrs = p.attributes.except('id', 'created_at', 'updated_at', 'journal_entry_id')
+    @original.postings.not_tax_legs.includes(:tax_legs, :tax_code).each do |p|
+      # Never the tax legs, and never their link: they are derived afresh at
+      # the copy's own date, so a copy into a new rate period gets the new rate.
+      attrs = p.attributes.except('id', 'created_at', 'updated_at', 'journal_entry_id',
+                                  'tax_for_posting_id')
+      attrs['amount'] = p.gross_amount
       attrs['deduction_pair_id'] = remap_pair_id(attrs['deduction_pair_id'], pair_id_map)
       # Never copy the raw link — remap the gift to its FRESH link (or strip).
       attrs['cross_entity_link_id'] = copy[:link_remap][attrs['cross_entity_link_id']] if attrs['cross_entity_link_id'].present?
@@ -254,7 +263,7 @@ class JournalEntriesController < BaseController
   end
 
   def set_journal_entry
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account]).find(params[:id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:id])
   end
 
   # POSTING_PARAMS + save_with_cross_entity_entries +
