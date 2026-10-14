@@ -23,6 +23,8 @@
       <li><a href="#cross-entity">Buchungen zwischen getrennten Unternehmen</a></li>
       <li><a href="#add-currency">Eine Währung hinzufügen</a></li>
       <li><a href="#tax-setup">Steuerschemata und Kategorien</a></li>
+      <li><a href="#vat">Umsatzsteuer</a></li>
+      <li><a href="#vat-multiple">Umsatzsteuer bei mehreren Betrieben</a></li>
     </ul>
   </nav>
 
@@ -59,7 +61,7 @@
   <p>Zwei weitere Regeln gelten, beide ohne Ausnahme:</p>
   <ul>
     <li><strong>Jede Buchung braucht mindestens eine Bilanzzeile</strong> &thinsp;&mdash;&thinsp; Aktiva, Passiva oder Eigenkapital. Eine reine Umbuchung zwischen zwei Aufwandskonten wird abgelehnt; nimm den Weg über das Bilanzkonto, von dem der Betrag kam, oder korrigiere die ursprüngliche Buchung.</li>
-    <li><strong>Sobald eine Buchung eine Ertrags-, Aufwands- oder Privatzeile enthält, darf sie nur EIN Bilanzkonto enthalten.</strong> &laquo;Die Bank zahlte die Miete und die Portokasse die Briefmarken&raquo; sind zwei Buchungen, nicht eine.</li>
+    <li><strong>Sobald eine Buchung eine Ertrags-, Aufwands- oder Privatzeile enthält, darf sie nur EIN Bilanzkonto enthalten.</strong> &laquo;Die Bank zahlte die Miete und die Portokasse die Briefmarken&raquo; sind zwei Buchungen, nicht eine. Die Umsatzsteuerzeilen, die die App aus einem Umsatzsteuer-Code ableitet, zählen dabei nicht mit &thinsp;&mdash;&thinsp; siehe <a href="#vat">Umsatzsteuer</a>.</li>
   </ul>
   <p>Eine Buchung, die nur aus Bilanzzeilen besteht, fällt nicht unter die zweite Regel und darf beliebig viele Konten nennen. Genau das macht die Eröffnungsbilanz möglich &thinsp;&mdash;&thinsp; siehe unten.</p>
 
@@ -127,5 +129,41 @@ Bei einem kumulativen Verfahren wie UK MTD erreicht die Korrektur die Behörde m
     <p>Beim Herunterladen bekommst du eine CSV, passend zu dem, was gerade auf dem Bildschirm steht &thinsp;&mdash;&thinsp; Zusammenfassung oder Detail. Der Versand per E-Mail bringt dir beide: eine <strong>Zusammenfassung</strong> (Kategoriesummen, das, was in die Felder kommt) und ein <strong>Detail</strong> (Kategoriesummen und ihre einzelnen Buchungen, mit Beleglinks; nicht zugeordnete Belege werden gesondert aufgeführt). Hat die Einheit ein Dateiformat für die Steuerberatung eingestellt (zum Beispiel DATEV), kommt das ebenfalls mit. Gibt es für den Zeitraum nichts zu melden, bekommst du stattdessen eine kurze E-Mail, die das mitteilt. Die Zusammenfassungs-CSV wird außerdem bei jeder Änderung als Backup gesichert, sodass du immer ein datiertes Backup davon hast, wie die Felder eines Zeitraums aussahen.</p>
     <p>Einen Steuerpflichtigen einrichten, sich mit der Steuerbehörde verbinden und einen Zeitraum senden &thinsp;&mdash;&thinsp; siehe <%= link_to "Steuerberichte einrichten", easy_manual_path(anchor: "tax") %> und <%= link_to "Vierteljährliche Zahlen selbst einreichen", easy_manual_path(anchor: "filing") %>.</p>
 
+  <h2 id="vat">Umsatzsteuer</h2>
+
+  <h3>Der Steuerzeitpunkt ist das Buchungsdatum</h3>
+  <p>Eine Buchung mit Umsatzsteuer wird in dem Zeitraum ausgewiesen, in den ihr Buchungsdatum fällt. Welche Methode gilt, entscheidet also, wie du buchst, und keine Einstellung. Buchst du die Zahlung, ist das Buchungsdatum der Zahltag; buchst du die Rechnung gegen Verbindlichkeiten oder Forderungen (einfaches Handbuch, <em>Ist-Besteuerung und Soll-Besteuerung</em>), ist es das Rechnungsdatum. Der anschließende Ausgleich ist eine Umbuchung von Verbindlichkeiten auf die Bank und trägt keinen Code, es wandert also keine Umsatzsteuer zweimal.</p>
+  <p>Zwei Folgen daraus. Das Formular für Bankbuchungen ist auf Zahlungen zugeschnitten, erfass Buchungen nach Soll-Besteuerung daher über das Journalbuchungs-Formular. Und die Konsistenz liegt bei dir: innerhalb eines Besteuerungszeitraums Ist- ODER Soll-Besteuerung &thinsp;&mdash;&thinsp; und wenn du wechselst, pass die Posten an, die über den Wechsel hinweg liegen!</p>
+
+  <h3>Wo die Umsatzsteuer landet, und was die Regel dann erlaubt</h3>
+  <p>Die Datei des Schemas gibt an, ob die Behörde die Umsatzsteuer auf einem <strong>Bilanzkonto</strong> führt (z. B. Großbritannien) oder als <strong>Ertrags- und Aufwandszeilen</strong> in der GuV (z. B. deutsche EÜR). Davon hängt ab, ob die Regel &laquo;nur ein Bilanzkonto, sobald Erfolgszeilen dabei sind&raquo; gelockert werden muss.</p>
+  <p>Bei einem Umsatzsteuerkonto in der Bilanz hätte ein Einkauf mit Umsatzsteuer sonst zwei Bilanzkonten (Aufwand, Vorsteuer, Bank). Die <em>abgeleitete</em> Zeile ist deshalb von der Regel ausgenommen &thinsp;&mdash;&thinsp; eine <strong>selbst getippte</strong> dagegen wird abgelehnt: eine Umsatzsteuerzeile ohne Code dahinter läge im Umsatzsteuerkonto und käme nie in die Erklärung.</p>
+  <p>Wo die Umsatzsteuerkonten Erfolgskonten sind, hat die Buchung ohnehin nur ein Bilanzkonto. Eine selbst getippte Zeile wird dort nicht abgelehnt &thinsp;&mdash;&thinsp; sie erscheint aber in der Erklärung als <em>nicht zugeordnete Umsatzsteuer</em>, und so fällt sie in beiden Formen auf.</p>
+  <p>Ansonsten bleibt die Regel bestehen: eine Kredittilgung, aufgeteilt in Tilgung und Zinsen, sind weiterhin zwei Buchungen.</p>
+
+  <h3>Das Umsatzsteuerkonto ausgleichen</h3>
+  <p>Jede Differenz zwischen dem, was auf dem Konto liegt, und dem, was die Codes erklären, erscheint in der Erklärung als <em>nicht zugeordnete Umsatzsteuer</em> &thinsp;&mdash;&thinsp; und genau so zeigt sich eine selbst getippte Umsatzsteuerbuchung.</p>
+
+  <h3>Daten, Sätze und Kopien</h3>
+  <p>Codes sind nach <strong>Datum</strong> versioniert, nicht nach Steuerjahr: ändert sich ein Satz, ändert er sich zu einem Datum. Verschiebst du eine Buchung über eine Satzänderung hinweg, wird die Umsatzsteuer mit dem am neuen Datum gültigen Satz neu abgeleitet.</p>
+  <p>Ein Umsatzsteuer-Code lässt sich nur in einer Buchung in der Währung des eigenen Schemas verwenden. Eine Rechnung, die von einem Konto in einer anderen Währung bezahlt wird, bekommt keinen Code: rechne vorher um, oder buche den Bruttobetrag und mach keine Vorsteuer geltend.</p>
+
+
+  <h2 id="vat-multiple">Umsatzsteuer bei mehreren Betrieben</h2>
+  <p>Die App erstellt <strong>eine Umsatzsteuer-Erklärung pro Betrieb (Einheit) und Schema</strong>.</p>
+
+  <h3>Welche deiner Betriebe sich eine Registrierung teilen, ist nicht deine Wahl</h3>
+  <p>Mehrere Bücher derselben Person oder einer Gesellschaft sind in der Regel ein Unternehmer mit einer Registrierung. Eigene Rechtspersonen &thinsp;&mdash;&thinsp; etwa zwei Gesellschaften &thinsp;&mdash;&thinsp; sind getrennte Registrierungen. Das entscheidet deine Steuerbehörde.</p>
+  <p>Die Umsatzgrenze folgt derselben Linie. Sind mehrere deiner Betriebe ein Unternehmer, zählen ihre Umsätze <strong>zusammen</strong> auf die Registrierungsgrenze. Ist jeder eine eigene Rechtsperson, wird jeder für sich geprüft. Die Grenzen selbst unterscheiden sich von Land zu Land.</p>
+
+  <h3>Wenn eine Registrierung mehrere deiner Betriebe umfasst</h3>
+  <p>Die App gibt dir weiterhin eine Erklärung pro Betrieb. Diese Erklärungen sind <strong>Teile deiner einen Erklärung</strong>: addier die Felder, Feld für Feld (z. B. Feld 6 von Betrieb 1 + Feld 6 von Betrieb 2 = Feld 6 gesamt), und reich die Summe ein. Mehr Raffinesse braucht es nicht, und es geht nichts verloren &thinsp;&mdash;&thinsp; jede Erklärung nennt den Betrieb, den sie abdeckt.</p>
+
+  <h3>Setz nie Umsatzsteuer-Codes auf Bewegungen zwischen Betrieben, die sich eine Registrierung teilen</h3>
+  <p>Sie sind ein Unternehmer, eine Bewegung zwischen ihnen ist also keine Leistung: es entsteht keine Umsatzsteuer und es gibt nichts zu melden. Setzt du doch einen Code, erfindet die zusammengefasste Erklärung einen Verkauf und einen Einkauf, die es nicht gibt. Dieser Fehler versteckt sich: die beiden Steuerfelder heben sich bei der Zahllast gegenseitig auf &thinsp;&mdash;&thinsp; dort würdest du nachsehen &thinsp;&mdash;&thinsp; während die Netto-Felder zu hoch bleiben.</p>
+
+  <h3>Die Einreichungsformen unterscheiden sich je nach Behörde</h3>
+  <p>Manche Behörden lassen einen Unternehmer je Betriebsteil getrennt einreichen; manche lassen mehrere Personen gemeinsam als eine einreichen. In Großbritannien sind das die <em>divisional registration</em>, die nur Körperschaften offensteht, und die <em>VAT group</em>, die eine Erklärung für mehrere Mitglieder einreicht. Die App erstellt keines von beidem: sie erstellt eine Erklärung pro Betrieb, und das Zusammenfassen oder Aufteilen liegt außerhalb davon.</p>
+  <p>Wenn du mehr als einen Betrieb führst, frag deine Steuerberatung, ob und wie du Umsatzsteuer erklärst.</p>
 </div>
 <%= render "help/back" %>

@@ -24,6 +24,7 @@
       <li><a href="#add-currency">Adding a Currency</a></li>
       <li><a href="#tax-setup">Tax schemes and categories</a></li>
       <li><a href="#vat">VAT</a></li>
+      <li><a href="#vat-multiple">VAT with more than one business</a></li>
     </ul>
   </nav>
 
@@ -132,6 +133,10 @@ Under a cumulative regime such as UK MTD corrections reach the authority with th
 
   <h2 id="vat">VAT</h2>
 
+  <h3>The tax point is the entry date</h3>
+  <p>An entry containing VAT is reported in the period of its entry date. So the basis is decided by how you book, not by a setting. Book the payment and the entry date is the payment date; book the invoice against Creditors or Debtors (easy manual, <em>Cash basis versus accrual basis</em>) and it is the invoice date. The settlement that follows is a Creditor-to-Bank transfer carrying no code, so no VAT moves twice.</p>
+  <p>Two consequences. The bank entry form is payment-shaped, so enter invoice-basis entries through the journal entry form instead. And consistency is yours to keep: cash OR accrual basis in the same tax period: and if you decide to change, make sure you adjust the items straddling the change!</p>
+
   <h3>Where the VAT lands, and what the rule then allows</h3>
   <p>The scheme&rsquo;s file says whether its authority treats VAT as a <strong>balance-sheet</strong> control account (e.g. UK), or as <strong>income and expense</strong> lines in the P&amp;L, (e.g. German EÜR). That decides whether the one-balance-account-if-nominals-present rule needs to be relaxed.</p>
   <p>With a balance-sheet control account, a VAT purchase would otherwise hold two balance accounts (expense, input VAT, bank), so the <em>derived</em> line is exempted from the rule &thinsp;&mdash;&thinsp; while one <strong>typed by hand</strong> is refused: a VAT line with no code behind it would sit in the control account and never reach the return.</p>
@@ -145,7 +150,22 @@ Under a cumulative regime such as UK MTD corrections reach the authority with th
   <p>Codes are versioned by <strong>date</strong>, not by tax year: if a rate changes, it changes on a date. Move an entry across a rate change and the VAT is re-derived at the rate in force on the new date.</p>
   <p>A VAT code can only be used on an entry in its scheme&rsquo;s own currency. An invoice paid from an account in another currency gets no code: convert first, or book the gross and reclaim nothing.</p>
 
-  <h3>VAT is not a split</h3>
-  <p>A <code>%</code> split divides one amount at a percentage <em>you</em> chose; a VAT code adds a further line at a rate fixed by <em>law</em>. Different mechanisms, and they do not interact.</p>
+
+  <h2 id="vat-multiple">VAT with more than one business</h2>
+  <p>The app produces <strong>one VAT return per business (entity) per scheme</strong>.</p>
+
+  <h3>Which of your businesses share a registration is not your choice</h3>
+  <p>Several sets of books belonging to the same person, or to one company, are usually one taxable person with one registration. Separate legal persons &thinsp;&mdash;&thinsp; two companies, say &thinsp;&mdash;&thinsp; are separate registrations. Your tax authority decides this.</p>
+  <p>The turnover test follows the same line. Where several of your businesses are one taxable person, their turnover counts <strong>together</strong> towards the registration threshold. Where each is its own legal person, each is tested on its own. The thresholds themselves differ by country.</p>
+
+  <h3>When one registration covers several of your businesses</h3>
+  <p>The app still gives you a return per entity/business. Those returns are <strong>parts of your one return</strong>: add the boxes, box by box (e.g. box 6 of entity 1 + box 6 of entity 2 = total box 6), and file the total. Nothing more clever is needed, and nothing is lost &thinsp;&mdash;&thinsp; each return names the business it covers.</p>
+
+  <h3>Never put VAT codes on movements between businesses that share a registration</h3>
+  <p>They are one taxable person, so a movement between them is not a supply: no VAT arises and there is nothing to report. Code it anyway and the combined return invents a sale and a purchase that do not exist. This error hides: the two tax boxes cancel each other on the amount payable, which is where you would check, while the net boxes are left overstated.</p>
+
+  <h3>Filing arrangements differ by authority</h3>
+  <p>Some authorities let one taxable person file separately per division; some let several persons file jointly as one. In the UK those are <em>divisional registration</em>, which is open to bodies corporate only, and a <em>VAT group</em>, which files one return for several members. The app produces neither: it produces one return per business, and compiling or splitting them is outside it.</p>
+  <p>If you run more than one business, ask your accountant if and how you file VAT.</p>
 </div>
 <%= render "help/back" %>

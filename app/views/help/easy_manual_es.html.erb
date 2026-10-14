@@ -18,6 +18,7 @@
       <li><a href="#transfer">Mover dinero entre tus propias cuentas &thinsp;&mdash;&thinsp; una transferencia</a></li>
       <li><a href="#basis">Criterio de caja y criterio de devengo</a></li>
       <li><a href="#splitting">Dividir una factura entre uso profesional y personal</a></li><br />
+      <li><a href="#vat">IVA</a></li><br />
       <li><a href="#receipts">Adjuntar justificantes</a></li>
       <li><a href="#repeating">Repetir un asiento anterior</a></li>
       <li><a href="#correcting">Corregir un error</a></li>
@@ -108,6 +109,10 @@
   <h3>Criterio de devengo</h3>
   <p>Con el criterio de devengo registras el ingreso al emitir la factura, contra una cuenta de Deudores (activo). Cuando llega el dinero lo saldas con una transferencia: Deudores =&gt; Cuenta bancaria. Un gasto va contra Acreedores (pasivo) cuando el proveedor te factura. Al pagar lo saldas igualmente con una transferencia: Cuenta bancaria =&gt; Acreedores. Un taller impartido en diciembre y cobrado en febrero da su beneficio en diciembre, y tu balance a fin de año muestra lo que queda pendiente en cada sentido.</p>
 
+  <h3>Cuál te está permitido usar</h3>
+  <p>No siempre lo eliges tú. Algunas administraciones te dejan escoger, otras solo admiten el criterio de caja mientras no pases de cierto tamaño, y otras exigen el criterio de devengo para el IVA al margen de lo que hagas en la renta. En el Reino Unido, por ejemplo, puedes declarar el IVA por criterio de caja mientras tus ventas sujetas no pasen de &pound;1,35 millones al año (2026). Pregunta a tu administración tributaria o a tu asesor fiscal qué reglas te aplican, y pregúntalo por separado para el IVA &thinsp;&mdash;&thinsp; la respuesta no siempre es la misma que para la renta.</p>
+  <p>A la app le sirven los dos: asigna cada apunte al periodo de la fecha que le pongas. Pero no mezcles criterio de caja y de devengo dentro del mismo periodo impositivo.</p>
+
   <h2 id="splitting">Dividir una factura entre uso profesional y personal</h2>
   <p>Algunos gastos son solo parcialmente profesionales. Tu internet en casa quizá lo uses un 60&nbsp;% para trabajar, y tu coche un 40&nbsp;% para visitas a clientes. Cuando los registres, puedes dividir el importe en el momento.</p>
   <p>Haz clic en el botón % junto al importe. Se abre una pequeña ventana donde puedes:</p>
@@ -119,6 +124,31 @@
   </ul>
   <p>El formulario ahora tiene dos líneas: la parte profesional en la cuenta de gastos, la parte privada en la cuenta personal. Ambas se guardan juntas y los libros quedan equilibrados.</p>
   <p>Para cambiar una división más tarde, haz clic en % en cualquiera de las dos líneas. La ventana se reabre con la división actual rellenada; haz tus ajustes y haz clic en Aplicar.</p>
+
+  <h2 id="vat">IVA</h2>
+  <p>Si tu empresa está dada de alta en el IVA, ve a configurar o editar los impuestos de esa empresa en tu panel &thinsp;&mdash;&thinsp; y marca tu régimen de IVA. A partir de ahí aparece una columna de IVA en los formularios de ingreso y de pago.</p>
+
+  <h3>Registrar una factura con IVA</h3>
+  <p><strong>Escribe el total, tal como aparece en tu extracto bancario.</strong> Después elige el código de IVA de esa línea &thinsp;&mdash;&thinsp; &ldquo;Compra, tipo general&rdquo; para la mayoría de lo que compras, &ldquo;Venta, tipo general&rdquo; para la mayoría de lo que vendes.</p>
+  <p>Se muestran el IVA y la base. Una compra de 121 € al 21% son 100 € de gasto y 21 € de IVA. En el banco siguen figurando 121 €, porque es lo que pagaste.</p>
+  <p>Si la factura trae un importe de IVA algo distinto &thinsp;&mdash;&thinsp; cada proveedor redondea a su manera &thinsp;&mdash;&thinsp; puedes escribir el suyo encima del nuestro. El total se queda como lo escribiste y la base se ajusta. Si luego cambias el total o el código, la app vuelve a calcular.</p>
+  <p>La primera vez que uses un código de IVA, la app crea una cuenta de IVA y te lo dice. Puedes renombrarla o colocarla bajo una cuenta madre.</p>
+
+  <h3>Sin IVA</h3>
+  <p>Deja el IVA en &ldquo;Sin IVA&rdquo; en todo lo que no lo lleve: un proveedor que no está dado de alta, una comisión bancaria, un sueldo. En una factura dividida el código de IVA se queda en la línea profesional; la parte personal no lleva ninguno.</p>
+
+  <h3>Tu declaración de IVA</h3>
+  <p>Una declaración de IVA es un informe como cualquier otro, así que creas uno por periodo. En tu panel, busca la fila del IVA y pulsa <strong>+ Añadir informe</strong>: dale un nombre que reconozcas &thinsp;&mdash;&thinsp; &ldquo;1T 2026&rdquo; &thinsp;&mdash;&thinsp; y el primer y el último día del periodo.</p>
+  <p><strong>Las cifras salen de las fechas</strong>, no del nombre. Un informe llamado 1T con las fechas equivocadas mostrará el periodo equivocado sin quejarse.</p>
+  <p>Pulsa el informe y tienes las casillas del formulario real, con la numeración de la propia administración, listas para copiar, además de un desglose por código y un CSV.</p>
+  <p>Esta app no presenta la declaración. La presentas tú.</p>
+
+  <h3>Pagar el IVA</h3>
+  <p>Cuando pagues el periodo, registra una <em>transferencia</em> de tu cuenta bancaria a la cuenta de IVA. Así queda a cero, lista para el periodo siguiente.</p>
+
+  <h3>Inversión del sujeto pasivo</h3>
+  <p>Algunas compras llegan sin IVA en la factura porque tienes que declararlo <em>tú</em>: servicios comprados en el extranjero, obra entre constructores, bienes procedentes de la UE. Elige <strong>Compra, inversión del sujeto pasivo</strong> &thinsp;&mdash;&thinsp; o, solo para la adquisición intracomunitaria, el código de adquisición, que la declaración lleva a otras casillas. La app añade el IVA a los dos lados a la vez, así que lo debes y lo deduces al mismo tiempo y no sale nada más de tu cuenta. Las dos cifras tienen que aparecer igualmente en la declaración, que es justamente para lo que sirve.</p>
+  <p>Si no tienes claro si una compra va por inversión del sujeto pasivo, pregunta a tu asesor fiscal. Equivocarse no cuesta dinero, pero deja la declaración mal.</p>
 
   <h2 id="receipts">Adjuntar justificantes</h2>
   <p>En cualquier depósito o retiro, haz clic en el botón + junto a una línea para adjuntar una foto o archivo (JPEG, PNG, PDF). Si ya has subido un justificante por separado, usa el icono de enlace para conectarlo. A una línea se le pueden adjuntar varios justificantes.</p>

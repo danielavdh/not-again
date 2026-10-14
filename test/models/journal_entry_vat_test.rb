@@ -391,7 +391,14 @@ class JournalEntryVatTest < ActiveSupport::TestCase
   # No shipped catalogue declares it yet, so the scheme's answer is stubbed —
   # that one header value is the whole input that decides the account's type.
   def with_nominal_vat_accounts
-    TaxSchemeConfig.stub(:vat_accounts_nominal?, true) { yield }
+    TaxSchemeConfig.stub(:vat_accounts_nominal?, true) do
+      # The type is decided when the scheme is SUBSCRIBED, so the pair setup
+      # made under the balance-sheet rule has to go and come back under this one.
+      entity = entities(:family_biz)
+      entity.update!(tax_schemes: [])
+      entity.update!(tax_schemes: [ "gb_vat" ])
+      yield
+    end
   end
 
   test "a scheme that keeps VAT in the P&L gets an expense account, not an asset" do
@@ -456,14 +463,13 @@ class JournalEntryVatTest < ActiveSupport::TestCase
     assert_equal "#{prefix}450", control.code
   end
 
-  # The window the ordinary rule misses: an account created during derivation
-  # whose entry then failed validation has no postings at all.
+  # The window the ordinary rule misses: subscribing to the scheme creates the
+  # pair, so a control account normally has no postings for a while.
   test "the digits are locked even before the account has any postings" do
-    fresh = Account.create!(code: "110995", name: "VAT probe", account_type: :asset,
-                            currency: "GBP", tax_scheme: "gb_vat", vat_role: :input)
+    fresh = vat_account(:input)
     assert_equal 0, fresh.postings.count
 
-    fresh.code = "510995"
+    fresh.code = fresh.code.sub(/\A1/, "5")
     assert_not fresh.save, "no postings is exactly when this would go unnoticed"
   end
 

@@ -12,8 +12,11 @@ module Reports
   # currency, so every figure is already in it), no date buckets, and no
   # debit-normal rule — a box's sign is the code's DIRECTION.
   #
-  # Date basis is entry_date: the app records payments, so for a cash-basis
-  # scheme that IS the tax point. Invoice-basis schemes are out of scope.
+  # Date basis is entry_date, and there is nothing else: the app draws no
+  # distinction between an invoice and a payment, so the tax point is whatever
+  # date the bookkeeper put on the entry. A payment booked direct gives a cash
+  # basis, an invoice booked against Creditors/Debtors an invoice basis. Neither
+  # is privileged, and neither is detected.
   class VatReturn
     DEBITS  = "SUM(CASE WHEN postings.entry_type = 0 THEN postings.amount ELSE 0 END)"
     CREDITS = "SUM(CASE WHEN postings.entry_type = 1 THEN postings.amount ELSE 0 END)"

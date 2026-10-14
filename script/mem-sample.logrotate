@@ -1,0 +1,14 @@
+# Install as /etc/logrotate.d/mem-sample alongside script/mem-sample.
+#
+# `su root syslog` is required, not optional: /var/log is mode 775 root:syslog on
+# Ubuntu, and logrotate refuses to touch a file in a group-writable directory
+# unless told which user/group to rotate as. Without it the entry parses but
+# silently never rotates (exit 1, "insecure permissions").
+/var/log/mem-sample.log {
+    su root syslog
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+}

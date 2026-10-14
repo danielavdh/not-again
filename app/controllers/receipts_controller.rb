@@ -114,11 +114,14 @@ class ReceiptsController < BaseController
     else
       respond_to do |format|
         format.html do
-          @entities = accessible_entities_for_upload
           if upload_receipts_only?
-            @my_receipts = accessible_receipts.unlinked.where(uploaded_by: current_admin).recent_first.limit(20)
-            render :upload_standalone, status: :unprocessable_entity
+            # The uploader's form lives in a <dialog> the page opens with JS, so
+            # re-rendering the page would put the errors behind a closed dialog.
+            # The flash is the only place this admin would see them.
+            redirect_to upload_standalone_receipts_path,
+                        alert: @receipt.errors.full_messages.to_sentence
           else
+            @entities = accessible_entities_for_upload
             render :new, status: :unprocessable_entity
           end
         end

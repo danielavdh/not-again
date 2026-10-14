@@ -23,6 +23,8 @@
       <li><a href="#cross-entity">Asientos entre negocios separados</a></li>
       <li><a href="#add-currency">Añadir una moneda</a></li>
       <li><a href="#tax-setup">Esquemas fiscales y categorías</a></li>
+      <li><a href="#vat">IVA</a></li>
+      <li><a href="#vat-multiple">IVA con más de una empresa</a></li>
     </ul>
   </nav>
 
@@ -59,7 +61,7 @@
   <p>Se aplican dos reglas más, y ninguna admite excepción:</p>
   <ul>
     <li><strong>Todo asiento necesita al menos una línea de balance</strong> &thinsp;&mdash;&thinsp; activo, pasivo o patrimonio. Una reclasificación puramente entre dos cuentas de gasto se rechaza; pasa por la cuenta de balance de la que vino el importe, o corrige el asiento original.</li>
-    <li><strong>En cuanto un asiento contiene una línea de ingresos, gastos o personal, solo puede contener UNA cuenta de balance.</strong> &laquo;El banco pagó el alquiler y la caja chica los sellos&raquo; son dos asientos, no uno.</li>
+    <li><strong>En cuanto un asiento contiene una línea de ingresos, gastos o personal, solo puede contener UNA cuenta de balance.</strong> &laquo;El banco pagó el alquiler y la caja chica los sellos&raquo; son dos asientos, no uno. Las líneas de IVA que la app deriva de un código no cuentan para esta regla &thinsp;&mdash;&thinsp; véase <a href="#vat">IVA</a>.</li>
   </ul>
   <p>Un asiento compuesto solo de líneas de balance no está sujeto a la segunda regla y puede nombrar tantas cuentas como quieras. Eso es justamente lo que hace posibles los saldos de apertura &thinsp;&mdash;&thinsp; véase más abajo.</p>
 
@@ -127,5 +129,41 @@ En un régimen acumulativo como UK MTD la corrección llega a la agencia con la 
     <p>Al descargar obtienes un CSV, el que corresponda a lo que hay en pantalla &thinsp;&mdash;&thinsp; resumen o detalle. Enviar un informe por correo te da los dos: un <strong>resumen</strong> (totales por categoría, lo que va en las casillas) y un <strong>detalle</strong> (los totales por categoría y sus asientos individuales, con enlaces a los recibos; los recibos sin vincular se listan aparte). Si la entidad tiene un formato de archivo para la asesoría configurado (por ejemplo DATEV), también se incluye. Si no hay nada que declarar en el período, recibes en su lugar un correo breve que lo indica. El CSV de resumen también se guarda cada vez que cambia, así que siempre tienes una copia de seguridad fechada de cómo estaban las casillas de un período.</p>
     <p>Configurar un contribuyente, conectar con la agencia tributaria y enviar un período &thinsp;&mdash;&thinsp; consulta <%= link_to "Configurar la declaración de impuestos", easy_manual_path(anchor: "tax") %> y <%= link_to "Presentar tú mismo las cifras trimestrales", easy_manual_path(anchor: "filing") %>.</p>
 
+  <h2 id="vat">IVA</h2>
+
+  <h3>El devengo es la fecha del asiento</h3>
+  <p>Un asiento con IVA se declara en el periodo en el que cae su fecha. Así que el criterio lo decide cómo contabilizas, no un ajuste de la app. Si registras el pago, la fecha del asiento es la del pago; si registras la factura contra Acreedores o Deudores (manual sencillo, <em>Criterio de caja y criterio de devengo</em>), es la de la factura. El cobro o pago posterior es una transferencia de Acreedores al banco y no lleva código, así que ningún IVA se mueve dos veces.</p>
+  <p>Dos consecuencias. El formulario de apuntes bancarios está pensado para pagos, así que los asientos por devengo se registran por el formulario de asientos de diario. Y la coherencia te toca a ti: dentro del mismo periodo impositivo, criterio de caja O criterio de devengo &thinsp;&mdash;&thinsp; y si decides cambiar, ajusta las partidas que quedan a caballo del cambio.</p>
+
+  <h3>Dónde aterriza el IVA, y qué permite entonces la regla</h3>
+  <p>El archivo del régimen indica si su administración lleva el IVA en una <strong>cuenta de balance</strong> (p. ej. el Reino Unido) o como <strong>líneas de ingresos y gastos</strong> en la cuenta de resultados (p. ej. la EÜR alemana). De eso depende si hay que relajar la regla de &laquo;una sola cuenta de balance cuando hay líneas de resultados&raquo;.</p>
+  <p>Con una cuenta de IVA en el balance, una compra con IVA tendría si no dos cuentas de balance (gasto, IVA soportado, banco), de modo que la línea <em>derivada</em> queda exenta de la regla &thinsp;&mdash;&thinsp; mientras que una <strong>escrita a mano</strong> se rechaza: una línea de IVA sin código detrás se quedaría en la cuenta de IVA y nunca llegaría a la declaración.</p>
+  <p>Donde las cuentas de IVA son de resultados, el asiento tiene de todos modos una sola cuenta de balance. Una línea escrita a mano no se rechaza ahí &thinsp;&mdash;&thinsp; pero aparece en la declaración como <em>IVA sin asignar</em>, y así se detecta en cualquiera de las dos formas.</p>
+  <p>Por lo demás la regla sigue en pie: la cuota de un préstamo dividida en principal e intereses son dos asientos.</p>
+
+  <h3>Vaciar la cuenta de IVA</h3>
+  <p>Cualquier diferencia entre lo que hay en la cuenta y lo que explican los códigos aparece en la declaración como <em>IVA sin asignar</em> &thinsp;&mdash;&thinsp; que es precisamente cómo se manifiesta un apunte de IVA escrito a mano.</p>
+
+  <h3>Fechas, tipos y copias</h3>
+  <p>Los códigos se versionan por <strong>fecha</strong>, no por ejercicio fiscal: si un tipo cambia, cambia en una fecha. Si mueves un asiento al otro lado de un cambio de tipo, el IVA se vuelve a derivar al tipo vigente en la fecha nueva.</p>
+  <p>Un código de IVA solo puede usarse en un asiento en la moneda del propio régimen. Una factura pagada desde una cuenta en otra moneda no lleva código: convierte primero, o contabiliza el importe bruto y no deduzcas nada.</p>
+
+
+  <h2 id="vat-multiple">IVA con más de una empresa</h2>
+  <p>La app produce <strong>una declaración de IVA por empresa (entidad) y régimen</strong>.</p>
+
+  <h3>Qué empresas tuyas comparten un alta no lo eliges tú</h3>
+  <p>Varios juegos de libros de la misma persona, o de una misma sociedad, son normalmente un solo sujeto pasivo con un solo alta. Personas jurídicas distintas &thinsp;&mdash;&thinsp; dos sociedades, por ejemplo &thinsp;&mdash;&thinsp; son altas separadas. Eso lo decide tu administración tributaria.</p>
+  <p>El umbral de volumen sigue la misma línea. Cuando varias de tus empresas son un solo sujeto pasivo, su volumen cuenta <strong>junto</strong> para el umbral de alta. Cuando cada una es su propia persona jurídica, cada una se mide por separado. Los umbrales en sí cambian según el país.</p>
+
+  <h3>Cuando un alta cubre varias de tus empresas</h3>
+  <p>La app te sigue dando una declaración por empresa. Esas declaraciones son <strong>partes de tu única declaración</strong>: suma las casillas, casilla por casilla (p. ej. casilla 6 de la empresa 1 + casilla 6 de la empresa 2 = casilla 6 total), y presenta el total. No hace falta nada más ingenioso, y no se pierde nada &thinsp;&mdash;&thinsp; cada declaración nombra la empresa que cubre.</p>
+
+  <h3>No pongas nunca códigos de IVA en movimientos entre empresas que comparten un alta</h3>
+  <p>Son un solo sujeto pasivo, así que un movimiento entre ellas no es una entrega: no nace IVA y no hay nada que declarar. Si le pones código igualmente, la declaración conjunta inventa una venta y una compra que no existen. Este error se esconde: las dos casillas de cuota se anulan entre sí en el importe a pagar &thinsp;&mdash;&thinsp; que es donde mirarías &thinsp;&mdash;&thinsp; mientras que las casillas de base quedan infladas.</p>
+
+  <h3>Las formas de presentación cambian según la administración</h3>
+  <p>Algunas administraciones dejan a un sujeto pasivo presentar por separado cada rama; otras dejan a varias personas presentar conjuntamente como una. En el Reino Unido son la <em>divisional registration</em>, abierta solo a personas jurídicas, y el <em>VAT group</em>, que presenta una declaración por varios miembros. La app no produce ninguna de las dos: produce una declaración por empresa, y sumarlas o repartirlas queda fuera.</p>
+  <p>Si llevas más de una empresa, pregunta a tu asesor fiscal si tienes que declarar IVA y cómo.</p>
 </div>
 <%= render "help/back" %>

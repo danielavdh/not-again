@@ -1,4 +1,8 @@
 class EntitiesController < BaseController
+  # For vat_accounts_notice: subscribing to a VAT scheme creates the control
+  # accounts, and the same sentence announces them here as after an entry.
+  include TaxLegDerivation
+
   TAX_MEMBER_ACTIONS = [:edit_tax, :update_tax, :filing_fields].freeze
   # Any admin may leave (unlink themselves from) an entity they belong to.
   SELF_SERVICE_ACTIONS = [:leave].freeze
@@ -102,8 +106,9 @@ class EntitiesController < BaseController
           else
             t("entities.edit_tax.updated_no_accounts")
           end
+        @vat_accounts_created = @entity.created_vat_accounts
         redirect_to (new_group ? report_group_path(new_group) : dashboard_path),
-                    notice: notice
+                    notice: [ notice, vat_accounts_notice ].compact.join(" ").presence
       else
         redirect_to edit_tax_entity_path(@entity), notice: t("entities.edit_tax.saved")
       end

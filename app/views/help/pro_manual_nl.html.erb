@@ -23,6 +23,8 @@
       <li><a href="#cross-entity">Boekingen tussen afzonderlijke bedrijven</a></li>
       <li><a href="#add-currency">Een valuta toevoegen</a></li>
       <li><a href="#tax-setup">Belastingschema&rsquo;s en categorieën</a></li>
+      <li><a href="#vat">Btw</a></li>
+      <li><a href="#vat-multiple">Btw bij meer dan één onderneming</a></li>
     </ul>
   </nav>
 
@@ -59,7 +61,7 @@
   <p>Er gelden nog twee regels, allebei zonder uitzondering:</p>
   <ul>
     <li><strong>Elke boeking heeft minstens één balansregel nodig</strong> &thinsp;&mdash;&thinsp; activa, passiva of eigen vermogen. Een herrubricering puur tussen twee kostenrekeningen wordt geweigerd; ga via de balansrekening waar het bedrag vandaan kwam, of corrigeer de oorspronkelijke boeking.</li>
-    <li><strong>Zodra een boeking een opbrengsten-, kosten- of privéregel bevat, mag er maar ÉÉN balansrekening in staan.</strong> &laquo;De bank betaalde de huur en de kleine kas de postzegels&raquo; zijn twee boekingen, geen één.</li>
+    <li><strong>Zodra een boeking een opbrengsten-, kosten- of privéregel bevat, mag er maar ÉÉN balansrekening in staan.</strong> &laquo;De bank betaalde de huur en de kleine kas de postzegels&raquo; zijn twee boekingen, geen één. De btw-regels die de app uit een btw-code afleidt, tellen hierbij niet mee &thinsp;&mdash;&thinsp; zie <a href="#vat">Btw</a>.</li>
   </ul>
   <p>Een boeking die alleen uit balansregels bestaat, valt niet onder de tweede regel en mag zoveel rekeningen noemen als je wilt. Juist dat maakt de openingsbalans mogelijk &thinsp;&mdash;&thinsp; zie hieronder.</p>
 
@@ -127,5 +129,41 @@ Bij een cumulatief stelsel als UK MTD bereikt de correctie de dienst met de volg
     <p>Bij downloaden krijg je één CSV, passend bij wat er op het scherm staat &thinsp;&mdash;&thinsp; samenvatting of detail. Een rapport e-mailen geeft je beide: een <strong>samenvatting</strong> (categorietotalen, wat in de vakjes komt) en een <strong>detail</strong> (categorietotalen met hun afzonderlijke boekingen, met linkjes naar bonnen; niet-gekoppelde bonnen staan apart vermeld). Heeft de entiteit een bestandsformaat voor de accountant ingesteld (bijvoorbeeld DATEV), dan zit dat er ook bij. Is er niets te melden voor de periode, dan krijg je in plaats daarvan een kort e-mailtje dat dit meldt. De samenvattings-CSV wordt ook bij elke wijziging als back-up bewaard, zodat je altijd een gedateerde back-up hebt van hoe de vakjes van een periode eruitzagen.</p>
     <p>Een belastingplichtige instellen, verbinding maken met de belastingdienst en een periode versturen &thinsp;&mdash;&thinsp; zie <%= link_to "Belastingrapportage instellen", easy_manual_path(anchor: "tax") %> en <%= link_to "Zelf je kwartaalcijfers indienen", easy_manual_path(anchor: "filing") %>.</p>
 
+  <h2 id="vat">Btw</h2>
+
+  <h3>De boekingsdatum bepaalt het tijdvak</h3>
+  <p>Een boeking met btw wordt verantwoord in het tijdvak waarin haar boekingsdatum valt. Welk stelsel geldt, bepaal je dus met hoe je boekt, niet met een instelling. Boek je de betaling, dan is de boekingsdatum de betaaldatum; boek je de factuur tegen Crediteuren of Debiteuren (eenvoudig handboek, <em>Kasstelsel en factuurstelsel</em>), dan is het de factuurdatum. De afwikkeling daarna is een overboeking van Crediteuren naar de bank en draagt geen code, dus er verhuist geen btw twee keer.</p>
+  <p>Twee gevolgen. Het formulier voor bankboekingen is op betalingen gebouwd, dus boekingen volgens het factuurstelsel voer je via het journaalboekingsformulier in. En de consistentie is aan jou: binnen hetzelfde belastingtijdvak kas- OF factuurstelsel &thinsp;&mdash;&thinsp; en als je wisselt, pas dan de posten aan die over de wisseling heen liggen!</p>
+
+  <h3>Waar de btw landt, en wat de regel dan toestaat</h3>
+  <p>Het bestand van de regeling geeft aan of de dienst de btw op een <strong>balansrekening</strong> houdt (bijv. het Verenigd Koninkrijk) of als <strong>opbrengsten- en kostenregels</strong> in de winst-en-verliesrekening (bijv. de Duitse EÜR). Daarvan hangt af of de regel &laquo;maar één balansrekening zodra er resultaatregels bij zitten&raquo; verruimd moet worden.</p>
+  <p>Bij een btw-rekening op de balans zou een inkoop met btw anders twee balansrekeningen hebben (kosten, voorbelasting, bank), dus de <em>afgeleide</em> regel is van de regel uitgezonderd &thinsp;&mdash;&thinsp; terwijl een <strong>met de hand getypte</strong> wordt geweigerd: een btw-regel zonder code erachter zou op de btw-rekening blijven staan en nooit in de aangifte komen.</p>
+  <p>Waar de btw-rekeningen resultaatrekeningen zijn, heeft de boeking toch al één balansrekening. Een met de hand getypte regel wordt daar niet geweigerd &thinsp;&mdash;&thinsp; maar ze verschijnt in de aangifte als <em>niet-toegewezen btw</em>, en zo valt ze in beide vormen op.</p>
+  <p>Verder blijft de regel staan: een aflossing gesplitst in hoofdsom en rente zijn nog steeds twee boekingen.</p>
+
+  <h3>De btw-rekening afwikkelen</h3>
+  <p>Elk verschil tussen wat er op de rekening staat en wat de codes verklaren, verschijnt in de aangifte als <em>niet-toegewezen btw</em> &thinsp;&mdash;&thinsp; en zo laat een met de hand getypte btw-boeking zich precies zien.</p>
+
+  <h3>Datums, tarieven en kopieën</h3>
+  <p>Codes zijn per <strong>datum</strong> geversioneerd, niet per belastingjaar: verandert een tarief, dan verandert het op een datum. Verplaats je een boeking over een tariefwijziging heen, dan wordt de btw opnieuw afgeleid tegen het tarief dat op de nieuwe datum gold.</p>
+  <p>Een btw-code kan alleen in een boeking in de eigen valuta van de regeling worden gebruikt. Een factuur die vanaf een rekening in een andere valuta betaald is, krijgt geen code: reken eerst om, of boek het brutobedrag en trek niets terug.</p>
+
+
+  <h2 id="vat-multiple">Btw bij meer dan één onderneming</h2>
+  <p>De app maakt <strong>één btw-aangifte per onderneming (entiteit) per regeling</strong>.</p>
+
+  <h3>Welke van je ondernemingen één btw-nummer delen, kies je niet zelf</h3>
+  <p>Meerdere boekhoudingen van dezelfde persoon, of van één vennootschap, zijn doorgaans één ondernemer met één btw-nummer. Afzonderlijke rechtspersonen &thinsp;&mdash;&thinsp; twee vennootschappen bijvoorbeeld &thinsp;&mdash;&thinsp; zijn afzonderlijke registraties. Dat bepaalt je belastingdienst.</p>
+  <p>De omzetdrempel volgt dezelfde lijn. Zijn meerdere van je ondernemingen één ondernemer, dan telt hun omzet <strong>samen</strong> mee voor de registratiedrempel. Is elke onderneming een eigen rechtspersoon, dan wordt elk apart getoetst. De drempels zelf verschillen per land.</p>
+
+  <h3>Als één btw-nummer meerdere van je ondernemingen dekt</h3>
+  <p>De app geeft je nog steeds een aangifte per onderneming. Die aangiften zijn <strong>delen van je ene aangifte</strong>: tel de vakken op, vak voor vak (bijv. vak 6 van onderneming 1 + vak 6 van onderneming 2 = vak 6 totaal), en dien het totaal in. Iets slimmers is niet nodig, en er gaat niets verloren &thinsp;&mdash;&thinsp; elke aangifte noemt de onderneming die ze dekt.</p>
+
+  <h3>Zet nooit btw-codes op bewegingen tussen ondernemingen die één btw-nummer delen</h3>
+  <p>Ze zijn één ondernemer, dus een beweging tussen hen is geen levering: er ontstaat geen btw en er is niets aan te geven. Zet je er toch een code op, dan verzint de samengevoegde aangifte een verkoop en een inkoop die niet bestaan. Deze fout verstopt zich: de twee btw-vakken heffen elkaar op in het te betalen bedrag &thinsp;&mdash;&thinsp; en daar zou je kijken &thinsp;&mdash;&thinsp; terwijl de nettovakken te hoog blijven.</p>
+
+  <h3>De manieren van aangifte verschillen per dienst</h3>
+  <p>Sommige diensten laten één ondernemer per bedrijfsonderdeel apart aangifte doen; sommige laten meerdere personen samen als één aangifte doen. In het Verenigd Koninkrijk zijn dat de <em>divisional registration</em>, alleen open voor rechtspersonen, en de <em>VAT group</em>, die één aangifte voor meerdere leden indient. De app maakt geen van beide: ze maakt één aangifte per onderneming, en die samenvoegen of opsplitsen valt erbuiten.</p>
+  <p>Heb je meer dan één onderneming, vraag je boekhouder dan of en hoe je btw aangeeft.</p>
 </div>
 <%= render "help/back" %>

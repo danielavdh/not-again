@@ -156,10 +156,19 @@ code. The Dutch return has `privégebruik` boxes and Germany has *unentgeltliche
 Wertabgabe*; both need rules this app does not hold. Book the private portion
 gross.
 
-**Invoice-basis tax points.** The app records payments, not invoices, so the
-entry date is the tax point. That is correct for a cash-basis scheme (UK cash
-accounting, German Ist-Versteuerung, EÜR) and wrong for an invoice-basis one. If
-you file on an invoice basis, this app's VAT return is not your return.
+**No invoice/payment distinction.** Corrected 2026-10-14: an earlier version of
+this entry said the app records payments and that its return is unusable on an
+invoice basis. Both were wrong. A VAT line is reported in the period of its
+**entry date**, and nothing more, so the basis follows the bookkeeping: book the
+payment for a cash basis, book the invoice against Creditors/Debtors for an
+invoice basis — which the easy manual documents under *Cash basis versus accrual
+basis*, and which the one-balance-account relaxation already allows (an expense
+with a code settled against a creditor saves and derives correctly).
+
+What is genuinely missing is any record of which basis a set of books is on, so
+nothing detects the same cost entered once as an invoice and once as a payment —
+which would report its VAT twice. The bank entry form is also payment-shaped, so
+invoice-basis entries go through the journal entry form.
 
 **Partial exemption and pro-rata recovery.** Input VAT is either reclaimable or
 it is not. A business that recovers a fraction of its input VAT has to compute
@@ -186,6 +195,29 @@ Record it as what it is: an ordinary sale in the paying business (income +
 output VAT) and an ordinary purchase in the receiving one (expense + input
 VAT), settled by a transfer. Two normal entries, no special mechanism — two
 entities never shared one entry anyway.
+
+**When the payer is not registered.** The paragraph above assumes the payer can
+issue a VAT invoice. If they cannot, the deciding fact is **whose name is on the
+supplier's invoice**:
+
+- Invoice in the **receiver's** name, the payer merely settled it: the receiver
+  holds a valid VAT invoice for a supply to their own business and **recovers
+  normally**. Nothing about who paid changes that.
+- Invoice in the **payer's** name: the supply was to an unregistered person, who
+  can neither reclaim it nor charge it onward. **The VAT is lost to both sides.**
+
+So the practical advice is the first one: have the invoices made out to the
+business whose expense it is.
+
+**And then the refusal above is resting on a premise the app cannot check.** The
+receiving side is refused a VAT code because "the receiver holds no invoice in
+their own name" — true of a gift of goods, false whenever the invoice was
+addressed to the receiver from the start, which is the correct way to arrange it.
+The app has no invoice record, so it cannot tell the two apart. Today the way
+round it is to book the receiving side as its **own ordinary entry** (expense
+with a purchase code, credited to the equity bridge), which is accepted because
+the refusal only fires on a posting that is `cross_entity_linked?`. The cost is
+that the two sides are no longer linked to each other.
 
 Which of the two a given payment actually is, and whether it is instead a
 disbursement, is a facts-and-circumstances question for an accountant. The app

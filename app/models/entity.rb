@@ -64,6 +64,7 @@ class Entity < ApplicationRecord
 
   after_create  :open_initial_membership_stint
   after_save    :track_group_membership_change, if: :saved_change_to_entity_group_id?
+  after_save    :sync_vat_control_accounts,      if: :saved_change_to_tax_schemes?
 
   scope :active, -> { where(active: true) }
   scope :by_code, ->(code) { where(code: code) }
@@ -190,6 +191,12 @@ class Entity < ApplicationRecord
                 .distinct.pluck(:journal_entry_id)
   end
 
+  # What the last save had to create, for the notice — an account appearing
+  # unannounced is worse than one the user made.
+  def created_vat_accounts
+    @created_vat_accounts || []
+  end
+
   # Every scheme in the catalogue, from any country. An entity has no country of
   # its own — the scheme names one, so a business filing in two places simply
   # carries two schemes.
@@ -238,6 +245,27 @@ class Entity < ApplicationRecord
       return if tax_schemes.blank?
       unknown = Array(tax_schemes) - available_tax_schemes
       errors.add(:tax_schemes, "unknown: #{unknown.join(', ')}") if unknown.any?
+    end
+
+    # Control accounts belong to the REGISTRATION, not to any entry. Created on
+    # subscribing, so no entry ever creates one unannounced and none is left
+    # behind by an entry that was then refused; dropped again on unsubscribing
+    # while the pair is still unused.
+    def sync_vat_control_accounts
+      was, now = saved_change_to_tax_schemes
+      added,   = TaxSchemeConfig.vat_schemes(Array(now) - Array(was))
+      removed, = TaxSchemeConfig.vat_schemes(Array(was) - Array(now))
+
+      resolved = added.flat_map { |scheme|
+        TaxCode::DIRECTIONS.map { |direction|
+          Account.resolve_vat_account(entity_code: code, scheme: scheme, direction: direction)
+        }
+      }
+      # resolve_ returns the existing account when there is one, so only the
+      # genuinely new ones are worth announcing.
+      @created_vat_accounts = resolved.select(&:previously_new_record?)
+
+      removed.each { |scheme| Account.drop_unused_vat_accounts(entity_code: code, scheme: scheme) }
     end
 
     # Joining a family from ungrouped is always allowed — only LEAVING one (to

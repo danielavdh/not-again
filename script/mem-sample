@@ -1,0 +1,36 @@
+#!/bin/sh
+# Samples container memory for the RSS watch (todo.md item 11). Runs on the
+# SERVER, hourly from root's crontab, appending to /var/log/mem-sample.log.
+# Deploy with: scp script/mem-sample root@<host>:/usr/local/bin/mem-sample
+#
+# Why it exists: the question "is the reboot cadence doing load-bearing work, or
+# would the workers plateau anyway" needs a curve, not a reading, and nobody
+# reliably takes a reading by hand for a fortnight.
+#
+# Tab-separated: timestamp, host uptime (s), container, pid-or-"total", rss, cmd.
+#   totals only:  awk -F'\t' '$4=="total"' /var/log/mem-sample.log
+#   one worker:   grep 'cluster worker 0' /var/log/mem-sample.log
+#
+# The cgroup total is the trustworthy figure; per-process RSS must NOT be summed
+# (forked children share loaded code as copy-on-write pages). It is here to show
+# WHERE growth sits — Puma vs Solid Queue — which a total cannot.
+set -u
+
+ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+up=$(cut -d' ' -f1 /proc/uptime | cut -d. -f1)
+
+docker ps --format '{{.Names}}' | grep -- '-web-' | while read -r c; do
+  short=$(printf '%s' "$c" | sed 's/-web-.*/-web/')
+
+  mem=$(docker stats --no-stream --format '{{.MemUsage}}' "$c" 2>/dev/null | awk '{print $1}')
+  printf '%s\t%s\t%s\ttotal\t%s\t-\n' "$ts" "$up" "$short" "${mem:-?}"
+
+  # docker top gives HOST pids; /proc is read on the host, which is the whole
+  # point — `docker exec` sits in a different PID namespace and cannot see them.
+  docker top "$c" 2>/dev/null | awk 'NR>1{print $2}' | while read -r p; do
+    rss=$(awk '/^VmRSS:/{print $2}' "/proc/$p/status" 2>/dev/null) || continue
+    [ -n "${rss:-}" ] || continue
+    cmd=$(tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null | cut -c1-40)
+    printf '%s\t%s\t%s\t%s\t%skB\t%s\n' "$ts" "$up" "$short" "$p" "$rss" "$cmd"
+  done
+done

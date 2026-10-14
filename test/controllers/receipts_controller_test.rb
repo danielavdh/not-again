@@ -470,7 +470,11 @@ class ReceiptsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    test "create failure re-renders upload_standalone" do
+    # It used to re-render the page, which put the errors behind a closed
+    # <dialog> — and read them off a fresh Receipt, so there were none to show.
+    # An upload-only admin has to be told WHY, and the flash is the only place
+    # on that page they would see it.
+    test "a refused upload says why, where this admin can read it" do
       assert_no_difference("Receipt.count") do
         post receipts_url(locale: :en), params: {
           receipt: {
@@ -480,7 +484,13 @@ class ReceiptsControllerTest < ActionDispatch::IntegrationTest
           }
         }
       end
-      assert_response :unprocessable_entity
+
+      assert_redirected_to upload_standalone_receipts_path
+      message = flash[:alert]
+      assert message.present?, "an upload that failed must say so"
+      follow_redirect!
+      assert_select ".flash", text: /#{Regexp.escape(message)}/,
+                    message: "the reason has to reach the page, not just the session"
     end
 
     test "can delete own unlinked receipt" do

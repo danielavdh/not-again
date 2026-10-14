@@ -242,6 +242,15 @@ class Account < ApplicationRecord
     )
   end
 
+  # Unsubscribing from a scheme. Both or neither: a pair where one side has been
+  # posted to stays whole, because a return reads the two together.
+  def self.drop_unused_vat_accounts(entity_code:, scheme:)
+    pair = vat_accounts.for_entity_codes([ entity_code ]).where(tax_scheme: scheme)
+    return if Posting.where(account_id: pair.select(:id)).exists?
+
+    pair.destroy_all
+  end
+
   # The top of the entity's range for that type, taken downward from 999. No
   # band is RESERVED: a rule refusing a code pattern would newly refuse accounts
   # that already exist in live books.

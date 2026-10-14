@@ -18,6 +18,7 @@
       <li><a href="#transfer">Geld overboeken tussen eigen rekeningen &thinsp;&mdash;&thinsp; een overboeking</a></li>
       <li><a href="#basis">Kasstelsel en factuurstelsel</a></li>
       <li><a href="#splitting">Een rekening splitsen tussen zakelijk en privé</a></li><br />
+      <li><a href="#vat">Btw</a></li><br />
       <li><a href="#receipts">Bonnen bijvoegen</a></li>
       <li><a href="#repeating">Een vorige boeking herhalen</a></li>
       <li><a href="#correcting">Een fout corrigeren</a></li>
@@ -99,14 +100,18 @@
   <p>Als de twee accounts in verschillende valuta worden bijgehouden, voer je het bedrag in dat daadwerkelijk op het doelaccount is bijgeschreven. De app berekent de impliciete wisselkoers ter plekke en toont die aan je voordat je opslaat.</p>
 
   <h2 id="basis">Kasstelsel en factuurstelsel</h2>
-  <p>Bij het kasstelsel boekt u op het moment dat het geld binnenkomt of uw rekening verlaat. Bij het factuurstelsel boekt u op het moment dat u iets levert of ontvangt, niet wanneer er betaald wordt.<br />
-	  De meeste ondernemers werken met het factuurstelsel; het kasstelsel mag alleen als u vrijwel uitsluitend aan particulieren levert. Weet u het niet zeker, dan kan de Belastingdienst of uw boekhouder het u vertellen.</p>
+  <p>Bij het kasstelsel boek je op het moment dat het geld binnenkomt of je rekening verlaat. Bij het factuurstelsel boek je op het moment dat je iets levert of ontvangt, niet wanneer er betaald wordt.<br />
+	  De meeste ondernemers werken met het factuurstelsel; het kasstelsel mag alleen als je vrijwel uitsluitend aan particulieren levert. Weet je het niet zeker, dan kan de Belastingdienst of je boekhouder het je vertellen.</p>
 
   <h3>Kasstelsel</h3>
-  <p>Het volgt het geld: u boekt de omzet wanneer het geld binnenkomt, en een kostenpost wanneer u die betaalt. Er wordt niets vastgelegd voordat het op uw rekening of in de kas staat, dus elke boeking is een gewone ontvangst of uitgave. Een workshop in december die in februari betaald wordt, valt in de winst van februari.</p>
+  <p>Het volgt het geld: je boekt de omzet wanneer het geld binnenkomt, en een kostenpost wanneer je die betaalt. Er wordt niets vastgelegd voordat het op je rekening of in de kas staat, dus elke boeking is een gewone ontvangst of uitgave. Een workshop in december die in februari betaald wordt, valt in de winst van februari.</p>
 
   <h3>Factuurstelsel</h3>
-  <p>Bij het factuurstelsel boekt u de omzet wanneer u de factuur schrijft, tegen een rekening Debiteuren (activa). Komt het geld binnen, dan boekt u dat weg met een overboeking: Debiteuren =&gt; Bankrekening. Een kostenpost boekt u tegen Crediteuren (passiva) zodra de leverancier factureert. Bij betaling boekt u die ook weg met een overboeking: Bankrekening =&gt; Crediteuren. Een workshop in december die in februari betaald wordt, valt in de winst van december, en uw balans per jaareinde laat zien wat er beide kanten op nog openstaat.</p>
+  <p>Bij het factuurstelsel boek je de omzet wanneer je de factuur schrijft, tegen een rekening Debiteuren (activa). Komt het geld binnen, dan boek je dat weg met een overboeking: Debiteuren =&gt; Bankrekening. Een kostenpost boek je tegen Crediteuren (passiva) zodra de leverancier factureert. Bij betaling boek je die ook weg met een overboeking: Bankrekening =&gt; Crediteuren. Een workshop in december die in februari betaald wordt, valt in de winst van december, en je balans per jaareinde laat zien wat er beide kanten op nog openstaat.</p>
+
+  <h3>Welk stelsel je mag gebruiken</h3>
+  <p>Dat is niet altijd jouw keuze, en per land verschilt het. Sommige belastingdiensten laten je kiezen, sommige staan het kasstelsel alleen toe zolang je onder een bepaalde omvang blijft, en sommige willen voor de btw het factuurstelsel, wat je voor de inkomstenbelasting ook doet. In het Verenigd Koninkrijk mag je de btw bijvoorbeeld op kasbasis aangeven zolang je belaste omzet niet boven &pound;1,35 miljoen per jaar komt (2026). Vraag het na bij je belastingdienst of je boekhouder &thinsp;&mdash;&thinsp; en vraag het apart voor de btw: het antwoord is niet altijd hetzelfde als voor de inkomstenbelasting.</p>
+  <p>De app kan met beide om: ze zet een boeking in de periode van de datum die je invult. Maar meng binnen hetzelfde belastingtijdvak geen kas- en factuurstelsel.</p>
 
   <h2 id="splitting">Een rekening splitsen tussen zakelijk en privé</h2>
   <p>Sommige kosten zijn maar gedeeltelijk zakelijk. Je thuisinternet gebruik je misschien voor 60&nbsp;% voor werk, je auto voor 40&nbsp;% voor klantenbezoeken. Wanneer je deze vastlegt, kun je het bedrag direct splitsen.</p>
@@ -119,6 +124,31 @@
   </ul>
   <p>Het formulier heeft nu twee regels: het zakelijke gedeelte op het uitgavenaccount, het privégedeelte op het privéaccount. Beide worden samen opgeslagen en de boeken blijven in evenwicht.</p>
   <p>Om een splitsing later te wijzigen, klik op % op een van beide regels. Het venster opent opnieuw met de huidige splitsing ingevuld; breng je aanpassingen aan en klik op Toepassen.</p>
+
+  <h2 id="vat">Btw</h2>
+  <p>Is je onderneming btw-plichtig, ga dan op je dashboard naar belastingen instellen of wijzigen voor die onderneming &thinsp;&mdash;&thinsp; en vink je btw-regeling aan. Daarna verschijnt er een btw-kolom in de formulieren voor ontvangst en uitgave.</p>
+
+  <h3>Een factuur met btw invoeren</h3>
+  <p><strong>Vul het totaal in, zoals het op je bankafschrift staat.</strong> Kies daarna de btw-code voor die regel &thinsp;&mdash;&thinsp; &ldquo;Inkoop, algemeen tarief&rdquo; voor het meeste wat je koopt, &ldquo;Verkoop, algemeen tarief&rdquo; voor het meeste wat je verkoopt.</p>
+  <p>De btw en het nettobedrag worden getoond. Een inkoop van € 121 bij 21% wordt € 100 kosten en € 21 btw. Op de bank staat nog steeds € 121, want dat heb je betaald.</p>
+  <p>Staat er op de factuur een iets ander btw-bedrag &thinsp;&mdash;&thinsp; leveranciers ronden verschillend af &thinsp;&mdash;&thinsp; dan mag je het hunne over het onze heen typen. Het totaal blijft zoals je het invulde en het netto past zich aan. Verander je daarna het totaal of de code, dan rekent de app opnieuw.</p>
+  <p>De eerste keer dat je een btw-code gebruikt, maakt de app een btw-rekening aan en zegt dat ook. Je kunt die hernoemen of onder een hoofdrekening plaatsen.</p>
+
+  <h3>Geen btw</h3>
+  <p>Laat de btw op &ldquo;Geen btw&rdquo; staan bij alles waar geen btw op zit: een leverancier zonder btw-nummer, bankkosten, loon. Bij een gesplitste rekening blijft de btw-code op de zakelijke regel staan; het privédeel krijgt er geen.</p>
+
+  <h3>Je btw-aangifte</h3>
+  <p>Een btw-aangifte is een rapport als elk ander, dus je maakt er één per tijdvak. Zoek op je dashboard de btw-regel en klik op <strong>+ Rapport toevoegen</strong>: geef het een naam die je terugkent &thinsp;&mdash;&thinsp; &ldquo;Q1 2026&rdquo; &thinsp;&mdash;&thinsp; en de eerste en laatste dag van het tijdvak.</p>
+  <p><strong>De cijfers komen uit de datums</strong>, niet uit de naam. Een rapport dat Q1 heet met de verkeerde datums laat het verkeerde tijdvak zien, zonder te klagen.</p>
+  <p>Klik het rapport aan en je krijgt de vakken van het echte formulier, in de nummering van de dienst zelf, klaar om over te nemen, plus een uitsplitsing per code en een CSV.</p>
+  <p>Deze app verstuurt de aangifte niet. Die dien je zelf in.</p>
+
+  <h3>De btw betalen</h3>
+  <p>Als je het tijdvak betaalt, boek dan een <em>overboeking</em> van je bankrekening naar de btw-rekening. Daarmee is die leeg en klaar voor het volgende tijdvak.</p>
+
+  <h3>Btw verlegd</h3>
+  <p>Bij sommige inkopen staat er geen btw op de factuur omdat <em>jij</em> die moet aangeven: diensten uit het buitenland, werk tussen bouwbedrijven, goederen uit de EU. Kies <strong>Inkoop, btw verlegd</strong> &thinsp;&mdash;&thinsp; of, alleen bij intracommunautaire verwerving, de verwervingscode, die de aangifte in andere vakken verantwoordt. De app zet de btw in één keer aan beide kanten, dus je bent die verschuldigd en trekt die tegelijk af, en er gaat niets extra van je rekening af. Beide bedragen moeten wel in de aangifte staan, en dat is er juist de hele bedoeling van.</p>
+  <p>Weet je niet zeker of btw bij een inkoop verlegd is, vraag het dan aan je boekhouder. Het fout doen kost geen geld, maar maakt de aangifte wel onjuist.</p>
 
   <h2 id="receipts">Bonnen bijvoegen</h2>
   <p>Bij elke storting of opname kun je op de + knop naast een regel klikken om een foto of bestand bij te voegen (JPEG, PNG, PDF). Als je al eerder een bon afzonderlijk hebt geüpload, gebruik dan het koppelicoon om deze te verbinden. Aan één regel kunnen meerdere bonnen worden bijgevoegd.</p>
