@@ -13,7 +13,7 @@ class JournalEntryVatTest < ActiveSupport::TestCase
     @date     = Date.new(2026, 5, 1)
     @purchase = TaxCode.resolve(scheme: "gb_vat", key: "purchase_standard", on: @date)
     @sale     = TaxCode.resolve(scheme: "gb_vat", key: "sale_standard",     on: @date)
-    @reverse  = TaxCode.resolve(scheme: "gb_vat", key: "purchase_reverse_charge", on: @date)
+    @reverse  = TaxCode.resolve(scheme: "gb_vat", key: "purchase_reverse_charge_services", on: @date)
   end
 
   # The bank form's own sequence: derive, then sum the rest into the bank leg.

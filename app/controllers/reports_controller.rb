@@ -723,7 +723,10 @@ class ReportsController < BaseController
     @display_currency = group.display_currency
     @vat_return = Reports::VatReturn.new(
       entity: group.entity, scheme: group.tax_scheme,
-      from:   @report.start_date, to: @report.end_date
+      from:   @report.start_date, to: @report.end_date,
+      # From the REPORT, so a rate change or joining the scheme mid-year cannot
+      # rewrite a quarter already filed.
+      flat_rate_bps: @report.flat_rate_bps
     ).call
 
     respond_to do |format|
@@ -865,7 +868,8 @@ class ReportsController < BaseController
   # to, and permitting it meant a forged field would raise rather than be
   # ignored.
   def report_params
-    params.require(:report).permit(:name, :start_date, :end_date, :report_group_id)
+    params.require(:report).permit(:name, :start_date, :end_date, :report_group_id,
+                                   :flat_rate_percentage)
   end
 
   def load_form_data

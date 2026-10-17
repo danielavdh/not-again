@@ -29,6 +29,15 @@
 # "No VAT", "Geen btw", "Keine USt". Never translated, for the same reason
 # scheme_label is not: it names this country's tax. "Keine MwSt" on a British
 # return is wrong even when the app is being read in German.
+# flat_rate_label: what this authority calls its flat-rate basis — "Flat rate",
+# "Durchschnittssatz". Omit where the scheme has none.
+# normal_rules_label: and what it calls the ordinary basis — "Normal rules"
+# (HMRC), "Regelbesteuerung", "Normale btw-regels", "Régimen general".
+# Both follow the no_tax_label rule: a word that appears on the AUTHORITY'S OWN
+# FORM is that authority's word, and is not translated. Translating it would
+# invent a form that does not exist — and would mislabel a UK flat rate as a
+# Spanish "régimen simplificado", which works on sector coefficients and is a
+# different thing entirely.
 # tax_year_ends:   "MM-DD" — omit for a calendar year
 # position:        display order of the scheme within its country (optional)
 #
@@ -185,6 +194,16 @@ module TaxSchemeConfig
     config[:no_tax_labels][scheme.to_s].presence || "No VAT"
   end
 
+  # The authority's own words for the two bases, never translated. See the
+  # header notes above.
+  def self.flat_rate_label(scheme)
+    config[:flat_rate_labels][scheme.to_s].presence || "Flat rate"
+  end
+
+  def self.normal_rules_label(scheme)
+    config[:normal_rules_labels][scheme.to_s].presence || "Normal rules"
+  end
+
   # The balance sheet, or the P&L. German EÜR is the reason: a cash-basis return
   # has no balance sheet to put a control account on.
   def self.vat_accounts_nominal?(scheme)
@@ -245,6 +264,8 @@ module TaxSchemeConfig
     kinds        = {}
     vat_accounts = {}
     no_tax_labels = {}
+    flat_rate_labels = {}
+    normal_rules_labels = {}
     code_files   = {}
     positions    = Hash.new { |h, k| h[k] = {} }
     seen_headers = {}
@@ -285,6 +306,8 @@ module TaxSchemeConfig
       kinds[slug]                 = data["kind"].presence
       vat_accounts[slug]          = data["vat_accounts"].presence
       no_tax_labels[slug]         = data["no_tax_label"].presence
+      flat_rate_labels[slug]      = data["flat_rate_label"].presence
+      normal_rules_labels[slug]   = data["normal_rules_label"].presence
       connectors[slug]            = data["connector"].presence
       authorities[country]        = data["authority"].presence if data["authority"].present?
       report_names[slug]          = data["report_name"].presence
@@ -325,6 +348,8 @@ module TaxSchemeConfig
       kinds:                    kinds.freeze,
       vat_accounts:             vat_accounts.freeze,
       no_tax_labels:            no_tax_labels.freeze,
+      flat_rate_labels:         flat_rate_labels.freeze,
+      normal_rules_labels:      normal_rules_labels.freeze,
       connectors:               connectors.freeze,
       authorities:              authorities.freeze,
       authorities_by_connector: authorities_by_connector,

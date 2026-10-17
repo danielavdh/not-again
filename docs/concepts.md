@@ -240,6 +240,31 @@ A scheme is a VAT scheme when its header says `kind: vat`. Load-bearing: a retur
 
 **Tax report group** — the set of accounts that make one submission, plus the identifier that authority uses for that business. A `ReportGroup` with a `tax_scheme`.
 
+### The authority's words are not translated
+
+A rule, not a preference, and it applies to every label the app shows that also
+appears on a tax form: **if a word is the word used on the authority's own form,
+and there is no translated form, the app uses that word.** It comes from the
+scheme's YAML header, in the authority's language, and the locale files never
+see it.
+
+`scheme_label`, `no_tax_label`, `flat_rate_label` and `normal_rules_label` all
+work this way. A German reader of a British VAT return sees "No VAT" and "Flat
+rate", not "Keine MwSt" and "Durchschnittssatz".
+
+Two reasons, and the second is the one that bites:
+
+- **A translation invents a form that does not exist.** HMRC publishes no German
+  VAT return, so no German wording is the right wording.
+- **Each country's near-equivalent is a different thing.** Translating "Flat
+  rate" into Spanish gives *régimen simplificado*, which works on sector
+  coefficients rather than a percentage of turnover. The reader would recognise
+  a scheme they are not looking at.
+
+So when adding a label: if it names something on a form, it is a header field.
+If it names something the *app* does — a button, a column of our own invention —
+it is a locale key.
+
 There is **no country object** anywhere — adding Poland means adding a Polish scheme, and the country falls out of its `country_code:` header. An **authority** (HMRC, ELSTER) is likewise just a string; only a connector is real code.
 
 ### What tier 3 will never include

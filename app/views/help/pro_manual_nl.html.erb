@@ -25,6 +25,7 @@
       <li><a href="#tax-setup">Belastingschema&rsquo;s en categorieën</a></li>
       <li><a href="#vat">Btw</a></li>
       <li><a href="#vat-multiple">Btw bij meer dan één onderneming</a></li>
+      <li><a href="#withheld-tax">Belasting ingehouden aan de bron</a></li>
     </ul>
   </nav>
 
@@ -165,5 +166,31 @@ Bij een cumulatief stelsel als UK MTD bereikt de correctie de dienst met de volg
   <h3>De manieren van aangifte verschillen per dienst</h3>
   <p>Sommige diensten laten één ondernemer per bedrijfsonderdeel apart aangifte doen; sommige laten meerdere personen samen als één aangifte doen. In het Verenigd Koninkrijk zijn dat de <em>divisional registration</em>, alleen open voor rechtspersonen, en de <em>VAT group</em>, die één aangifte voor meerdere leden indient. De app maakt geen van beide: ze maakt één aangifte per onderneming, en die samenvoegen of opsplitsen valt erbuiten.</p>
   <p>Heb je meer dan één onderneming, vraag je boekhouder dan of en hoe je btw aangeeft.</p>
+
+  <h2 id="withheld-tax">Belasting ingehouden aan de bron</h2>
+  <p>&Eacute;&eacute;n principe, veel namen: het Britse CIS, de Spaanse IRPF-<em>retenci&oacute;n</em>, de Duitse <em>Bauabzugsteuer</em>, de Zwitserse <em>Verrechnungssteuer</em> en de loonheffing. Telkens houdt degene die betaalt een percentage in en draagt dat namens de ontvanger af aan de belastingdienst.</p>
+  <p>Twee dingen bepalen hoe je het boekt: of je het <strong>ondergaat</strong> of zelf <strong>inhoudt</strong>, en of de verrekening aan een persoon of aan een vennootschap toekomt.</p>
+
+  <h3>Een zzp'er die het ondergaat</h3>
+  <p>&Eacute;&eacute;n boeking. De omzet voor het volle bedrag, de inhouding als eigen regel aan de andere kant, en de bankregel als sluitpost. De inhouding gaat naar een <em>priv&eacute;rekening</em>, want de inkomstenbelasting van een zzp'er was nooit een kostenpost van de onderneming.</p>
+
+  <h3>Een vennootschap die het ondergaat</h3>
+  <p>Een vennootschap heeft geen priv&eacute;rekening: de belastingdienst is het <em>aan de vennootschap</em> schuldig, die het verrekent met haar eigen loonheffingen. Het is dus een <strong>actiefpost</strong>.</p>
+  <p>Maak twee boekingen; een vennootschap werkt toch al met het factuurstelsel, dus de factuur en het geld zijn twee gebeurtenissen:</p>
+  <ul>
+    <li><strong>De factuur</strong> &thinsp;&mdash;&thinsp; Omzet credit 1.500, Debiteuren debet 1.500.</li>
+    <li><strong>De betaling</strong> &thinsp;&mdash;&thinsp; Debiteuren credit 1.500, Bank debet 1.300, Te verrekenen belasting debet 200.</li>
+  </ul>
+
+  <h3>Als jij het bij een ander inhoudt</h3>
+  <p>Het spiegelbeeld. Jij bent het de belastingdienst schuldig, dus het is een <strong>schuld</strong>, en dezelfde vorm met twee boekingen geldt:</p>
+  <ul>
+    <li><strong>Hun factuur</strong> &thinsp;&mdash;&thinsp; Kosten debet 1.500, Crediteuren credit 1.500.</li>
+    <li><strong>Jij betaalt hen</strong> &thinsp;&mdash;&thinsp; Crediteuren debet 1.500, Bank credit 1.300, Af te dragen belasting credit 200.</li>
+    <li><strong>Jij draagt af</strong> &thinsp;&mdash;&thinsp; Af te dragen belasting debet 200, Bank credit 200.</li>
+  </ul>
+
+  <h3>Wat de app niet doet</h3>
+  <p>Ze legt het geld vast. Ze voert geen inhoudingsregeling uit: geen controle van wie je betaalt, geen maandaangiften, geen inhoudingsverklaringen, geen termijnen. Juist het Britse CIS vraagt dat allemaal, en elk daarvan gaat per onderaannemer, en die kent deze app niet.</p>
 </div>
 <%= render "help/back" %>

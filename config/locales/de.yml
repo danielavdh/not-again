@@ -1226,6 +1226,7 @@ de:
       boxes: "Die Erklärung"
       summary: "Zusammenfassung"
       by_code: "Nach Schlüssel"
+      by_account: "Nach Konto"
       due: "Umsatzsteuer auf Erlöse"
       reclaimed: "Abziehbare Vorsteuer"
       payable: "Zahllast"
@@ -1233,6 +1234,8 @@ de:
       unassigned_warning: "%{amount} liegen auf den Umsatzsteuerkonten, ohne von einem Steuerschlüssel zu stammen. Dieser Betrag steht in keiner Kennzahl oben. Buchung suchen und Schlüssel setzen, oder die Kennzahl in der Erklärung von Hand korrigieren."
       reverse_charge: "Steuerschuldumkehr"
       reverse_charge_note: "und %{amount} geschuldet"
+      flat_rate_label: "Pauschalsatz %, falls du die Pauschalregelung nutzt"
+      flat_rate_placeholder: "z. B. 14,5"
       direction_label: "Art"
       direction_short:
         input: "Einkauf"

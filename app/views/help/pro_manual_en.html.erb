@@ -25,6 +25,7 @@
       <li><a href="#tax-setup">Tax schemes and categories</a></li>
       <li><a href="#vat">VAT</a></li>
       <li><a href="#vat-multiple">VAT with more than one business</a></li>
+      <li><a href="#withheld-tax">Tax withheld at source</a></li>
     </ul>
   </nav>
 
@@ -167,5 +168,31 @@ Under a cumulative regime such as UK MTD corrections reach the authority with th
   <h3>Filing arrangements differ by authority</h3>
   <p>Some authorities let one taxable person file separately per division; some let several persons file jointly as one. In the UK those are <em>divisional registration</em>, which is open to bodies corporate only, and a <em>VAT group</em>, which files one return for several members. The app produces neither: it produces one return per business, and compiling or splitting them is outside it.</p>
   <p>If you run more than one business, ask your accountant if and how you file VAT.</p>
+
+  <h2 id="withheld-tax">Tax withheld at source</h2>
+  <p>One principle, many names: UK CIS, Spanish IRPF <em>retenci&oacute;n</em>, German <em>Bauabzugsteuer</em>, Swiss <em>Verrechnungssteuer</em>, and PAYE on a salary. In every case the payer keeps back a percentage and hands it to the tax office on the payee's behalf.</p>
+  <p>Two things decide how to book it: whether you <strong>suffer</strong> it or <strong>withhold</strong> it, and whether the credit belongs to a person or to a company.</p>
+
+  <h3>A sole trader suffering it</h3>
+  <p>One entry. The income at its full value, the deduction as its own line on the opposite side, and the bank line as the balance. The deduction goes to a <em>personal</em> account, because a sole trader's income tax was never a business expense.</p>
+
+  <h3>A company suffering it</h3>
+  <p>A company has no personal account: the money is owed <em>to the company</em> by the tax office, which sets it against its own payroll liabilities. So it is an <strong>asset</strong>.</p>
+  <p>Create two entries; a company accounts on an accrual basis anyway, so the invoice and the money are two events:</p>
+  <ul>
+    <li><strong>The invoice</strong> &thinsp;&mdash;&thinsp; Income credit 1,500, Debtors debit 1,500.</li>
+    <li><strong>The remittance</strong> &thinsp;&mdash;&thinsp; Debtors credit 1,500, Bank debit 1,300, Tax recoverable debit 200.</li>
+  </ul>
+
+  <h3>Withholding it from someone else</h3>
+  <p>The mirror image. You owe the tax office, so it is a <strong>liability</strong>, and the same two-entry shape applies:</p>
+  <ul>
+    <li><strong>Their invoice</strong> &thinsp;&mdash;&thinsp; Expense debit 1,500, Creditors credit 1,500.</li>
+    <li><strong>You pay them</strong> &thinsp;&mdash;&thinsp; Creditors debit 1,500, Bank credit 1,300, Tax payable credit 200.</li>
+    <li><strong>You pay the tax office</strong> &thinsp;&mdash;&thinsp; Tax payable debit 200, Bank credit 200.</li>
+  </ul>
+
+  <h3>What the app does not do</h3>
+  <p>It records the money. It does not run a withholding scheme: no verification of the people you pay, no monthly returns, no deduction statements, no deadlines. UK CIS in particular requires all of those, and every one of them is per-subcontractor, which this app has no record of.</p>
 </div>
 <%= render "help/back" %>

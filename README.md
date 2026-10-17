@@ -59,7 +59,7 @@ It was built with Europe in mind — the tax catalogues, the FX rules and the fi
 **Three ways to run this**
 
 - **On your own computer**, for yourself alone — see [Run it locally](#run-it-locally). Cost: 0
-- **Hosted for you** — see [docs/scalingo.md](docs/scalingo.md), a few clicks and a card. The machine is theirs; they maintain it. Cost: from €25/month <!-- TODO: Scalingo's smallest server+database tier; not going to be enough — revisit once we know real requirements -->
+- **Hosted for you** — see [docs/scalingo.md](docs/scalingo.md), a few clicks and a card. The machine is theirs; they maintain it. Cost: from about €36/month
 - **On a server you rent** — see [Run it in production](#run-it-in-production). More involved, you maintain. Our instructions are detailed, but if you have never used the terminal, it may not be for you. You could hire someone to set it up for you and do the maintenance. Cost: €5+/month.
 
 ---

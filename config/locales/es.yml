@@ -1226,6 +1226,7 @@ es:
       boxes: "La declaración"
       summary: "Resumen"
       by_code: "Por código"
+      by_account: "Por cuenta"
       due: "IVA devengado en ventas"
       reclaimed: "IVA soportado deducible"
       payable: "IVA a ingresar"
@@ -1233,6 +1234,8 @@ es:
       unassigned_warning: "%{amount} está en las cuentas de IVA sin que ningún código de IVA lo haya puesto allí. No figura en ninguna casilla anterior. Busque el asiento y asígnele un código, o corrija la casilla a mano en la declaración."
       reverse_charge: "Inversión del sujeto pasivo"
       reverse_charge_note: "y %{amount} devengado"
+      flat_rate_label: "% de tipo fijo, si estás en el régimen de tipo fijo"
+      flat_rate_placeholder: "p. ej. 14,5"
       direction_label: "Tipo"
       direction_short:
         input: "Compra"

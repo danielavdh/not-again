@@ -945,6 +945,15 @@ body{
 				}
 				h3{color: var(--light); margin: 1vw 0;}
 				p{color: var(--light);}
+				.semitransparent{
+				//opacity: 0.5;
+				//background-color: color-mix(in srgb, var(--green)  55%, transparent);
+				border-inline-start: 2vw solid var(--green);
+				font-weight: 300;
+				}
+				td.semitransparent{
+				color: #666;
+				}
 			}
 /***************************************************************/
 /*********** DIV#new_edit_view .form_xxx (new, edit) ***********/

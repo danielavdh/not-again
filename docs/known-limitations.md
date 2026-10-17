@@ -223,5 +223,33 @@ Which of the two a given payment actually is, and whether it is instead a
 disbursement, is a facts-and-circumstances question for an accountant. The app
 takes no view.
 
+**Construction businesses: CIS is not handled, and that is disqualifying.** The
+catalogue carries the UK domestic reverse charge for building and construction
+services, which may give the impression the app suits a construction business. It
+does not. The Construction Industry Scheme — the contractor deducting 20% or 30%
+from a subcontractor's labour, monthly returns, the subcontractor reclaiming it —
+is a separate withholding regime that this app models in no way at all. On the
+advice of a practising accountant in the sector (2026-10-15): *"CIS is a legal and
+integral part of construction and cannot be ignored."* Treat the reverse-charge
+codes as serving a non-construction business that occasionally receives such an
+invoice, not as construction support. The reduced-rate (5%) domestic reverse
+charge is also real in practice and is not shipped.
+
+**Flat-rate and simplified schemes** (UK Flat Rate Scheme, Spanish *régimen
+simplificado*, the EU farmers' flat-rate scheme). Corrected 2026-10-16, having
+first been listed alongside margin schemes as though comparable — it is not.
+**The bookkeeping is unaffected**: you still charge VAT, still record it, and
+should still code purchases, because the figures are needed for the annual
+reckoning whatever the scheme. What differs is two boxes of the return: box 1 is
+the flat percentage of VAT-INCLUSIVE turnover, and box 6 is VAT-inclusive rather
+than net (box 4 is nil, which it already is if nothing was coded). Both are
+derivable from what the return shows, so a user can work them out; the app does
+not do it for them. If ever built, note that FRS box 6 also carries
+reverse-charge transactions and sales of capital goods at NET, so it is not
+simply box 6 plus box 1.
+
+**Margin schemes** are a different matter and genuinely not built: VAT is charged
+on the margin rather than the price, so the derivation itself differs.
+
 **Filing.** The return is a screen and a CSV. HMRC VAT MTD and Dutch Digipoort
 are separate connectors, not built.

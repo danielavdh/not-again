@@ -22,7 +22,7 @@ require "test_helper"
 # This test forbids nothing. It stops a change until someone has answered the
 # question, and leaves the answer in the commit.
 class TaxCatalogueSnapshotTest < ActiveSupport::TestCase
-  UPDATE = "bin/rails acc:tax_categories:snapshot"
+  UPDATE = "bin/rails tax_categories:snapshot"
 
   test "the snapshot exists" do
     assert TaxCatalogueSnapshot::PATH.exist?,

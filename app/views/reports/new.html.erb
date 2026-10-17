@@ -33,6 +33,14 @@
       </div>
     </div>
 
+    <% if @report_group&.vat_report? %>
+      <div class="field">
+        <%= f.label :flat_rate_percentage, t("tax.vat.flat_rate_label") %>
+        <%= f.number_field :flat_rate_percentage, min: 0.01, max: 100, step: 0.01,
+                           placeholder: t("tax.vat.flat_rate_placeholder") %>
+      </div>
+    <% end %>
+
     <div class="actions">
       <%= f.submit "Create Report" %>
     </div>

@@ -20,6 +20,11 @@ kind: vat
 # a German reader of a BRITISH return should see "No VAT", not "Keine MwSt" —
 # the tax being named is VAT.
 no_tax_label: "No VAT"
+# HMRC's own words. Notice 733 contrasts the scheme with "the normal VAT rules";
+# gov.uk has no formal name for the ordinary basis, so that is the closest there
+# is. Not translated — see the header notes in TaxSchemeConfig.
+flat_rate_label: "Flat rate"
+normal_rules_label: "Normal rules"
 # No connector. The return is a screen and a CSV; VAT MTD is a separate
 # connector, later.
 #
@@ -62,14 +67,24 @@ categories:
     export_column: "6"
     # "All other outputs" includes the dispatches reported in box 8, so a
     # figure there is counted again here. HMRC's own instruction.
-    includes: [ total_dispatches_ni ]
+    includes: [ total_dispatches_ni, reverse_charge_services_net ]
     position: 60
   - key: total_purchases_ex_vat
     label: "Total value of purchases and all other inputs excluding any VAT"
     export_column: "7"
-    # Likewise box 9: an acquisition counts in both.
-    includes: [ total_acquisitions_ni ]
+    # Likewise box 9: an acquisition counts in both. And the reverse charge on
+    # services, which HMRC puts in box 6 as well — see below.
+    includes: [ total_acquisitions_ni, reverse_charge_services_net ]
     position: 70
+
+  # NOT a box, which is why it has no export_column: the return never shows it.
+  # A code names exactly one net category, but the reverse charge on services
+  # received from outside the UK has to reach box 6 AND box 7 (Notice 700/12,
+  # customer side: "box 1, box 4, box 6 (value of the deemed supply) and box
+  # 7"). So both boxes include this one and the code feeds it.
+  - key: reverse_charge_services_net
+    label: "Reverse charge on services, net"
+    position: 75
   - key: total_dispatches_ni
     label: "Total value of dispatches of goods and related costs (excluding VAT) from Northern Ireland to EU Member States"
     export_column: "8"
@@ -123,15 +138,38 @@ tax_codes:
     net_category_key: total_sales_ex_vat
     tax_category_key: vat_due_sales
     position: 130
-  # Outside the scope of UK VAT, so it reaches no box at all — but it is still
-  # a code, so the user records the decision rather than leaving the row blank
-  # and wondering later.
+  # Exempt is NOT zero-rated, though both land in box 6. Zero-rated is taxable
+  # at 0%: it counts towards the registration threshold and leaves input tax
+  # recoverable. Exempt is not taxable: it does neither, and it is the thing
+  # that triggers partial exemption. Recording exempt income as zero-rated
+  # overstates turnover for the threshold and hides the restriction.
+  - key: sale_exempt
+    label: "Exempt"
+    rate_bps: 0
+    direction: output
+    valid_from: "1996-08-01"
+    net_category_key: total_sales_ex_vat
+    position: 145
+  # Genuinely in no box: a grant, a dividend, a transfer of a going concern.
+  # NOT the place-of-supply case below, which looks the same to a user and is
+  # not the same to HMRC.
   - key: sale_outside_scope
     label: "Outside the scope of VAT"
     rate_bps: 0
     direction: output
     valid_from: "1996-08-01"
     position: 150
+  # Outside the scope under the place-of-supply rules, and box 6 wants it:
+  # 700/12 lists "supplies which are outside the scope of UK VAT as described in
+  # Place of supply of services (VAT Notice 741A)" among what box 6 includes.
+  # Performing abroad, or licensing to a label outside the UK.
+  - key: sale_services_outside_uk
+    label: "Services to a business outside the UK"
+    rate_bps: 0
+    direction: output
+    valid_from: "2021-01-01"
+    net_category_key: total_sales_ex_vat
+    position: 155
   - key: sale_export
     label: "Export outside the UK"
     rate_bps: 0
@@ -186,28 +224,66 @@ tax_codes:
   # legs are derived, they net to zero, and the point is the REPORT: the figures
   # appear in boxes 1 and 4, which is what HMRC asks for.
   #
-  # ONE code covers both cases that reach those same boxes: services bought from
-  # outside the UK, and the domestic reverse charge for construction. The return
-  # cannot tell them apart — same net box, same tax box, same other half — so
-  # asking the user to choose between them was a question with no consequence,
-  # and put two "reverse charge" lines a keystroke apart.
+  # TWO codes, because the two cases differ on BOX 6 — corrected 2026-10-15,
+  # after this file claimed "the return cannot tell them apart" and shipped one
+  # code doing both. It can, and the difference is a figure:
   #
-  # An EU acquisition into Northern Ireland is NOT one of these: it reaches
-  # boxes 9 and 2 instead, so it keeps its own code.
-  - key: purchase_reverse_charge
-    label: "Reverse charge"
+  #   services from outside the UK (700/12, customer): boxes 1, 4, 6 AND 7
+  #   domestic construction (Notice 735, customer):    boxes 1, 4, 7 — "the VAT
+  #     exclusive value of the purchases must not be entered in box 6"
+  #
+  # The single code was set the construction way, so every overseas service
+  # bought — a foreign agent, software, a hosting bill — left box 6 short.
+  #
+  # An EU acquisition into Northern Ireland is neither: boxes 9 and 2, own code.
+  - key: purchase_reverse_charge_services
+    label: "Reverse charge: services from outside the UK"
     rate_bps: 2000
     direction: input
+    outside_flat_rate: true
     valid_from: "2021-01-01"
+    reverse_charge: true
+    # Feeds both box 6 and box 7 through the category above.
+    net_category_key: reverse_charge_services_net
+    tax_category_key: vat_reclaimed
+    reverse_tax_category_key: vat_due_sales
+    position: 50
+  # Kept although construction is not an audience this app serves — CIS is not
+  # handled, see known-limitations.md. A non-construction business can still
+  # receive such an invoice, and then this is the right code.
+  - key: purchase_reverse_charge_construction
+    label: "Reverse charge: construction"
+    rate_bps: 2000
+    direction: input
+    outside_flat_rate: true
+    valid_from: "2021-03-01"
+    reverse_charge: true
+    # Box 7 only. Box 6 is explicitly excluded for the customer.
+    net_category_key: total_purchases_ex_vat
+    tax_category_key: vat_reclaimed
+    reverse_tax_category_key: vat_due_sales
+    position: 60
+  # The DRC applies at the reduced rate too — conversions, renovations of
+  # long-empty dwellings, energy-saving installations. Confirmed as real in
+  # practice by a practising construction accountant, 2026-10-16. Only the
+  # CUSTOMER side needs it: the supplier posts no VAT at either rate, so the
+  # single sale_reverse_charge_construction covers both.
+  - key: purchase_reverse_charge_construction_reduced
+    label: "Reverse charge: construction, reduced rate"
+    rate_bps: 500
+    direction: input
+    outside_flat_rate: true
+    valid_from: "2021-03-01"
     reverse_charge: true
     net_category_key: total_purchases_ex_vat
     tax_category_key: vat_reclaimed
     reverse_tax_category_key: vat_due_sales
-    position: 50
+    position: 65
   - key: purchase_acquisition_ni_eu
     label: "Northern Ireland: EU acquisition"
     rate_bps: 2000
     direction: input
+    outside_flat_rate: true
     valid_from: "2021-01-01"
     reverse_charge: true
     net_category_key: total_acquisitions_ni
@@ -218,6 +294,7 @@ tax_codes:
     label: "Construction, reverse charge"
     rate_bps: 0
     direction: output
+    outside_flat_rate: true
     valid_from: "2021-03-01"
     net_category_key: total_sales_ex_vat
     position: 160

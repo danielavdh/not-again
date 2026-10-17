@@ -25,6 +25,7 @@
       <li><a href="#tax-setup">Steuerschemata und Kategorien</a></li>
       <li><a href="#vat">Umsatzsteuer</a></li>
       <li><a href="#vat-multiple">Umsatzsteuer bei mehreren Betrieben</a></li>
+      <li><a href="#withheld-tax">Einbehaltene Steuer an der Quelle</a></li>
     </ul>
   </nav>
 
@@ -165,5 +166,31 @@ Bei einem kumulativen Verfahren wie UK MTD erreicht die Korrektur die Behörde m
   <h3>Die Einreichungsformen unterscheiden sich je nach Behörde</h3>
   <p>Manche Behörden lassen einen Unternehmer je Betriebsteil getrennt einreichen; manche lassen mehrere Personen gemeinsam als eine einreichen. In Großbritannien sind das die <em>divisional registration</em>, die nur Körperschaften offensteht, und die <em>VAT group</em>, die eine Erklärung für mehrere Mitglieder einreicht. Die App erstellt keines von beidem: sie erstellt eine Erklärung pro Betrieb, und das Zusammenfassen oder Aufteilen liegt außerhalb davon.</p>
   <p>Wenn du mehr als einen Betrieb führst, frag deine Steuerberatung, ob und wie du Umsatzsteuer erklärst.</p>
+
+  <h2 id="withheld-tax">Einbehaltene Steuer an der Quelle</h2>
+  <p>Ein Prinzip, viele Namen: britisches CIS, spanische IRPF-<em>retenci&oacute;n</em>, deutsche <em>Bauabzugsteuer</em>, schweizerische <em>Verrechnungssteuer</em> und die Lohnsteuer. In allen Fällen behält der Zahlende einen Prozentsatz ein und führt ihn für den Empfänger ans Finanzamt ab.</p>
+  <p>Zwei Dinge entscheiden über die Buchung: ob du sie <strong>erleidest</strong> oder <strong>einbehältst</strong>, und ob die Anrechnung einer Person oder einer Gesellschaft zusteht.</p>
+
+  <h3>Ein Einzelunternehmer, dem sie abgezogen wird</h3>
+  <p>Eine Buchung. Die Einnahme in voller Höhe, der Abzug als eigene Zeile auf der Gegenseite, und die Bankzeile als Ausgleich. Der Abzug geht auf ein <em>Privatkonto</em>, denn die Einkommensteuer eines Einzelunternehmers war nie eine Betriebsausgabe.</p>
+
+  <h3>Eine Gesellschaft, der sie abgezogen wird</h3>
+  <p>Eine Gesellschaft hat kein Privatkonto: das Geld schuldet das Finanzamt <em>der Gesellschaft</em>, die es gegen ihre eigenen Lohnsteuerverbindlichkeiten verrechnet. Es ist also ein <strong>Aktivposten</strong>.</p>
+  <p>Erfass zwei Buchungen; eine Gesellschaft bilanziert ohnehin, Rechnung und Geld sind also zwei Vorgänge:</p>
+  <ul>
+    <li><strong>Die Rechnung</strong> &thinsp;&mdash;&thinsp; Ertrag Haben 1.500, Forderungen Soll 1.500.</li>
+    <li><strong>Die Zahlung</strong> &thinsp;&mdash;&thinsp; Forderungen Haben 1.500, Bank Soll 1.300, Anrechenbare Steuer Soll 200.</li>
+  </ul>
+
+  <h3>Wenn du sie einem anderen abziehst</h3>
+  <p>Spiegelbildlich. Du schuldest dem Finanzamt, es ist also eine <strong>Verbindlichkeit</strong>, und es gilt dieselbe Form mit zwei Buchungen:</p>
+  <ul>
+    <li><strong>Dessen Rechnung</strong> &thinsp;&mdash;&thinsp; Aufwand Soll 1.500, Verbindlichkeiten Haben 1.500.</li>
+    <li><strong>Du zahlst ihn</strong> &thinsp;&mdash;&thinsp; Verbindlichkeiten Soll 1.500, Bank Haben 1.300, Abzuführende Steuer Haben 200.</li>
+    <li><strong>Du zahlst ans Finanzamt</strong> &thinsp;&mdash;&thinsp; Abzuführende Steuer Soll 200, Bank Haben 200.</li>
+  </ul>
+
+  <h3>Was die App nicht tut</h3>
+  <p>Sie erfasst das Geld. Sie führt kein Abzugsverfahren: keine Prüfung derer, die du bezahlst, keine Monatsmeldungen, keine Abzugsbescheinigungen, keine Fristen. Gerade das britische CIS verlangt all das, und jedes davon bezieht sich auf den einzelnen Subunternehmer, den diese App nirgends führt.</p>
 </div>
 <%= render "help/back" %>

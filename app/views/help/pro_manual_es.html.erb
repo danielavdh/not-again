@@ -25,6 +25,7 @@
       <li><a href="#tax-setup">Esquemas fiscales y categorías</a></li>
       <li><a href="#vat">IVA</a></li>
       <li><a href="#vat-multiple">IVA con más de una empresa</a></li>
+      <li><a href="#withheld-tax">Impuestos retenidos en origen</a></li>
     </ul>
   </nav>
 
@@ -165,5 +166,31 @@ En un régimen acumulativo como UK MTD la corrección llega a la agencia con la 
   <h3>Las formas de presentación cambian según la administración</h3>
   <p>Algunas administraciones dejan a un sujeto pasivo presentar por separado cada rama; otras dejan a varias personas presentar conjuntamente como una. En el Reino Unido son la <em>divisional registration</em>, abierta solo a personas jurídicas, y el <em>VAT group</em>, que presenta una declaración por varios miembros. La app no produce ninguna de las dos: produce una declaración por empresa, y sumarlas o repartirlas queda fuera.</p>
   <p>Si llevas más de una empresa, pregunta a tu asesor fiscal si tienes que declarar IVA y cómo.</p>
+
+  <h2 id="withheld-tax">Impuestos retenidos en origen</h2>
+  <p>Un principio con muchos nombres: el CIS brit&aacute;nico, la <em>retenci&oacute;n</em> de IRPF espa&ntilde;ola, la <em>Bauabzugsteuer</em> alemana, el <em>Verrechnungssteuer</em> suizo y la retenci&oacute;n sobre un sueldo. En todos los casos quien paga se queda un porcentaje y lo entrega a Hacienda en nombre de quien cobra.</p>
+  <p>Dos cosas deciden c&oacute;mo contabilizarlo: si la <strong>sufres</strong> o la <strong>practicas</strong>, y si el cr&eacute;dito corresponde a una persona o a una sociedad.</p>
+
+  <h3>Un aut&oacute;nomo que la sufre</h3>
+  <p>Un solo asiento. El ingreso por su importe &iacute;ntegro, la retenci&oacute;n como l&iacute;nea propia en el lado contrario, y la l&iacute;nea del banco como diferencia. La retenci&oacute;n va a una cuenta <em>personal</em>, porque el IRPF de un aut&oacute;nomo nunca fue un gasto de la actividad.</p>
+
+  <h3>Una sociedad que la sufre</h3>
+  <p>Una sociedad no tiene cuenta personal: Hacienda se lo debe <em>a la sociedad</em>, que lo compensa con sus propias obligaciones. Por tanto es un <strong>activo</strong>.</p>
+  <p>Haz dos asientos; una sociedad lleva criterio de devengo de todos modos, as&iacute; que la factura y el cobro son dos hechos distintos:</p>
+  <ul>
+    <li><strong>La factura</strong> &thinsp;&mdash;&thinsp; Ingresos haber 1.500, Deudores debe 1.500.</li>
+    <li><strong>El cobro</strong> &thinsp;&mdash;&thinsp; Deudores haber 1.500, Banco debe 1.300, Retenciones a recuperar debe 200.</li>
+  </ul>
+
+  <h3>Cuando la practicas t&uacute;</h3>
+  <p>La imagen inversa. Se la debes a Hacienda, as&iacute; que es un <strong>pasivo</strong>, y vale la misma forma de dos asientos:</p>
+  <ul>
+    <li><strong>Su factura</strong> &thinsp;&mdash;&thinsp; Gasto debe 1.500, Acreedores haber 1.500.</li>
+    <li><strong>Le pagas</strong> &thinsp;&mdash;&thinsp; Acreedores debe 1.500, Banco haber 1.300, Retenciones a ingresar haber 200.</li>
+    <li><strong>Ingresas en Hacienda</strong> &thinsp;&mdash;&thinsp; Retenciones a ingresar debe 200, Banco haber 200.</li>
+  </ul>
+
+  <h3>Lo que la app no hace</h3>
+  <p>Registra el dinero. No gestiona el r&eacute;gimen de retenciones: ni verificaci&oacute;n de a qui&eacute;n pagas, ni declaraciones mensuales, ni certificados de retenci&oacute;n, ni plazos. El CIS brit&aacute;nico en particular exige todo eso, y cada cosa va por subcontratista, algo que esta app no registra en ning&uacute;n sitio.</p>
 </div>
 <%= render "help/back" %>

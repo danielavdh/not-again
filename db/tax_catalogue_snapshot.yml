@@ -586,6 +586,11 @@ gb_vat_2026.yml:
     api_section:
     export_column: '7'
     api_field:
+  reverse_charge_services_net:
+    section:
+    api_section:
+    export_column:
+    api_field:
   total_dispatches_ni:
     section:
     api_section:

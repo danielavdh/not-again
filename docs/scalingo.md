@@ -177,9 +177,9 @@ Write down: project ID, secret key, and a sender address on your domain for `MAI
 
 ## What it costs
 
-<!-- TODO: figures below are provisional — Scalingo's smallest server + database    tier starts around €25/month and is not expected to be enough for real use;    revisit and confirm once we know actual resource requirements. Also confirm    whether a free trial period currently exists before stating one here. -->
 
-- **Scalingo:** from around €25/month for the smallest app and database — likely more once real usage is accounted for. You choose and pay for the size of each separately, so it scales with what you actually need.
+
+- **Scalingo:** from about €36/month — an L container (1 GB) for the app, plus the smallest PostgreSQL Starter plan. The app runs its background jobs inside the web process, so there is only one container to pay for. Receipts need object storage, which is billed separately and costs very little.
 - **Scaleway (file storage):** free under 75 GB.
 - **Scaleway (email):** a free monthly allowance, far more than this app sends.
 

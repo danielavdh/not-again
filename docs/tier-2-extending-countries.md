@@ -72,6 +72,13 @@ db/tax_categories/
 
 ### The header
 
+⚠️ **Header labels are in the authority's language and are never translated.**
+`scheme_label`, `no_tax_label`, `flat_rate_label`, `normal_rules_label`: if the
+word appears on the form, it belongs here and not in a locale file. See
+[concepts.md](concepts.md) for why — briefly, translating invents a form that
+does not exist, and each country's nearest equivalent is usually a different
+scheme.
+
 ```yaml
 country_code: de           # two letters, lowercased
 country_label: "Deutschland"   # the COUNTRY's own name — see below

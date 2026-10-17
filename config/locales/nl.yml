@@ -1227,6 +1227,7 @@ nl:
       boxes: "De aangifte"
       summary: "Samenvatting"
       by_code: "Per code"
+      by_account: "Per rekening"
       due: "Af te dragen btw over omzet"
       reclaimed: "Terug te vragen voorbelasting"
       payable: "Te betalen btw"
@@ -1234,6 +1235,8 @@ nl:
       unassigned_warning: "%{amount} staat op de btw-rekeningen zonder dat een btw-code dat daar heeft gezet. Dit bedrag staat in geen enkele rubriek hierboven. Zoek de boeking op en geef die een code, of corrigeer de rubriek handmatig in de aangifte."
       reverse_charge: "Verlegde btw"
       reverse_charge_note: "en %{amount} verschuldigd"
+      flat_rate_label: "Forfaitair %, als je de forfaitaire regeling gebruikt"
+      flat_rate_placeholder: "bijv. 14,5"
       direction_label: "Soort"
       direction_short:
         input: "Inkoop"

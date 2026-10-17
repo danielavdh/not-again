@@ -1224,6 +1224,7 @@ en:
       boxes: "The return"
       summary: "Summary"
       by_code: "By code"
+      by_account: "By account"
       due: "VAT due on sales"
       reclaimed: "VAT reclaimable on purchases"
       payable: "Net VAT payable"
@@ -1231,6 +1232,8 @@ en:
       unassigned_warning: "%{amount} is sitting in the VAT accounts that no VAT code put there. It is not in any box above. Find the entry and give it a code, or correct the box by hand on the return."
       reverse_charge: "Reverse charge"
       reverse_charge_note: "and %{amount} due"
+      flat_rate_label: "Flat rate %, if you are on the Flat Rate Scheme"
+      flat_rate_placeholder: "e.g. 14.5"
       direction_label: "Kind"
       direction_short:
         input: "Purchase"

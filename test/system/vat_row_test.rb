@@ -144,7 +144,7 @@ class VatRowTest < ApplicationSystemTestCase
 
     within(row) do
       fill_in_amount "100.00"
-      select_code "purchase_reverse_charge"
+      select_code "purchase_reverse_charge_services"
 
       assert_equal "20.00", find("input.posting-tax-amount").value
       # The net equals the gross: nothing was carved out of it.

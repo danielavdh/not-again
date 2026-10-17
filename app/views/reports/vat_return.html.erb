@@ -19,12 +19,28 @@
 	<% else %>
 
 		<h3><%= t("tax.vat.boxes") %></h3>
+		<%# The comparison column is for reading, never for filing. The left-hand
+		    figures are the ones a submission sends. %>
+		<% comparison = @vat_return[:comparison_boxes].index_by(&:key) %>
 		<table>
 			<thead>
 				<tr>
 					<th><%= t("tax.vat.box") %></th>
 					<th><%= t("attrs.description") %></th>
-					<th class="right"><%= @vat_return[:currency] %></th>
+					<%# No currency here: every figure is formatted with its symbol,
+					    and an authority files in one currency anyway. %>
+					<th class="right">
+						<% if @vat_return[:flat_rate_bps] %>
+							<%= @vat_return[:flat_rate_label] %> (<%= @vat_return[:flat_rate_bps] / 100.0 %>%)
+						<% else %>
+							<%= t("attrs.amount") %>
+						<% end %>
+					</th>
+					<% if comparison.any? %>
+						<th class="right semitransparent">
+							<%= @vat_return[:normal_rules_label] %>
+						</th>
+					<% end %>
 				</tr>
 			</thead>
 			<tbody>
@@ -33,10 +49,16 @@
 						<td><%= box.reference %></td>
 						<td><%= box.label %></td>
 						<td class="right"><%= format_cents_with_currency(box.amount, @vat_return[:currency], show_zero: true) %></td>
+						<% if comparison.any? %>
+							<td class="right semitransparent">
+								<%= format_cents_with_currency(comparison[box.key]&.amount.to_i, @vat_return[:currency], show_zero: true) %>
+							</td>
+						<% end %>
 					</tr>
 				<% end %>
 			</tbody>
 		</table>
+
 
 		<h3><%= t("tax.vat.summary") %></h3>
 		<table>
@@ -96,6 +118,32 @@
 								             amount: format_cents_with_currency(line.reverse_tax, @vat_return[:currency], show_zero: true)) %></span>
 							<% end %>
 						</td>
+					</tr>
+				<% end %>
+			</tbody>
+		</table>
+	<% end %>
+
+	<% if @vat_return[:account_lines].any? %>
+		<h3><%= t("tax.vat.by_account") %></h3>
+		<table>
+			<thead>
+				<tr>
+					<th><%= t("jargon.account") %></th>
+					<th><%= t("tax.vat.code") %></th>
+					<th><%= t("attrs.rate") %></th>
+					<th class="right"><%= t("tax.vat.net") %></th>
+					<th class="right"><%= t("tax.vat.amount") %></th>
+				</tr>
+			</thead>
+			<tbody>
+				<% @vat_return[:account_lines].each do |line| %>
+					<tr class="<%= cycle('list-line-odd', 'list-line-even') %>">
+						<td><%= line.account_code %> - <%= line.account_name %></td>
+						<td><%= line.code.label %></td>
+						<td><%= line.code.rate_label %></td>
+						<td class="right"><%= format_cents_with_currency(line.net, @vat_return[:currency], show_zero: true) %></td>
+						<td class="right"><%= format_cents_with_currency(line.tax, @vat_return[:currency], show_zero: true) %></td>
 					</tr>
 				<% end %>
 			</tbody>

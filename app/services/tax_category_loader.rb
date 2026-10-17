@@ -10,6 +10,7 @@ class TaxCategoryLoader
                             keywords includes].freeze
   REQUIRED_CODE_KEYS   = %w[key rate_bps direction valid_from].freeze
   ALLOWED_CODE_KEYS    = %w[key label rate_bps direction valid_from valid_to reverse_charge
+                            outside_flat_rate
                             net_category_key tax_category_key reverse_tax_category_key
                             datev_bu position].freeze
 
@@ -183,8 +184,11 @@ class TaxCategoryLoader
         direction:        row['direction'].to_s,
         valid_from:       row['valid_from'],
         valid_to:         row['valid_to'],
-        # One code, two legs netting to zero.
+        # One code, two legs netting to zero. NOT "is a reverse charge" — see
+        # outside_flat_rate below, which is that question.
         reverse_charge:   row['reverse_charge'] ? true : false,
+        # Excluded from flat-rate turnover and accounted under normal rules.
+        outside_flat_rate: row['outside_flat_rate'] ? true : false,
         # Two fields because a rate cannot say which box: a zero-rated supply
         # and an export are both 0% and belong on different lines.
         net_category_key: row['net_category_key'],

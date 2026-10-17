@@ -21,6 +21,22 @@ class Report < ApplicationRecord
   validates :name, presence: true
   validates :start_date, presence: true
   validates :end_date, presence: true
+  # Basis points. A flat rate is a whole-percent-or-half figure in practice, but
+  # the column is bps so it cannot drift from tax_codes.rate_bps.
+  validates :flat_rate_bps, numericality: { only_integer: true, in: 1..10_000 },
+                            allow_nil: true
+
+  # The form asks for a PERCENTAGE, because that is what the scheme is quoted in
+  # and what the user reads off HMRC's list. The column is basis points so it
+  # cannot drift from tax_codes.rate_bps. Point-only, like the exchange-rate
+  # field: an HTML5 number input takes "." whatever the admin's number format.
+  def flat_rate_percentage
+    flat_rate_bps && flat_rate_bps / 100.0
+  end
+
+  def flat_rate_percentage=(value)
+    self.flat_rate_bps = value.presence && (value.to_f * 100).round
+  end
   validate :end_date_after_start_date
 
 private

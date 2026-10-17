@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_06_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -287,6 +287,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_100000) do
   create_table "reports", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "end_date", null: false
+    t.integer "flat_rate_bps"
     t.string "name", null: false
     t.bigint "report_group_id", null: false
     t.date "start_date", null: false
@@ -465,6 +466,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_100000) do
     t.string "key", null: false
     t.string "label"
     t.string "net_category_key"
+    t.boolean "outside_flat_rate", default: false, null: false
     t.integer "position", default: 0, null: false
     t.integer "rate_bps", null: false
     t.boolean "reverse_charge", default: false, null: false

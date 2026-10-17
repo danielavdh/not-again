@@ -25,9 +25,16 @@ module Reports
 
         csv << [ shared_label("tax.vat.boxes") ]
         csv << [ shared_label("tax.vat.box"), shared_label("attrs.description"),
-                 csv_label(:total_of, name: @data[:currency]) ]
+                 @data[:flat_rate_bps] ?
+                   "#{@data[:flat_rate_label]} (#{@data[:flat_rate_bps] / 100.0}%)" :
+                   csv_label(:total_of, name: @data[:currency]),
+                 (@data[:normal_rules_label] if @data[:comparison_boxes].any?) ].compact
+        comparison = @data[:comparison_boxes].index_by(&:key)
         @data[:boxes].each do |box|
-          csv << [ box.reference, box.label, money(box.amount) ]
+          row = [ box.reference, box.label, money(box.amount) ]
+          # Appended, never substituted: column 3 is always what gets filed.
+          row << money(comparison[box.key]&.amount.to_i) if comparison.any?
+          csv << row
         end
         csv << []
 
@@ -52,6 +59,20 @@ module Reports
                    line.code.label, line.code.rate_label,
                    money(line.net), money(line.tax),
                    line.code.reverse_charge? ? money(line.reverse_tax) : nil ]
+        end
+
+        # Per account as well, because this is the half an accountant reads.
+        if @data[:account_lines].any?
+          csv << []
+          csv << [ shared_label("tax.vat.by_account") ]
+          csv << [ shared_label("jargon.account"), shared_label("tax.vat.code"),
+                   shared_label("attrs.rate"),
+                   shared_label("tax.vat.net"), shared_label("tax.vat.amount") ]
+          @data[:account_lines].each do |line|
+            csv << [ "#{line.account_code} - #{line.account_name}",
+                     line.code.label, line.code.rate_label,
+                     money(line.net), money(line.tax) ]
+          end
         end
       end
     end
