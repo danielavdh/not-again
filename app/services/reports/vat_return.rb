@@ -173,9 +173,12 @@ module Reports
       end
     end
 
-    # Which boxes the flat rate lands in, taken from an ordinary sale code
-    # rather than hard-coded — so this is not silently GB-only.
+    # Which boxes the flat rate lands in: the ones the scheme names, or those of
+    # an ordinary sale code — never hard-coded, so this is not silently GB-only.
     def flat_rate_sales_box
+      named = TaxSchemeConfig.flat_rate_categories(@scheme)
+      return named if named
+
       code = codes.find { |c|
         c.output? && c.flat_rate.nil? &&
           c.net_category_key.present? && c.tax_category_key.present?
@@ -221,13 +224,18 @@ module Reports
 
     # The whole catalogue, not just the boxes codes name: a box that only TOTALS
     # others is fed by no code and would be missing from the lookup.
+    #
+    # The codes are versioned by date and reach back before the scheme's first
+    # year file (a 2023 Swiss sale at 7,7 % files in a Ziffer the 2026 file
+    # still carries), so a period before any file takes the earliest one.
     def catalogue
-      @catalogue ||= TaxCategory.catalogue_for(
-        scheme: @scheme,
-        year:   TaxCategory.tax_year_for(
-                  country_code: TaxSchemeConfig.country_for(@scheme), date: @to
-                )
-      )
+      @catalogue ||= begin
+        year  = TaxCategory.tax_year_for(country_code: TaxSchemeConfig.country_for(@scheme), date: @to)
+        found = TaxCategory.catalogue_for(scheme: @scheme, year: year)
+        found.presence ||
+          TaxCategory.catalogue_for(scheme: @scheme,
+                                    year: TaxCategory.where(scheme: @scheme).minimum(:tax_year))
+      end
     end
 
     # Adds each box's included boxes into it, to any depth: HMRC's box 6 includes

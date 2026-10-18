@@ -6,17 +6,17 @@ require "test_helper"
 # including the ordering the tax forms rely on.
 class TaxSchemeConfigTest < ActiveSupport::TestCase
   test "countries come from the catalogue headers" do
-    assert_equal %w[ch de gb nl], TaxSchemeConfig.countries
+    assert_equal %w[ch de es gb nl], TaxSchemeConfig.countries
   end
 
   test "schemes are grouped by country and ordered by their position header" do
     assert_equal %w[gb_self_employment gb_property gb_vat], TaxSchemeConfig.schemes_for("gb")
     assert_equal %w[de_euer de_vat de_vermietung],             TaxSchemeConfig.schemes_for("de")
-    assert_equal %w[ch_selbst],                      TaxSchemeConfig.schemes_for("ch")
+    assert_equal %w[ch_selbst ch_vat],               TaxSchemeConfig.schemes_for("ch")
   end
 
   test "schemes_for is case-insensitive and empty for an unknown country" do
-    assert_equal %w[ch_selbst], TaxSchemeConfig.schemes_for("CH")
+    assert_equal %w[ch_selbst ch_vat], TaxSchemeConfig.schemes_for("CH")
     assert_equal [], TaxSchemeConfig.schemes_for("xx")
     assert_equal [], TaxSchemeConfig.schemes_for(nil)
   end
@@ -84,7 +84,7 @@ class TaxSchemeConfigTest < ActiveSupport::TestCase
   end
 
   test "all_schemes lists every scheme, country then declared position" do
-    assert_equal %w[ch_selbst de_euer de_vat de_vermietung gb_self_employment gb_property gb_vat nl_winst nl_vat],
+    assert_equal %w[ch_selbst ch_vat de_euer de_vat de_vermietung es_vat gb_self_employment gb_property gb_vat nl_winst nl_vat],
                  TaxSchemeConfig.all_schemes
   end
 

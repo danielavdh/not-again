@@ -218,6 +218,14 @@ module TaxSchemeConfig
     config[:prepayment_categories][scheme.to_s]
   end
 
+  # Where a flat rate FILES, when it is not the ordinary sales boxes: the Swiss
+  # Saldosteuersatz has a Ziffer of its own (323), the British flat rate uses
+  # boxes 6 and 1. [net_key, tax_key], or nil to use the first ordinary sale
+  # code's boxes.
+  def self.flat_rate_categories(scheme)
+    config[:flat_rate_categories][scheme.to_s]
+  end
+
   def self.normal_rules_label(scheme)
     config[:normal_rules_labels][scheme.to_s].presence || "Normal rules"
   end
@@ -284,6 +292,7 @@ module TaxSchemeConfig
     no_tax_labels = {}
     flat_rate_labels = {}
     prepayment_categories = {}
+    flat_rate_categories = {}
     normal_rules_labels = {}
     code_files   = {}
     positions    = Hash.new { |h, k| h[k] = {} }
@@ -327,6 +336,9 @@ module TaxSchemeConfig
       no_tax_labels[slug]         = data["no_tax_label"].presence
       flat_rate_labels[slug]      = data["flat_rate_label"].presence
       prepayment_categories[slug] = data["prepayment_category"].presence
+      if data["flat_rate_net_category"].present? && data["flat_rate_tax_category"].present?
+        flat_rate_categories[slug] = [ data["flat_rate_net_category"], data["flat_rate_tax_category"] ]
+      end
       normal_rules_labels[slug]   = data["normal_rules_label"].presence
       connectors[slug]            = data["connector"].presence
       authorities[country]        = data["authority"].presence if data["authority"].present?
@@ -370,6 +382,7 @@ module TaxSchemeConfig
       no_tax_labels:            no_tax_labels.freeze,
       flat_rate_labels:         flat_rate_labels.freeze,
       prepayment_categories:    prepayment_categories.freeze,
+      flat_rate_categories:     flat_rate_categories.freeze,
       normal_rules_labels:      normal_rules_labels.freeze,
       connectors:               connectors.freeze,
       authorities:              authorities.freeze,

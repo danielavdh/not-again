@@ -1,0 +1,352 @@
+country_code: es
+country_label: "España"
+scheme: vat
+tax_year: 2026
+authority: AEAT
+position: 20
+scheme_label: "IVA (Modelo 303)"
+report_name: "ES-IVA"
+currency: EUR
+form_code: "303"
+kind: vat
+no_tax_label: "Sin IVA"
+# No flat_rate_label: the régimen simplificado is index-based (módulos × importe
+# por unidad), not a percentage of turnover, so the app's flat rate cannot
+# express it and does not pretend to.
+#
+# Source: Anexo III of Orden HAC/27/2026 (BOE-A-2026-1761) and the AEAT
+# instrucciones 2026 for the Modelo 303, régimen general. Casilla numbers are
+# the form's own. A "Tipo %" casilla is the rate column and is not a box here.
+#
+# THE SHAPES THAT DIFFER: the devengado side pairs base and cuota PER RATE
+# (casillas 07/09 for 21 %, like the Dutch rubrieken); the deducible side
+# pairs base and cuota per KIND of purchase (interior, bienes de inversión,
+# importación, intracomunitaria), not per rate. A reverse charge therefore
+# puts its base in TWO places — devengado (10 or 12) and deducible (36 or 28)
+# — which a feeder category carries to both.
+#
+# Deliberately NOT covered: recargo de equivalencia (16-26, 156-170), the
+# régimen simplificado (58), criterio de caja (62/63, 74/75), the rectificación
+# and regularización casillas (14/15, 40-44, 76, 68, 108), cuotas a compensar
+# (110, 78, 87), OSS (123/124) and the carburantes pago a cuenta (112). A core
+# 303 for a business in the régimen general.
+
+categories:
+  # --- IVA devengado: base y cuota por tipo ---------------------------------
+  - key: base_0
+    label: "Régimen general, 0 % — base imponible"
+    export_column: "150"
+    position: 10
+  - key: cuota_0
+    label: "Régimen general, 0 % — cuota"
+    export_column: "152"
+    position: 12
+  - key: base_4
+    label: "Régimen general, 4 % — base imponible"
+    export_column: "01"
+    position: 20
+  - key: cuota_4
+    label: "Régimen general, 4 % — cuota"
+    export_column: "03"
+    position: 22
+  - key: base_10
+    label: "Régimen general, 10 % — base imponible"
+    export_column: "04"
+    position: 30
+  - key: cuota_10
+    label: "Régimen general, 10 % — cuota"
+    export_column: "06"
+    position: 32
+  - key: base_21
+    label: "Régimen general, 21 % — base imponible"
+    export_column: "07"
+    position: 40
+  - key: cuota_21
+    label: "Régimen general, 21 % — cuota"
+    export_column: "09"
+    position: 42
+  # --- Devengado por inversión del sujeto pasivo -----------------------------
+  # The base of an intra-EU acquisition or a reverse-charge purchase is wanted
+  # on the devengado side AND on the deducible side. A code names one net box,
+  # so the net goes to a feeder and both casillas include it.
+  - key: aib_base
+    label: "Adquisiciones intracomunitarias de bienes y servicios — base imponible"
+    export_column: "10"
+    includes: [ aib_net ]
+    position: 50
+  - key: aib_cuota
+    label: "Adquisiciones intracomunitarias de bienes y servicios — cuota"
+    export_column: "11"
+    position: 52
+  - key: isp_base
+    label: "Otras operaciones con inversión del sujeto pasivo (excepto adq. intracom.) — base imponible"
+    export_column: "12"
+    includes: [ isp_net ]
+    position: 60
+  - key: isp_cuota
+    label: "Otras operaciones con inversión del sujeto pasivo (excepto adq. intracom.) — cuota"
+    export_column: "13"
+    position: 62
+  - key: total_devengado
+    label: "Total cuota devengada"
+    export_column: "27"
+    includes: [ cuota_0, cuota_4, cuota_10, cuota_21, aib_cuota, isp_cuota ]
+    position: 70
+
+  # --- IVA deducible: base y cuota por clase de operación --------------------
+  - key: ded_interior_base
+    label: "Por cuotas soportadas en operaciones interiores corrientes — base"
+    export_column: "28"
+    includes: [ isp_net ]
+    position: 80
+  - key: ded_interior_cuota
+    label: "Por cuotas soportadas en operaciones interiores corrientes — cuota"
+    export_column: "29"
+    position: 82
+  - key: ded_inversion_base
+    label: "Por cuotas soportadas en operaciones interiores con bienes de inversión — base"
+    export_column: "30"
+    position: 90
+  - key: ded_inversion_cuota
+    label: "Por cuotas soportadas en operaciones interiores con bienes de inversión — cuota"
+    export_column: "31"
+    position: 92
+  # The base of an import is the customs value, which the app does not hold;
+  # casilla 32 is left to the bookkeeper. See importacion below.
+  - key: ded_importacion_base
+    label: "Por cuotas soportadas en las importaciones de bienes corrientes — base"
+    export_column: "32"
+    position: 100
+  - key: ded_importacion_cuota
+    label: "Por cuotas soportadas en las importaciones de bienes corrientes — cuota"
+    export_column: "33"
+    position: 102
+  - key: ded_aib_base
+    label: "En adquisiciones intracomunitarias de bienes y servicios corrientes — base"
+    export_column: "36"
+    includes: [ aib_net ]
+    position: 110
+  - key: ded_aib_cuota
+    label: "En adquisiciones intracomunitarias de bienes y servicios corrientes — cuota"
+    export_column: "37"
+    position: 112
+  - key: total_deducir
+    label: "Total a deducir"
+    export_column: "45"
+    includes: [ ded_interior_cuota, ded_inversion_cuota, ded_importacion_cuota, ded_aib_cuota ]
+    position: 120
+  - key: resultado_general
+    label: "Resultado régimen general"
+    export_column: "46"
+    includes: [ total_devengado ]
+    subtracts: [ total_deducir ]
+    position: 130
+
+  # --- Información adicional --------------------------------------------------
+  - key: entregas_intracomunitarias
+    label: "Entregas intracomunitarias de bienes y servicios"
+    export_column: "59"
+    position: 140
+  - key: exportaciones
+    label: "Exportaciones y operaciones asimiladas"
+    export_column: "60"
+    position: 150
+  - key: no_sujetas_localizacion
+    label: "Operaciones no sujetas por reglas de localización (excepto las incluidas en la casilla 123)"
+    export_column: "120"
+    position: 160
+  - key: sujetas_isp
+    label: "Operaciones sujetas con inversión del sujeto pasivo"
+    export_column: "122"
+    position: 170
+
+  # --- Resultado -------------------------------------------------------------
+  # The form chains these; without the régimen simplificado, compensaciones
+  # and foral attribution they are all the same figure.
+  - key: suma_resultados
+    label: "Suma de resultados"
+    export_column: "64"
+    includes: [ resultado_general ]
+    position: 180
+  - key: atribuible_estado
+    label: "Atribuible a la Administración del Estado"
+    export_column: "66"
+    includes: [ suma_resultados ]
+    position: 182
+  - key: resultado_autoliquidacion
+    label: "Resultado de la autoliquidación"
+    export_column: "69"
+    includes: [ atribuible_estado ]
+    position: 184
+  - key: resultado
+    label: "Resultado"
+    export_column: "71"
+    includes: [ resultado_autoliquidacion ]
+    position: 186
+
+  # --- Feeders: a base the form wants in two casillas ------------------------
+  - key: aib_net
+    label: "Base de adquisiciones intracomunitarias (sin casilla propia)"
+    position: 190
+  - key: isp_net
+    label: "Base de operaciones con inversión del sujeto pasivo (sin casilla propia)"
+    position: 192
+
+# 21 % and 10 % since 1 September 2012; 4 % since 1995; the 0 % row since 2023.
+tax_codes:
+  # --- Ventas -----------------------------------------------------------------
+  - key: venta_21
+    label: "Venta, tipo general"
+    rate_bps: 2100
+    direction: output
+    valid_from: "2012-09-01"
+    net_category_key: base_21
+    tax_category_key: cuota_21
+    position: 10
+  - key: venta_10
+    label: "Venta, tipo reducido"
+    rate_bps: 1000
+    direction: output
+    valid_from: "2012-09-01"
+    net_category_key: base_10
+    tax_category_key: cuota_10
+    position: 20
+  - key: venta_4
+    label: "Venta, tipo superreducido"
+    rate_bps: 400
+    direction: output
+    valid_from: "1995-01-01"
+    net_category_key: base_4
+    tax_category_key: cuota_4
+    position: 30
+  - key: venta_0
+    label: "Venta, tipo 0 %"
+    rate_bps: 0
+    direction: output
+    valid_from: "2023-01-01"
+    net_category_key: base_0
+    position: 40
+  # Art. 20 LIVA: exempt interior supplies reach no casilla of the 303.
+  - key: venta_exenta
+    label: "Venta exenta (art. 20)"
+    rate_bps: 0
+    direction: output
+    valid_from: "1995-01-01"
+    position: 50
+  - key: venta_intracomunitaria
+    label: "Entrega intracomunitaria / servicio a empresa de la UE"
+    rate_bps: 0
+    direction: output
+    valid_from: "2010-01-01"
+    net_category_key: entregas_intracomunitarias
+    position: 60
+  - key: venta_exportacion
+    label: "Exportación"
+    rate_bps: 0
+    direction: output
+    valid_from: "1995-01-01"
+    net_category_key: exportaciones
+    position: 70
+  # A service to a business outside the EU, or any other supply not subject
+  # in Spain by the place-of-supply rules.
+  - key: venta_no_sujeta
+    label: "No sujeta por reglas de localización"
+    rate_bps: 0
+    direction: output
+    valid_from: "2010-01-01"
+    net_category_key: no_sujetas_localizacion
+    position: 80
+  # The SUPPLIER of a domestic reverse-charge supply (art. 84.Uno.2.º).
+  - key: venta_isp
+    label: "Venta con inversión del sujeto pasivo"
+    rate_bps: 0
+    direction: output
+    valid_from: "1995-01-01"
+    net_category_key: sujetas_isp
+    position: 90
+
+  # --- Compras ----------------------------------------------------------------
+  - key: compra_21
+    label: "Compra, tipo general"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2012-09-01"
+    net_category_key: ded_interior_base
+    tax_category_key: ded_interior_cuota
+    position: 110
+  - key: compra_10
+    label: "Compra, tipo reducido"
+    rate_bps: 1000
+    direction: input
+    valid_from: "2012-09-01"
+    net_category_key: ded_interior_base
+    tax_category_key: ded_interior_cuota
+    position: 120
+  - key: compra_4
+    label: "Compra, tipo superreducido"
+    rate_bps: 400
+    direction: input
+    valid_from: "1995-01-01"
+    net_category_key: ded_interior_base
+    tax_category_key: ded_interior_cuota
+    position: 130
+  # "No deben incluirse las adquisiciones a tipo cero o exentas": no casilla.
+  - key: compra_sin_iva
+    label: "Compra sin IVA"
+    rate_bps: 0
+    direction: input
+    valid_from: "1995-01-01"
+    position: 140
+  - key: compra_inversion_21
+    label: "Compra de bien de inversión"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2012-09-01"
+    net_category_key: ded_inversion_base
+    tax_category_key: ded_inversion_cuota
+    position: 150
+  # Import VAT settled with the Aduana (DUA): the amount entered IS the cuota
+  # (TaxCode#amount_is_tax?), deducted in 33. The base, casilla 32, is the
+  # customs value, which the goods' own invoice does not carry; the bookkeeper
+  # fills it in.
+  - key: importacion
+    label: "IVA a la importación (DUA)"
+    rate_bps: 0
+    direction: input
+    valid_from: "1995-01-01"
+    tax_category_key: ded_importacion_cuota
+    position: 160
+  # Goods or services from a business in another member state: devengado in
+  # 10/11, deducible in 36/37 — the base in both, through the feeder.
+  - key: adquisicion_intracomunitaria_21
+    label: "Adquisición intracomunitaria"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2012-09-01"
+    reverse_charge: true
+    net_category_key: aib_net
+    tax_category_key: ded_aib_cuota
+    reverse_tax_category_key: aib_cuota
+    position: 170
+  - key: adquisicion_intracomunitaria_10
+    label: "Adquisición intracomunitaria, tipo reducido"
+    rate_bps: 1000
+    direction: input
+    valid_from: "2012-09-01"
+    reverse_charge: true
+    net_category_key: aib_net
+    tax_category_key: ded_aib_cuota
+    reverse_tax_category_key: aib_cuota
+    position: 180
+  # A service from outside the EU, or a domestic reverse-charge supply
+  # received (art. 84.Uno.2.º): devengado in 12/13, deducible in 28/29.
+  - key: compra_isp_21
+    label: "Compra con inversión del sujeto pasivo"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2012-09-01"
+    reverse_charge: true
+    net_category_key: isp_net
+    tax_category_key: ded_interior_cuota
+    reverse_tax_category_key: isp_cuota
+    position: 190

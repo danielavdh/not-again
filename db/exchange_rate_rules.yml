@@ -120,6 +120,22 @@ nl:
     nl_vat:
       accepts:  [ecb_daily]
 
+es:
+  # Income tax: nothing statutory prescribes a rate; the ECB reference rate is
+  # the ordinary published choice, as for Germany and the Netherlands.
+  accepts:      [ecb]
+  date_basis:   transaction_date
+  election:     consistent
+  unpublished_currency: manual_with_evidence
+  schemes:
+    # Art. 79.Once LIVA: "el tipo de cambio vendedor, fijado por el Banco de
+    # España, que esté vigente en el momento del devengo". The Banco de España
+    # publishes no selling rate of its own any more: its daily table is the
+    # ECB's official euro reference rate, as its own pages say. So the daily
+    # ECB rate at the tax point is what the law reaches today.
+    es_vat:
+      accepts:  [ecb_daily]
+
 gb:
   # HMRC publishes a monthly rate, fixed in advance for the month it names, and
   # accepts it for both income tax and VAT. HMRC does permit a spot rate as an

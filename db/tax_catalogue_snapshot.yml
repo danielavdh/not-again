@@ -76,6 +76,152 @@ ch_selbst_2026.yml:
     api_section:
     export_column: 959b:2.10
     api_field:
+ch_vat_2026.yml:
+  total_entgelte:
+    section:
+    api_section:
+    export_column: '200'
+    api_field:
+  exporte:
+    section:
+    api_section:
+    export_column: '220'
+    api_field:
+  leistungen_ausland:
+    section:
+    api_section:
+    export_column: '221'
+    api_field:
+  ausgenommen:
+    section:
+    api_section:
+    export_column: '230'
+    api_field:
+  entgeltsminderungen:
+    section:
+    api_section:
+    export_column: '235'
+    api_field:
+  diverses:
+    section:
+    api_section:
+    export_column: '280'
+    api_field:
+  total_abzuege:
+    section:
+    api_section:
+    export_column: '289'
+    api_field:
+  steuerbarer_umsatz:
+    section:
+    api_section:
+    export_column: '299'
+    api_field:
+  leistungen_normal:
+    section:
+    api_section:
+    export_column: '303'
+    api_field:
+  steuer_normal:
+    section:
+    api_section:
+    export_column: '303'
+    api_field:
+  leistungen_reduziert:
+    section:
+    api_section:
+    export_column: '313'
+    api_field:
+  steuer_reduziert:
+    section:
+    api_section:
+    export_column: '313'
+    api_field:
+  leistungen_beherbergung:
+    section:
+    api_section:
+    export_column: '343'
+    api_field:
+  steuer_beherbergung:
+    section:
+    api_section:
+    export_column: '343'
+    api_field:
+  leistungen_normal_alt:
+    section:
+    api_section:
+    export_column: '302'
+    api_field:
+  steuer_normal_alt:
+    section:
+    api_section:
+    export_column: '302'
+    api_field:
+  leistungen_reduziert_alt:
+    section:
+    api_section:
+    export_column: '312'
+    api_field:
+  steuer_reduziert_alt:
+    section:
+    api_section:
+    export_column: '312'
+    api_field:
+  leistungen_beherbergung_alt:
+    section:
+    api_section:
+    export_column: '342'
+    api_field:
+  steuer_beherbergung_alt:
+    section:
+    api_section:
+    export_column: '342'
+    api_field:
+  leistungen_saldo:
+    section:
+    api_section:
+    export_column: '323'
+    api_field:
+  steuer_saldo:
+    section:
+    api_section:
+    export_column: '323'
+    api_field:
+  bezugsteuer_leistungen:
+    section:
+    api_section:
+    export_column: '383'
+    api_field:
+  bezugsteuer_steuer:
+    section:
+    api_section:
+    export_column: '383'
+    api_field:
+  total_geschuldet:
+    section:
+    api_section:
+    export_column: '399'
+    api_field:
+  vorsteuer_material:
+    section:
+    api_section:
+    export_column: '400'
+    api_field:
+  vorsteuer_investitionen:
+    section:
+    api_section:
+    export_column: '405'
+    api_field:
+  total_vorsteuer:
+    section:
+    api_section:
+    export_column: '479'
+    api_field:
+  zu_bezahlen:
+    section:
+    api_section:
+    export_column: '500'
+    api_field:
 de_euer_2026.yml:
   betriebseinnahmen_kleinunternehmer:
     section: income
@@ -528,6 +674,172 @@ de_vermietung_2026.yml:
     section: expenses
     api_section:
     export_column: '49'
+    api_field:
+es_vat_2026.yml:
+  base_0:
+    section:
+    api_section:
+    export_column: '150'
+    api_field:
+  cuota_0:
+    section:
+    api_section:
+    export_column: '152'
+    api_field:
+  base_4:
+    section:
+    api_section:
+    export_column: '01'
+    api_field:
+  cuota_4:
+    section:
+    api_section:
+    export_column: '03'
+    api_field:
+  base_10:
+    section:
+    api_section:
+    export_column: '04'
+    api_field:
+  cuota_10:
+    section:
+    api_section:
+    export_column: '06'
+    api_field:
+  base_21:
+    section:
+    api_section:
+    export_column: '07'
+    api_field:
+  cuota_21:
+    section:
+    api_section:
+    export_column: '09'
+    api_field:
+  aib_base:
+    section:
+    api_section:
+    export_column: '10'
+    api_field:
+  aib_cuota:
+    section:
+    api_section:
+    export_column: '11'
+    api_field:
+  isp_base:
+    section:
+    api_section:
+    export_column: '12'
+    api_field:
+  isp_cuota:
+    section:
+    api_section:
+    export_column: '13'
+    api_field:
+  total_devengado:
+    section:
+    api_section:
+    export_column: '27'
+    api_field:
+  ded_interior_base:
+    section:
+    api_section:
+    export_column: '28'
+    api_field:
+  ded_interior_cuota:
+    section:
+    api_section:
+    export_column: '29'
+    api_field:
+  ded_inversion_base:
+    section:
+    api_section:
+    export_column: '30'
+    api_field:
+  ded_inversion_cuota:
+    section:
+    api_section:
+    export_column: '31'
+    api_field:
+  ded_importacion_base:
+    section:
+    api_section:
+    export_column: '32'
+    api_field:
+  ded_importacion_cuota:
+    section:
+    api_section:
+    export_column: '33'
+    api_field:
+  ded_aib_base:
+    section:
+    api_section:
+    export_column: '36'
+    api_field:
+  ded_aib_cuota:
+    section:
+    api_section:
+    export_column: '37'
+    api_field:
+  total_deducir:
+    section:
+    api_section:
+    export_column: '45'
+    api_field:
+  resultado_general:
+    section:
+    api_section:
+    export_column: '46'
+    api_field:
+  entregas_intracomunitarias:
+    section:
+    api_section:
+    export_column: '59'
+    api_field:
+  exportaciones:
+    section:
+    api_section:
+    export_column: '60'
+    api_field:
+  no_sujetas_localizacion:
+    section:
+    api_section:
+    export_column: '120'
+    api_field:
+  sujetas_isp:
+    section:
+    api_section:
+    export_column: '122'
+    api_field:
+  suma_resultados:
+    section:
+    api_section:
+    export_column: '64'
+    api_field:
+  atribuible_estado:
+    section:
+    api_section:
+    export_column: '66'
+    api_field:
+  resultado_autoliquidacion:
+    section:
+    api_section:
+    export_column: '69'
+    api_field:
+  resultado:
+    section:
+    api_section:
+    export_column: '71'
+    api_field:
+  aib_net:
+    section:
+    api_section:
+    export_column:
+    api_field:
+  isp_net:
+    section:
+    api_section:
+    export_column:
     api_field:
 gb_property_2026.yml:
   rent_income:

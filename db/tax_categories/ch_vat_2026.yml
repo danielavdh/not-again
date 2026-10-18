@@ -1,0 +1,351 @@
+country_code: ch
+country_label: "Schweiz — Suisse — Svizzera"
+scheme: vat
+tax_year: 2026
+authority: ESTV
+position: 20
+scheme_label: "MWST-Abrechnung"
+report_name: "CH-MWST"
+currency: CHF
+form_code: MWST
+kind: vat
+no_tax_label: "Keine MWST"
+# The two methods of the Swiss return. Effective method is the ordinary basis
+# and is what the codes file to. The Saldosteuersatz method is the app's flat
+# rate: MWST-Info 12 — the turnover INCLUDING tax is multiplied by the approved
+# Saldosteuersatz, no input tax is claimed, and the Bezugsteuer is declared at
+# the statutory rate (Ziffer 383) all the same. Its figures go in Ziffer 323,
+# not in 303, which is why the header names the flat-rate boxes.
+flat_rate_label: "Saldosteuersatz"
+normal_rules_label: "Effektive Methode"
+flat_rate_net_category: leistungen_saldo
+flat_rate_tax_category: steuer_saldo
+#
+# Source: the ESTV's 2026 online-form samples (effektive Methode and
+# Saldosteuersatz) and the paper forms 0550_03 / 0536_04. Ziffern are the
+# form's own. Rates 8,1 % / 2,6 % / 3,8 % since 1 January 2024; the previous
+# 7,7 % / 2,5 % / 3,7 % rows (302/312/342) are kept for entries up to 2023.
+#
+# THE SHAPE THAT DIFFERS: Ziffer 200 is the WORLDWIDE total of consideration,
+# exports and foreign supplies included, and 220-280 then DEDUCT what is not
+# taxable, so that 299 is the taxable turnover. So every sale code's net reaches
+# 200, and a non-taxable one reaches its deduction Ziffer as well. The
+# Steuerberechnung rows carry two amounts each — Leistungen and Steuer — under
+# ONE Ziffer, like the Dutch rubrieken.
+#
+# Deliberately NOT covered: 205 (optierte Leistungen), 225 (Meldeverfahren),
+# 410 (Einlageentsteuerung), 415/420 (Vorsteuerkorrekturen und -kürzungen),
+# 900/910 (andere Mittelflüsse). 235 and 280 are shown, fed by no code.
+
+categories:
+  # --- I. Umsatz -------------------------------------------------------------
+  - key: total_entgelte
+    label: "Total der vereinbarten bzw. vereinnahmten Entgelte (weltweiter Umsatz)"
+    export_column: "200"
+    includes: [ leistungen_normal, leistungen_reduziert, leistungen_beherbergung,
+                leistungen_normal_alt, leistungen_reduziert_alt, leistungen_beherbergung_alt,
+                exporte, leistungen_ausland, ausgenommen ]
+    position: 10
+  - key: exporte
+    label: "Von der Steuer befreite Leistungen (u.a. Exporte, Art. 23)"
+    export_column: "220"
+    position: 20
+  - key: leistungen_ausland
+    label: "Leistungen im Ausland (Ort der Leistung im Ausland)"
+    export_column: "221"
+    position: 30
+  - key: ausgenommen
+    label: "Von der Steuer ausgenommene Inlandleistungen (Art. 21), für die nicht nach Art. 22 optiert wird"
+    export_column: "230"
+    position: 40
+  - key: entgeltsminderungen
+    label: "Entgeltsminderungen wie Skonti, Rabatte usw."
+    export_column: "235"
+    position: 50
+  - key: diverses
+    label: "Diverses (z.B. Wert des Bodens, Ankaufspreise Margenbesteuerung)"
+    export_column: "280"
+    position: 60
+  - key: total_abzuege
+    label: "Total Ziff. 220 bis 280"
+    export_column: "289"
+    includes: [ exporte, leistungen_ausland, ausgenommen, entgeltsminderungen, diverses ]
+    position: 70
+  - key: steuerbarer_umsatz
+    label: "Steuerbarer Gesamtumsatz (Ziff. 200 abzüglich Ziff. 289)"
+    export_column: "299"
+    includes: [ total_entgelte ]
+    subtracts: [ total_abzuege ]
+    position: 80
+
+  # --- II. Steuerberechnung: Leistungen und Steuer je Satz -------------------
+  - key: leistungen_normal
+    label: "Normalsatz 8,1 % — Leistungen"
+    export_column: "303"
+    position: 100
+  - key: steuer_normal
+    label: "Normalsatz 8,1 % — Steuer"
+    export_column: "303"
+    position: 102
+  - key: leistungen_reduziert
+    label: "Reduzierter Satz 2,6 % — Leistungen"
+    export_column: "313"
+    position: 110
+  - key: steuer_reduziert
+    label: "Reduzierter Satz 2,6 % — Steuer"
+    export_column: "313"
+    position: 112
+  - key: leistungen_beherbergung
+    label: "Beherbergungssatz 3,8 % — Leistungen"
+    export_column: "343"
+    position: 120
+  - key: steuer_beherbergung
+    label: "Beherbergungssatz 3,8 % — Steuer"
+    export_column: "343"
+    position: 122
+  # The rows for supplies at the rates in force until 31 December 2023.
+  - key: leistungen_normal_alt
+    label: "Normalsatz 7,7 % (bis 31.12.2023) — Leistungen"
+    export_column: "302"
+    position: 104
+  - key: steuer_normal_alt
+    label: "Normalsatz 7,7 % (bis 31.12.2023) — Steuer"
+    export_column: "302"
+    position: 106
+  - key: leistungen_reduziert_alt
+    label: "Reduzierter Satz 2,5 % (bis 31.12.2023) — Leistungen"
+    export_column: "312"
+    position: 114
+  - key: steuer_reduziert_alt
+    label: "Reduzierter Satz 2,5 % (bis 31.12.2023) — Steuer"
+    export_column: "312"
+    position: 116
+  - key: leistungen_beherbergung_alt
+    label: "Beherbergungssatz 3,7 % (bis 31.12.2023) — Leistungen"
+    export_column: "342"
+    position: 124
+  - key: steuer_beherbergung_alt
+    label: "Beherbergungssatz 3,7 % (bis 31.12.2023) — Steuer"
+    export_column: "342"
+    position: 126
+  # Saldosteuersatz: where the flat rate files. Fed by no code; the header's
+  # flat_rate_net_category / flat_rate_tax_category name them.
+  - key: leistungen_saldo
+    label: "Saldosteuersatz — Leistungen"
+    export_column: "323"
+    position: 130
+  - key: steuer_saldo
+    label: "Saldosteuersatz — Steuer"
+    export_column: "323"
+    position: 132
+  - key: bezugsteuer_leistungen
+    label: "Bezugsteuer (netto, exkl. MWST) — Leistungen"
+    export_column: "383"
+    position: 140
+  - key: bezugsteuer_steuer
+    label: "Bezugsteuer — Steuer"
+    export_column: "383"
+    position: 142
+  - key: total_geschuldet
+    label: "Total geschuldete Steuer"
+    export_column: "399"
+    includes: [ steuer_normal, steuer_reduziert, steuer_beherbergung,
+                steuer_normal_alt, steuer_reduziert_alt, steuer_beherbergung_alt,
+                steuer_saldo, bezugsteuer_steuer ]
+    position: 150
+
+  # --- Vorsteuer --------------------------------------------------------------
+  - key: vorsteuer_material
+    label: "Vorsteuer auf Material- und Dienstleistungsaufwand"
+    export_column: "400"
+    position: 160
+  - key: vorsteuer_investitionen
+    label: "Vorsteuer auf Investitionen und übrigem Betriebsaufwand"
+    export_column: "405"
+    position: 170
+  - key: total_vorsteuer
+    label: "Total Ziff. 400 bis 420"
+    export_column: "479"
+    includes: [ vorsteuer_material, vorsteuer_investitionen ]
+    position: 180
+  # Negative when the business has a Guthaben (the form's Ziffer 510).
+  - key: zu_bezahlen
+    label: "Zu bezahlender Betrag (negativ: Guthaben der steuerpflichtigen Person, Ziff. 510)"
+    export_column: "500"
+    includes: [ total_geschuldet ]
+    subtracts: [ total_vorsteuer ]
+    position: 190
+
+# Rates changed on 1 January 2024 (8,0 → 7,7 % on 1 January 2018 is not
+# covered: valid_from is 2018). One key, two rows, two sets of Ziffern.
+tax_codes:
+  # --- Verkauf ----------------------------------------------------------------
+  - key: verkauf_normal
+    label: "Verkauf, Normalsatz"
+    rate_bps: 770
+    direction: output
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    net_category_key: leistungen_normal_alt
+    tax_category_key: steuer_normal_alt
+    position: 10
+  - key: verkauf_normal
+    label: "Verkauf, Normalsatz"
+    rate_bps: 810
+    direction: output
+    valid_from: "2024-01-01"
+    net_category_key: leistungen_normal
+    tax_category_key: steuer_normal
+    position: 10
+  - key: verkauf_reduziert
+    label: "Verkauf, reduzierter Satz"
+    rate_bps: 250
+    direction: output
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    net_category_key: leistungen_reduziert_alt
+    tax_category_key: steuer_reduziert_alt
+    position: 20
+  - key: verkauf_reduziert
+    label: "Verkauf, reduzierter Satz"
+    rate_bps: 260
+    direction: output
+    valid_from: "2024-01-01"
+    net_category_key: leistungen_reduziert
+    tax_category_key: steuer_reduziert
+    position: 20
+  - key: verkauf_beherbergung
+    label: "Beherbergung"
+    rate_bps: 370
+    direction: output
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    net_category_key: leistungen_beherbergung_alt
+    tax_category_key: steuer_beherbergung_alt
+    position: 30
+  - key: verkauf_beherbergung
+    label: "Beherbergung"
+    rate_bps: 380
+    direction: output
+    valid_from: "2024-01-01"
+    net_category_key: leistungen_beherbergung
+    tax_category_key: steuer_beherbergung
+    position: 30
+  # Exports and supplies abroad are not flat-rate turnover: the Saldosteuersatz
+  # applies to the taxable turnover of Ziffer 299, from which 220 and 221 are
+  # already deducted. Under normal rules they file box-for-box: that is what
+  # `normal` does here too.
+  - key: export
+    label: "Export (steuerbefreit, Art. 23)"
+    rate_bps: 0
+    direction: output
+    valid_from: "2018-01-01"
+    flat_rate: normal
+    net_category_key: exporte
+    position: 40
+  - key: leistung_ausland
+    label: "Leistung im Ausland"
+    rate_bps: 0
+    direction: output
+    valid_from: "2018-01-01"
+    flat_rate: normal
+    net_category_key: leistungen_ausland
+    position: 50
+  - key: ausgenommen
+    label: "Ausgenommen (Art. 21)"
+    rate_bps: 0
+    direction: output
+    valid_from: "2018-01-01"
+    flat_rate: normal
+    net_category_key: ausgenommen
+    position: 60
+
+  # --- Einkauf ----------------------------------------------------------------
+  - key: einkauf_normal
+    label: "Einkauf, Normalsatz"
+    rate_bps: 770
+    direction: input
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    tax_category_key: vorsteuer_material
+    position: 110
+  - key: einkauf_normal
+    label: "Einkauf, Normalsatz"
+    rate_bps: 810
+    direction: input
+    valid_from: "2024-01-01"
+    tax_category_key: vorsteuer_material
+    position: 110
+  - key: einkauf_reduziert
+    label: "Einkauf, reduzierter Satz"
+    rate_bps: 250
+    direction: input
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    tax_category_key: vorsteuer_material
+    position: 120
+  - key: einkauf_reduziert
+    label: "Einkauf, reduzierter Satz"
+    rate_bps: 260
+    direction: input
+    valid_from: "2024-01-01"
+    tax_category_key: vorsteuer_material
+    position: 120
+  - key: einkauf_investition
+    label: "Investition, übriger Betriebsaufwand"
+    rate_bps: 770
+    direction: input
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    tax_category_key: vorsteuer_investitionen
+    position: 130
+  - key: einkauf_investition
+    label: "Investition, übriger Betriebsaufwand"
+    rate_bps: 810
+    direction: input
+    valid_from: "2024-01-01"
+    tax_category_key: vorsteuer_investitionen
+    position: 130
+  - key: einkauf_ohne
+    label: "Einkauf ohne MWST"
+    rate_bps: 0
+    direction: input
+    valid_from: "2018-01-01"
+    position: 140
+  # Services from abroad: Bezugsteuer, declared in 383 and deducted in 400.
+  # Under the Saldosteuersatz it is declared all the same and not deducted
+  # (MWST-Info 12 Ziff. 5), which is `declare_only`.
+  - key: bezugsteuer
+    label: "Bezugsteuer (Leistung aus dem Ausland)"
+    rate_bps: 770
+    direction: input
+    valid_from: "2018-01-01"
+    valid_to:   "2023-12-31"
+    reverse_charge: true
+    flat_rate: declare_only
+    net_category_key: bezugsteuer_leistungen
+    tax_category_key: vorsteuer_material
+    reverse_tax_category_key: bezugsteuer_steuer
+    position: 150
+  - key: bezugsteuer
+    label: "Bezugsteuer (Leistung aus dem Ausland)"
+    rate_bps: 810
+    direction: input
+    valid_from: "2024-01-01"
+    reverse_charge: true
+    flat_rate: declare_only
+    net_category_key: bezugsteuer_leistungen
+    tax_category_key: vorsteuer_material
+    reverse_tax_category_key: bezugsteuer_steuer
+    position: 150
+  # Import VAT paid to the BAZG: the amount entered IS the tax
+  # (TaxCode#amount_is_tax?), deducted in 400. Nothing under the
+  # Saldosteuersatz, where no input tax is claimed.
+  - key: einfuhrsteuer
+    label: "Einfuhrsteuer (BAZG)"
+    rate_bps: 0
+    direction: input
+    valid_from: "2018-01-01"
+    flat_rate: excluded
+    tax_category_key: vorsteuer_material
+    position: 160
