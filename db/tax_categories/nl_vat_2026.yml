@@ -1,0 +1,298 @@
+country_code: nl
+country_label: "Nederland"
+scheme: vat
+tax_year: 2026
+authority: Belastingdienst
+position: 40
+scheme_label: "Omzetbelasting"
+report_name: "NL-BTW"
+currency: EUR
+form_code: OB
+kind: vat
+# This form's own language — never translated. A British reader of a DUTCH
+# return should see "Geen btw".
+no_tax_label: "Geen btw"
+# Source: Nederlandse Taxonomie NT20, entrypoint bd-rpt-ob-aangifte-2026.xsd,
+# transcribed in docs/tax-forms/VAT/nl-omzetbelasting-aangifte-nt20.md, plus the
+# Belastingdienst's own rubriek guidance. Rates 2026: 21% hoog, 9% laag, 0%.
+#
+# TWO SHAPES THAT DIFFER FROM THE UK FORM, and both were the point of building
+# this — they are what tests the abstraction rather than the tax:
+#
+#  1. Net and VAT are PAIRED PER RUBRIEK. The UK puts every net in box 6 and
+#     every output VAT in box 1; here 1a carries both its own omzet and its own
+#     btw. So a rubriek is two categories sharing one export_column.
+#  2. There is NO box for the net of ordinary purchases. The UK has box 7; the
+#     Dutch form has only 5b, the deductible tax. So an ordinary purchase code
+#     names a tax category and no net category at all.
+#
+# No connector: the return is a screen and a CSV. Digipoort is a later job.
+
+categories:
+  # --- 1. Prestaties binnenland ---------------------------------------------
+  - key: turnover_high
+    label: "Leveringen/diensten belast met hoog tarief — omzet"
+    export_column: "1a"
+    position: 10
+  - key: vat_high
+    label: "Leveringen/diensten belast met hoog tarief — omzetbelasting"
+    export_column: "1a"
+    position: 20
+  - key: turnover_low
+    label: "Leveringen/diensten belast met laag tarief — omzet"
+    export_column: "1b"
+    position: 30
+  - key: vat_low
+    label: "Leveringen/diensten belast met laag tarief — omzetbelasting"
+    export_column: "1b"
+    position: 40
+  - key: turnover_other
+    label: "Leveringen/diensten belast met overige tarieven behalve 0% — omzet"
+    export_column: "1c"
+    position: 50
+  - key: vat_other
+    label: "Leveringen/diensten belast met overige tarieven behalve 0% — omzetbelasting"
+    export_column: "1c"
+    position: 60
+  # An annual correction rather than a transaction, so no code feeds it. The box
+  # exists because the form has it and a reader copying figures needs the line.
+  - key: turnover_private_use
+    label: "Privégebruik — omzet"
+    export_column: "1d"
+    position: 70
+  - key: vat_private_use
+    label: "Privégebruik — omzetbelasting"
+    export_column: "1d"
+    position: 80
+  # Also where a SUPPLIER reports a domestic verlegging: the Belastingdienst
+  # puts "het bedrag waarover de btw is verlegd" here, not in rubriek 2.
+  - key: turnover_zero_or_not_taxed
+    label: "Leveringen/diensten belast met 0% of niet bij u belast"
+    export_column: "1e"
+    position: 90
+
+  # --- 2. Verleggingsregelingen binnenland ----------------------------------
+  - key: turnover_rc_inland
+    label: "Leveringen/diensten waarbij de omzetbelasting naar u is verlegd — omzet"
+    export_column: "2a"
+    position: 100
+  - key: vat_rc_inland
+    label: "Leveringen/diensten waarbij de omzetbelasting naar u is verlegd — omzetbelasting"
+    export_column: "2a"
+    position: 110
+
+  # --- 3. Prestaties naar/in het buitenland ---------------------------------
+  - key: turnover_outside_eu
+    label: "Leveringen naar landen buiten de EU"
+    export_column: "3a"
+    position: 120
+  - key: turnover_within_eu
+    label: "Leveringen naar of diensten in landen binnen de EU"
+    export_column: "3b"
+    position: 130
+  # Only WITHOUT the one-stop shop (OSS/éénloketsysteem). Under OSS, distance
+  # sales and B2C services taxed in another member state are not on this
+  # return at all — toelichting 3c — so they carry no code.
+  - key: turnover_distance_sales_eu
+    label: "Afstandsverkopen in de EU (zonder OSS)"
+    export_column: "3c"
+    position: 140
+
+  # --- 4. Prestaties uit het buitenland aan u verricht ----------------------
+  - key: turnover_from_outside_eu
+    label: "Leveringen/diensten uit landen buiten de EU — omzet"
+    export_column: "4a"
+    position: 150
+  - key: vat_from_outside_eu
+    label: "Leveringen/diensten uit landen buiten de EU — omzetbelasting"
+    export_column: "4a"
+    position: 160
+  - key: turnover_from_within_eu
+    label: "Leveringen/diensten uit landen binnen de EU — omzet"
+    export_column: "4b"
+    position: 170
+  - key: vat_from_within_eu
+    label: "Leveringen/diensten uit landen binnen de EU — omzetbelasting"
+    export_column: "4b"
+    position: 180
+
+  # --- 5. Berekening ---------------------------------------------------------
+  # The Belastingdienst's own sum: 1a + 1b + 1c + 1d + 2a + 4a + 4b.
+  - key: vat_owed
+    label: "Verschuldigde omzetbelasting"
+    export_column: "5a"
+    includes: [ vat_high, vat_low, vat_other, vat_private_use, vat_rc_inland,
+                vat_from_outside_eu, vat_from_within_eu ]
+    position: 190
+  - key: vat_input
+    label: "Voorbelasting"
+    export_column: "5b"
+    position: 200
+  - key: vat_payable
+    label: "Totaal te betalen of terug te vragen"
+    export_column: "5c"
+    includes: [ vat_owed ]
+    subtracts: [ vat_input ]
+    position: 210
+
+tax_codes:
+  # --- Verkopen -------------------------------------------------------------
+  - key: verkoop_hoog
+    label: "Verkoop, hoog tarief"
+    rate_bps: 2100
+    direction: output
+    valid_from: "2019-01-01"
+    net_category_key: turnover_high
+    tax_category_key: vat_high
+    position: 10
+  - key: verkoop_laag
+    label: "Verkoop, laag tarief"
+    rate_bps: 900
+    direction: output
+    valid_from: "2019-01-01"
+    net_category_key: turnover_low
+    tax_category_key: vat_low
+    position: 20
+  - key: verkoop_nul
+    label: "Verkoop, 0%"
+    rate_bps: 0
+    direction: output
+    valid_from: "2019-01-01"
+    net_category_key: turnover_zero_or_not_taxed
+    position: 30
+  # The supplier's side of a domestic verlegging. Rate 0 because no btw is
+  # charged: the customer accounts for it in 2a.
+  - key: verkoop_verlegd_binnenland
+    label: "Verkoop, btw verlegd"
+    rate_bps: 0
+    direction: output
+    valid_from: "2019-01-01"
+    net_category_key: turnover_zero_or_not_taxed
+    position: 40
+  # Goods only — toelichting 3a: "omzet van goederen die u hebt uitgevoerd".
+  - key: verkoop_buiten_eu
+    label: "Uitvoer van goederen buiten de EU"
+    rate_bps: 0
+    direction: output
+    valid_from: "2019-01-01"
+    net_category_key: turnover_outside_eu
+    position: 50
+  # A service to a business outside the EU is taxed there and "hoeft u niet
+  # aan te geven in uw btw-aangifte" (Belastingdienst): no rubriek, so no box.
+  # The code exists so the decision is recorded, and so this turnover is not
+  # left looking like a goods export or an exempt supply.
+  - key: verkoop_dienst_buiten_eu
+    label: "Dienst aan ondernemer buiten de EU"
+    rate_bps: 0
+    direction: output
+    valid_from: "2019-01-01"
+    position: 55
+  - key: verkoop_binnen_eu
+    label: "ICL: levering of dienst"
+    rate_bps: 0
+    direction: output
+    valid_from: "2019-01-01"
+    net_category_key: turnover_within_eu
+    position: 60
+  - key: verkoop_afstandsverkopen_eu
+    label: "Afstandsverkopen in de EU (zonder OSS)"
+    rate_bps: 0
+    direction: output
+    valid_from: "2021-07-01"
+    net_category_key: turnover_distance_sales_eu
+    position: 70
+  # Vrijgestelde prestaties reach NO rubriek — the form has no line for them.
+  # The code exists so the decision is recorded rather than left blank, and so
+  # exempt turnover stays identifiable for a partial-exemption question.
+  - key: verkoop_vrijgesteld
+    label: "Vrijgesteld"
+    rate_bps: 0
+    direction: output
+    valid_from: "2019-01-01"
+    position: 80
+
+  # --- Inkopen --------------------------------------------------------------
+  # No net category: the Dutch form has no box for the value of ordinary
+  # purchases, only 5b for the deductible tax.
+  - key: inkoop_hoog
+    label: "Inkoop, hoog tarief"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2019-01-01"
+    tax_category_key: vat_input
+    position: 110
+  - key: inkoop_laag
+    label: "Inkoop, laag tarief"
+    rate_bps: 900
+    direction: input
+    valid_from: "2019-01-01"
+    tax_category_key: vat_input
+    position: 120
+  - key: inkoop_geen_btw
+    label: "Inkoop zonder btw"
+    rate_bps: 0
+    direction: input
+    valid_from: "2019-01-01"
+    position: 130
+  # Verlegd naar u: owed in 2a, deducted in 5b. Two legs, one code.
+  - key: inkoop_verlegd_binnenland
+    label: "Inkoop, btw verlegd"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2019-01-01"
+    reverse_charge: true
+    net_category_key: turnover_rc_inland
+    tax_category_key: vat_input
+    reverse_tax_category_key: vat_rc_inland
+    position: 140
+  # Rubriek 4a holds two things: a service bought from a supplier outside the
+  # EU with the btw verlegd naar u — the common case — and goods imported under
+  # the verleggingsregeling bij invoer, which needs an Article 23 licence.
+  # Without that licence the import VAT is paid at customs and goes in 5b
+  # only: the next code.
+  - key: inkoop_buiten_eu
+    label: "Dienst van buiten de EU / invoer met art. 23"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2019-01-01"
+    reverse_charge: true
+    net_category_key: turnover_from_outside_eu
+    tax_category_key: vat_input
+    reverse_tax_category_key: vat_from_outside_eu
+    position: 150
+  # Paid to customs or to the courier: nothing to declare, only to deduct, and
+  # the amount entered IS the btw (TaxCode#amount_is_tax?) — customs worked it
+  # out on a value that is not the supplier's invoice. The goods themselves
+  # were booked on the supplier's invoice.
+  - key: invoer_btw_douane
+    label: "Invoer-btw betaald bij douane"
+    rate_bps: 0
+    direction: input
+    valid_from: "2019-01-01"
+    tax_category_key: vat_input
+    position: 155
+  # Rubriek 4b holds an intra-community acquisition of goods AND a service
+  # bought from a supplier in another member state with the btw verlegd naar u
+  # (Google, Adobe, Meta: the most frequent foreign purchase there is). The
+  # form does not split 4a/4b by rate, so one code covers both at 21%, and a
+  # 9% acquisition — books — has its own.
+  - key: inkoop_binnen_eu
+    label: "Inkoop uit EU: verwerving of verlegde dienst"
+    rate_bps: 2100
+    direction: input
+    valid_from: "2019-01-01"
+    reverse_charge: true
+    net_category_key: turnover_from_within_eu
+    tax_category_key: vat_input
+    reverse_tax_category_key: vat_from_within_eu
+    position: 160
+  - key: inkoop_binnen_eu_laag
+    label: "Inkoop uit EU, laag tarief"
+    rate_bps: 900
+    direction: input
+    valid_from: "2019-01-01"
+    reverse_charge: true
+    net_category_key: turnover_from_within_eu
+    tax_category_key: vat_input
+    reverse_tax_category_key: vat_from_within_eu
+    position: 165

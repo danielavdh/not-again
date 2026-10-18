@@ -12,11 +12,14 @@
 
 	<%= render partial: 'shared/flash' %>
 
+	<%# A quiet period is still a return, and it is filed with every box at
+	    zero — so the boxes are shown whatever the period holds. Only the
+	    per-code and per-account detail has nothing to say then. %>
 	<% if @vat_return[:lines].empty? %>
 		<p><%= t(".nothing",
 		          from: l(@report.start_date, format: :short_date),
 		          to:   l(@report.end_date, format: :short_date)) %></p>
-	<% else %>
+	<% end %>
 
 		<h3><%= t("tax.vat.boxes") %></h3>
 		<%# The comparison column is for reading, never for filing. The left-hand
@@ -64,15 +67,15 @@
 		<table>
 			<tbody>
 				<tr class="list-line-odd">
-					<td><%= t("tax.vat.due") %></th>
+					<td><%= t("tax.vat.due") %></td>
 					<td class="right"><%= format_cents_with_currency(@vat_return[:vat_due], @vat_return[:currency], show_zero: true) %></td>
 				</tr>
 				<tr class="list-line-odd">
-					<td><%= t("tax.vat.reclaimed") %></th>
+					<td><%= t("tax.vat.reclaimed") %></td>
 					<td class="right"><%= format_cents_with_currency(@vat_return[:vat_reclaimed], @vat_return[:currency], show_zero: true) %></td>
 				</tr>
 				<tr class="total list-line-even">
-					<td><%= t("tax.vat.payable") %></th>
+					<td><%= t("tax.vat.payable") %></td>
 					<td class="right"><%= format_cents_with_currency(@vat_return[:net_payable], @vat_return[:currency], show_zero: true) %></td>
 				</tr>
 			</tbody>
@@ -88,6 +91,7 @@
 			</p>
 		<% end %>
 
+	<% unless @vat_return[:lines].empty? %>
 		<h3><%= t("tax.vat.by_code") %></h3>
 		<table>
 			<thead>

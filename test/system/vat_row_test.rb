@@ -49,8 +49,127 @@ class VatRowTest < ApplicationSystemTestCase
                  "commonest first, not whatever sorts to the top"
     assert_operator shown.index("Standard rate (20%)"),
                     :<,
-                    shown.index { |t| t.include?("Reverse charge") },
+                    shown.index { |t| t.start_with?("RC:", "DRC:") },
                     "the everyday rates come before the odd ones"
+  end
+
+  # The label is abbreviated to fit the cell, so the full wording of the boxes
+  # has to survive into the rendered dropdown. TomSelect builds its own divs and
+  # throws the <option> away with its title unless something carries it across.
+  test "an option in the open list still says which boxes it files to" do
+    visit app_url("/en/journal_entries/new")
+
+    within(row) { find("td.tax-col .ts-control").click }
+    standard = all(".ts-dropdown .option", minimum: 3)
+               .find { |option| option.text == "Standard rate (20%)" }
+
+    assert standard, "the standard rate should be in the list"
+    assert_match(/\A7 · /, standard[:title].to_s,
+                 "hovering an abbreviated code must still answer where it goes")
+  end
+
+  # Account#tax_code_problem refuses a sales code on an expense row, so offering
+  # one is offering a mistake. QuickBooks narrows by FORM; here the direction
+  # belongs to the account on the row, so one entry can hold both.
+  test "an expense row is not offered the codes that belong to sales" do
+    visit app_url("/en/journal_entries/new")
+
+    within(row) do
+      select_account accounts(:expenses_general)
+      find("td.tax-col .ts-control").click
+    end
+
+    assert_includes offered, code_id("gb_vat", "purchase_standard")
+    assert_not_includes offered, code_id("gb_vat", "sale_exempt"),
+                        "a sale cannot be booked to an expense account"
+  end
+
+  test "an income row is not offered the codes that belong to purchases" do
+    visit app_url("/en/journal_entries/new")
+
+    within(row) do
+      select_account accounts(:income_sales)
+      find("td.tax-col .ts-control").click
+    end
+
+    assert_includes offered, code_id("gb_vat", "sale_exempt")
+    assert_not_includes offered, code_id("gb_vat", "purchase_standard"),
+                        "a purchase cannot be booked to an income account"
+  end
+
+  # Two businesses in one family can be registered in different countries. A
+  # code from a scheme this entity does not file is refused on save, so it has
+  # no business being in the list.
+  test "a business is not offered another country's codes" do
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/de_vat_2026.yml"))
+    entities(:daughter).update!(tax_schemes: [ "de_vat" ])
+    german = code_id("de_vat", "einkauf_19")
+    visit app_url("/en/journal_entries/new")
+
+    within(row) { find("td.tax-col .ts-control").click }
+    assert_includes offered, german,
+                    "the German codes must be in the list, or this proves nothing"
+
+    within(row) do
+      find("td.tax-col .ts-control").click     # close
+      select_account accounts(:expenses_general)   # entity 10, files gb_vat only
+      find("td.tax-col .ts-control").click
+    end
+    assert_not_includes offered, german, "entity 10 files no German VAT"
+    assert_includes offered, code_id("gb_vat", "purchase_standard"), "its own remain"
+  end
+
+  # Correcting a code on a SAVED entry is the moment a short list is most
+  # wanted, and it is the one moment no change event fires: the accounts arrive
+  # already chosen.
+  test "an entry opened for editing gets the short list too" do
+    entry = saved_expense_entry
+    visit app_url("/en/journal_entries/#{entry.id}/edit")
+
+    within(first("tr.posting-row")) { find("td.tax-col .ts-control").click }
+
+    assert_includes offered, code_id("gb_vat", "purchase_standard")
+    assert_not_includes offered, code_id("gb_vat", "sale_exempt"),
+                        "an expense row, even one booked last week"
+  end
+
+  # Opening a page must not alter what is booked. Narrowing a list is a reading
+  # aid; the entry is the record.
+  test "opening a saved entry for editing does not change the code on it" do
+    entry = saved_expense_entry
+    chosen = entry.postings.find { |p| p.tax_code_id }.tax_code_id
+    visit app_url("/en/journal_entries/#{entry.id}/edit")
+
+    assert_equal chosen.to_s,
+                 first("tr.posting-row").find("select.posting-tax-code", visible: :all).value
+  end
+
+  # The code is picked first as often as not. Narrowing a row that has no
+  # account yet would hide the code the user is reaching for.
+  test "a row with no account yet still offers both directions" do
+    visit app_url("/en/journal_entries/new")
+
+    within(row) { find("td.tax-col .ts-control").click }
+
+    assert_includes offered, code_id("gb_vat", "purchase_standard")
+    assert_includes offered, code_id("gb_vat", "sale_exempt"),
+                    "nothing has said which way round this row is yet"
+  end
+
+  # Changing the account after choosing a code used to leave the code sitting
+  # there to be refused on save. It is the account that moved, so the code goes.
+  test "a code the new account cannot take is cleared, not left to fail on save" do
+    visit app_url("/en/journal_entries/new")
+
+    within(row) do
+      select_account accounts(:income_sales)
+      select_code "sale_exempt"
+      assert_equal code_id("gb_vat", "sale_exempt").to_s,
+                   find("select.posting-tax-code", visible: :all).value
+
+      select_account accounts(:expenses_general)
+      assert_equal "", find("select.posting-tax-code", visible: :all).value
+    end
   end
 
   test "a business with no VAT scheme sees no VAT column at all" do
@@ -257,6 +376,35 @@ class VatRowTest < ApplicationSystemTestCase
   # groups — the optgroup heading is what tells a reader which, and a screen
   # reader announces it, but option text alone no longer identifies a code. It
   # also means renaming a label cannot break these tests.
+  # A posted expense with a VAT code on it, as the edit form will find it.
+  def saved_expense_entry
+    code = TaxCode.resolve(scheme: "gb_vat", key: "purchase_standard", on: Date.current)
+    entry = JournalEntry.new(entry_date: Date.current, memo: "Phone", posted: true)
+    entry.postings.build(account: accounts(:expenses_general), entry_type: :debit,
+                         amount: 12_000, tax_code_id: code.id)
+    entry.derive_tax_legs
+    balance = entry.postings.reject(&:marked_for_destruction?)
+                   .sum { |p| p.debit? ? p.amount.to_i : -p.amount.to_i }
+    entry.postings.build(account: accounts(:bank_gbp), entry_type: :credit,
+                         amount: balance.abs, currency: "GBP")
+    entry.save!
+    entry
+  end
+
+  # The ids actually rendered in the open dropdown — not the labels, for the
+  # reason select_code gives below.
+  def offered
+    all(".ts-dropdown .option", minimum: 1).filter_map { |option|
+      option["data-value"].presence&.to_i
+    }
+  end
+
+  def code_id(scheme, key)
+    code = TaxCode.resolve(scheme: scheme, key: key, on: Date.current)
+    assert code, "no #{scheme} code #{key} in force today"
+    code.id
+  end
+
   def select_code(key)
     code = TaxCode.resolve(scheme: "gb_vat", key: key, on: Date.current)
     assert code, "no gb_vat code #{key} in force today"

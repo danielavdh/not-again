@@ -18,7 +18,8 @@ const Accounts = {
 		}
 		/* Initialize TomSelect on all elements with data-tomselect */
 		await TomSelectHelper.init();
-		
+		this.narrowTaxCodesOnLoadedRows();
+
 		this.attachListeners();
 		this.initModal();
 		this.setupReconcileModal();
@@ -221,6 +222,7 @@ const Accounts = {
 				this.recalculateRowTax(row);
 				return;
 			}
+			if (this.narrowTaxCodes(codeSelect, option)) this.recalculateRowTax(row);
 			if (codeSelect.value) return;
 
 			const remembered = option?.dataset.defaultTaxCode;
@@ -1039,11 +1041,23 @@ const Accounts = {
 	/* The VAT inside a gross amount — the same half-up split TaxCode makes on the
 	   server, so the field agrees with what gets saved. Reverse charge is the one
 	   case where the rate does NOT come out of the amount: the invoice carried
-	   none. floor((2n + d) / 2d) is half-up without meeting a float. */
-	rowTaxFromGross(grossCents, rateBps, reverseCharge) {
-		if (!rateBps || grossCents <= 0) return 0;
-		const divisor = reverseCharge ? 10000 : 10000 + rateBps;
-		return Math.floor((grossCents * rateBps * 2 + divisor) / (divisor * 2));
+	   none. An amount-is-tax code (import VAT paid at the border) has no rate at
+	   all: the whole amount is the VAT. A negative gross — a refund, a commission
+	   line inside a split income — carries its VAT with the same sign.
+	   floor((2n + d) / 2d) is half-up without meeting a float. */
+	rowTaxFromGross(grossCents, code) {
+		if (grossCents === 0) return 0;
+		const abs = Math.abs(grossCents);
+		let tax;
+		if (code.amountIsTax) {
+			tax = abs;
+		} else if (!code.rateBps) {
+			tax = 0;
+		} else {
+			const divisor = code.reverse ? 10000 : 10000 + code.rateBps;
+			tax = Math.floor((abs * code.rateBps * 2 + divisor) / (divisor * 2));
+		}
+		return grossCents < 0 ? -tax : tax;
 	},
 	/* Rate and shape, off the selected <option>. */
 	rowTaxCode(row) {
@@ -1054,7 +1068,8 @@ const Accounts = {
 			select,
 			chosen:  !!select.value,
 			rateBps: parseInt(option?.dataset.rateBps || '0', 10),
-			reverse: option?.dataset.reverseCharge === 'true'
+			reverse: option?.dataset.reverseCharge === 'true',
+			amountIsTax: option?.dataset.amountIsTax === 'true'
 		};
 	},
 	recalculateRowTax(row) {
@@ -1069,13 +1084,19 @@ const Accounts = {
 		}
 		if (!code.chosen) {
 			field.value = '';
+			field.readOnly = false;
 			this.showRowNet(row);
 			return;
 		}
+		/* No invoice figure to match on a reverse charge or an amount-is-tax
+		   code: the app's own is the only one, and the server ignores a typed
+		   one. */
+		field.readOnly = code.reverse || code.amountIsTax;
+
 		/* A new sum, so our figure is the one to show again. */
 		const gross = parseAmountToCents(row.querySelector('.posting-amount')?.value || '');
 		field.value = gross === null ? ''
-			: formatAmountFromCents(this.rowTaxFromGross(gross, code.rateBps, code.reverse));
+			: formatAmountFromCents(this.rowTaxFromGross(gross, code));
 		this.showRowNet(row);
 	},
 	/* What will actually hit the P&L. The label comes from the markup, so this
@@ -1096,6 +1117,56 @@ const Accounts = {
 		/* Reverse charge leaves the net alone: the legs are extra. */
 		const net = code.reverse ? gross : gross - (vat === null ? 0 : vat);
 		netEl.textContent = `${netEl.dataset.netLabel || ''} ${formatAmountFromCents(net)}`.trim();
+	},
+	/* The codes an account can actually take, which is the other two thirds of
+	   Account#tax_code_problem: an expense row takes purchase codes, an income
+	   row sales codes, and either takes only the schemes its own business files.
+	   The server refuses the rest on save, so this offers nothing it would then
+	   reject — a list of 29 that can only ever be 8.
+
+	   A row with no account yet keeps the whole list: the code may be picked
+	   first. Returns true when a chosen code was dropped, because the row's
+	   figures then have to be worked out again. */
+	narrowTaxCodes(codeSelect, accountOption) {
+		const ts = TomSelectHelper.getInstance(codeSelect);
+		if (!ts) return false;
+
+		/* Taken once, before anything is removed: TomSelect keeps no copy. */
+		if (!ts.__allOptions) ts.__allOptions = Object.values(ts.options);
+
+		const type = accountOption?.dataset.type;
+		const schemes = (accountOption?.dataset.vatSchemes || '').split(' ').filter(Boolean);
+		const wanted = type === 'income' ? 'output' : 'input';
+		const chosen = codeSelect.value;
+		const allowed = option =>
+			!option.value ||
+			(option.direction === wanted &&
+			 (schemes.length === 0 || schemes.includes(option.scheme)));
+
+		/* Only a code the list actually holds can be dropped. A value the server
+		   did not offer is left alone: the row carries something this form
+		   cannot speak about, and guessing at it is not an improvement. */
+		const dropped = chosen && ts.options[chosen] && !allowed(ts.options[chosen]);
+
+		ts.clearOptions(allowed);
+		ts.addOptions(ts.__allOptions.filter(allowed));
+		if (dropped) ts.setValue('', true);
+		ts.refreshOptions(false);
+		return !!dropped;
+	},
+	/* An entry opened for editing arrives with its accounts already chosen, and
+	   no change event ever fires for them — so without this the one moment a
+	   short list is most wanted, correcting a code on a saved entry, got the
+	   full one. Nothing is cleared here: only the list is narrowed. */
+	narrowTaxCodesOnLoadedRows() {
+		document.querySelectorAll('.posting-row').forEach(row => {
+			const codeSelect = row.querySelector('.posting-tax-code');
+			const accountSelect = row.querySelector('.posting-account');
+			if (!codeSelect || !accountSelect?.value) return;
+
+			this.narrowTaxCodes(codeSelect,
+			                    accountSelect.options[accountSelect.selectedIndex]);
+		});
 	},
 	/* The select is wrapped by TomSelect, so .hidden goes on the container. */
 	setRowTaxVisible(row, visible) {

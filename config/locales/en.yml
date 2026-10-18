@@ -765,6 +765,7 @@ en:
       tax_code_scheme: "%{account} cannot use a %{scheme} code — this business does not file it"
       tax_code_cross_entity: "%{account} cannot carry a VAT code in a cross-entity transaction"
       tax_code_direction: "%{code} is the wrong way round for %{account}. A sale code belongs on income, a purchase code on an expense."
+      tax_amount_exceeds_gross: "%{account}: the VAT cannot be more than the amount. It is part of the amount, not added to it."
   languages:
     new_language: "New Language"
     new_title: "New Language"

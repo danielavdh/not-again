@@ -270,12 +270,14 @@ class Rates::GapFinderTest < ActiveSupport::TestCase
   # for ever, for countries it has never heard of. It matters most for a daily
   # source: ~250 periods a year against 12.
   test "a source no rule names and no report displays is never swept" do
-    assert_not Rates::GapFinder.wanted?("ecb_daily"),
-               "no country accepts it yet, so nothing should fetch it unattended"
+    RateRuleConfig.stub(:all_accepted_sources, %w[ecb hmrc]) do
+      assert_not Rates::GapFinder.wanted?("ecb_daily"),
+                 "no country accepts it, so nothing should fetch it unattended"
 
-    make_books_multi_currency
-    report_over(Date.new(2026, 1, 1), Date.new(2026, 1, 31))
-    assert_empty Rates::GapFinder.call.select { |s, _| s == "ecb_daily" }
+      make_books_multi_currency
+      report_over(Date.new(2026, 1, 1), Date.new(2026, 1, 31))
+      assert_empty Rates::GapFinder.call.select { |s, _| s == "ecb_daily" }
+    end
   end
 
   test "a source a country's rule names IS swept" do
@@ -299,17 +301,15 @@ class Rates::GapFinderTest < ActiveSupport::TestCase
     assert Rates::GapFinder.wanted?("bundesbank")
   end
 
-  # The other half: an override naming a tax nobody has written a catalogue for
-  # can never fire, so it must not drag its source into the nightly sweep. That
-  # is what lets the rules file state a country's law in full — Germany's
-  # umsatzsteuer, the Dutch omzetbelasting — at no cost.
-  test "an override for a scheme that does not exist wants nothing" do
-    assert_not_includes TaxSchemeConfig.all_schemes, "omzetbelasting"
-    assert_equal %w[ecb_daily],
-                 RateRuleConfig.accepted_sources("nl", scheme: "omzetbelasting"),
-                 "the law is stated"
-    assert_not_includes RateRuleConfig.all_accepted_sources, "ecb_daily",
-                        "and costs nothing until a catalogue for it exists"
+  # The other half: a VAT scheme's override is keyed by the slug its catalogue
+  # file produces, and the moment it matches, its source joins the nightly
+  # sweep. Dutch VAT wants the ECB's daily rate; under the Dutch word for the
+  # tax the override matched nothing and nothing fetched it.
+  test "a VAT override keyed by its scheme slug drags its source into the sweep" do
+    assert_includes TaxSchemeConfig.all_schemes, "nl_vat"
+    assert_equal %w[ecb_daily], RateRuleConfig.accepted_sources("nl", scheme: "nl_vat")
+    assert_includes RateRuleConfig.all_accepted_sources, "ecb_daily"
+    assert Rates::GapFinder.wanted?("ecb_daily")
   end
 
   test "a source tier 1 displays through is swept whatever the rules say" do

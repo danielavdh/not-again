@@ -138,16 +138,19 @@ En un régimen acumulativo como UK MTD la corrección llega a la agencia con la 
 
   <h3>Dónde aterriza el IVA, y qué permite entonces la regla</h3>
   <p>El archivo del régimen indica si su administración lleva el IVA en una <strong>cuenta de balance</strong> (p. ej. el Reino Unido) o como <strong>líneas de ingresos y gastos</strong> en la cuenta de resultados (p. ej. la EÜR alemana). De eso depende si hay que relajar la regla de &laquo;una sola cuenta de balance cuando hay líneas de resultados&raquo;.</p>
-  <p>Con una cuenta de IVA en el balance, una compra con IVA tendría si no dos cuentas de balance (gasto, IVA soportado, banco), de modo que la línea <em>derivada</em> queda exenta de la regla &thinsp;&mdash;&thinsp; mientras que una <strong>escrita a mano</strong> se rechaza: una línea de IVA sin código detrás se quedaría en la cuenta de IVA y nunca llegaría a la declaración.</p>
+  <p>Con una cuenta de IVA en el balance, una compra con IVA tendría si no dos cuentas de balance (gasto, IVA soportado, banco), de modo que la línea <em>derivada</em> queda exenta de la regla &thinsp;&mdash;&thinsp; mientras que una <strong>escrita a mano</strong> se rechaza: una línea de IVA sin código detrás se quedaría en la cuenta de IVA y nunca llegaría a la declaración. Un código de inversión del sujeto pasivo no deriva ninguna línea: la declaración obtiene las dos mitades de la base.</p>
   <p>Donde las cuentas de IVA son de resultados, el asiento tiene de todos modos una sola cuenta de balance. Una línea escrita a mano no se rechaza ahí &thinsp;&mdash;&thinsp; pero aparece en la declaración como <em>IVA sin asignar</em>, y así se detecta en cualquiera de las dos formas.</p>
   <p>Por lo demás la regla sigue en pie: la cuota de un préstamo dividida en principal e intereses son dos asientos.</p>
 
   <h3>Vaciar la cuenta de IVA</h3>
-  <p>Cualquier diferencia entre lo que hay en la cuenta y lo que explican los códigos aparece en la declaración como <em>IVA sin asignar</em> &thinsp;&mdash;&thinsp; que es precisamente cómo se manifiesta un apunte de IVA escrito a mano.</p>
+  <p>Cualquier diferencia entre lo que hay en la cuenta y lo que explican los códigos aparece en la declaración como <em>IVA sin asignar</em> &thinsp;&mdash;&thinsp; que es precisamente cómo se manifiesta un apunte de IVA escrito a mano. Solo cuentan los asientos con ingresos o gastos: pagar el trimestre, una transferencia del banco a la cuenta de IVA, es una liquidación y no se informa.</p>
+
+  <h3>Parar y volver a empezar</h3>
+  <p>Al desmarcar un régimen de IVA se borran sus cuentas de IVA si nunca se contabilizó nada en ellas. Si no, se quedan, desactivadas, y los asientos de los años en que declaraste conservan sus códigos. Vuelve a marcar el régimen y las mismas cuentas reaparecen.</p>
 
   <h3>Fechas, tipos y copias</h3>
-  <p>Los códigos se versionan por <strong>fecha</strong>, no por ejercicio fiscal: si un tipo cambia, cambia en una fecha. Si mueves un asiento al otro lado de un cambio de tipo, el IVA se vuelve a derivar al tipo vigente en la fecha nueva.</p>
-  <p>Un código de IVA solo puede usarse en un asiento en la moneda del propio régimen. Una factura pagada desde una cuenta en otra moneda no lleva código: convierte primero, o contabiliza el importe bruto y no deduzcas nada.</p>
+  <p>Los códigos se versionan por <strong>fecha</strong>, no por ejercicio fiscal: si un tipo cambia, cambia en una fecha. Si mueves un asiento al otro lado de un cambio de tipo, no se guarda hasta que elijas el código vigente en la fecha nueva.</p>
+  <p>Un importe negativo en una línea con código &thinsp;&mdash;&thinsp; una devolución, una línea de comisión dentro de un ingreso dividido &thinsp;&mdash;&thinsp; invierte el IVA junto con la base. La cuenta decide la casilla: una cuenta de gasto es una compra, vaya el dinero en la dirección que vaya.</p>
 
 
   <h2 id="vat-multiple">IVA con más de una empresa</h2>

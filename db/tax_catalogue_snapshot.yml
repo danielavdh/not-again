@@ -307,6 +307,142 @@ de_euer_2026.yml:
     api_section:
     export_column: '147'
     api_field:
+de_vat_2026.yml:
+  umsatz_19:
+    section:
+    api_section:
+    export_column: '81'
+    api_field:
+  umsatz_7:
+    section:
+    api_section:
+    export_column: '86'
+    api_field:
+  ig_lieferungen:
+    section:
+    api_section:
+    export_column: '41'
+    api_field:
+  steuerfrei_mit_vorsteuerabzug:
+    section:
+    api_section:
+    export_column: '43'
+    api_field:
+  steuerfrei_ohne_vorsteuerabzug:
+    section:
+    api_section:
+    export_column: '48'
+    api_field:
+  leistungen_13b_erbracht:
+    section:
+    api_section:
+    export_column: '60'
+    api_field:
+  nicht_steuerbar_eu_b2b:
+    section:
+    api_section:
+    export_column: '21'
+    api_field:
+  nicht_steuerbar_uebrige:
+    section:
+    api_section:
+    export_column: '45'
+    api_field:
+  umsatz_andere_saetze:
+    section:
+    api_section:
+    export_column: '35'
+    api_field:
+  steuer_andere_saetze:
+    section:
+    api_section:
+    export_column: '36'
+    api_field:
+  ig_erwerb_19:
+    section:
+    api_section:
+    export_column: '89'
+    api_field:
+  ig_erwerb_7:
+    section:
+    api_section:
+    export_column: '93'
+    api_field:
+  ig_erwerb_andere_saetze:
+    section:
+    api_section:
+    export_column: '95'
+    api_field:
+  steuer_ig_erwerb_andere_saetze:
+    section:
+    api_section:
+    export_column: '98'
+    api_field:
+  leistungen_13b_bezogen:
+    section:
+    api_section:
+    export_column: '46'
+    api_field:
+  steuer_13b:
+    section:
+    api_section:
+    export_column: '47'
+    api_field:
+  leistungen_13b_andere:
+    section:
+    api_section:
+    export_column: '84'
+    api_field:
+  steuer_13b_andere:
+    section:
+    api_section:
+    export_column: '85'
+    api_field:
+  vorsteuer_rechnungen:
+    section:
+    api_section:
+    export_column: '66'
+    api_field:
+  vorsteuer_ig_erwerb:
+    section:
+    api_section:
+    export_column: '61'
+    api_field:
+  einfuhrumsatzsteuer:
+    section:
+    api_section:
+    export_column: '62'
+    api_field:
+  vorsteuer_13b:
+    section:
+    api_section:
+    export_column: '67'
+    api_field:
+  berechnete_steuer_19:
+    section:
+    api_section:
+    export_column:
+    api_field:
+  berechnete_steuer_7:
+    section:
+    api_section:
+    export_column:
+    api_field:
+  berechnete_steuer_ig_erwerb:
+    section:
+    api_section:
+    export_column:
+    api_field:
+  sondervorauszahlung:
+    section:
+    api_section:
+    export_column: '39'
+    api_field:
+  zahllast:
+    section:
+    api_section:
+    export_column: '83'
+    api_field:
 de_vermietung_2026.yml:
   mieteinnahmen:
     section: income
@@ -600,6 +736,112 @@ gb_vat_2026.yml:
     section:
     api_section:
     export_column: '9'
+    api_field:
+nl_vat_2026.yml:
+  turnover_high:
+    section:
+    api_section:
+    export_column: 1a
+    api_field:
+  vat_high:
+    section:
+    api_section:
+    export_column: 1a
+    api_field:
+  turnover_low:
+    section:
+    api_section:
+    export_column: 1b
+    api_field:
+  vat_low:
+    section:
+    api_section:
+    export_column: 1b
+    api_field:
+  turnover_other:
+    section:
+    api_section:
+    export_column: 1c
+    api_field:
+  vat_other:
+    section:
+    api_section:
+    export_column: 1c
+    api_field:
+  turnover_private_use:
+    section:
+    api_section:
+    export_column: 1d
+    api_field:
+  vat_private_use:
+    section:
+    api_section:
+    export_column: 1d
+    api_field:
+  turnover_zero_or_not_taxed:
+    section:
+    api_section:
+    export_column: 1e
+    api_field:
+  turnover_rc_inland:
+    section:
+    api_section:
+    export_column: 2a
+    api_field:
+  vat_rc_inland:
+    section:
+    api_section:
+    export_column: 2a
+    api_field:
+  turnover_outside_eu:
+    section:
+    api_section:
+    export_column: 3a
+    api_field:
+  turnover_within_eu:
+    section:
+    api_section:
+    export_column: 3b
+    api_field:
+  turnover_distance_sales_eu:
+    section:
+    api_section:
+    export_column: 3c
+    api_field:
+  turnover_from_outside_eu:
+    section:
+    api_section:
+    export_column: 4a
+    api_field:
+  vat_from_outside_eu:
+    section:
+    api_section:
+    export_column: 4a
+    api_field:
+  turnover_from_within_eu:
+    section:
+    api_section:
+    export_column: 4b
+    api_field:
+  vat_from_within_eu:
+    section:
+    api_section:
+    export_column: 4b
+    api_field:
+  vat_owed:
+    section:
+    api_section:
+    export_column: 5a
+    api_field:
+  vat_input:
+    section:
+    api_section:
+    export_column: 5b
+    api_field:
+  vat_payable:
+    section:
+    api_section:
+    export_column: 5c
     api_field:
 nl_winst_2025.yml:
   netto_omzet:

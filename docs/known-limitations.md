@@ -170,16 +170,29 @@ nothing detects the same cost entered once as an invoice and once as a payment �
 which would report its VAT twice. The bank entry form is also payment-shaped, so
 invoice-basis entries go through the journal entry form.
 
-**Partial exemption and pro-rata recovery.** Input VAT is either reclaimable or
-it is not. A business that recovers a fraction of its input VAT has to compute
-the restriction itself and adjust the return.
+**Partial exemption and pro-rata recovery.** The app records what you may
+reclaim; it does not work out how much that is. Input tax attributable to
+taxable supplies goes in at the invoice figure, input tax attributable to exempt
+supplies goes in as zero and the whole gross stays in the cost. The *residual*
+pool — input tax used for both — is apportioned on the period's totals with an
+annual adjustment, and that calculation is the business's, not ours.
 
-**Foreign-currency invoices.** A VAT code may only be used on an entry in the
-scheme's own currency, because a control account holds one currency and the
-authority is paid in one currency. A UK VAT invoice paid from a euro account
-gets no code: convert and pay from a sterling account, or book the gross and
-reclaim nothing. The app does not record an invoice currency, so the expense
-already carries this limitation — VAT inherits it.
+One known inaccuracy: where VAT is irrecoverable, box 7 carries the gross,
+while HMRC asks for the value excluding VAT.
+
+**Foreign-currency invoices.** A **reverse charge** may be paid from an account
+in any currency. It posts nothing: the return works both halves out from the
+net, translated at the rate that country's law accepts for the entry date,
+exactly as every other tax report translates. Nothing is converted when an entry
+is saved. If no accepted rate is held for that date, the return says so.
+
+Any **other** VAT code posts a line into a control account, which holds the
+scheme's currency, so it is refused on an entry in another currency. In
+practice this means a supplier established in your own country who chooses to
+invoice in a foreign currency — rare. Goods from abroad are import VAT, which
+has its own codes; services from abroad are a reverse charge. Book the gross
+with no code and record the VAT, which the invoice must state in your currency
+anyway, as its own entry.
 
 **VAT on a cross-entity gift.** The receiving side of a cross-entity
 transaction cannot carry a VAT code. That is not an arbitrary restriction: the

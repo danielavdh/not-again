@@ -138,16 +138,19 @@ Bei einem kumulativen Verfahren wie UK MTD erreicht die Korrektur die Behörde m
 
   <h3>Wo die Umsatzsteuer landet, und was die Regel dann erlaubt</h3>
   <p>Die Datei des Schemas gibt an, ob die Behörde die Umsatzsteuer auf einem <strong>Bilanzkonto</strong> führt (z. B. Großbritannien) oder als <strong>Ertrags- und Aufwandszeilen</strong> in der GuV (z. B. deutsche EÜR). Davon hängt ab, ob die Regel &laquo;nur ein Bilanzkonto, sobald Erfolgszeilen dabei sind&raquo; gelockert werden muss.</p>
-  <p>Bei einem Umsatzsteuerkonto in der Bilanz hätte ein Einkauf mit Umsatzsteuer sonst zwei Bilanzkonten (Aufwand, Vorsteuer, Bank). Die <em>abgeleitete</em> Zeile ist deshalb von der Regel ausgenommen &thinsp;&mdash;&thinsp; eine <strong>selbst getippte</strong> dagegen wird abgelehnt: eine Umsatzsteuerzeile ohne Code dahinter läge im Umsatzsteuerkonto und käme nie in die Erklärung.</p>
+  <p>Bei einem Umsatzsteuerkonto in der Bilanz hätte ein Einkauf mit Umsatzsteuer sonst zwei Bilanzkonten (Aufwand, Vorsteuer, Bank). Die <em>abgeleitete</em> Zeile ist deshalb von der Regel ausgenommen &thinsp;&mdash;&thinsp; eine <strong>selbst getippte</strong> dagegen wird abgelehnt: eine Umsatzsteuerzeile ohne Code dahinter läge im Umsatzsteuerkonto und käme nie in die Erklärung. Ein Reverse-Charge-Code leitet gar keine Zeile ab: die Erklärung weist beide Hälften aus dem Nettobetrag aus.</p>
   <p>Wo die Umsatzsteuerkonten Erfolgskonten sind, hat die Buchung ohnehin nur ein Bilanzkonto. Eine selbst getippte Zeile wird dort nicht abgelehnt &thinsp;&mdash;&thinsp; sie erscheint aber in der Erklärung als <em>nicht zugeordnete Umsatzsteuer</em>, und so fällt sie in beiden Formen auf.</p>
   <p>Ansonsten bleibt die Regel bestehen: eine Kredittilgung, aufgeteilt in Tilgung und Zinsen, sind weiterhin zwei Buchungen.</p>
 
   <h3>Das Umsatzsteuerkonto ausgleichen</h3>
-  <p>Jede Differenz zwischen dem, was auf dem Konto liegt, und dem, was die Codes erklären, erscheint in der Erklärung als <em>nicht zugeordnete Umsatzsteuer</em> &thinsp;&mdash;&thinsp; und genau so zeigt sich eine selbst getippte Umsatzsteuerbuchung.</p>
+  <p>Jede Differenz zwischen dem, was auf dem Konto liegt, und dem, was die Codes erklären, erscheint in der Erklärung als <em>nicht zugeordnete Umsatzsteuer</em> &thinsp;&mdash;&thinsp; und genau so zeigt sich eine selbst getippte Umsatzsteuerbuchung. Gezählt werden nur Buchungen mit Ertrag oder Aufwand: die Zahlung des Quartals, eine Umbuchung von der Bank auf das Umsatzsteuerkonto, ist ein Ausgleich und wird nicht ausgewiesen.</p>
+
+  <h3>Aufhören und wieder anfangen</h3>
+  <p>Wird ein Umsatzsteuer-Schema abgewählt, werden seine Umsatzsteuerkonten gelöscht, wenn nie etwas darauf gebucht wurde. Sonst bleiben sie, deaktiviert, und die Buchungen aus den Jahren, in denen du erklärt hast, behalten ihre Codes. Wähl das Schema wieder an, und dieselben Konten sind zurück.</p>
 
   <h3>Daten, Sätze und Kopien</h3>
-  <p>Codes sind nach <strong>Datum</strong> versioniert, nicht nach Steuerjahr: ändert sich ein Satz, ändert er sich zu einem Datum. Verschiebst du eine Buchung über eine Satzänderung hinweg, wird die Umsatzsteuer mit dem am neuen Datum gültigen Satz neu abgeleitet.</p>
-  <p>Ein Umsatzsteuer-Code lässt sich nur in einer Buchung in der Währung des eigenen Schemas verwenden. Eine Rechnung, die von einem Konto in einer anderen Währung bezahlt wird, bekommt keinen Code: rechne vorher um, oder buche den Bruttobetrag und mach keine Vorsteuer geltend.</p>
+  <p>Codes sind nach <strong>Datum</strong> versioniert, nicht nach Steuerjahr: ändert sich ein Satz, ändert er sich zu einem Datum. Verschiebst du eine Buchung über eine Satzänderung hinweg, wird das Speichern abgelehnt, bis du den am neuen Datum gültigen Code wählst.</p>
+  <p>Ein negativer Betrag auf einer Zeile mit Code &thinsp;&mdash;&thinsp; eine Erstattung, eine Provisionszeile innerhalb einer aufgeteilten Einnahme &thinsp;&mdash;&thinsp; kehrt die Umsatzsteuer zusammen mit dem Netto um. Das Konto entscheidet über das Feld: ein Aufwandskonto ist ein Einkauf, egal in welche Richtung das Geld floss.</p>
 
 
   <h2 id="vat-multiple">Umsatzsteuer bei mehreren Betrieben</h2>

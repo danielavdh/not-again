@@ -714,20 +714,24 @@ class ReportsController < BaseController
   private
 
   # A VAT return for the report's own period. Its own path, because everything
-  # #show does before building the data is about currency translation, and a
-  # VAT return has none to do: a code may only be used on an entry in its
-  # scheme's currency, so every figure is already in it. No display choice, no
-  # source to resolve, no missing-rate column, no fx variance.
+  # #show does before building the data is about the reader's choices, and a
+  # return offers none: it is filed in the authority's currency at the
+  # authority's accepted rate. The translation itself is the same as every
+  # other tax report's, and a missing rate is reported the same way.
   def show_vat_return
     group = @report.report_group
     @display_currency = group.display_currency
-    @vat_return = Reports::VatReturn.new(
-      entity: group.entity, scheme: group.tax_scheme,
-      from:   @report.start_date, to: @report.end_date,
-      # From the REPORT, so a rate change or joining the scheme mid-year cannot
-      # rewrite a quarter already filed.
-      flat_rate_bps: @report.flat_rate_bps
-    ).call
+    @vat_return = with_rates(nil) {
+      Reports::VatReturn.new(
+        entity: group.entity, scheme: group.tax_scheme,
+        from:   @report.start_date, to: @report.end_date,
+        # From the REPORT, so a rate change or joining the scheme mid-year cannot
+        # rewrite a quarter already filed.
+        flat_rate_bps: @report.flat_rate_bps,
+        prepayment:    @report.prepayment
+      ).call
+    }
+    return redirect_to report_group_path(group), alert: flash.now[:alert] if @vat_return.nil?
 
     respond_to do |format|
       format.html { render :vat_return }
@@ -869,7 +873,7 @@ class ReportsController < BaseController
   # ignored.
   def report_params
     params.require(:report).permit(:name, :start_date, :end_date, :report_group_id,
-                                   :flat_rate_percentage)
+                                   :flat_rate_percentage, :prepayment_display)
   end
 
   def load_form_data

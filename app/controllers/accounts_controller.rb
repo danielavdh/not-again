@@ -186,7 +186,7 @@ class AccountsController < BaseController
     end
   end
   def edit_deposit
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:journal_entry_id])
     return if redirect_cross_entity_counterpart_to_origin(@journal_entry) # JE₂ → JE₁'s edit
     @entry_type = 'deposit'
     load_form_data(account_types: [:income, :expense, :personal])
@@ -195,7 +195,7 @@ class AccountsController < BaseController
   end
   def update_deposit
     @entry_type = 'deposit'
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:journal_entry_id])
     @journal_entry.assign_attributes(bank_entry_params)
     derive_tax_legs_for(@journal_entry)
     recalculate_bank_posting
@@ -224,15 +224,17 @@ class AccountsController < BaseController
     )
     pair_id_map = {}
     copy = build_cross_entity_copy(original) # fresh links + JE₂′ mirror (#8)
-    original.postings.not_tax_legs.where.not(account_id: @account.id)
-            .includes(:tax_legs, :tax_code).each do |p|
+    # The whole entry, legs included, so gross_amount reads them from memory;
+    # the loaded account and code ride along so the form asks for neither.
+    original.postings.includes(:account, :tax_code).to_a
+            .reject { |p| p.tax_leg? || p.account_id == @account.id }.each do |p|
       @journal_entry.postings.build(
-        account_id: p.account_id,
+        account: p.account,
         entry_type: p.entry_type,
-        # The gross as typed; the legs are re-derived at the copy's own date, so
+        # The gross as typed; the leg is re-derived at the copy's own date, so
         # a copy into a new rate period gets the new rate.
         amount: p.gross_amount,
-        tax_code_id: p.tax_code_id,
+        tax_code: p.tax_code,
         currency: p.currency,
         description: p.description,
         reference: p.reference,
@@ -278,7 +280,7 @@ class AccountsController < BaseController
     end
   end
   def edit_withdrawal
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:journal_entry_id])
     return if redirect_cross_entity_counterpart_to_origin(@journal_entry) # JE₂ → JE₁'s edit
     @entry_type = 'withdrawal'
     load_form_data(account_types: [:income, :expense, :personal])
@@ -287,7 +289,7 @@ class AccountsController < BaseController
   end
   def update_withdrawal
     @entry_type = 'withdrawal'
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:journal_entry_id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:journal_entry_id])
     
     @journal_entry.assign_attributes(bank_entry_params)
     derive_tax_legs_for(@journal_entry)
@@ -317,15 +319,17 @@ class AccountsController < BaseController
     )
     pair_id_map = {}
     copy = build_cross_entity_copy(original) # fresh links + JE₂′ mirror (#8)
-    original.postings.not_tax_legs.where.not(account_id: @account.id)
-            .includes(:tax_legs, :tax_code).each do |p|
+    # The whole entry, legs included, so gross_amount reads them from memory;
+    # the loaded account and code ride along so the form asks for neither.
+    original.postings.includes(:account, :tax_code).to_a
+            .reject { |p| p.tax_leg? || p.account_id == @account.id }.each do |p|
       @journal_entry.postings.build(
-        account_id: p.account_id,
+        account: p.account,
         entry_type: p.entry_type,
-        # The gross as typed; the legs are re-derived at the copy's own date, so
+        # The gross as typed; the leg is re-derived at the copy's own date, so
         # a copy into a new rate period gets the new rate.
         amount: p.gross_amount,
-        tax_code_id: p.tax_code_id,
+        tax_code: p.tax_code,
         currency: p.currency,
         description: p.description,
         reference: p.reference,

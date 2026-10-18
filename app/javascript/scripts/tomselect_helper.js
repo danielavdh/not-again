@@ -173,6 +173,23 @@ const TomSelectHelper = {
             config.preload = false;
         }
         
+        /* The VAT boxes this code files to, in the authority's own wording —
+           what the shortened label has no room for. TomSelect builds its own
+           divs and drops the <option>'s title, but keeps the element itself on
+           the data as $option, so nothing has to be repeated in a data-
+           attribute. A DOM node is returned, never a markup string: textContent
+           and title are set as properties. */
+        if (select.classList.contains('posting-tax-code')) {
+            const withTitle = data => {
+                const el = document.createElement('div');
+                el.textContent = data.text || '';
+                const title = data.$option?.title;
+                if (title) el.title = title;
+                return el;
+            };
+            config.render = { option: withTitle, item: withTitle };
+        }
+
         if (select.classList.contains('posting-account')) {
             config.render = {
                 item: (data, escape) => {

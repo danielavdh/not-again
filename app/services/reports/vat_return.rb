@@ -8,9 +8,16 @@ module Reports
   # postings BY ACCOUNT, and a return groups them by CODE, because one expense
   # account carries several rates and several boxes. Three things the shared
   # pipeline does are not needed, which is why this is short rather than a copy:
-  # no currency translation (a code may only be used on an entry in its scheme's
-  # currency, so every figure is already in it), no date buckets, and no
-  # debit-normal rule — a box's sign is the code's DIRECTION.
+  # no date buckets, no debit-normal rule (a box's sign is the code's
+  # DIRECTION), and no display-currency choice — a return is filed in the
+  # authority's currency and in no other.
+  #
+  # Translation, where any is needed, happens HERE and nowhere else, as in every
+  # other report: a derived VAT leg is a balance posting and so already in the
+  # scheme's currency; the net rows are the expense or income itself, in
+  # whatever currency the entry was, and are translated at the authority's
+  # accepted rate for the entry date. See #net_totals. A reverse charge posts
+  # no leg at all — its VAT is the rate on the translated net, both ways.
   #
   # Date basis is entry_date, and there is nothing else: the app draws no
   # distinction between an invoice and a payment, so the tax point is whatever
@@ -26,7 +33,7 @@ module Reports
     AccountLine = Struct.new(:account_code, :account_name, :code, :net, :tax,
                              keyword_init: true)
 
-    def initialize(entity:, scheme:, from:, to:, flat_rate_bps: nil)
+    def initialize(entity:, scheme:, from:, to:, flat_rate_bps: nil, prepayment: nil)
       @entity = entity
       @scheme = scheme
       @from   = from
@@ -34,6 +41,9 @@ module Reports
       # Basis points, from the REPORT. nil is an ordinary return, which is
       # almost every one.
       @flat_rate_bps = flat_rate_bps.to_i.positive? ? flat_rate_bps.to_i : nil
+      # Minor units, from the REPORT: a prepayment the authority fixed and this
+      # return deducts, in the box the scheme names for it. Not a transaction.
+      @prepayment = prepayment.to_i.positive? ? prepayment.to_i : nil
     end
 
     def call
@@ -59,7 +69,7 @@ module Reports
         comparison_boxes: comparison_boxes,
         vat_due:     vat_due,
         vat_reclaimed: vat_reclaimed,
-        net_payable: vat_due - vat_reclaimed,
+        net_payable: vat_due - vat_reclaimed - @prepayment.to_i,
         # Per account as well as per code. The by-code table reconciles the
         # boxes; this one is what an accountant can actually act on — a wrong
         # rate on electricity, or input tax that belongs to exempt income.
@@ -80,13 +90,24 @@ module Reports
     # 0.00 is harder to check than one listing what happened.
     def lines
       @lines ||= codes.filter_map { |code|
-        net         = net_totals[code.id].to_i
-        tax         = tax_totals[[ code.id, code.direction ]].to_i
-        reverse_tax = code.reverse_charge? ? tax_totals[[ code.id, opposite(code.direction) ]].to_i : 0
-        next if [ net, tax, reverse_tax ].all?(&:zero?)
+        net = net_totals[code.id].to_i
+        if code.reverse_charge?
+          # Nothing was posted: the VAT is the rate on the net, which is already
+          # in the scheme's currency here — owed and reclaimed alike.
+          tax = reverse_tax = code.tax_from_net(net)
+        else
+          tax         = tax_totals[[ code.id, code.direction ]].to_i
+          reverse_tax = 0
+        end
+        next if net.zero? && tax.zero?
 
         Line.new(code: code, net: net, tax: tax, reverse_tax: reverse_tax)
       }
+    end
+
+    # The codes whose VAT is a posted leg. A reverse charge's is not.
+    def leg_code_ids
+      @leg_code_ids ||= codes.reject(&:reverse_charge?).map(&:id)
     end
 
     # What the codes put directly into each box, plus the boxes it totals up.
@@ -108,24 +129,33 @@ module Reports
       lines.each_with_object(Hash.new(0)) { |line, direct| add_line(direct, line) }
     end
 
-    # Notice 733. Supplies outside the scheme keep normal treatment and are
-    # "recorded in boxes 1 and 4 as you would under normal accounting".
-    # Everything else contributes its VAT-INCLUSIVE value to the sales box, and
-    # the tax box is the flat percentage of that — not the VAT actually charged.
-    # Input tax inside the scheme is not reclaimed, so purchases contribute
-    # their value and no tax.
+    # Notice 733 and 700/12. A code inside the scheme contributes its
+    # VAT-INCLUSIVE value to the sales box, and the tax box is the flat
+    # percentage of that — not the VAT actually charged; a purchase inside the
+    # scheme contributes nothing at all, not even a value. A code outside the
+    # scheme does what TaxCode::FLAT_RATE_TREATMENTS says: boxes as under
+    # normal rules, declared but not reclaimed, or nothing.
     def flat_rate_direct
       direct   = Hash.new(0)
       turnover = 0
 
       lines.each do |line|
-        next add_line(direct, line) if line.code.outside_flat_rate?
-
-        # Sales build the flat-rate turnover. Purchases inside the scheme
-        # contribute nothing at all — not even a value. Notice 700/12: box 7
-        # is blank unless there is qualifying capital expenditure, something in
-        # box 9, or a reverse charge, and those are all outside_flat_rate.
-        turnover += line.net + line.tax if line.code.output?
+        case line.code.flat_rate
+        when "normal"
+          add_line(direct, line)
+        when "declare_only"
+          # The value and the output half, never the reclaim: "you do not
+          # normally make a separate claim for input VAT, including any VAT on
+          # imports or acquisitions".
+          direct[line.code.net_category_key] += line.net if line.code.net_category_key.present?
+          if line.code.reverse_tax_category_key.present?
+            direct[line.code.reverse_tax_category_key] += line.reverse_tax
+          end
+        when "excluded"
+          nil
+        else
+          turnover += line.net + line.tax if line.code.output?
+        end
       end
 
       if (sales_box = flat_rate_sales_box)
@@ -147,7 +177,7 @@ module Reports
     # rather than hard-coded — so this is not silently GB-only.
     def flat_rate_sales_box
       code = codes.find { |c|
-        c.output? && !c.outside_flat_rate? &&
+        c.output? && c.flat_rate.nil? &&
           c.net_category_key.present? && c.tax_category_key.present?
       }
       code && [ code.net_category_key, code.tax_category_key ]
@@ -166,6 +196,9 @@ module Reports
       # it is filed with nine zeros.
 
       categories = catalogue
+      if @prepayment && (key = TaxSchemeConfig.prepayment_category(@scheme))
+        direct = direct.merge(key => direct[key].to_i + @prepayment)
+      end
       sums = roll_up(direct, categories)
 
 
@@ -207,8 +240,11 @@ module Reports
         return resolved[key] if resolved.key?(key)
         return direct[key].to_i if seen.include?(key)
 
-        children = categories[key]&.includes || []
-        amount = direct[key].to_i + children.sum { |child| total_for.call(child, seen + [ key ]) }
+        children = categories[key]&.includes  || []
+        minus    = categories[key]&.subtracts || []
+        amount = direct[key].to_i +
+                 children.sum { |child| total_for.call(child, seen + [ key ]) } -
+                 minus.sum    { |child| total_for.call(child, seen + [ key ]) }
         resolved[key] = amount
       }
 
@@ -222,7 +258,11 @@ module Reports
     # queries, all grouped, nothing loaded.
     def account_lines
       @account_lines ||= begin
-        nets  = signed_pairs(
+        # Translated like #net_totals, and for the same reason: these are the
+        # expense and income rows themselves, in whatever currency the entry
+        # was. Left raw, a EUR 13.00 phone bill printed as GBP 13.00 under a
+        # sterling heading.
+        nets  = signed_pairs_in_scheme_currency(
           Posting.where(tax_code_id: codes.map(&:id)).where(account_id: entity_account_ids),
           [ :account_id, :tax_code_id ]
         )
@@ -236,7 +276,7 @@ module Reports
           # A sale credits income, a purchase debits expense; the table wants
           # both positive. Same rule as net_totals.
           net = code.output? ? -amount : amount
-          tax = taxes[[ account_id, code_id ]].to_i
+          tax = code.reverse_charge? ? code.tax_from_net(net) : taxes[[ account_id, code_id ]].to_i
           next if net.zero? && tax.zero?
 
           account_code, account_name = names[account_id]
@@ -255,7 +295,7 @@ module Reports
         rows = Posting.joins(:journal_entry, :account)
                       .joins("INNER JOIN postings net ON net.id = postings.tax_for_posting_id")
                       .where(journal_entries: { posted: true, entry_date: @from..@to })
-                      .where(net: { tax_code_id: codes.map(&:id) })
+                      .where(net: { tax_code_id: leg_code_ids })
                       .where(account_id: vat_account_ids)
                       .group(Arel.sql("net.account_id"), Arel.sql("net.tax_code_id"),
                              Arel.sql("accounts.vat_role"))
@@ -274,6 +314,20 @@ module Reports
     end
 
     # Two grouping columns. signed_sums above takes one and is unchanged.
+    def signed_pairs_in_scheme_currency(scope, columns)
+      scope.joins(:journal_entry)
+           .where(journal_entries: { posted: true, entry_date: @from..@to })
+           .joins(Posting.currency_join_sql)
+           .group(*columns, Arel.sql(Posting.effective_currency_sql),
+                  Arel.sql("journal_entries.entry_date"))
+           .pluck(*columns, Arel.sql(Posting.effective_currency_sql),
+                  Arel.sql("journal_entries.entry_date"),
+                  Arel.sql(DEBITS), Arel.sql(CREDITS))
+           .each_with_object(Hash.new(0)) { |(a, b, currency, date, debits, credits), out|
+             out[[ a, b ]] += translate_net(debits - credits, currency, date)
+           }
+    end
+
     def signed_pairs(scope, columns)
       scope.joins(:journal_entry)
            .where(journal_entries: { posted: true, entry_date: @from..@to })
@@ -282,7 +336,7 @@ module Reports
            .each_with_object({}) { |(a, b, debits, credits), out| out[[ a, b ]] = debits - credits }
     end
 
-    # By the SIDE the VAT landed on, not the code: a reverse charge owes and
+    # By the SIDE the VAT lands on, not the code: a reverse charge owes and
     # reclaims under one code and both halves count.
     #
     # Under a flat rate these are NOT the VAT actually charged and paid — they
@@ -290,21 +344,17 @@ module Reports
     # Taken from the same figures the boxes are built from, so the summary and
     # the boxes cannot disagree.
     def vat_due
-      @vat_due ||=
-        if flat_rate?
-          flat_rate_summary.first
-        else
-          tax_totals.sum { |(_, role), amount| role == TaxCode::OUTPUT ? amount : 0 }
-        end
+      @vat_due ||= flat_rate? ? flat_rate_summary.first : side_total(TaxCode::OUTPUT)
     end
 
     def vat_reclaimed
-      @vat_reclaimed ||=
-        if flat_rate?
-          flat_rate_summary.last
-        else
-          tax_totals.sum { |(_, role), amount| role == TaxCode::INPUT ? amount : 0 }
-        end
+      @vat_reclaimed ||= flat_rate? ? flat_rate_summary.last : side_total(TaxCode::INPUT)
+    end
+
+    # A code's own tax sits on its own side; a reverse charge's other half on
+    # the other.
+    def side_total(side)
+      lines.sum { |line| line.code.direction == side ? line.tax : line.reverse_tax }
     end
 
     # Which categories mean "due" and which mean "reclaimed", read off the codes
@@ -332,7 +382,16 @@ module Reports
                    .where(tax_scheme: @scheme).pluck(:id)
       return 0 if ids.empty?
 
-      moved = signed_sums(Posting.where(account_id: ids), group: :account_id)
+      # Only entries that carry income or expense: a VAT figure a code should
+      # have produced can only sit beside the row that produced it. An entry
+      # with none — the quarter's payment to the authority, a transfer between
+      # the two control accounts — is a settlement, and used to be reported
+      # here as VAT nobody accounted for, on every return after the first.
+      nominal_entries = Posting.joins(:account)
+                               .where(accounts: { account_type: %i[income expense personal] })
+                               .select(:journal_entry_id)
+      moved = signed_sums(Posting.where(account_id: ids, journal_entry_id: nominal_entries),
+                          group: :account_id)
       # Owed sits on the credit side and reclaimable on the debit side, so
       # credits less debits IS the net payable. signed_sums gives the reverse.
       from_accounts = -moved.values.sum
@@ -340,16 +399,54 @@ module Reports
     end
 
     # One query.
+    # The VALUE boxes. Unlike the tax, these are not stored in the scheme's
+    # currency: the net row is the expense or income itself, in whatever
+    # currency the entry was. A reverse charge may be paid from a euro account
+    # while the return is filed in sterling, so the figures are grouped by
+    # currency and DATE and translated at the authority's own accepted rate —
+    # the same one the tax was converted at when the entry was saved.
+    #
+    # Everything in the scheme's own currency short-circuits, so an entity that
+    # never pays in another currency triggers no rate lookup at all.
     def net_totals
-      @net_totals ||= signed_sums(
-        Posting.where(tax_code_id: codes.map(&:id)).where(account_id: entity_account_ids),
-        group: :tax_code_id
-      ).each_with_object({}) { |(code_id, amount), out|
-        # A sale CREDITS income, a purchase DEBITS expense, and a return wants
-        # both as positive figures. amount here is debits less credits, so the
-        # sale's sign flips and the purchase's does not.
-        out[code_id] = direction_of(code_id) == TaxCode::OUTPUT ? -amount : amount
-      }
+      @net_totals ||= begin
+        rows = Posting.where(tax_code_id: codes.map(&:id))
+                      .where(account_id: entity_account_ids)
+                      .joins(:journal_entry)
+                      .where(journal_entries: { posted: true, entry_date: @from..@to })
+                      .joins(Posting.currency_join_sql)
+                      .group(:tax_code_id, Arel.sql(Posting.effective_currency_sql),
+                             Arel.sql("journal_entries.entry_date"))
+                      .pluck(:tax_code_id, Arel.sql(Posting.effective_currency_sql),
+                             Arel.sql("journal_entries.entry_date"),
+                             Arel.sql(DEBITS), Arel.sql(CREDITS))
+
+        rows.each_with_object(Hash.new(0)) { |(code_id, currency, date, debits, credits), out|
+          amount = debits - credits
+          # A sale CREDITS income, a purchase DEBITS expense, and a return wants
+          # both as positive figures. amount here is debits less credits, so the
+          # sale's sign flips and the purchase's does not.
+          amount = -amount if direction_of(code_id) == TaxCode::OUTPUT
+          out[code_id] += translate_net(amount, currency, date)
+        }
+      end
+    end
+
+    def scheme_currency
+      @scheme_currency ||= TaxSchemeConfig.currency_for(@scheme)
+    end
+
+    def translate_net(cents, currency, date)
+      return cents if cents.zero? || currency.blank? || currency == scheme_currency
+      net_translation.translate_one(cents, currency, on: date, account_id: nil)
+    end
+
+    def net_translation
+      @net_translation ||= Reports::Translation.new(
+        display_currency: scheme_currency,
+        scheme:           @scheme,
+        entity_id_for:    ->(_) { @entity.id }
+      )
     end
 
     # The derived legs, by (code, the role of the account they landed on). One
@@ -360,7 +457,7 @@ module Reports
         rows = Posting.joins(:journal_entry, :account)
                       .joins("INNER JOIN postings net ON net.id = postings.tax_for_posting_id")
                       .where(journal_entries: { posted: true, entry_date: @from..@to })
-                      .where(net: { tax_code_id: codes.map(&:id) })
+                      .where(net: { tax_code_id: leg_code_ids })
                       .where(account_id: vat_account_ids)
                       .group(Arel.sql("net.tax_code_id"), Arel.sql("accounts.vat_role"))
                       .pluck(Arel.sql("net.tax_code_id"), Arel.sql("accounts.vat_role"),
@@ -399,8 +496,5 @@ module Reports
       @directions[code_id]
     end
 
-    def opposite(direction)
-      direction == TaxCode::INPUT ? TaxCode::OUTPUT : TaxCode::INPUT
-    end
   end
 end

@@ -250,13 +250,15 @@ class Entity < ApplicationRecord
     # Control accounts belong to the REGISTRATION, not to any entry. Created on
     # subscribing, so no entry ever creates one unannounced and none is left
     # behind by an entry that was then refused; dropped again on unsubscribing
-    # while the pair is still unused.
+    # while the pair is still unused, retired if it holds VAT, and the same
+    # pair revived on subscribing again.
     def sync_vat_control_accounts
       was, now = saved_change_to_tax_schemes
       added,   = TaxSchemeConfig.vat_schemes(Array(now) - Array(was))
       removed, = TaxSchemeConfig.vat_schemes(Array(was) - Array(now))
 
       resolved = added.flat_map { |scheme|
+        Account.revive_vat_accounts(entity_code: code, scheme: scheme)
         TaxCode::DIRECTIONS.map { |direction|
           Account.resolve_vat_account(entity_code: code, scheme: scheme, direction: direction)
         }
@@ -265,7 +267,7 @@ class Entity < ApplicationRecord
       # genuinely new ones are worth announcing.
       @created_vat_accounts = resolved.select(&:previously_new_record?)
 
-      removed.each { |scheme| Account.drop_unused_vat_accounts(entity_code: code, scheme: scheme) }
+      removed.each { |scheme| Account.retire_vat_accounts(entity_code: code, scheme: scheme) }
     end
 
     # Joining a family from ungrouped is always allowed — only LEAVING one (to

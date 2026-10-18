@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -33,6 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_110000) do
     t.string "tax_scheme"
     t.datetime "updated_at", null: false
     t.integer "vat_role"
+    t.index "tax_scheme, vat_role, substr((code)::text, 2, 2)", name: "index_accounts_one_live_vat_account_per_role", unique: true, where: "(active AND (vat_role IS NOT NULL))"
     t.index ["account_type"], name: "index_accounts_on_account_type"
     t.index ["active"], name: "index_accounts_on_active"
     t.index ["code"], name: "index_accounts_on_code", unique: true
@@ -289,6 +290,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_110000) do
     t.date "end_date", null: false
     t.integer "flat_rate_bps"
     t.string "name", null: false
+    t.integer "prepayment"
     t.bigint "report_group_id", null: false
     t.date "start_date", null: false
     t.datetime "updated_at", null: false
@@ -452,6 +454,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_110000) do
     t.integer "position", default: 0, null: false
     t.string "scheme", null: false
     t.string "section"
+    t.string "subtracts", default: [], null: false, array: true
     t.integer "tax_year", null: false
     t.datetime "updated_at", null: false
     t.index ["country_code", "scheme", "tax_year", "key"], name: "index_tax_categories_lookup", unique: true
@@ -463,10 +466,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_110000) do
     t.datetime "created_at", null: false
     t.string "datev_bu"
     t.string "direction", null: false
+    t.string "flat_rate"
     t.string "key", null: false
     t.string "label"
     t.string "net_category_key"
-    t.boolean "outside_flat_rate", default: false, null: false
     t.integer "position", default: 0, null: false
     t.integer "rate_bps", null: false
     t.boolean "reverse_charge", default: false, null: false

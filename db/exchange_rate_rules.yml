@@ -87,15 +87,16 @@ de:
   unpublished_currency: manual_with_evidence
   schemes:
     # ⚠️ NOT BUILT YET — there is no `umsatzsteuer` scheme in db/tax_categories.
-    # Declared now because it is the reason the Bundesbank is fetched at all, and
-    # because the answer should be written down where it is looked for rather
-    # than rediscovered. Harmless until the scheme exists: nothing matches it.
+    # Keyed by the scheme SLUG, as TaxSchemeConfig derives it from the catalogue
+    # file (country + scheme: de_vat_2026.yml → de_vat). It sat here under the
+    # German word for a year with no file to match, and when the file came the
+    # override never fired: German VAT translated at the ECB rate.
     #
     # §16 Abs. 6 UStG requires the monthly average rate PUBLISHED by the BMF.
     # The Bundesbank computes and publishes those figures; the BMF's own CSV sits
     # behind a captcha, so we read the Bundesbank, which is the source of the
     # numbers rather than a copy of them.
-    umsatzsteuer:
+    de_vat:
       accepts:  [bundesbank, ecb]
 
 nl:
@@ -111,18 +112,12 @@ nl:
   election:     consistent
   unpublished_currency: manual_with_evidence
   schemes:
-    # ⚠️ NOT BUILT YET — there is no `omzetbelasting` scheme in db/tax_categories.
-    # Declared because it is the reason `ecb_daily` exists, and because the
-    # answer belongs where it will be looked for.
+    # Keyed by the scheme SLUG (nl_vat_2026.yml → nl_vat) — see de_vat above.
     #
     # Dutch VAT is keyed to the rate at the moment of the taxable event — the
     # ECB's DAILY reference rate, not a monthly figure. Germany naming a monthly
     # average is the European exception, not the rule.
-    #
-    # Costs nothing until the scheme exists: an override for a scheme with no
-    # catalogue file can never fire, and RateRuleConfig.all_accepted_sources
-    # ignores it, so nothing fetches ecb_daily on its account.
-    omzetbelasting:
+    nl_vat:
       accepts:  [ecb_daily]
 
 gb:

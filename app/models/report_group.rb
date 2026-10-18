@@ -49,6 +49,13 @@ class ReportGroup < ApplicationRecord
     tax_scheme.present? && TaxSchemeConfig.vat_scheme?(tax_scheme)
   end
 
+  # The box a prepayment is deducted in, when this scheme's return has one, so
+  # the report form can ask for it in the authority's own words.
+  def prepayment_category
+    key = TaxSchemeConfig.prepayment_category(tax_scheme)
+    key && TaxCategory.where(scheme: tax_scheme, key: key).order(tax_year: :desc).first
+  end
+
   # Which authority this group's scheme files with — "hmrc". Nil for a custom
   # group, or a scheme that stops at tagging and export.
   def authority_key

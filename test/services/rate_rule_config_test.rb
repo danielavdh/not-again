@@ -12,9 +12,11 @@ class RateRuleConfigTest < ActiveSupport::TestCase
   test "a country's accepted sources are ordered, most preferred first" do
     assert_equal %w[hmrc], RateRuleConfig.accepted_sources("gb")
     # Germany's VAT override is the live ordered list: the Bundesbank average
-    # §16(6) UStG names, then the ECB where it does not reach.
+    # §16(6) UStG names, then the ECB where it does not reach. Keyed by the
+    # scheme SLUG the catalogue file produces — under the German word it never
+    # matched, and German VAT translated at the ECB rate.
     assert_equal %w[bundesbank ecb],
-                 RateRuleConfig.accepted_sources("de", scheme: "umsatzsteuer")
+                 RateRuleConfig.accepted_sources("de", scheme: "de_vat")
   end
 
   # Within one country, VAT and income tax do not want the same series. That is
@@ -23,15 +25,15 @@ class RateRuleConfigTest < ActiveSupport::TestCase
     assert_equal %w[ecb], RateRuleConfig.accepted_sources("de")
     assert_equal %w[ecb], RateRuleConfig.accepted_sources("de", scheme: "de_euer")
     assert_equal %w[bundesbank ecb],
-                 RateRuleConfig.accepted_sources("de", scheme: "umsatzsteuer")
+                 RateRuleConfig.accepted_sources("de", scheme: "de_vat")
   end
 
   test "an override replaces only the field it names" do
     assert_equal "transaction_date",
-                 RateRuleConfig.date_basis_for("de", scheme: "umsatzsteuer"),
+                 RateRuleConfig.date_basis_for("de", scheme: "de_vat"),
                  "date_basis is not overridden, so it must be inherited"
     assert_equal "manual_with_evidence",
-                 RateRuleConfig.unpublished_currency_for("de", scheme: "umsatzsteuer")
+                 RateRuleConfig.unpublished_currency_for("de", scheme: "de_vat")
   end
 
   # Empty, not an exception and not a default. A country with no rule falls back

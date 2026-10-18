@@ -296,6 +296,13 @@ class BaseController < ApplicationController
     schemes, = TaxSchemeConfig.vat_schemes(
       in_scope.pluck(:tax_schemes).flatten.compact.uniq
     )
+    # And whatever the entry's rows already carry: a code from a scheme the
+    # business has since stopped filing must stay selectable, or the select
+    # would come back without it and the save would silently drop it.
+    if @journal_entry&.persisted?
+      schemes |= TaxCode.where(id: @journal_entry.postings.map(&:tax_code_id).compact.uniq)
+                        .distinct.pluck(:scheme)
+    end
     @tax_code_options = schemes.empty? ? [] :
       TaxCode.options_for(schemes: schemes, on: @journal_entry&.entry_date || Date.current)
 
@@ -304,16 +311,19 @@ class BaseController < ApplicationController
     @tax_code_blank_label =
       schemes.one? ? TaxSchemeConfig.no_tax_label(schemes.first) : t("tax.vat.none")
 
-    # WHICH businesses file, not just whether any do: the entity is a property
-    # of the account on the row, so one entry can mix registered and not.
-    @vat_entity_codes = vat_filing_entity_codes
+    # WHICH businesses file, and WHICH schemes: the entity is a property of the
+    # account on the row, so one entry can mix registered and not, and two
+    # registered businesses can file in different countries. The browser narrows
+    # the code list per row from this.
+    @vat_schemes_by_entity = vat_schemes_by_entity
+    @vat_entity_codes      = @vat_schemes_by_entity.keys.to_set
   end
 
-  def vat_filing_entity_codes
-    accessible_entities.pluck(:code, :tax_schemes).filter_map { |code, schemes|
+  def vat_schemes_by_entity
+    accessible_entities.pluck(:code, :tax_schemes).each_with_object({}) { |(code, schemes), by_code|
       vat, = TaxSchemeConfig.vat_schemes(Array(schemes))
-      code if vat.any?
-    }.to_set
+      by_code[code] = vat if vat.any?
+    }
   end
 
   # Builds [label, id, data-attrs] select options, including the cross-entity
@@ -336,8 +346,13 @@ class BaseController < ApplicationController
       attrs['data-deduction-pct'] = deduction_pct if deduction_pct
       # The code to assume for a row here, and where to write a new one back.
       attrs['data-default-tax-code'] = default_tax_code_id if default_tax_code_id
-      # Whether THIS account's business files VAT.
-      attrs['data-files-vat'] = '1' if @vat_entity_codes.include?(entity_code)
+      # Whether THIS account's business files VAT, and under which schemes —
+      # the row's code list is narrowed to them, because a code from another
+      # country's scheme is refused on save (Account#tax_code_problem).
+      if (vat_schemes = @vat_schemes_by_entity[entity_code])
+        attrs['data-files-vat']   = '1'
+        attrs['data-vat-schemes'] = vat_schemes.join(' ')
+      end
       attrs['data-save-tax-code-url'] = save_default_tax_code_account_path(id)
       ["#{code} - #{name}", id, attrs]
     }

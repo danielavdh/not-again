@@ -9,6 +9,24 @@ class AccountValidationsTest < ActiveSupport::TestCase
   setup do
     @parent = accounts(:parent_account) # 110000, asset, GBP, no parent
     @bank   = accounts(:bank_gbp)       # 110001, asset, GBP, no parent
+    TaxSchemeConfig.reload!
+  end
+
+  # ==================== tax_tag_names_a_scheme ====================
+
+  # The options builder offers only real schemes, but the two endpoints that
+  # save a tag took whatever arrived.
+  test "a tax tag must name an income-tax scheme that exists" do
+    account = accounts(:income_sales)
+
+    account.assign_attributes(tax_scheme: "xx_nothing", tax_category_key: "bogus")
+    assert_not account.valid?, "no such scheme"
+
+    account.assign_attributes(tax_scheme: "gb_vat", tax_category_key: "vat_due_sales")
+    assert_not account.valid?, "a VAT box is filled from codes, never from a tag"
+
+    account.assign_attributes(tax_scheme: "gb_self_employment", tax_category_key: "sales_income")
+    assert account.valid?, account.errors.full_messages.join("; ")
   end
 
   # ==================== parent_cannot_be_grandparent ====================

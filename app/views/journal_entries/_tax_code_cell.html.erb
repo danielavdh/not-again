@@ -6,13 +6,15 @@
   <% if pf.object.cross_entity_link_id.blank? %>
     <%# Hidden from the start where the account already cannot carry a code: a
         balance-sheet row, a 6xx private row, or one whose business files no
-        VAT. The JS does the same on CHANGE; this is for rows the server renders
+        VAT — unless the row already carries a code, from a year it did file.
+        The JS does the same on CHANGE; this is for rows the server renders
         with an account on them, where no change event fires. A row with no
         account yet keeps it — nothing has been chosen. %>
     <% account = pf.object.account %>
     <% blocked = account.present? &&
                  (!(account.income? || account.expense?) ||
-                  !@vat_entity_codes.include?(account.entity_code)) %>
+                  (!@vat_entity_codes.include?(account.entity_code) &&
+                   pf.object.tax_code_id.blank?)) %>
     <%= tag.div class: class_names("tax-fields", hidden: blocked) do %>
       <%= pf.select :tax_code_id,
                     grouped_options_for_select(@tax_code_options, pf.object.tax_code_id),
@@ -29,11 +31,15 @@
               hidden in CSS without leaving the field nameless. %>
           <%= pf.label :tax_amount_display, t("tax.vat.amount") %>
           <%# Editable: an invoice may have rounded differently. The amount
-              column is the GROSS and never moves; the net absorbs it. %>
+              column is the GROSS and never moves; the net absorbs it. Not for
+              a reverse charge or an amount-is-tax code: there is no invoice
+              figure to match, the app's own is the only one. %>
+          <% code = pf.object.tax_code %>
           <%= pf.text_field :tax_amount_display,
                         value: pf.object.vat_display_formatted,
                         class: 'posting-tax-amount right',
                         inputmode: 'decimal',
+                        readonly: code.present? && (code.reverse_charge? || code.amount_is_tax?),
                         aria: { label: t("tax.vat.amount") },
                         data: { tax_amount_field: true } %>
         </div>

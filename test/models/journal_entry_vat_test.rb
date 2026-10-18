@@ -100,15 +100,28 @@ class JournalEntryVatTest < ActiveSupport::TestCase
 
   # The supplier charged nothing; we owe the VAT and reclaim it in one breath.
   # The bank must not move by a penny more than the invoice.
-  test "reverse charge leaves the bank alone and fills both control accounts" do
+  # Owed and reclaimed in the same breath, so the ledger has no use for it: the
+  # return works it out from the net. Nothing is posted, nothing is converted.
+  test "a reverse charge posts nothing: the bank and the expense both carry the gross" do
     je = bank_entry(gross: 10_000, code: @reverse)
     assert je.save, je.errors.full_messages.join("; ")
 
     assert_equal(-10_000, amount_on(je, accounts(:bank_gbp)), "the invoice carried no VAT")
     assert_equal 10_000,  amount_on(je, accounts(:expenses_general))
-    assert_equal 2_000,   amount_on(je, vat_account(:input))
-    assert_equal(-2_000,  amount_on(je, vat_account(:output)))
+    assert_equal 0, je.postings.count(&:tax_leg?), "no leg either way"
     assert_equal je.total_debits, je.total_credits
+  end
+
+  # The figure is the law's, not the invoice's: there is nothing to match.
+  test "a typed VAT figure on a reverse charge is ignored" do
+    je = bank_entry(gross: 10_000, code: @reverse, tax_amount: "500.00")
+    assert je.save, je.errors.full_messages.join("; ")
+
+    assert_equal 10_000, amount_on(je, accounts(:expenses_general))
+    assert_equal 0, je.postings.count(&:tax_leg?)
+    assert_equal CurrencyConfig.format_display(20.00),
+                 je.postings.find { |p| p.tax_code_id }.vat_display_formatted,
+                 "and the row shows the rate on the net"
   end
 
   test "the control accounts are created once, not once per entry" do
@@ -145,6 +158,26 @@ class JournalEntryVatTest < ActiveSupport::TestCase
   test "a code on an entry in another currency is refused" do
     je = bank_entry(gross: 12_000, code: @purchase, bank: accounts(:bank_eur))
     assert_not je.save, "GBP VAT cannot be reclaimed through a EUR account"
+  end
+
+  # An entry from a year the business filed keeps its VAT after the business
+  # stops filing; only putting a code ON a row is held to today's registration.
+  test "a row that already carries a code can be re-saved after the business stopped filing" do
+    je = bank_entry(gross: 12_000, code: @purchase)
+    je.save!
+    entities(:family_biz).update!(tax_schemes: [])
+
+    je = JournalEntry.includes(:postings).find(je.id)
+    je.memo = "description corrected"
+    je.derive_tax_legs
+    assert je.save, je.errors.full_messages.join("; ")
+    assert_equal 2_000, je.postings.find(&:tax_leg?).amount, "and keeps its VAT"
+  end
+
+  test "a code cannot be put on a row once the business stopped filing" do
+    entities(:family_biz).update!(tax_schemes: [])
+    je = bank_entry(gross: 12_000, code: @purchase)
+    assert_not je.save
   end
 
   test "a VAT code on a balance-sheet row is refused" do
@@ -360,6 +393,209 @@ class JournalEntryVatTest < ActiveSupport::TestCase
       directions = options.map { |_l, _id, data| data[:data][:direction] }.uniq
       assert_equal 1, directions.size, "a group holds one direction only"
     end
+  end
+
+  # A business registered in two countries gets both catalogues on one form, and
+  # the option has to say which without spending its width on saying it: the
+  # authority's own name is 26 characters ("Umsatzsteuer-Voranmeldung") and left
+  # no room for the code itself.
+  test "two authorities in play are told apart by country, not by a name in brackets" do
+    TaxSchemeConfig.reload!
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/de_vat_2026.yml"))
+    labels = TaxCode.options_for(schemes: [ "gb_vat", "de_vat" ], on: @date)
+                    .flat_map { |_group, options| options.map(&:first) }
+
+    assert labels.any? { |l| l.start_with?("🇩🇪") }, "the German codes name Germany"
+    assert labels.any? { |l| l.start_with?("🇬🇧") }, "the British codes name Britain"
+    assert_empty labels.select { |l| l.include?("[") },
+                 "and no option carries the authority's full name"
+  end
+
+  # One authority is the normal case, and a country marker on every row of it
+  # would be wallpaper: there is nothing to tell apart.
+  test "a single authority is not marked with a country at all" do
+    labels = TaxCode.options_for(schemes: [ "gb_vat" ], on: @date)
+                    .flat_map { |_group, options| options.map(&:first) }
+
+    assert_empty labels.grep(/\p{So}/), "no country marker"
+    assert_includes labels, "Standard rate (20%)"
+  end
+
+  # "Exempt (0%)" and "Zero rate (0%)" are not the same thing in law, and a
+  # bookkeeper choosing between them must not be shown a figure that says they
+  # are. Nothing is zero-rated BECAUSE a rate of 0% applies to it.
+  test "a code that charges no VAT does not claim a rate" do
+    labels = TaxCode.options_for(schemes: [ "gb_vat" ], on: @date)
+                    .flat_map { |_group, options| options.map(&:first) }
+
+    assert_includes labels, "Exempt"
+    assert_includes labels, "Zero rate"
+    assert_empty labels.grep(/\(0%\)/), "a rate of nothing is not information"
+    assert_includes labels, "Reduced rate (5%)", "a real rate is still stated"
+  end
+
+  # The labels are abbreviated to fit one line ("DRC: construction", "i.g.
+  # Erwerb"), which is only honest while the full wording stays reachable. It is
+  # the authority's own, taken from the box the code files to — nothing is
+  # written twice and nothing can drift.
+  test "a code says which boxes of the return its figures land in" do
+    option = TaxCode.options_for(schemes: [ "gb_vat" ], on: @date)
+                    .flat_map { |_group, options| options }
+                    .find { |_label, id, _attrs| id == @purchase.id }
+    title = option.last[:title]
+
+    assert_match(/\A7 · /, title, "the net goes in box 7")
+    assert_match(/^4 · /,   title, "and the VAT in box 4 — both, not just one")
+  end
+
+  # The German form has no field for output tax at 19%: ELSTER computes it. A
+  # tooltip naming a box that does not exist would be worse than none.
+  test "a box the authority does not have is not invented for the tooltip" do
+    TaxSchemeConfig.reload!
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/de_vat_2026.yml"))
+    code = TaxCode.resolve(scheme: "de_vat", key: "verkauf_19", on: @date)
+    option = TaxCode.options_for(schemes: [ "de_vat" ], on: @date)
+                    .flat_map { |_group, options| options }
+                    .find { |_label, id, _attrs| id == code.id }
+
+    assert_equal 1, option.last[:title].lines.size,
+                 "Kz 81 alone — the tax has no Kennzahl of its own"
+    assert_match(/\A81 · /, option.last[:title])
+  end
+
+  # Exempt sales are reported in no box at all. An empty tooltip is the truth;
+  # a stale one from another code would not be.
+  test "a code that reports to no box carries no tooltip" do
+    code = TaxCode.resolve(scheme: "gb_vat", key: "sale_outside_scope", on: @date)
+    option = TaxCode.options_for(schemes: [ "gb_vat" ], on: @date)
+                    .flat_map { |_group, options| options }
+                    .find { |_label, id, _attrs| id == code.id }
+
+    assert_nil option.last[:title]
+  end
+
+  # Import VAT paid at the border is a payment that is nothing BUT VAT: the goods
+  # were bought from the supplier, and this is the customs figure on its own. The
+  # app used to replace it with zero and send the money to the net box, silently,
+  # so the return was short by it and nothing said so.
+  test "a payment that is nothing but VAT reaches the VAT box, not the net box" do
+    je = bank_entry(gross: 3_622, code: @purchase, tax_amount: "36.22")
+    assert je.save, je.errors.full_messages.join("; ")
+
+    net = je.postings.find { |p| p.tax_code_id }
+    leg = je.postings.find { |p| p.tax_for_posting_id }
+    assert_equal 0,     net.amount, "nothing of it is net"
+    assert_equal 3_622, leg.amount, "all of it is VAT"
+    assert_equal accounts(:bank_gbp).id,
+                 je.postings.find { |p| p.tax_code_id.nil? && p.tax_for_posting_id.nil? }.account_id
+  end
+
+  # The two ways import VAT is settled report differently, and the catalogue has
+  # to say which. Postponed declares and deducts on the same return; paid at the
+  # border is only a deduction, because the money already went to customs.
+  test "postponed import VAT declares and deducts; a C79 only deducts" do
+    postponed = TaxCode.resolve(scheme: "gb_vat", key: "purchase_import_postponed", on: @date)
+    c79       = TaxCode.resolve(scheme: "gb_vat", key: "purchase_import_c79", on: @date)
+
+    assert postponed.reverse_charge?, "both halves, on the same return"
+    assert_equal "vat_due_sales",  postponed.reverse_tax_category_key
+    assert_equal "vat_reclaimed",  postponed.tax_category_key
+    assert_equal "total_purchases_ex_vat", postponed.net_category_key
+
+    assert_not c79.reverse_charge?, "nothing to declare — customs already has the money"
+    assert_equal "vat_reclaimed", c79.tax_category_key
+    assert_nil c79.net_category_key,
+               "the value of the goods was entered when they were bought"
+  end
+
+  # A rate would auto-fill a figure the user must overwrite, and claim an
+  # arithmetic the app is not doing: the customs value is goods plus freight
+  # plus duty, which is not the supplier's invoice.
+  test "a C79 code states no rate, because the amount entered is the VAT" do
+    c79 = TaxCode.resolve(scheme: "gb_vat", key: "purchase_import_c79", on: @date)
+    assert_equal 0, c79.rate_bps
+    assert_equal "Import VAT (C79)", c79.display_name, "and so advertises none"
+  end
+
+  # The boundary moved to the right place: equal to the amount is a real entry,
+  # more than the amount is a mistake. It must be refused rather than corrected
+  # — a figure that disappears on save is worse than one that will not save.
+  test "a VAT larger than the amount is refused, not quietly made zero" do
+    je = bank_entry(gross: 12_000, code: @purchase, tax_amount: "130.00")
+
+    assert_not je.save
+    assert je.errors[:base].any?, "it must say why"
+    assert_nil JournalEntry.find_by(memo: "vat test"), "and nothing may reach the books"
+  end
+
+  # A reverse charge derives two legs — the tax owed and the same tax reclaimed
+  # — and the row shows the VAT ONCE. Summing them reported 2.60 of VAT on a
+  # 13.00 bill as 5.20, on screen and on every re-open of the entry.
+  # The row still says what the VAT is, from the rate alone, with no leg behind
+  # it: 2.60 on a 13.00 bill, in the entry's own currency.
+  test "a reverse charge row shows the rate on the net" do
+    je = bank_entry(gross: 1_300, code: @reverse)
+    je.save!
+
+    row = je.postings.find { |p| p.tax_code_id }
+    assert_equal 0, je.postings.count(&:tax_leg?)
+    assert_equal CurrencyConfig.format_display(2.60), row.vat_display_formatted
+  end
+
+  # Import VAT paid at the border is nothing but VAT, and the code says so: no
+  # rate, a tax box and no net box. Nothing to type — the amount IS the VAT.
+  # Typing it was the old way, and a copy, a blank field or a keystroke in the
+  # amount that reset the field to 0.00 then booked the whole payment as net.
+  test "an amount-is-tax code takes the whole amount as VAT with nothing typed" do
+    c79 = TaxCode.resolve(scheme: "gb_vat", key: "purchase_import_c79", on: @date)
+    assert c79.amount_is_tax?
+
+    je = bank_entry(gross: 5_000, code: c79)
+    assert je.save, je.errors.full_messages.join("; ")
+
+    assert_equal 0,     amount_on(je, accounts(:expenses_general)), "nothing of it is net"
+    assert_equal 5_000, amount_on(je, vat_account(:input)),         "all of it is VAT"
+    assert_equal(-5_000, amount_on(je, accounts(:bank_gbp)))
+  end
+
+  test "a typed figure on an amount-is-tax code is ignored, even a zero" do
+    c79 = TaxCode.resolve(scheme: "gb_vat", key: "purchase_import_c79", on: @date)
+    je = bank_entry(gross: 5_000, code: c79, tax_amount: "0.00")
+    assert je.save, je.errors.full_messages.join("; ")
+
+    assert_equal 5_000, amount_on(je, vat_account(:input))
+  end
+
+  # The bank form flips a row's side with a minus sign: a supplier's refund is
+  # a negative purchase. The VAT it carried has to come back out of the control
+  # account with it; it used to stay there, and the refunded gross went into
+  # the purchases box as net.
+  test "a negative gross reverses the VAT along with the net" do
+    je = bank_entry(gross: -12_000, code: @purchase)
+    assert je.save, je.errors.full_messages.join("; ")
+
+    assert_equal 12_000,  amount_on(je, accounts(:bank_gbp)),   "money came back"
+    assert_equal(-10_000, amount_on(je, accounts(:expenses_general)), "the net is reversed")
+    assert_equal(-2_000,  amount_on(je, vat_account(:input)),   "and so is the VAT")
+    assert_equal je.total_debits, je.total_credits
+  end
+
+  # An update whose form did not send the amount: what the column holds is the
+  # NET of the last derivation, and treating it as the gross took the VAT off
+  # a second time — net, leg and bank all shrank, and the save said "updated".
+  test "re-deriving a saved row without a new amount keeps its gross" do
+    je = bank_entry(gross: 12_000, code: @purchase)
+    je.save!
+    je = JournalEntry.includes(:postings).find(je.id)
+
+    je.postings.find { |p| p.tax_code_id }.assign_attributes(tax_code_id: @purchase.id)
+    je.derive_tax_legs
+    rebalance_bank(je)
+    assert je.save, je.errors.full_messages.join("; ")
+
+    assert_equal 10_000,  amount_on(je, accounts(:expenses_general))
+    assert_equal 2_000,   amount_on(je, vat_account(:input))
+    assert_equal(-12_000, amount_on(je, accounts(:bank_gbp)))
   end
 
   # Deriving twice over the same object must not take the VAT off twice — the

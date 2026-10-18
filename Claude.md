@@ -1,5 +1,6 @@
 ### CORE ARCHITECTURE & CONSTRAINTS
 - **Stack:** Rails 8.1 hosted on Hetzner.
+- **Currency — THE principle of this app:** only balance-sheet postings carry a currency. Nominal rows borrow the entry's balance-leg currency. Every report translates at REPORT time, by the rules of the scheme being reported (`db/exchange_rate_rules.yml`), at the rate for the entry's date. Nothing is ever converted when an entry is saved. If a design needs a figure in another currency at save time, the design is wrong.
 - **Memory:** All database operations MUST be memory-conscious. 
     - **Rule:** Use SQL/ActiveRecord for calculations and filtering. Avoid loading large collections into Ruby memory for processing.
 - **Frontend Philosophy:** No Turbo, No Stimulus, No Bootstrap. 

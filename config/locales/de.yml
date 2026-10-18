@@ -768,6 +768,7 @@ de:
       tax_code_scheme: "%{account} kann keinen %{scheme}-Schlüssel verwenden — dieser Betrieb erklärt ihn nicht"
       tax_code_cross_entity: "%{account} kann in einer betriebsübergreifenden Buchung keinen Steuerschlüssel tragen"
       tax_code_direction: "%{code} passt nicht zu %{account}. Ein Verkaufsschlüssel gehört auf ein Erlöskonto, ein Einkaufsschlüssel auf ein Aufwandskonto."
+      tax_amount_exceeds_gross: "%{account}: Die Umsatzsteuer kann nicht höher sein als der Betrag. Sie ist im Betrag enthalten, nicht zusätzlich."
   languages:
     new_language: "Neue Sprache"
     new_title: "Neue Sprache"

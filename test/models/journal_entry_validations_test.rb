@@ -36,6 +36,19 @@ class JournalEntryValidationsTest < ActiveSupport::TestCase
     assert je.errors[:base].any?
   end
 
+  # The rule is about several DIFFERENT balance accounts in one entry. Two rows
+  # on the same bank — a refund arriving on the same statement line, a
+  # correction — is still one balance account, and refusing it was an accident
+  # of counting rows: the message named the account twice to say so.
+  test "valid with two rows on the SAME balance account and a nominal" do
+    je = JournalEntry.new(entry_date: Date.current)
+    je.postings.build(account: @bank_gbp, amount: 10000, entry_type: :debit,  currency: "GBP")
+    je.postings.build(account: @bank_gbp, amount: 2000,  entry_type: :credit, currency: "GBP")
+    je.postings.build(account: @income,   amount: 8000,  entry_type: :credit, currency: "GBP")
+
+    assert je.valid?, je.errors.full_messages.join("; ")
+  end
+
   # The shape a private-use split (or VAT booked to a nominal) takes: one bank
   # leg, two nominal legs. One balance account → allowed.
   test "valid with one balance account and two nominals (a split expense)" do

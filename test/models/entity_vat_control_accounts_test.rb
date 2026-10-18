@@ -61,6 +61,34 @@ class EntityVatControlAccountsTest < ActiveSupport::TestCase
                  "nothing was posted to the output side, but the pair stays whole"
   end
 
+  # Once a scheme has been used it can never be fully deleted, only hidden:
+  # the VAT in the pair belongs to a year the business did file. Subscribing
+  # again brings the SAME accounts back, so that year's return still finds it.
+  test "a used pair is hidden on unsubscribing and the same pair comes back on subscribing again" do
+    @entity.update!(tax_schemes: [ "gb_vat" ])
+    post_a_purchase
+    ids = control_accounts.order(:id).pluck(:id)
+
+    @entity.update!(tax_schemes: [])
+    assert_equal [ false, false ], control_accounts.order(:id).pluck(:active), "hidden"
+    assert_equal [ "gb_vat", "gb_vat" ], control_accounts.pluck(:tax_scheme), "but still the scheme's"
+
+    @entity.update!(tax_schemes: [ "gb_vat" ])
+    assert_equal ids, control_accounts.order(:id).pluck(:id), "the same two, no third"
+    assert_equal [ true, true ], control_accounts.order(:id).pluck(:active)
+  end
+
+  # The Ruby rule checks, then inserts; two saves arriving together both pass
+  # the check. The database holds the line: one LIVE control account per
+  # entity, scheme and role.
+  test "the database refuses a second live control account for the same role" do
+    @entity.update!(tax_schemes: [ "gb_vat" ])
+    live = control_accounts.find_by(vat_role: :input)
+    twin = Account.new(live.attributes.except("id").merge("code" => "110990", "name" => "twin"))
+
+    assert_raises(ActiveRecord::RecordNotUnique) { twin.save(validate: false) }
+  end
+
   test "unsubscribing one scheme leaves another scheme's accounts alone" do
     @entity.update!(tax_schemes: [ "gb_vat", "gb_self_employment" ])
 

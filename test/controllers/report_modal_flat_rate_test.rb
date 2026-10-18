@@ -27,6 +27,18 @@ class ReportModalFlatRateTest < ActionDispatch::IntegrationTest
                  "the dashboard's Add Report form must carry the flat-rate field")
   end
 
+  # Only a return with a line for it asks for a prepayment: the German UStVA
+  # has Kz 39, the British VAT100 has nothing of the kind.
+  test "a German VAT group's form asks for the Sondervorauszahlung, a British one does not" do
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/de_vat_2026.yml"))
+    patch update_tax_entity_path(@entity), params: { entity: { tax_schemes: [ "de_vat" ] } }
+    assert_match(/report\[prepayment_display\]/, dashboard_body)
+    assert_match(/Sondervorauszahlung/, dashboard_body, "in the authority's own words")
+
+    patch update_tax_entity_path(@entity), params: { entity: { tax_schemes: [ "gb_vat" ] } }
+    assert_no_match(/report\[prepayment_display\]/, dashboard_body)
+  end
+
   # An income-tax scheme has no flat rate, and offering one would invite a
   # number that silently changes nothing.
   test "a non-VAT group's form does not" do

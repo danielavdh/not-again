@@ -135,22 +135,6 @@ class Reports::VatReturnTest < ActiveSupport::TestCase
     assert_equal 8_000,  box(res, "vat_due_sales")
   end
 
-  # The check that makes a hand-typed VAT posting audible instead of just
-  # missing from the return.
-  test "VAT put in the control account by hand is reported as unassigned" do
-    entry(gross: 12_000, key: "purchase_standard", account: accounts(:expenses_general), side: :debit)
-    control = Account.vat_accounts.for_entity_codes([ "10" ]).find_by(vat_role: :input)
-
-    hand = JournalEntry.new(entry_date: @date, memo: "typed by hand", posted: true)
-    hand.postings.build(account: control, entry_type: :debit, amount: 500, currency: "GBP")
-    hand.postings.build(account: accounts(:bank_gbp), entry_type: :credit, amount: 500, currency: "GBP")
-    hand.save!
-
-    res = result
-    assert_equal 2_000, box(res, "vat_reclaimed"), "the box only holds what a code produced"
-    assert_equal(-500, res[:unassigned], "and the difference is named")
-  end
-
   # The name was always right and the assertion was not: it demanded an EMPTY
   # return, which is not a thing you can file. A VAT return has nine boxes
   # whatever happened in the quarter, and a nil return is nine zeros.
@@ -396,6 +380,40 @@ class Reports::VatReturnTest < ActiveSupport::TestCase
                  "box 6: flat-rate turnover gross, plus the outside supply at net"
   end
 
+  # Notice 733 §6.3: supplies outside the scope of UK VAT are not flat-rate
+  # turnover. A musician's fee from a promoter abroad was being taxed at the
+  # flat percentage.
+  test "a sale outside the scope is not flat-rate turnover, and still reaches box 6" do
+    entry(gross: 60_000, key: "sale_standard",             account: accounts(:income_sales), side: :credit)
+    entry(gross: 40_000, key: "sale_services_outside_uk",  account: accounts(:income_sales), side: :credit)
+    res = flat(1450)
+
+    assert_equal 8_700,  box(res, "vat_due_sales"), "14.5% of 60,000 and nothing on the 40,000"
+    assert_equal 100_000, box(res, "total_sales_ex_vat"), "box 6 wants the value all the same"
+  end
+
+  # 700/12, flat rate: import VAT is added to box 1 and there is no box 4
+  # claim — "you do not normally make a separate claim for input VAT,
+  # including any VAT on imports or acquisitions".
+  test "postponed import VAT under the flat rate is declared and not reclaimed" do
+    entry(gross: 60_000, key: "sale_standard",             account: accounts(:income_sales),     side: :credit)
+    entry(gross: 10_000, key: "purchase_import_postponed", account: accounts(:expenses_general), side: :debit)
+    res = flat(1450)
+
+    assert_equal 8_700 + 2_000, box(res, "vat_due_sales"), "box 1: the flat rate plus the import VAT"
+    assert_equal 0,      box(res, "vat_reclaimed"),         "box 4: nothing"
+    assert_equal 10_000, box(res, "total_purchases_ex_vat"), "box 7: the value"
+  end
+
+  test "import VAT paid at the border is nothing at all under the flat rate" do
+    entry(gross: 60_000, key: "sale_standard",       account: accounts(:income_sales),     side: :credit)
+    entry(gross: 2_000,  key: "purchase_import_c79", account: accounts(:expenses_general), side: :debit)
+    res = flat(1450)
+
+    assert_equal 8_700, box(res, "vat_due_sales")
+    assert_equal 0,     box(res, "vat_reclaimed"), "paid, and not reclaimable under the scheme"
+  end
+
   test "the comparison shows the same period on the ordinary basis" do
     entry(gross: 60_000, key: "sale_standard",     account: accounts(:income_sales),     side: :credit)
     entry(gross: 12_000, key: "purchase_standard", account: accounts(:expenses_general), side: :debit)
@@ -425,5 +443,50 @@ class Reports::VatReturnTest < ActiveSupport::TestCase
     entry(gross: 60_000, key: "sale_standard", account: accounts(:income_sales), side: :credit)
 
     assert_not flat(1450).key?(:flat_rate_caveats)
+  end
+
+  # Box 5 is "the difference between boxes 3 and 4" — a SUBTRACTION, and roll_up
+  # could only add, so nothing ever fed it. Every return printed 0.00 there,
+  # on the one box that says what you owe. Found 2026-10-17 while asking what a
+  # Dutch catalogue would need, because its 5c is the same shape.
+  test "box 5 is box 3 less box 4" do
+    entry(gross: 60_000, key: "sale_standard",     account: accounts(:income_sales),     side: :credit)
+    entry(gross: 12_000, key: "purchase_standard", account: accounts(:expenses_general), side: :debit)
+    res = result
+
+    assert_equal 10_000, box(res, "total_vat_due"),  "box 3"
+    assert_equal  2_000, box(res, "vat_reclaimed"),  "box 4"
+    assert_equal  8_000, box(res, "net_vat"),        "box 5"
+    assert_equal res[:net_payable], box(res, "net_vat"),
+                 "the box and the summary cannot disagree about what is owed"
+  end
+
+  # The manual says: pay the quarter with a transfer from the bank to the VAT
+  # account. That is a movement on the control account that no code explains —
+  # and it was reported as VAT nobody accounted for, on every return after the
+  # first. A settlement carries no income or expense; VAT that a code should
+  # have produced always sits beside the row that produced it.
+  test "paying last quarter's bill is not unassigned VAT on this quarter's return" do
+    entry(gross: 60_000, key: "sale_standard", account: accounts(:income_sales), side: :credit,
+          date: Date.new(2026, 2, 10))
+    q1 = result(from: Date.new(2026, 1, 1), to: Date.new(2026, 3, 31))
+    assert_equal 10_000, q1[:net_payable]
+
+    control = Account.vat_accounts.for_entity_codes([ "10" ]).find_by(vat_role: :output)
+    pay = JournalEntry.new(entry_date: Date.new(2026, 5, 7), memo: "HMRC Q1", posted: true)
+    pay.postings.build(account: control, entry_type: :debit, amount: 10_000, currency: "GBP")
+    pay.postings.build(account: accounts(:bank_gbp), entry_type: :credit, amount: 10_000, currency: "GBP")
+    pay.save!
+
+    q2 = result
+    assert_equal 0, q2[:unassigned]
+    assert_equal 0, q2[:net_payable], "and the payment is not a figure on the return either"
+  end
+
+  test "box 5 goes negative when more was reclaimed than charged" do
+    entry(gross: 12_000, key: "purchase_standard", account: accounts(:expenses_general), side: :debit)
+    res = result
+
+    assert_equal(-2_000, box(res, "net_vat"), "a reclaim, not a zero")
   end
 end

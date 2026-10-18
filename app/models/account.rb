@@ -36,6 +36,11 @@ class Account < ApplicationRecord
   validate :entity_code_is_writable, if: :acting_admin
   validate :parent_cannot_be_grandparent
   validate :code_not_in_retained_earnings_range, unless: :locked?
+  # On a CHANGE of tag only, so an account tagged under an earlier catalogue
+  # stays renameable whatever happened to its box since.
+  validate :tax_tag_names_a_scheme,
+           if: -> { tax_scheme.present? && !vat_role? &&
+                    (tax_scheme_changed? || tax_category_key_changed?) }
   validate :vat_role_needs_a_vat_scheme,        if: :vat_role?
   validate :one_vat_account_per_scheme_and_role, if: -> { vat_role? && active? }
   validate :vat_currency_matches_the_scheme,    if: -> { vat_role? && currency_required? }
@@ -240,15 +245,37 @@ class Account < ApplicationRecord
       vat_role:     direction,
       active:       true
     )
+  rescue ActiveRecord::RecordNotUnique
+    # Two first coded saves for one business at the same moment: the other one
+    # just made it, and the unique index on live control accounts refused ours.
+    active.vat_accounts.for_entity_codes([ entity_code ])
+          .find_by!(tax_scheme: scheme, vat_role: direction)
   end
 
-  # Unsubscribing from a scheme. Both or neither: a pair where one side has been
+  # Unsubscribing from a scheme. An unused pair goes; a pair with VAT posted to
+  # it is history and stays, deactivated, so it is offered nowhere until the
+  # business files again. Both or neither: a pair where one side has been
   # posted to stays whole, because a return reads the two together.
-  def self.drop_unused_vat_accounts(entity_code:, scheme:)
+  def self.retire_vat_accounts(entity_code:, scheme:)
     pair = vat_accounts.for_entity_codes([ entity_code ]).where(tax_scheme: scheme)
-    return if Posting.where(account_id: pair.select(:id)).exists?
+    if Posting.where(account_id: pair.select(:id)).exists?
+      pair.update_all(active: false)
+    else
+      pair.destroy_all
+    end
+  end
 
-    pair.destroy_all
+  # Subscribing again: the pair retired above comes back, the same accounts,
+  # so a return for an earlier year still finds its VAT. Only a role with no
+  # live account — a control account the user retired by hand while still
+  # filing was replaced by a fresh one, and that one stays.
+  def self.revive_vat_accounts(entity_code:, scheme:)
+    vat_accounts.for_entity_codes([ entity_code ]).where(tax_scheme: scheme, active: false)
+                .order(:id).each do |account|
+      next if active.vat_accounts.for_entity_codes([ entity_code ])
+                    .exists?(tax_scheme: scheme, vat_role: account.vat_role)
+      account.update!(active: true)
+    end
   end
 
   # The top of the entity's range for that type, taken downward from 999. No
@@ -291,11 +318,15 @@ class Account < ApplicationRecord
   #
   # Scoped to one entity's accounts: another entity may still file the same
   # scheme and must not lose its own tagging. One UPDATE, nothing loaded.
+  #
+  # Never a control account. Its scheme is not a tag but what it IS, and
+  # stripping it left the VAT already posted there invisible to the return and
+  # made re-subscribing create a second pair beside it.
   def self.release_from_scheme(entity_code:, scheme:)
     return if scheme.blank?
 
     for_entity_codes([ entity_code ])
-      .where(tax_scheme: scheme)
+      .where(tax_scheme: scheme, vat_role: nil)
       .update_all(tax_scheme: nil, tax_category_key: nil)
   end
 
@@ -412,6 +443,19 @@ private
     return unless code =~ /\A3\d{2}9\d{2}\z/
     reserved = "#{code[0..3]}00–#{code[0..3]}99"
     errors.add(:code, I18n.t("accounts.errors.reserved_for_retained_earnings", range: reserved))
+  end
+
+  # The options builder offers only real schemes, but the two endpoints that
+  # save a tag took whatever arrived: a scheme that does not exist, or a VAT
+  # scheme, whose boxes are filled from codes and never from tags. The KEY is
+  # not checked against the catalogue: a box retired by a later year file is
+  # exactly what unmapped_for_tax and the tax report's "not in the catalogue"
+  # line exist to show, and the catalogue is loaded after the schema, not
+  # before it.
+  def tax_tag_names_a_scheme
+    return if TaxSchemeConfig.all_schemes.include?(tax_scheme) &&
+              !TaxSchemeConfig.vat_scheme?(tax_scheme)
+    errors.add(:tax_scheme, :inclusion)
   end
 
   def vat_role_needs_a_vat_scheme

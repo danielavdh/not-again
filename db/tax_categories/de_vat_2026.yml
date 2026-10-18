@@ -1,0 +1,508 @@
+country_code: de
+country_label: "Deutschland"
+scheme: vat
+tax_year: 2026
+authority: ELSTER
+position: 20
+scheme_label: "Umsatzsteuer-Voranmeldung"
+report_name: "DE-USt"
+currency: EUR
+form_code: UStVA
+kind: vat
+no_tax_label: "Keine USt"
+# Zeile 49, Kz 39: a filer with a Dauerfristverlängerung pays a
+# Sondervorauszahlung in advance and deducts it from Kz 83 in the last
+# Voranmeldung of the year. A figure on the return, not a transaction — the
+# report form asks for it, and only here, because this header names it.
+prepayment_category: sondervorauszahlung
+# THE SHAPE THAT DIFFERS, and the reason this file was worth writing: the UStVA
+# has NO Kennzahl for output tax at 19% or 7%. You enter the net in 81 and 86
+# and ELSTER computes the tax itself. The Dutch form pairs each rubriek with its
+# own btw; the British form collects every output tax in box 1; Germany collects
+# none at all.
+#
+# So the tax still has to go somewhere, because Kz 83 is computed from it. It
+# goes to a category with NO export_column — a feeder, invisible on the return,
+# the same device gb_vat already uses to let one code reach two boxes. Kz 83
+# then includes the feeders and subtracts the Vorsteuer Kennzahlen.
+#
+# ⚠️ Mixing a Bemessungsgrundlage with a Steuer is, in the Germans' own words,
+# "der häufigste Formularfehler überhaupt". NET: 81, 86, 46, 89, 93, 41, 43, 48,
+# 60. TAX: 47, 61, 62, 66, 67. The labels below say which, every time.
+#
+# Deliberately NOT covered: the Land-/Forstwirtschaft rates, the Bauleistungen
+# and Grundstück sub-cases of § 13b (Kz 73/74) and the Berichtigungs-Kennzahlen
+# (Kz 64/65/69). A core UStVA, not a complete one.
+#
+# vat_accounts is left at the default (balance sheet). Umsatzsteuer and
+# Vorsteuer are Bilanzkonten for a bilanzierender Unternehmer. An EÜR filer
+# treats them as Betriebseinnahme/-ausgabe instead — that is a property of the
+# TAXPAYER, not of the form, and this file cannot express it.
+
+categories:
+  # --- Steuerpflichtige Umsätze (Bemessungsgrundlage) ------------------------
+  - key: umsatz_19
+    label: "Steuerpflichtige Umsätze zum Steuersatz von 19 % — Bemessungsgrundlage"
+    export_column: "81"
+    position: 10
+  - key: umsatz_7
+    label: "Steuerpflichtige Umsätze zum Steuersatz von 7 % — Bemessungsgrundlage"
+    export_column: "86"
+    position: 20
+  # --- Steuerfreie Umsätze (Bemessungsgrundlage) -----------------------------
+  - key: ig_lieferungen
+    label: "Innergemeinschaftliche Lieferungen an Abnehmer mit USt-IdNr. — Bemessungsgrundlage"
+    export_column: "41"
+    position: 30
+  - key: steuerfrei_mit_vorsteuerabzug
+    label: "Weitere steuerfreie Umsätze mit Vorsteuerabzug — Bemessungsgrundlage"
+    export_column: "43"
+    position: 40
+  - key: steuerfrei_ohne_vorsteuerabzug
+    label: "Steuerfreie Umsätze ohne Vorsteuerabzug — Bemessungsgrundlage"
+    export_column: "48"
+    position: 50
+  # Zeile 34: as the SUPPLIER, domestic supplies for which the customer owes
+  # the tax under § 13b Abs. 5 — Bauleistungen, Gebäudereinigung and the like.
+  # NOT a service to a business abroad: that is Kz 21 or 45 below.
+  - key: leistungen_13b_erbracht
+    label: "Im Inland ausgeführte Umsätze, für die der Leistungsempfänger die Steuer schuldet (§ 13b Abs. 5) — Bemessungsgrundlage"
+    export_column: "60"
+    position: 60
+  # Zeile 35: a service to a business in another member state, taxed there
+  # (§ 3a Abs. 2, § 18b Satz 1 Nr. 2) — also reported in the ZM.
+  - key: nicht_steuerbar_eu_b2b
+    label: "Nicht steuerbare sonstige Leistungen gem. § 18b Satz 1 Nr. 2 UStG — Bemessungsgrundlage"
+    export_column: "21"
+    position: 62
+  # Zeile 36: everything else with a place of supply outside Germany — a
+  # service to a business outside the EU, a gig performed abroad for a
+  # non-business audience, OSS turnover above the threshold.
+  - key: nicht_steuerbar_uebrige
+    label: "Übrige nicht steuerbare Umsätze (Leistungsort nicht im Inland) — Bemessungsgrundlage"
+    export_column: "45"
+    position: 64
+  # Zeile 28: the other rates. Only the second half of 2020 has ever needed
+  # them (16 % and 5 %), and Kz 36 IS a tax field, unlike 81/86.
+  - key: umsatz_andere_saetze
+    label: "Umsätze zu anderen Steuersätzen — Bemessungsgrundlage"
+    export_column: "35"
+    position: 25
+  - key: steuer_andere_saetze
+    label: "Umsätze zu anderen Steuersätzen — Steuer"
+    export_column: "36"
+    position: 26
+  # --- Innergemeinschaftliche Erwerbe (Bemessungsgrundlage) ------------------
+  - key: ig_erwerb_19
+    label: "Innergemeinschaftliche Erwerbe zum Steuersatz von 19 % — Bemessungsgrundlage"
+    export_column: "89"
+    position: 70
+  - key: ig_erwerb_7
+    label: "Innergemeinschaftliche Erwerbe zum Steuersatz von 7 % — Bemessungsgrundlage"
+    export_column: "93"
+    position: 80
+  # Zeile 26: acquisitions at other rates — the second half of 2020 — and
+  # here, as in Kz 36, the tax has a field of its own.
+  - key: ig_erwerb_andere_saetze
+    label: "Innergemeinschaftliche Erwerbe zu anderen Steuersätzen — Bemessungsgrundlage"
+    export_column: "95"
+    position: 82
+  - key: steuer_ig_erwerb_andere_saetze
+    label: "Innergemeinschaftliche Erwerbe zu anderen Steuersätzen — Steuer"
+    export_column: "98"
+    position: 84
+  # --- § 13b als Leistungsempfänger ------------------------------------------
+  # Zeile 30 (Kz 46/47) is ONLY a service from a supplier established in
+  # another member state (§ 3a Abs. 2, § 13b Abs. 1). A service from outside
+  # the EU — a US host, a Swiss agent, a British label — is Zeile 32, "Andere
+  # Leistungen" (Kz 84/85), with Werklieferungen and the rest of § 13b Abs. 2.
+  # The Vorsteuer for both is Kz 67.
+  - key: leistungen_13b_bezogen
+    label: "Sonstige Leistungen eines im übrigen Gemeinschaftsgebiet ansässigen Unternehmers (§ 13b Abs. 1) — Bemessungsgrundlage"
+    export_column: "46"
+    position: 90
+  - key: steuer_13b
+    label: "Steuer auf Leistungen nach § 13b Abs. 1 — Steuer"
+    export_column: "47"
+    position: 100
+  - key: leistungen_13b_andere
+    label: "Andere Leistungen (§ 13b Abs. 2 Nr. 1, 2, 4 bis 12) — Bemessungsgrundlage"
+    export_column: "84"
+    position: 102
+  - key: steuer_13b_andere
+    label: "Steuer auf andere Leistungen nach § 13b Abs. 2 — Steuer"
+    export_column: "85"
+    position: 104
+  # --- Vorsteuer (Steuer) ----------------------------------------------------
+  - key: vorsteuer_rechnungen
+    label: "Vorsteuerbeträge aus Rechnungen anderer Unternehmer — Steuer"
+    export_column: "66"
+    position: 110
+  - key: vorsteuer_ig_erwerb
+    label: "Vorsteuerbeträge aus innergemeinschaftlichen Erwerben — Steuer"
+    export_column: "61"
+    position: 120
+  # "Entstandene", not "entrichtete": since 2020 the deduction follows the tax
+  # arising (§ 15 Abs. 1 Satz 1 Nr. 2), not its payment, and the 2026 form
+  # says so.
+  - key: einfuhrumsatzsteuer
+    label: "Entstandene Einfuhrumsatzsteuer — Steuer"
+    export_column: "62"
+    position: 130
+  - key: vorsteuer_13b
+    label: "Vorsteuerbeträge aus Leistungen nach § 13b — Steuer"
+    export_column: "67"
+    position: 140
+
+  # --- Feeders: the tax ELSTER computes, which has no Kennzahl ---------------
+  # No export_column, so they never appear on the return. Kz 83 needs them.
+  - key: berechnete_steuer_19
+    label: "Berechnete Steuer 19 % (kein Formularfeld)"
+    position: 150
+  - key: berechnete_steuer_7
+    label: "Berechnete Steuer 7 % (kein Formularfeld)"
+    position: 160
+  - key: berechnete_steuer_ig_erwerb
+    label: "Berechnete Steuer auf innergemeinschaftliche Erwerbe (kein Formularfeld)"
+    position: 170
+
+  # --- Ergebnis ---------------------------------------------------------------
+  - key: sondervorauszahlung
+    label: "Abzug der festgesetzten Sondervorauszahlung für Dauerfristverlängerung (in der Regel nur in der letzten Voranmeldung des Besteuerungszeitraums)"
+    export_column: "39"
+    position: 178
+  - key: zahllast
+    label: "Verbleibende Umsatzsteuer-Vorauszahlung"
+    export_column: "83"
+    includes: [ berechnete_steuer_19, berechnete_steuer_7, steuer_andere_saetze,
+                berechnete_steuer_ig_erwerb, steuer_ig_erwerb_andere_saetze,
+                steuer_13b, steuer_13b_andere ]
+    subtracts: [ vorsteuer_rechnungen, vorsteuer_ig_erwerb,
+                 einfuhrumsatzsteuer, vorsteuer_13b, sondervorauszahlung ]
+    position: 180
+
+# Codes are versioned by DATE. From 1 July to 31 December 2020 the rates were
+# 16 % and 5 %, so every rated code has a row up to 30 June 2020, a row from
+# 1 January 2021, and the 2020 rows between them — which file to the "andere
+# Steuersätze" Kennzahlen, not to 81/86/89/93.
+#
+# datev_bu is the DATEV BU-Schlüssel the export sends instead of the VAT
+# amount; DATEV works the VAT out from it. Set only where the key is beyond
+# doubt — 2/3 (USt 7 %/19 %), 8/9 (VSt 7 %/19 %). The § 13b, Erwerb and 2020
+# keys depend on the SKR and the Steuerberater's setup and are left for them.
+tax_codes:
+  # --- Ausgangsumsätze -------------------------------------------------------
+  - key: verkauf_19
+    label: "Verkauf"
+    rate_bps: 1900
+    direction: output
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    net_category_key: umsatz_19
+    # The feeder, not a Kennzahl: ELSTER computes this figure itself.
+    tax_category_key: berechnete_steuer_19
+    datev_bu: "3"
+    position: 10
+  - key: verkauf_19
+    label: "Verkauf"
+    rate_bps: 1900
+    direction: output
+    valid_from: "2021-01-01"
+    net_category_key: umsatz_19
+    tax_category_key: berechnete_steuer_19
+    datev_bu: "3"
+    position: 10
+  - key: verkauf_16
+    label: "Verkauf (2. Halbjahr 2020)"
+    rate_bps: 1600
+    direction: output
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    net_category_key: umsatz_andere_saetze
+    tax_category_key: steuer_andere_saetze
+    position: 12
+  - key: verkauf_7
+    label: "Verkauf"
+    rate_bps: 700
+    direction: output
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    net_category_key: umsatz_7
+    tax_category_key: berechnete_steuer_7
+    datev_bu: "2"
+    position: 20
+  - key: verkauf_7
+    label: "Verkauf"
+    rate_bps: 700
+    direction: output
+    valid_from: "2021-01-01"
+    net_category_key: umsatz_7
+    tax_category_key: berechnete_steuer_7
+    datev_bu: "2"
+    position: 20
+  - key: verkauf_5
+    label: "Verkauf (2. Halbjahr 2020)"
+    rate_bps: 500
+    direction: output
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    net_category_key: umsatz_andere_saetze
+    tax_category_key: steuer_andere_saetze
+    position: 22
+  - key: verkauf_ig_lieferung
+    label: "i.g. Lieferung"
+    rate_bps: 0
+    direction: output
+    valid_from: "2007-01-01"
+    net_category_key: ig_lieferungen
+    position: 30
+  - key: verkauf_steuerfrei_mit_vorsteuerabzug
+    label: "Steuerfrei, mit VSt-Abzug"
+    rate_bps: 0
+    direction: output
+    valid_from: "2007-01-01"
+    net_category_key: steuerfrei_mit_vorsteuerabzug
+    position: 40
+  - key: verkauf_steuerfrei_ohne_vorsteuerabzug
+    label: "Steuerfrei, ohne VSt-Abzug"
+    rate_bps: 0
+    direction: output
+    valid_from: "2007-01-01"
+    net_category_key: steuerfrei_ohne_vorsteuerabzug
+    position: 50
+  # The SUPPLIER of a domestic § 13b supply (Bauleistung, Gebäudereinigung).
+  - key: verkauf_13b
+    label: "§ 13b-Leistung erbracht (Inland)"
+    rate_bps: 0
+    direction: output
+    valid_from: "2007-01-01"
+    net_category_key: leistungen_13b_erbracht
+    position: 60
+  # A service to a business in another member state: taxed there, Kz 21 here
+  # (and the ZM). Place-of-supply rule of § 3a Abs. 2 since 1 January 2010.
+  - key: verkauf_eu_b2b
+    label: "Dienstleistung an EU-Unternehmer"
+    rate_bps: 0
+    direction: output
+    valid_from: "2010-01-01"
+    net_category_key: nicht_steuerbar_eu_b2b
+    position: 62
+  # Place of supply outside Germany and not Kz 21: a service to a business
+  # outside the EU, a performance abroad.
+  - key: verkauf_nicht_steuerbar
+    label: "Nicht steuerbar (Leistungsort im Ausland)"
+    rate_bps: 0
+    direction: output
+    valid_from: "2010-01-01"
+    net_category_key: nicht_steuerbar_uebrige
+    position: 64
+
+  # --- Eingangsumsätze --------------------------------------------------------
+  # No net category: the UStVA has no Kennzahl for the value of an ordinary
+  # purchase, only 66 for the Vorsteuer.
+  - key: einkauf_19
+    label: "Einkauf"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    tax_category_key: vorsteuer_rechnungen
+    datev_bu: "9"
+    position: 110
+  - key: einkauf_19
+    label: "Einkauf"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2021-01-01"
+    tax_category_key: vorsteuer_rechnungen
+    datev_bu: "9"
+    position: 110
+  - key: einkauf_16
+    label: "Einkauf (2. Halbjahr 2020)"
+    rate_bps: 1600
+    direction: input
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    tax_category_key: vorsteuer_rechnungen
+    position: 112
+  - key: einkauf_7
+    label: "Einkauf"
+    rate_bps: 700
+    direction: input
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    tax_category_key: vorsteuer_rechnungen
+    datev_bu: "8"
+    position: 120
+  - key: einkauf_7
+    label: "Einkauf"
+    rate_bps: 700
+    direction: input
+    valid_from: "2021-01-01"
+    tax_category_key: vorsteuer_rechnungen
+    datev_bu: "8"
+    position: 120
+  - key: einkauf_5
+    label: "Einkauf (2. Halbjahr 2020)"
+    rate_bps: 500
+    direction: input
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    tax_category_key: vorsteuer_rechnungen
+    position: 122
+  - key: einkauf_ohne_vorsteuer
+    label: "Einkauf ohne VSt"
+    rate_bps: 0
+    direction: input
+    valid_from: "2007-01-01"
+    position: 130
+  # Einfuhr aus dem Drittland. Die Einfuhrumsatzsteuer entsteht beim Zoll und
+  # wird als Vorsteuer in Kz 62 abgezogen — es gibt nichts anzumelden, nur
+  # abzuziehen. Deutschland kennt keine Verlagerung in die Voranmeldung; ein
+  # Verrechnungsmodell ab 2030 hat die Finanzministerkonferenz am 10.09.2026
+  # in Aussicht gestellt, beschlossen ist es nicht.
+  #
+  # Kein net_category_key, rate_bps 0: der eingegebene Betrag IST die Steuer
+  # (TaxCode#amount_is_tax?), vom Zoll auf den Zollwert berechnet — nicht auf
+  # den Rechnungsbetrag des Lieferanten. Der Wert der Ware wurde beim Einkauf
+  # gebucht.
+  - key: einfuhrumsatzsteuer_code
+    label: "Einfuhrumsatzsteuer"
+    rate_bps: 0
+    direction: input
+    valid_from: "2007-01-01"
+    tax_category_key: einfuhrumsatzsteuer
+    position: 135
+  - key: ig_erwerb_19_code
+    label: "i.g. Erwerb"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    reverse_charge: true
+    net_category_key: ig_erwerb_19
+    tax_category_key: vorsteuer_ig_erwerb
+    reverse_tax_category_key: berechnete_steuer_ig_erwerb
+    position: 140
+  - key: ig_erwerb_19_code
+    label: "i.g. Erwerb"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: ig_erwerb_19
+    tax_category_key: vorsteuer_ig_erwerb
+    reverse_tax_category_key: berechnete_steuer_ig_erwerb
+    position: 140
+  - key: ig_erwerb_16_code
+    label: "i.g. Erwerb (2. Halbjahr 2020)"
+    rate_bps: 1600
+    direction: input
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    reverse_charge: true
+    net_category_key: ig_erwerb_andere_saetze
+    tax_category_key: vorsteuer_ig_erwerb
+    reverse_tax_category_key: steuer_ig_erwerb_andere_saetze
+    position: 142
+  - key: ig_erwerb_7_code
+    label: "i.g. Erwerb"
+    rate_bps: 700
+    direction: input
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    reverse_charge: true
+    net_category_key: ig_erwerb_7
+    tax_category_key: vorsteuer_ig_erwerb
+    reverse_tax_category_key: berechnete_steuer_ig_erwerb
+    position: 150
+  - key: ig_erwerb_7_code
+    label: "i.g. Erwerb"
+    rate_bps: 700
+    direction: input
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: ig_erwerb_7
+    tax_category_key: vorsteuer_ig_erwerb
+    reverse_tax_category_key: berechnete_steuer_ig_erwerb
+    position: 150
+  - key: ig_erwerb_5_code
+    label: "i.g. Erwerb (2. Halbjahr 2020)"
+    rate_bps: 500
+    direction: input
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    reverse_charge: true
+    net_category_key: ig_erwerb_andere_saetze
+    tax_category_key: vorsteuer_ig_erwerb
+    reverse_tax_category_key: steuer_ig_erwerb_andere_saetze
+    position: 152
+  # Here the Steuer DOES have a Kennzahl of its own, 47 — unlike 19 %/7 % sales.
+  # Kz 46/47 take any rate, so the 2020 window is a rate change under the same
+  # key, not a different box.
+  - key: einkauf_13b
+    label: "§ 13b: Dienstleistung aus dem EU-Ausland"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    reverse_charge: true
+    net_category_key: leistungen_13b_bezogen
+    tax_category_key: vorsteuer_13b
+    reverse_tax_category_key: steuer_13b
+    position: 160
+  - key: einkauf_13b
+    label: "§ 13b: Dienstleistung aus dem EU-Ausland"
+    rate_bps: 1600
+    direction: input
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    reverse_charge: true
+    net_category_key: leistungen_13b_bezogen
+    tax_category_key: vorsteuer_13b
+    reverse_tax_category_key: steuer_13b
+    position: 160
+  - key: einkauf_13b
+    label: "§ 13b: Dienstleistung aus dem EU-Ausland"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: leistungen_13b_bezogen
+    tax_category_key: vorsteuer_13b
+    reverse_tax_category_key: steuer_13b
+    position: 160
+  # A service from a supplier OUTSIDE the EU: Zeile 32, Kz 84/85. Hosting,
+  # software, an agent in the US or Switzerland or Britain.
+  - key: einkauf_13b_drittland
+    label: "§ 13b: Dienstleistung aus dem Drittland"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2007-01-01"
+    valid_to:   "2020-06-30"
+    reverse_charge: true
+    net_category_key: leistungen_13b_andere
+    tax_category_key: vorsteuer_13b
+    reverse_tax_category_key: steuer_13b_andere
+    position: 162
+  - key: einkauf_13b_drittland
+    label: "§ 13b: Dienstleistung aus dem Drittland"
+    rate_bps: 1600
+    direction: input
+    valid_from: "2020-07-01"
+    valid_to:   "2020-12-31"
+    reverse_charge: true
+    net_category_key: leistungen_13b_andere
+    tax_category_key: vorsteuer_13b
+    reverse_tax_category_key: steuer_13b_andere
+    position: 162
+  - key: einkauf_13b_drittland
+    label: "§ 13b: Dienstleistung aus dem Drittland"
+    rate_bps: 1900
+    direction: input
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: leistungen_13b_andere
+    tax_category_key: vorsteuer_13b
+    reverse_tax_category_key: steuer_13b_andere
+    position: 162

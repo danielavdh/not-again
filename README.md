@@ -32,7 +32,7 @@ The server side does talk to services you choose: object storage for the receipt
 ### What it does
 
 - **Double-entry bookkeeping** with full journal entry support
-- **Multi-currency** accounts with monthly FX rate translation and explicit variance reporting, from the published rates of the ECB, HMRC, the Bundesbank and the Swiss ESTV — all monthly, plus the ECB's daily series where a country's rules ask for it
+- **Multi-currency** accounts with FX rate translation and explicit variance reporting, from the published rates of the ECB, HMRC, the Bundesbank and the Swiss ESTV — all monthly, plus the ECB's daily series where a country's rules ask for it. The principle behind it: **only balance-sheet postings carry a currency. Everything else is translated at report time, by the rules of the scheme being reported, at the rate for the entry's date. Nothing is converted when an entry is saved.** That is what makes a euro expense paid from a sterling account, or a reverse charge from an account in any currency, an ordinary entry rather than a conversion
 - **Tax export** — a transactions listing with receipt links and a tax-category CSV in the authority's own boxes, plus an optional accountant format (DATEV today; adding one is a single file)
 - **Receipt management** — upload, compress and link photos, scans and PDFs to postings, including from a phone by someone who can do nothing else
 - **Entity-scoped access control** — co-admins, read-only and upload-only roles, OTP

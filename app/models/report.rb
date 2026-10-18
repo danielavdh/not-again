@@ -37,6 +37,20 @@ class Report < ApplicationRecord
   def flat_rate_percentage=(value)
     self.flat_rate_bps = value.presence && (value.to_f * 100).round
   end
+
+  # A prepayment the authority fixed, deducted on this return — Germany's
+  # Sondervorauszahlung. Minor units in the column; the form takes the amount,
+  # point-only like the field above.
+  validates :prepayment, numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+                         allow_nil: true
+
+  def prepayment_display
+    prepayment && prepayment / 100.0
+  end
+
+  def prepayment_display=(value)
+    self.prepayment = value.presence && (value.to_f * 100).round
+  end
   validate :end_date_after_start_date
 
 private

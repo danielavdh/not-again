@@ -180,23 +180,55 @@ class QueryBudgetTest < ActionDispatch::IntegrationTest
 
   # The one that matters: a form showing ten coded rows must cost what one
   # costs. Both forms loaded an account per row, and the pro form a tax code
-  # per row, until the preloads went in (55 and 48 queries, measured).
+  # per row, until the preloads went in (55 and 48 queries, measured). Reverse
+  # charge rows loaded the account of each leg on top (31 → 49, measured).
   test "a VAT form costs the same for ten coded rows as for one" do
     code = with_vat
+    rc   = TaxCode.resolve(scheme: "gb_vat", key: "purchase_reverse_charge_services",
+                           on: Date.new(2026, 5, 1))
     sign_in_as(admins(:two))
-    one = vat_entry(code, 1)
-    ten = vat_entry(code, 10)
 
-    %w[bank pro].each do |form|
-      counts = [ one, ten ].map { |je|
-        url = form == "bank" ?
-          edit_withdrawal_account_url(accounts(:bank_gbp), journal_entry_id: je.id, locale: :en) :
-          edit_journal_entry_url(je, locale: :en)
-        count_queries { get url }.size
-      }
-      assert_equal counts.first, counts.last,
-        "#{form} form went from #{counts.first} to #{counts.last} queries between 1 and 10 coded rows"
+    [ code, rc ].each do |c|
+      one = vat_entry(c, 1)
+      ten = vat_entry(c, 10)
+
+      %w[bank pro].each do |form|
+        counts = [ one, ten ].map { |je|
+          url = form == "bank" ?
+            edit_withdrawal_account_url(accounts(:bank_gbp), journal_entry_id: je.id, locale: :en) :
+            edit_journal_entry_url(je, locale: :en)
+          count_queries { get url }.size
+        }
+        assert_equal counts.first, counts.last,
+          "#{form} form (#{c.key}) went from #{counts.first} to #{counts.last} queries " \
+          "between 1 and 10 coded rows"
+      end
     end
+  end
+
+  # Every save loaded the account of every row one at a time, through the very
+  # cache that was meant to stop it: 28 queries for one row, 59 for twelve.
+  # Twelve rows are 22 more INSERTs than one (eleven nets, eleven legs) and
+  # nothing else may grow with them.
+  test "saving a coded bank entry costs the same per row for twelve rows as for one" do
+    code = with_vat
+    sign_in_as(admins(:two))
+    vat_entry(code, 1) # the control account exists before either save below
+
+    counts = [ 1, 12 ].map { |n|
+      params = { journal_entry: { entry_date: "2026-05-01", memo: "bulk #{n}",
+        postings_attributes: n.times.to_h { |i|
+          [ i.to_s, { account_id: accounts(:expenses_general).id, entry_type: "debit",
+                      amount_display: "120.00", tax_code_id: code.id } ]
+        } } }
+      count_queries {
+        post create_withdrawal_account_url(accounts(:bank_gbp), locale: :en), params: params
+      }.size
+    }
+
+    assert_equal counts.first + 22, counts.last,
+      "create_withdrawal went from #{counts.first} to #{counts.last} queries between 1 and 12 " \
+      "coded rows — more than the 22 extra INSERTs, so something is per row"
   end
 
   # --- the real test: cost must not follow data ----------------------------
@@ -233,6 +265,33 @@ class QueryBudgetTest < ActionDispatch::IntegrationTest
   # going from no report groups to some legitimately adds one preload query, and
   # that is a constant, not a loop. Five more businesses against fifteen more is
   # the honest comparison — a per-entity query would show as +10.
+  # The balance-account column was rebuilt on 2026-10-17 to exclude derived VAT
+  # legs and to decide per entry whether to name one account or list codes. All
+  # of that is Ruby over one already-plucked array — this is what says so.
+  test "journal_entries#index costs the same with thirty more entries" do
+    sign_in_as(admins(:two))
+
+    before = count_queries { get journal_entries_url(locale: :en) }.size
+
+    # A mix of both shapes the column handles: with nominals, and transfers.
+    30.times do |i|
+      postings =
+        if i.even?
+          [ { account_id: accounts(:expenses_general).id, amount: 100, currency: "GBP", entry_type: :debit },
+            { account_id: accounts(:bank_gbp).id,         amount: 100, currency: "GBP", entry_type: :credit } ]
+        else
+          [ { account_id: accounts(:bank_gbp_two).id, amount: 100, currency: "GBP", entry_type: :debit },
+            { account_id: accounts(:bank_gbp).id,     amount: 100, currency: "GBP", entry_type: :credit } ]
+        end
+      JournalEntry.create!(entry_date: Date.current, memo: "bulk #{i}", postings_attributes: postings)
+    end
+
+    after = count_queries { get journal_entries_url(locale: :en) }.size
+
+    assert_equal before, after,
+      "journal_entries#index went from #{before} to #{after} queries when 30 entries were added — it is looping over rows"
+  end
+
   test "the dashboard costs the same for five businesses as for fifteen" do
     sign_in_as(admins(:two))
 

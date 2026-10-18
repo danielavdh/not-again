@@ -768,6 +768,7 @@ es:
       tax_code_scheme: "%{account} no puede usar un código de %{scheme} — esta empresa no lo declara"
       tax_code_cross_entity: "%{account} no puede llevar un código de IVA en una operación entre empresas"
       tax_code_direction: "%{code} no corresponde a %{account}. Un código de venta va en una cuenta de ingresos, y uno de compra en una de gastos."
+      tax_amount_exceeds_gross: "%{account}: el IVA no puede ser mayor que el importe. Está incluido en el importe, no se añade."
   languages:
     new_language: "Nuevo idioma"
     new_title: "Nuevo idioma"

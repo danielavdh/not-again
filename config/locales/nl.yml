@@ -768,6 +768,7 @@ nl:
       tax_code_scheme: "%{account} kan geen %{scheme}-code gebruiken — deze onderneming geeft die regeling niet aan"
       tax_code_cross_entity: "%{account} kan geen btw-code dragen in een boeking tussen ondernemingen"
       tax_code_direction: "%{code} hoort niet bij %{account}. Een verkoopcode hoort op een opbrengstrekening, een inkoopcode op een kostenrekening."
+      tax_amount_exceeds_gross: "%{account}: de btw kan niet hoger zijn dan het bedrag. De btw zit in het bedrag, er niet bovenop."
   languages:
     new_language: "Nieuwe taal"
     new_title: "Nieuwe taal"

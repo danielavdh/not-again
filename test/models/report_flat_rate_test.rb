@@ -21,6 +21,21 @@ class ReportFlatRateTest < ActiveSupport::TestCase
     assert_nil Report.new(flat_rate_percentage: nil).flat_rate_bps
   end
 
+  # The same shape for the prepayment: the form takes an amount, the column
+  # holds minor units.
+  test "a prepayment typed on the form is stored in minor units and reads back" do
+    assert_equal 5_000, Report.new(prepayment_display: "50").prepayment
+    assert_equal 1_234, Report.new(prepayment_display: "12.34").prepayment
+    assert_equal 12.34, Report.new(prepayment_display: "12.34").prepayment_display
+    assert_nil Report.new(prepayment_display: "").prepayment
+  end
+
+  test "a negative prepayment is refused" do
+    report = Report.new(prepayment: -1)
+    report.valid?
+    assert_includes report.errors.attribute_names, :prepayment
+  end
+
   test "a rate outside any real scheme is refused" do
     report = Report.new(flat_rate_percentage: "150")
     report.valid?

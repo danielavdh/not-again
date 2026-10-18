@@ -62,7 +62,7 @@ all_blank || new_record_zero
     end
   }
   
-  attr_accessor :from_account_id, :to_account_id, 
+  attr_accessor :from_account_id, :to_account_id,
                 :transfer_amount, :transfer_amount_display,
                 :target_amount, :target_amount_display
 
@@ -108,9 +108,13 @@ all_blank || new_record_zero
     end
 
     # Regular balance check...
-    default_currency = active_postings.find { |p| 
-      acct = account_for_posting(p)
-      acct&.balance_account?
+    #
+    # NEVER a derived VAT leg. It sits on a control account, so it is a
+    # balance-sheet row and matched here — and a reverse charge's legs are in
+    # the SCHEME's currency, which is not the entry's. Taking one of those as
+    # the default handed every nominal row a currency the entry was never in.
+    default_currency = active_postings.find { |p|
+      !p.tax_leg? && account_for_posting(p)&.balance_account?
     }&.currency
 
     balances = Hash.new(0)
@@ -269,6 +273,9 @@ all_blank || new_record_zero
     rows.each do |row|
       mine = orphans.delete(row) || (row.id.present? ? orphans.delete(row.id) : nil) || []
       code = codes[row.tax_code_id]
+      # Handed to the row, so the form that renders it afterwards does not
+      # load the same code again, once per row.
+      row.association(:tax_code).target = code if code
       reconcile_tax_legs(row, mine, code ? tax_legs_wanted(row, code, created) : [])
     end
 
@@ -284,35 +291,65 @@ all_blank || new_record_zero
 
 private
 
-  # What this row's legs should be, and the net it is left with. Gross is the
+  # The currency every leg of an entry with nominals is in: that of the balance
+  # row's ACCOUNT. The posting's own currency column is only filled at
+  # validation, after derivation has run, so it cannot be read here.
+  def entry_currency
+    postings.reject { |p| p.marked_for_destruction? || p.tax_leg? }
+            .filter_map { |p| account_for_posting(p) }
+            .find(&:balance_account?)
+            &.currency
+  end
+
+  # What this row's leg should be, and the net it is left with. Gross is the
   # invariant: edit the VAT figure and the net moves, never the gross, so the
   # bank leg goes on matching the statement.
   def tax_legs_wanted(row, code, created)
     account = account_for_posting(row)
     return [] if account.nil? || account.entity_code.blank?
 
-    row.gross_for_tax ||= row.amount.to_i
-    gross = row.gross_for_tax
-    return [] if gross <= 0
+    # A reverse charge posts nothing. The VAT is owed and reclaimed in the same
+    # breath, so the ledger has no use for it; the return works it out from the
+    # net, translated at the authority's accepted rate for the entry date like
+    # every other figure in a tax report. Which is also what lets it be paid
+    # from an account in any currency: nothing is converted at save.
+    return [] if code.reverse_charge?
 
-    # Reverse charge: the invoice carried no VAT, so nothing is split — two legs
-    # on opposite sides that cancel, and the bank leg untouched.
-    if code.reverse_charge?
-      row.amount = gross
-      tax = row.tax_amount_from_form || code.tax_from_net(gross)
-      return [] unless tax.positive?
+    # On an update that did not resubmit the amount, the column holds the NET
+    # of the last derivation; the gross is that plus the leg it already has.
+    row.gross_for_tax ||=
+      row.amount_changed? || row.amount_submitted? || row.new_record? ? row.amount.to_i
+                                                                        : row.gross_amount.to_i
+    return [] if row.gross_for_tax.zero?
 
-      [ vat_leg(account, code, TaxCode::OUTPUT, tax, flip(row.entry_type), created),
-        vat_leg(account, code, TaxCode::INPUT,  tax, row.entry_type,       created) ]
-    else
-      tax = row.tax_amount_from_form || code.tax_from_gross(gross)
-      tax = 0 if tax.negative? || tax >= gross
-      row.amount = gross - tax
-      return [] unless tax.positive?
+    # A refund, or a commission line inside a split income: the bank form flips
+    # a row's side with a minus sign, which normalize_negative_amounts applies
+    # only at validation. The VAT reverses with the net, so the leg takes the
+    # flipped side now and the row keeps its sign for the normaliser.
+    gross = row.gross_for_tax.abs
+    side  = row.gross_for_tax.negative? ? flip(row.entry_type) : row.entry_type
 
-      # Same side as the net row: a purchase debits both, the bank carries both.
-      [ vat_leg(account, code, code.direction, tax, row.entry_type, created) ]
-    end
+    tax =
+      if code.amount_is_tax?
+        gross
+      else
+        typed = row.tax_amount_from_form || code.tax_from_gross(gross)
+        # More than the whole amount is a mistake, refused rather than quietly
+        # replaced. It used to become zero, which sent the figure to the net
+        # box and left nothing to notice.
+        if typed.negative? || typed > gross
+          row.tax_amount_invalid = true
+          typed = code.tax_from_gross(gross)
+        end
+        typed
+      end
+
+    net = gross - tax
+    row.amount = row.gross_for_tax.negative? ? -net : net
+    return [] unless tax.positive?
+
+    # Same side as the net row: a purchase debits both, the bank carries both.
+    [ vat_leg(account, code, code.direction, tax, side, created) ]
   end
 
   # One query per (scheme, direction), however many rows share it.
@@ -358,11 +395,6 @@ private
     codes    = TaxCode.where(id: rows.map(&:tax_code_id)).index_by(&:id)
     accounts = rows.index_with { |row| account_for_posting(row) }
     schemes  = filed_schemes_by_entity(accounts.values.compact.map(&:entity_code).uniq)
-    # The currency every leg of an entry with nominals is in, by construction.
-    entry_currency = postings.reject { |p| p.marked_for_destruction? }
-                             .find { |p| !p.tax_leg? && account_for_posting(p)&.balance_account? }
-                             &.currency
-
     rows.each do |row|
       account = accounts[row]
       next if account.nil?
@@ -376,7 +408,17 @@ private
         next
       end
 
-      case account.tax_code_problem(code, filed_schemes: schemes.fetch(account.entity_code, []))
+      if row.tax_amount_invalid
+        errors.add(:base, I18n.t("journal_entries.errors.tax_amount_exceeds_gross",
+                                 account: name))
+      end
+
+      # A row that already carried this code keeps it after the business has
+      # stopped filing: the entry belongs to a year it did file. Only a code
+      # being PUT on a row is held to today's registration.
+      filed = schemes.fetch(account.entity_code, [])
+      filed |= [ code.scheme ] unless row.tax_code_id_changed?
+      case account.tax_code_problem(code, filed_schemes: filed)
       when :not_nominal
         errors.add(:base, I18n.t("journal_entries.errors.tax_code_not_nominal", account: name))
       when :direction
@@ -390,9 +432,12 @@ private
                                  scheme: TaxSchemeConfig.scheme_label(code.scheme)))
       end
 
-      # A control account holds one currency, the one the authority is paid in.
+      # A control account holds one currency, the one the authority is paid in,
+      # so a leg in another currency could not be posted. A reverse charge
+      # posts no leg, so it is free of this.
       wanted = TaxSchemeConfig.currency_for(code.scheme)
-      if entry_currency.present? && wanted.present? && entry_currency != wanted
+      if !code.reverse_charge? &&
+         entry_currency.present? && wanted.present? && entry_currency != wanted
         errors.add(:base, I18n.t("journal_entries.errors.tax_code_currency",
                                  scheme: TaxSchemeConfig.scheme_label(code.scheme),
                                  scheme_currency: wanted, entry_currency: entry_currency))
@@ -495,14 +540,20 @@ private
     errors.add(:base, I18n.t("journal_entries.errors.must_balance")) unless balanced?
   end
   
+  # One query for the whole entry's accounts, and the answer is handed to each
+  # posting's association so nothing downstream — a validation, a view — asks
+  # again. Reading `posting.account` to find the missing ones was itself the
+  # query per row this exists to avoid.
   def account_for_posting(posting)
-    @_posting_account_cache ||= begin
-      missing_ids = postings.reject(&:marked_for_destruction?)
-        .select { |p| p.account.nil? && p.account_id.present? }
-        .map(&:account_id).uniq
-      missing_ids.any? ? Account.where(id: missing_ids).index_by(&:id) : {}
-    end
-    posting.account || @_posting_account_cache[posting.account_id]
+    association = posting.association(:account)
+    return association.target if association.loaded?
+    return nil if posting.account_id.blank?
+
+    @_posting_account_cache ||= Account.where(id: postings.map(&:account_id).compact.uniq)
+                                       .index_by(&:id)
+    account = @_posting_account_cache[posting.account_id] || posting.account
+    association.target = account if account
+    account
   end
       
   def must_have_balance_sheet_posting
@@ -543,6 +594,10 @@ private
       balance << account if account.balance_account? && !posting.tax_leg?
     end
 
+    # DISTINCT accounts, not rows: the rule is about several balance accounts in
+    # one entry, and two rows on the SAME one is still one account. Counting
+    # rows refused that, and named the account twice in the message saying so.
+    balance = balance.uniq
     return if nominal.empty? || balance.size <= 1
 
     # Named, because the message left the user to work out which of six rows.

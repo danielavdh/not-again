@@ -121,6 +121,36 @@ class AccountsVatCopyTest < ActionDispatch::IntegrationTest
   end
 
   # The derived leg is not a row the user owns, so it must not come back as one.
+  # Import VAT paid at the border: the whole amount is the VAT, by the code's
+  # own shape, so a copy needs nothing typed into the VAT field to come back
+  # whole. It used to come back with the field empty, and submitting it as
+  # rendered booked the payment as plain expense with no leg at all.
+  test "a copy of an import-VAT entry books the whole amount as VAT again" do
+    c79 = TaxCode.resolve(scheme: "gb_vat", key: "purchase_import_c79", on: Date.new(2026, 5, 1))
+    je = JournalEntry.new(entry_date: Date.new(2026, 5, 1), memo: "customs", posted: true)
+    je.postings.build(account: accounts(:expenses_general), entry_type: :debit,
+                      amount: 5_000, tax_code_id: c79.id)
+    je.derive_tax_legs
+    je.postings.build(account: @bank, entry_type: :credit, amount: 5_000, currency: "GBP")
+    je.save!
+
+    get copy_withdrawal_account_path(@bank, journal_entry_id: je.id)
+    assert_response :success
+    assert_select "input.posting-amount[value='50.00']"
+    assert_select "input.posting-tax-amount[readonly][value='50.00']"
+
+    assert_difference -> { JournalEntry.count }, 1 do
+      post create_withdrawal_account_path(@bank), params: { journal_entry: {
+        entry_date: "2026-06-01", memo: "customs again",
+        postings_attributes: { "0" => { account_id: accounts(:expenses_general).id,
+                                        entry_type: "debit", amount_display: "50.00",
+                                        tax_code_id: c79.id, tax_amount_display: "" } } } }
+    end
+    copy = JournalEntry.order(:id).last
+    assert_equal 5_000, copy.postings.find(&:tax_leg?).amount, "all of it is VAT"
+    assert_equal 0, copy.postings.find { |p| p.tax_code_id }.amount
+  end
+
   test "a copy does not bring the derived VAT leg back as a posting row" do
     get copy_withdrawal_account_path(@bank, journal_entry_id: @je.id)
 

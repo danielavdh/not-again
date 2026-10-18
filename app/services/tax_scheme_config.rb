@@ -114,6 +114,17 @@ module TaxSchemeConfig
     config[:countries_by_scheme][scheme.to_s]
   end
 
+  # The country as a flag, for places that must name the authority in no space
+  # at all — a select option beside fifteen others. Regional indicators, so it
+  # is text: it survives a bare <option>, needs no asset and no markup. Windows
+  # ships no flag glyphs and falls back to the two letters, which is the same
+  # information.
+  def self.flag_for(scheme)
+    code = country_for(scheme)
+    return nil if code.blank?
+    code.upcase.each_char.map { |ch| (0x1F1E6 + ch.ord - "A".ord).chr(Encoding::UTF_8) }.join
+  end
+
   def self.authority_for(scheme)
     country = country_for(scheme)
     country && authority(country)
@@ -200,6 +211,13 @@ module TaxSchemeConfig
     config[:flat_rate_labels][scheme.to_s].presence || "Flat rate"
   end
 
+  # The key of the box a prepayment fixed by the authority is deducted in —
+  # Germany's Kz 39, Sondervorauszahlung — or nil for a scheme whose return has
+  # no such line. Declared in the catalogue header as prepayment_category.
+  def self.prepayment_category(scheme)
+    config[:prepayment_categories][scheme.to_s]
+  end
+
   def self.normal_rules_label(scheme)
     config[:normal_rules_labels][scheme.to_s].presence || "Normal rules"
   end
@@ -265,6 +283,7 @@ module TaxSchemeConfig
     vat_accounts = {}
     no_tax_labels = {}
     flat_rate_labels = {}
+    prepayment_categories = {}
     normal_rules_labels = {}
     code_files   = {}
     positions    = Hash.new { |h, k| h[k] = {} }
@@ -307,6 +326,7 @@ module TaxSchemeConfig
       vat_accounts[slug]          = data["vat_accounts"].presence
       no_tax_labels[slug]         = data["no_tax_label"].presence
       flat_rate_labels[slug]      = data["flat_rate_label"].presence
+      prepayment_categories[slug] = data["prepayment_category"].presence
       normal_rules_labels[slug]   = data["normal_rules_label"].presence
       connectors[slug]            = data["connector"].presence
       authorities[country]        = data["authority"].presence if data["authority"].present?
@@ -349,6 +369,7 @@ module TaxSchemeConfig
       vat_accounts:             vat_accounts.freeze,
       no_tax_labels:            no_tax_labels.freeze,
       flat_rate_labels:         flat_rate_labels.freeze,
+      prepayment_categories:    prepayment_categories.freeze,
       normal_rules_labels:      normal_rules_labels.freeze,
       connectors:               connectors.freeze,
       authorities:              authorities.freeze,

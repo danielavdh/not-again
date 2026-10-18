@@ -57,21 +57,46 @@ class Posting < ApplicationRecord
   end
 
   # What the row is worth on the statement: net plus its derived VAT. The amount
-  # itself for an uncoded row, and for a reverse charge, where the legs cancel.
+  # itself for an uncoded row, and for a reverse charge, which posts no leg.
   # What the form shows and what a copy carries.
   def gross_amount
     return amount if amount.nil? || tax_code_id.blank?
-    return amount if tax_code&.reverse_charge?
-    amount + tax_legs.reject(&:marked_for_destruction?).sum { |leg| leg.amount.to_i }
+    amount + own_tax_legs.sum { |leg| leg.amount.to_i }
   end
 
-  # Nil when there is no code, so the field renders empty and hidden.
+  # Nil when there is no code, so the field renders empty and hidden. A reverse
+  # charge has no leg to read: its VAT is the rate on the net, in the entry's
+  # own currency — the return translates it. An amount-is-tax code's VAT is the
+  # whole gross, whether or not the leg has been derived yet (a copy).
   def vat_display_formatted(locale: I18n.locale)
     return nil if tax_code_id.blank?
-    total = tax_legs.reject(&:marked_for_destruction?).sum { |leg| leg.amount.to_i }
+    total =
+      if    tax_code&.reverse_charge? then tax_code.tax_from_net(amount.to_i)
+      elsif tax_code&.amount_is_tax?  then gross_amount.to_i
+      else  own_tax_legs.sum { |leg| leg.amount.to_i }
+      end
     return nil if total.zero?
     CurrencyConfig.format_display(total / 100.0, locale: locale)
   end
+
+  # The legs derived FROM this row, from the entry's own postings. Not the
+  # tax_legs association: a leg built moments ago is not in it yet, and when the
+  # entry was loaded with the legs preloaded it held a SECOND copy of each —
+  # one derive_tax_legs updated and one this read — so a failed edit re-rendered
+  # the old leg added onto the new gross.
+  def own_tax_legs
+    return tax_legs.reject(&:marked_for_destruction?) if journal_entry.nil?
+
+    journal_entry.postings.reject(&:marked_for_destruction?).select { |leg|
+      (id.present? && leg.tax_for_posting_id == id) ||
+        leg.association(:tax_for_posting).target.equal?(self)
+    }
+  end
+
+  # Whether the form sent an amount for this row at all — see
+  # JournalEntry#tax_legs_wanted, which must not mistake a stored net for a
+  # typed gross.
+  def amount_submitted? = @amount_submitted == true
 
   def tax_amount_from_form
     return nil if tax_amount_display.nil? || tax_amount_display.to_s.strip.empty?
@@ -88,6 +113,9 @@ class Posting < ApplicationRecord
   attr_accessor :amount_display, :existing_receipt_id
   # The user's own VAT figure, where an invoice rounded differently from us.
   attr_accessor :tax_amount_display
+  # Set by JournalEntry#tax_legs_wanted when the typed VAT exceeds the amount,
+  # so the entry can refuse with a message instead of correcting it silently.
+  attr_accessor :tax_amount_invalid
   # Derivation rewrites `amount` from gross to net, so without this a second
   # pass over the same object would take the VAT off twice.
   attr_accessor :gross_for_tax
@@ -224,6 +252,7 @@ class Posting < ApplicationRecord
   # derive_tax_legs splits it. Only the posting forms and the cross-entity modal
   # read these — no ledger or report does.
   def amount_display=(value)
+    @amount_submitted = true
     self.amount = CurrencyConfig.parse_to_cents(value)
   end
   def amount_display
@@ -253,6 +282,12 @@ class Posting < ApplicationRecord
         WHERE p2.journal_entry_id = postings.journal_entry_id
         AND p2.currency IS NOT NULL
         AND a2.account_type IN (1, 2, 3)
+        -- Never a derived VAT leg. It is a balance-sheet row like any other, so
+        -- it matches, and with LIMIT 1 and no ORDER BY which row wins is
+        -- undefined — a leg in the scheme's currency could hand every nominal
+        -- in the entry a currency the entry was never in.
+        AND p2.tax_for_posting_id IS NULL
+        ORDER BY p2.id
         LIMIT 1
       ) balance_currency ON true
     SQL
@@ -285,14 +320,21 @@ class Posting < ApplicationRecord
 
 private
   
+  def zero_amount_allowed?
+    journal_entry&.closing_entry? || (tax_code_id.present? && own_tax_legs.any?)
+  end
+
   def amount_must_be_valid
     if amount.blank?
       errors.add(:amount_display, I18n.t("postings.errors.amount_blank"))
     elsif !amount.is_a?(Numeric)
       errors.add(:amount_display, I18n.t("postings.errors.amount_not_a_number"))
-    elsif amount.negative? || (amount.zero? && !journal_entry&.closing_entry?)
+    elsif amount.negative? || (amount.zero? && !zero_amount_allowed?)
       # A closing entry may carry a zero retained-earnings leg (a break-even
       # year): the leg still has to exist as the entry's balance-sheet posting.
+      # A coded row whose VAT is the whole amount nets to zero for the same
+      # reason — import VAT paid at the border is nothing but VAT, and the row
+      # still has to exist to carry the code the legs hang off.
       errors.add(:amount_display, I18n.t("postings.errors.amount_not_positive"))
     end
   end
@@ -419,7 +461,9 @@ private
     return unless account&.equity?
     gift = cross_entity_counterpart
     return unless gift
-    bank = gift.journal_entry&.postings&.detect { |p| p != gift && p.account&.balance_account? }
+    bank = gift.journal_entry&.postings&.detect { |p|
+      p != gift && !p.tax_leg? && p.account&.balance_account?
+    }
     return if bank.nil? || bank.currency.blank?
     if currency != bank.currency
       errors.add(:base, I18n.t("postings.errors.cross_entity_currency_mismatch", currency: bank.currency))

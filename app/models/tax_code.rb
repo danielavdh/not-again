@@ -12,6 +12,16 @@ class TaxCode < ApplicationRecord
   OUTPUT     = "output"  # VAT we charged and owe
   DIRECTIONS = [ INPUT, OUTPUT ].freeze
 
+  # What the flat rate does with a code. Nil is inside the scheme: a sale feeds
+  # the flat-rate turnover, a purchase reclaims nothing. The rest are the three
+  # things Notice 733 does with a supply outside the scheme:
+  #   normal       — boxes exactly as under normal rules (reverse charge on
+  #                  services, a sale outside the scope)
+  #   declare_only — the output half is declared, nothing is reclaimed
+  #                  (postponed import VAT, a Northern Ireland acquisition)
+  #   excluded     — nothing at all (import VAT paid at the border)
+  FLAT_RATE_TREATMENTS = %w[normal declare_only excluded].freeze
+
   has_many :postings, dependent: :restrict_with_error
 
   validates :country_code, presence: true, format: { with: /\A[a-z]{2}\z/ }
@@ -24,6 +34,7 @@ class TaxCode < ApplicationRecord
                                        greater_than_or_equal_to: 0,
                                        less_than_or_equal_to: 10_000 }
   validates :valid_from, presence: true
+  validates :flat_rate, inclusion: { in: FLAT_RATE_TREATMENTS }, allow_nil: true
   validate  :valid_to_after_valid_from
 
   scope :for_schemes, ->(schemes) { where(scheme: Array(schemes)) }
@@ -55,6 +66,14 @@ class TaxCode < ApplicationRecord
   def input?  = direction == INPUT
   def output? = direction == OUTPUT
 
+  # A code with no rate, a tax box and no net box: the amount entered IS the
+  # tax. Import VAT paid at the border — the goods were bought in their own
+  # entry, and this payment is nothing but VAT, worked out by customs on a
+  # value that is not the supplier's invoice. Nothing to split, nothing to type.
+  def amount_is_tax?
+    rate_bps.to_i.zero? && tax_category_key.present? && net_category_key.blank?
+  end
+
   # The VAT a GROSS amount contains: 19% of 119.00 is 19.00, not 22.61, because
   # the user types what the statement says. Integer minor units throughout.
   #
@@ -83,7 +102,9 @@ class TaxCode < ApplicationRecord
     self[:label].presence || key.to_s.tr("_", " ").capitalize
   end
 
-  def display_name = "#{label} (#{rate_label})"
+  # The rate only where it distinguishes: "Exempt (0%)" and "Zero rate (0%)"
+  # read as the same thing, and they are not.
+  def display_name = rate_bps.to_i.zero? ? label : "#{label} (#{rate_label})"
 
   # GROUPED by direction, for grouped_options_for_select. Flat, "Sale, reduced
   # rate (5%)" and "Purchase, reduced rate (5%)" sat six rows apart with only
@@ -92,17 +113,24 @@ class TaxCode < ApplicationRecord
   #
   # The rate rides on the option so the browser can make the same split; the
   # server recomputes regardless. The scheme is named only when two authorities
-  # are in play, where "20%" alone would not say which.
+  # are in play, where "20%" alone would not say which — as a flag, because the
+  # authority's own name is 26 characters and the option has none to spare.
   def self.options_for(schemes:, on:)
     schemes = Array(schemes)
     label_scheme = schemes.size > 1
 
-    codes = for_schemes(schemes).on(on).ordered.map { |code|
-      prefix = label_scheme ? "[#{TaxSchemeConfig.scheme_label(code.scheme)}] " : ""
+    rows  = for_schemes(schemes).on(on).ordered.to_a
+    boxes = boxes_for(rows, on: on)
+
+    codes = rows.map { |code|
+      prefix = label_scheme ? "#{TaxSchemeConfig.flag_for(code.scheme)} " : ""
       [ code.direction,
         "#{prefix}#{code.display_name}", code.id,
-        { data: { rate_bps: code.rate_bps, direction: code.direction,
-                  reverse_charge: code.reverse_charge.presence } } ]
+        { title: boxes[code.id],
+          data: { rate_bps: code.rate_bps, direction: code.direction,
+                  scheme: code.scheme,
+                  reverse_charge: code.reverse_charge.presence,
+                  amount_is_tax: code.amount_is_tax?.presence } } ]
     }
 
     # Purchases first — DIRECTIONS order — because most entries are money going
@@ -111,6 +139,43 @@ class TaxCode < ApplicationRecord
       rows = codes.select { |d, *| d == direction }
       next if rows.empty?
       [ I18n.t("tax.vat.direction.#{direction}"), rows.map { |_d, *option| option } ]
+    }
+  end
+
+  # Which boxes of the return a code's figures land in, as the authority words
+  # them — the long wording the option label no longer has room for, and the
+  # question a bookkeeper actually has about an unfamiliar code.
+  #
+  # Nothing is invented here: it is the label of the category the code already
+  # names. A category with no box of its own (a feeder, carrying a figure the
+  # authority computes itself) has nothing to say and is left out, so a German
+  # sale shows Kz 81 alone — which is the truth about the UStVA.
+  #
+  # One query for all of them, however many codes.
+  def self.boxes_for(codes, on:)
+    keys = codes.flat_map { |c|
+      [ c.net_category_key, c.tax_category_key, c.reverse_tax_category_key ]
+    }.compact.uniq
+    return {} if keys.empty?
+
+    years = codes.map(&:country_code).uniq.index_with { |cc|
+      TaxCategory.tax_year_for(country_code: cc, date: on)
+    }
+    categories = TaxCategory.where(scheme: codes.map(&:scheme).uniq, key: keys)
+                            .where("tax_year <= ?", years.values.compact.max)
+                            .order(:tax_year)
+                            .index_by { |c| [ c.scheme, c.key ] }
+
+    codes.index_by(&:id).transform_values { |code|
+      lines = [ code.net_category_key, code.tax_category_key, code.reverse_tax_category_key ]
+        .compact
+        .filter_map { |key|
+          category = categories[[ code.scheme, key ]]
+          next if category.nil? || category.reference.blank?
+          # Not a dash: the authority's own labels already contain one.
+          "#{category.reference} · #{category.label}"
+        }.uniq
+      lines.join("\n").presence
     }
   end
 

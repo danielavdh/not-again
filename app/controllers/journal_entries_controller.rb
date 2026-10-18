@@ -92,7 +92,7 @@ class JournalEntriesController < BaseController
   end
 
   def edit
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:id])
     return if redirect_cross_entity_counterpart_to_origin(@journal_entry) # JE₂ → JE₁'s edit
     @journal_entry.postings.build if @journal_entry.postings.empty?
     @entity = nil
@@ -169,12 +169,16 @@ class JournalEntriesController < BaseController
     @journal_entry.period_end    = nil
     pair_id_map = {}
     copy = build_cross_entity_copy(@original) # fresh links + the JE₂′ mirror (#8)
-    @original.postings.not_tax_legs.includes(:tax_legs, :tax_code).each do |p|
+    # The whole entry, legs included, so gross_amount reads them from memory.
+    @original.postings.includes(:account, :tax_code).to_a.reject(&:tax_leg?).each do |p|
       # Never the tax legs, and never their link: they are derived afresh at
       # the copy's own date, so a copy into a new rate period gets the new rate.
       attrs = p.attributes.except('id', 'created_at', 'updated_at', 'journal_entry_id',
                                   'tax_for_posting_id')
       attrs['amount'] = p.gross_amount
+      # The loaded objects, so the form asks for neither, once per row.
+      attrs['account']  = p.account
+      attrs['tax_code'] = p.tax_code
       attrs['deduction_pair_id'] = remap_pair_id(attrs['deduction_pair_id'], pair_id_map)
       # Never copy the raw link — remap the gift to its FRESH link (or strip).
       attrs['cross_entity_link_id'] = copy[:link_remap][attrs['cross_entity_link_id']] if attrs['cross_entity_link_id'].present?
@@ -263,7 +267,7 @@ class JournalEntriesController < BaseController
   end
 
   def set_journal_entry
-    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code, :tax_legs]).find(params[:id])
+    @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:id])
   end
 
   # POSTING_PARAMS + save_with_cross_entity_entries +
@@ -330,8 +334,14 @@ class JournalEntriesController < BaseController
         'accounts.name',
         'accounts.account_type',
         :cross_entity_link_id,
-        'accounts.locked'
+        'accounts.locked',
+        # A derived VAT leg is not the entry's balance account — the
+        # one-balance-account rule does not count it either.
+        :tax_for_posting_id
       )
+      # Ordered so the column cannot change between page loads. It used to take
+      # whichever row the database happened to return first.
+      .sort_by { |row| row[4].to_s }
 
     @balance_account = {}
     @credit_sums = {}
@@ -342,17 +352,44 @@ class JournalEntriesController < BaseController
     # Collected here rather than asked per row.
     @app_owned_close_ids = Set.new
 
-    posting_data.each do |je_id, entry_type, amount, currency, code, name, account_type, link_id, locked|
+    # Collected first, decided after: what the column should say depends on
+    # whether the entry has nominals, which is not known until every row is in.
+    balance_rows = Hash.new { |h, k| h[k] = [] }
+    has_nominals = Hash.new(false)
+
+    posting_data.each do |je_id, entry_type, amount, currency, code, name, account_type, link_id, locked, tax_for|
       @app_owned_close_ids << je_id if locked && account_type == 'equity'
       if balance_sheet_types.include?(account_type)
-        @balance_account[je_id] ||= "#{code} - #{name}"
-        @credit_currency[je_id] ||= currency
+        unless tax_for
+          balance_rows[je_id] << [ code, name ]
+          @credit_currency[je_id] ||= currency
+        end
+      else
+        has_nominals[je_id] = true
       end
+      # Never a derived VAT leg: the net row beside it already shows as the
+      # gross on this page, and the leg would count the VAT a second time.
+      next if tax_for
       if entry_type == 'credit'
         @credit_sums[je_id] ||= { amount: 0 }
         @credit_sums[je_id][:amount] += amount
       end
       @cross_entity_je_ids << je_id if link_id.present?
+    end
+
+    # With nominals present the rule guarantees exactly ONE balance account, so
+    # the column names it. Without nominals — a transfer, an opening balance —
+    # there is no single one to name and no direction the app can vouch for
+    # across three accounts, so it lists the codes instead.
+    balance_rows.each do |je_id, rows|
+      accounts = rows.uniq
+      @balance_account[je_id] =
+        if has_nominals[je_id]
+          code, name = accounts.first
+          "#{code} - #{name}"
+        else
+          accounts.map(&:first).join(", ")
+        end
     end
   end
 end

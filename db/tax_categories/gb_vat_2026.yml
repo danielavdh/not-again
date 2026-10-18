@@ -61,6 +61,10 @@ categories:
   - key: net_vat
     label: "Net VAT to pay to HMRC or reclaim (difference between boxes 3 and 4)"
     export_column: "5"
+    # The form says it: box 3 minus box 4. Declared, so no code names box 5 —
+    # and until this existed the box printed 0.00 on every return.
+    includes: [ total_vat_due ]
+    subtracts: [ vat_reclaimed ]
     position: 50
   - key: total_sales_ex_vat
     label: "Total value of sales and all other outputs excluding any VAT"
@@ -106,10 +110,15 @@ categories:
 # land in — two fields because a rate cannot say which box. zero_rated_sale and
 # export_sale are both 0% and belong in different lines.
 #
-# valid_from is 1996-08-01, when the 20% standard rate's predecessor regime
-# settled, except where a rate genuinely changed later. The app refuses a code
-# on an entry dated before its valid_from, so these are deliberately early
-# enough to cover any books a user brings with them.
+# valid_from is set early enough to cover any books a user brings with them,
+# except where the rule itself has a start: the 20% rate (4 January 2011), the
+# B2B place-of-supply rule and the services reverse charge (1 January 2010),
+# the domestic reverse charge for construction (1 March 2021), and the
+# post-Brexit import and Northern Ireland codes (1 January 2021). The app
+# refuses a code on an entry dated before its valid_from.
+#
+# flat_rate says what the Flat Rate Scheme does with a code — see
+# TaxCode::FLAT_RATE_TREATMENTS. Left out, the code is inside the scheme.
 tax_codes:
   # --- Sales -------------------------------------------------------------
   - key: sale_standard
@@ -154,31 +163,36 @@ tax_codes:
   # NOT the place-of-supply case below, which looks the same to a user and is
   # not the same to HMRC.
   - key: sale_outside_scope
-    label: "Outside the scope of VAT"
+    label: "Outside the scope"
     rate_bps: 0
     direction: output
     valid_from: "1996-08-01"
+    # Notice 733 §6.3: supplies outside the scope are not flat-rate turnover.
+    flat_rate: normal
     position: 150
   # Outside the scope under the place-of-supply rules, and box 6 wants it:
   # 700/12 lists "supplies which are outside the scope of UK VAT as described in
   # Place of supply of services (VAT Notice 741A)" among what box 6 includes.
   # Performing abroad, or licensing to a label outside the UK.
   - key: sale_services_outside_uk
-    label: "Services to a business outside the UK"
+    label: "B2B services outside UK"
     rate_bps: 0
     direction: output
-    valid_from: "2021-01-01"
+    valid_from: "2010-01-01"
     net_category_key: total_sales_ex_vat
+    # Outside the scope, so outside the scheme (733 §6.3); box 6 still wants
+    # the value, which is what normal treatment gives.
+    flat_rate: normal
     position: 155
   - key: sale_export
-    label: "Export outside the UK"
+    label: "Export outside UK"
     rate_bps: 0
     direction: output
     valid_from: "2021-01-01"
     net_category_key: total_sales_ex_vat
     position: 140
   - key: sale_dispatch_ni_eu
-    label: "Northern Ireland: dispatch to the EU"
+    label: "NI: dispatch to EU"
     rate_bps: 0
     direction: output
     valid_from: "2021-01-01"
@@ -237,11 +251,12 @@ tax_codes:
   #
   # An EU acquisition into Northern Ireland is neither: boxes 9 and 2, own code.
   - key: purchase_reverse_charge_services
-    label: "Reverse charge: services from outside the UK"
+    label: "RC: overseas services"
     rate_bps: 2000
     direction: input
-    outside_flat_rate: true
-    valid_from: "2021-01-01"
+    # 733 §6.4: "record them in boxes 1 and 4" as under normal accounting.
+    flat_rate: normal
+    valid_from: "2010-01-01"
     reverse_charge: true
     # Feeds both box 6 and box 7 through the category above.
     net_category_key: reverse_charge_services_net
@@ -252,10 +267,10 @@ tax_codes:
   # handled, see known-limitations.md. A non-construction business can still
   # receive such an invoice, and then this is the right code.
   - key: purchase_reverse_charge_construction
-    label: "Reverse charge: construction"
+    label: "DRC: construction"
     rate_bps: 2000
     direction: input
-    outside_flat_rate: true
+    flat_rate: normal
     valid_from: "2021-03-01"
     reverse_charge: true
     # Box 7 only. Box 6 is explicitly excluded for the customer.
@@ -269,10 +284,10 @@ tax_codes:
   # CUSTOMER side needs it: the supplier posts no VAT at either rate, so the
   # single sale_reverse_charge_construction covers both.
   - key: purchase_reverse_charge_construction_reduced
-    label: "Reverse charge: construction, reduced rate"
+    label: "DRC: construction"
     rate_bps: 500
     direction: input
-    outside_flat_rate: true
+    flat_rate: normal
     valid_from: "2021-03-01"
     reverse_charge: true
     net_category_key: total_purchases_ex_vat
@@ -280,21 +295,63 @@ tax_codes:
     reverse_tax_category_key: vat_due_sales
     position: 65
   - key: purchase_acquisition_ni_eu
-    label: "Northern Ireland: EU acquisition"
+    label: "NI: EU acquisition"
     rate_bps: 2000
     direction: input
-    outside_flat_rate: true
+    # Declared in box 2, value in boxes 7 and 9; no box 4 under the scheme
+    # (700/12, flat rate: "you do not normally make a separate claim for input
+    # VAT, including any VAT on imports or acquisitions").
+    flat_rate: declare_only
     valid_from: "2021-01-01"
     reverse_charge: true
     net_category_key: total_acquisitions_ni
     tax_category_key: vat_reclaimed
     reverse_tax_category_key: vat_due_acquisitions
     position: 70
+  # Goods arriving from outside the UK. Two codes, because there are two ways
+  # the VAT is settled and they report differently.
+  #
+  # POSTPONED: nothing is paid at the border. The VAT is declared in box 1 and
+  # reclaimed in box 4 on the same return, which is the reverse-charge shape,
+  # and the value goes in box 7. Evidence is the monthly postponed VAT
+  # statement, not a C79.
+  - key: purchase_import_postponed
+    label: "Import VAT, postponed"
+    rate_bps: 2000
+    direction: input
+    # Under the scheme the import VAT is added to box 1 and not reclaimed
+    # (700/12, flat rate boxes 1 and 4; 733 §6.5).
+    flat_rate: declare_only
+    valid_from: "2021-01-01"
+    reverse_charge: true
+    net_category_key: total_purchases_ex_vat
+    tax_category_key: vat_reclaimed
+    reverse_tax_category_key: vat_due_sales
+    position: 75
+  # PAID AT THE BORDER: the courier or agent paid HMRC and billed you. There is
+  # nothing to declare — only the reclaim, on the C79 certificate HMRC issues
+  # monthly. So this code has no net at all: the payment IS the VAT, and the
+  # value of the goods was already entered when they were bought.
+  # rate_bps 0 and no net box: the amount entered IS the VAT (TaxCode#amount_is_tax?),
+  # taken from the certificate, calculated by customs on a value that is not
+  # the supplier's invoice — goods plus freight plus duty. Box 7 wants the value
+  # of the goods too: that comes from the supplier's own invoice, which must
+  # carry a box-7 code of its own ("Supplier not VAT registered" fits).
+  # Under the flat rate, nothing: the VAT was paid and cannot be reclaimed.
+  - key: purchase_import_c79
+    label: "Import VAT (C79)"
+    rate_bps: 0
+    direction: input
+    flat_rate: excluded
+    valid_from: "2021-01-01"
+    tax_category_key: vat_reclaimed
+    position: 76
   - key: sale_reverse_charge_construction
-    label: "Construction, reverse charge"
+    label: "DRC: construction"
     rate_bps: 0
     direction: output
-    outside_flat_rate: true
+    # Notice 735: excluded from flat-rate turnover; box 6 as normal.
+    flat_rate: normal
     valid_from: "2021-03-01"
     net_category_key: total_sales_ex_vat
     position: 160

@@ -14,7 +14,11 @@
         <optgroup label="<%= group_label %>">
           <% options.each do |label, id, html_attrs| %>
             <option value="<%= id %>"
+                    title="<%= html_attrs&.dig(:title) %>"
                     data-rate-bps="<%= html_attrs&.dig(:data, :rate_bps) %>"
+                    data-direction="<%= html_attrs&.dig(:data, :direction) %>"
+                    data-scheme="<%= html_attrs&.dig(:data, :scheme) %>"
+                    data-amount-is-tax="<%= html_attrs&.dig(:data, :amount_is_tax) %>"
                     data-reverse-charge="<%= html_attrs&.dig(:data, :reverse_charge) %>"><%= label %></option>
           <% end %>
         </optgroup>

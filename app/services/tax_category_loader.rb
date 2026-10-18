@@ -7,10 +7,10 @@ class TaxCategoryLoader
   REQUIRED_HEADER_KEYS = %w[country_code scheme tax_year].freeze
   REQUIRED_ROW_KEYS    = %w[key].freeze
   ALLOWED_ROW_KEYS     = %w[key section api_section label export_column api_field position notes
-                            keywords includes].freeze
+                            keywords includes subtracts].freeze
   REQUIRED_CODE_KEYS   = %w[key rate_bps direction valid_from].freeze
   ALLOWED_CODE_KEYS    = %w[key label rate_bps direction valid_from valid_to reverse_charge
-                            outside_flat_rate
+                            flat_rate
                             net_category_key tax_category_key reverse_tax_category_key
                             datev_bu position].freeze
 
@@ -20,7 +20,16 @@ class TaxCategoryLoader
     @path = path
   end
 
+  # One transaction: the categories, the codes and the prune are one catalogue,
+  # and a file refused halfway through used to leave the boxes updated, the
+  # removal email queued, and the doomed code still there.
   def call
+    TaxCategory.transaction { load }
+  end
+
+  private
+
+  def load
     data = YAML.safe_load_file(@path, permitted_classes: [Symbol])
     raise "Root must be a Hash in #{@path}" unless data.is_a?(Hash)
 
@@ -86,6 +95,8 @@ class TaxCategoryLoader
         # Boxes of the same form this one totals up — a fact about the form, so
         # a code feeding box 8 reaches box 6 without naming both.
         includes:     Array(row['includes']).map(&:to_s),
+        # And boxes it takes AWAY — box 5 of a UK return is box 3 minus box 4.
+        subtracts:    Array(row['subtracts']).map(&:to_s),
         notes:        row['notes'],
         # Words that mean this box, in the FORM'S own language — never the
         # user's. Matching a translated word against an account name written in
@@ -99,10 +110,10 @@ class TaxCategoryLoader
     # should, silently.
     declared = rows.map { |r| r[:key] }
     rows.each do |row|
-      unknown = row[:includes] - declared
+      unknown = (row[:includes] + row[:subtracts]) - declared
       next if unknown.empty?
-      raise "Category #{row[:key]} says it includes #{unknown.inspect}, which is not a " \
-            "category in #{@path}. A box can only total boxes of its own form."
+      raise "Category #{row[:key]} says it includes or subtracts #{unknown.inspect}, which is " \
+            "not a category in #{@path}. A box can only total boxes of its own form."
     end
 
     TaxCategory.upsert_all(
@@ -138,8 +149,6 @@ class TaxCategoryLoader
     )
   end
 
-  private
-
   # Versioned by DATE, so these rows do NOT belong to the file's tax_year the
   # way the categories do — one key may have two rows a decade apart. Hence one
   # file per scheme (TaxSchemeConfig enforces it), pruned against the scheme.
@@ -157,6 +166,7 @@ class TaxCategoryLoader
         raise "Tax code #{i} missing '#{k}' in #{@path}" if row[k].to_s.empty?
       end
       check_direction!(row['direction'], i)
+      check_flat_rate!(row['flat_rate'], i)
 
       key = row['key'].to_s
       # A rate change is a second row; a second row with the same start date is
@@ -184,11 +194,11 @@ class TaxCategoryLoader
         direction:        row['direction'].to_s,
         valid_from:       row['valid_from'],
         valid_to:         row['valid_to'],
-        # One code, two legs netting to zero. NOT "is a reverse charge" — see
-        # outside_flat_rate below, which is that question.
+        # Owed and reclaimed in one breath; posts no leg, reports in two boxes.
         reverse_charge:   row['reverse_charge'] ? true : false,
-        # Excluded from flat-rate turnover and accounted under normal rules.
-        outside_flat_rate: row['outside_flat_rate'] ? true : false,
+        # What the flat rate does with it — TaxCode::FLAT_RATE_TREATMENTS. Nil
+        # is inside the scheme, which almost every code is.
+        flat_rate:        row['flat_rate']&.to_s,
         # Two fields because a rate cannot say which box: a zero-rated supply
         # and an export are both 0% and belong on different lines.
         net_category_key: row['net_category_key'],
@@ -200,6 +210,8 @@ class TaxCategoryLoader
         position:         row['position'].to_i
       }
     end
+
+    check_no_overlap!(rows)
 
     TaxCode.upsert_all(
       rows.map { |r| r.merge(created_at: Time.current, updated_at: Time.current) },
@@ -226,6 +238,9 @@ class TaxCategoryLoader
             "removing it."
     end
 
+    # An account's remembered default is a form prefill, not history, and the
+    # foreign key would otherwise refuse the delete halfway through.
+    Account.where(default_tax_code_id: doomed.map(&:id)).update_all(default_tax_code_id: nil)
     TaxCode.where(id: doomed.map(&:id)).delete_all
     Rails.logger.info("TaxCategoryLoader: removed #{doomed.size} unused tax code row(s) " \
                       "from #{scheme} — no longer in #{File.basename(@path)}")
@@ -237,6 +252,26 @@ class TaxCategoryLoader
     raise "Tax code #{index} has direction: #{value.inspect} in #{@path}. " \
           "Must be one of #{TaxCode::DIRECTIONS.join(', ')} — input is VAT we paid and " \
           "reclaim, output is VAT we charged and owe."
+  end
+
+  def check_flat_rate!(value, i)
+    return if value.nil? || TaxCode::FLAT_RATE_TREATMENTS.include?(value.to_s)
+    raise "Tax code #{i} has flat_rate: #{value.inspect} in #{@path}; " \
+          "one of #{TaxCode::FLAT_RATE_TREATMENTS.join(', ')}, or leave it out"
+  end
+
+  # Two rows of one key in force on the same day would resolve by id — the
+  # older rate, silently. A rate change is a valid_to on the old row and a
+  # valid_from on the new, and the two must not overlap.
+  def check_no_overlap!(rows)
+    rows.group_by { |r| r[:key] }.each do |key, versions|
+      versions.sort_by { |r| r[:valid_from].to_s }.each_cons(2) do |earlier, later|
+        next if earlier[:valid_to].present? && earlier[:valid_to].to_s < later[:valid_from].to_s
+        raise "Tax code #{key} from #{earlier[:valid_from]} is still in force when the row " \
+              "from #{later[:valid_from]} begins, in #{@path}. Give the earlier row a valid_to " \
+              "before the later row's valid_from."
+      end
+    end
   end
 
   # `section` is a FIXED vocabulary of three, and this is the only thing that

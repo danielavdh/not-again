@@ -41,6 +41,52 @@ class AccountsVatUpdateTest < ActionDispatch::IntegrationTest
         } } }
   end
 
+  # The edit paths used to preload the legs twice over — once among the entry's
+  # postings, which derivation updates, and once on the net row, which the
+  # form read. Nothing is saved on a refused edit, so the form showed the OLD
+  # leg added onto the NEW gross: 240.00 typed came back as 260.00, and fixing
+  # only the date then booked 260.00 against a 240.00 statement line.
+  test "a refused edit re-renders the gross as submitted" do
+    patch update_withdrawal_account_path(@bank, journal_entry_id: @je.id),
+          params: submitted(amount_display: "240.00", tax_amount_display: "40.00")
+                    .deep_merge(journal_entry: { entry_date: "2010-01-01" })
+
+    assert_response :unprocessable_entity, "the code did not exist in 2010"
+    assert_select "input.posting-amount[value='240.00']"
+    assert_select "input.posting-amount[value='260.00']", count: 0
+  end
+
+  # A client that sends the row with no amount at all. What the column holds
+  # is the NET of the last derivation, and taking that for the gross shrank
+  # net, VAT and bank together, and said "updated".
+  test "an update that omits the amount leaves the figures alone" do
+    patch update_withdrawal_account_path(@bank, journal_entry_id: @je.id),
+          params: { journal_entry: { entry_date: "2026-05-01", memo: "kit",
+                      postings_attributes: {
+                        "0" => { id: @net.id, tax_code_id: @code.id },
+                        "1" => { id: @je.postings.find { |p| p.account_id == @bank.id }.id,
+                                 account_id: @bank.id, entry_type: "credit", currency: "GBP" } } } }
+
+    assert_response :redirect
+    @je.reload
+    assert_equal 10_000, @je.postings.find { |p| p.account_id == @expense.id }.amount
+    assert_equal 2_000,  @je.postings.find(&:tax_leg?).amount
+    assert_equal 12_000, @je.postings.find { |p| p.account_id == @bank.id }.amount
+  end
+
+  # The form's code list is built from what the business files TODAY. An entry
+  # from a year it did file would come back with a select that no longer held
+  # its code, and saving that dropped the code without a word.
+  test "an entry from a year the business filed still offers its code after unsubscribing" do
+    entities(:family_biz).update!(tax_schemes: [])
+
+    get edit_withdrawal_account_path(@bank, journal_entry_id: @je.id)
+
+    assert_response :success
+    assert_select "select.posting-tax-code option[selected][value='#{@code.id}']"
+    assert_select "div.tax-fields.hidden", { count: 0 }, "and the cell is shown"
+  end
+
   test "re-saving an unchanged VAT entry succeeds and adds no row" do
     patch update_withdrawal_account_path(@bank, journal_entry_id: @je.id), params: submitted
 
