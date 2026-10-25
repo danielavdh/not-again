@@ -10,6 +10,17 @@ module Rates
   # any particular feed. Adding a new publisher is a YAML entry plus a parser
   # class — no change here.
   class Fetcher
+    # A publisher's server dropping the connection is the ordinary transient
+    # failure, not a bug. Anything listed here makes the URL a miss, so the
+    # source reports a failure, the job's own retry fires an hour later, and the
+    # other sources in the same run are still fetched. An exception that escapes
+    # instead aborts the whole run and skips the retry.
+    NETWORK_ERRORS = [
+      Net::OpenTimeout, Net::ReadTimeout, Net::HTTPBadResponse, SocketError, EOFError,
+      Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EHOSTUNREACH, Errno::ENETUNREACH,
+      Errno::ETIMEDOUT, OpenSSL::SSL::SSLError
+    ].freeze
+
     class << self
       def enabled?
         ENV.fetch("FETCH_EXCHANGE_RATES", Rails.env.production? ? "true" : "false") == "true"
@@ -186,8 +197,8 @@ module Rates
           # otherwise become part of the first header cell and match nothing.
           response.body.dup.force_encoding(Encoding::UTF_8).scrub.delete_prefix("﻿")
         end
-      rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, Errno::ECONNREFUSED => e
-        Rails.logger.warn "Rates::Fetcher: network error fetching #{url}: #{e.message}"
+      rescue *NETWORK_ERRORS => e
+        Rails.logger.warn "Rates::Fetcher: network error fetching #{url}: #{e.class}: #{e.message}"
         nil
       end
 
