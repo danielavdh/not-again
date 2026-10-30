@@ -1,6 +1,6 @@
 <% content_for :title, @journal_entry.persisted? ? t("accounts.ledger.edit_transfer") : t("accounts.ledger.new_transfer") %>
 <% content_for :head do %>
-  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all", integrity: true %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all", integrity: true, crossorigin: "anonymous" %>
 <% end %>
 
 <div id="new_edit_view">

@@ -8,6 +8,8 @@ class SubresourceIntegrityTest < ActionDispatch::IntegrationTest
     assert stylesheets.any?, "no stylesheet on the page"
     stylesheets.each do |link|
       assert_match(/\Asha384-/, link["integrity"].to_s, "#{link['href']} has no integrity hash")
+      # Without it a cross-origin (CDN) file cannot be checked, and the browser refuses it.
+      assert_equal "anonymous", link["crossorigin"], "#{link['href']} lacks crossorigin"
     end
 
     importmap = JSON.parse(css_select("script[type=importmap]").first.text)

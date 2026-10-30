@@ -1,6 +1,6 @@
 <% content_for :title, t("accounts.entries.#{@journal_entry.persisted? ? 'edit' : 'new'}_bank_entry", type: t("accounts.entries.#{@account.entry_label(@entry_type)}")) %>
 <% content_for :head do %>
-  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all", integrity: true %>
+  <%= stylesheet_link_tag "tom-select.bootstrap5.min", media: "all", integrity: true, crossorigin: "anonymous" %>
 <% end %>
 
 <div id="new_edit_view">
