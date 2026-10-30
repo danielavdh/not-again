@@ -1,3 +1,5 @@
+enable_integrity!
+
 pin "application", preload: false   # the public side — front page, legal, demo
 pin "accounting", preload: false  # the signed-in app
 pin_all_from "app/javascript/frontend", under: "frontend", preload: false

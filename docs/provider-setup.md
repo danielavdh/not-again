@@ -339,6 +339,8 @@ Skip this entirely if you like. Leave `ASSET_HOST` unset and the app serves its 
 
 ⚠️ After changing response headers (CORS especially), **purge the pull zone**. Assets are cached for a year, so a stale copy otherwise lingers.
 
+⚠️ Leave **Bunny Optimizer** off. Every page carries a hash of each stylesheet and script, and the browser refuses a file that does not match it. A minified copy does not match, so turning the optimizer on leaves every page unstyled and without JavaScript.
+
 ---
 
 ## 6. The GitHub token for deploying

@@ -26,7 +26,7 @@
 
     <%= yield :head %>
 
-	<%= stylesheet_link_tag "accounting", media: "all" %>
+	<%= stylesheet_link_tag "accounting", media: "all", integrity: true %>
     <%= javascript_importmap_tags "accounting" %>
 
     <title><%= content_for(:title).presence || @title || "not-again" %></title>

@@ -18,7 +18,9 @@ class NumberFormatPrefTest < ApplicationSystemTestCase
     field = first("input.posting-amount")
     field.set("1234.5")
     field.native.send_keys(:tab)
-    assert_equal "1,234.50", first("input.posting-amount").value
+    # A filter block, not .value: the reformat runs on blur, after Tab returns,
+    # and only Capybara's matchers wait for it.
+    assert_selector("input.posting-amount", minimum: 1) { |el| el.value == "1,234.50" }
 
     # Choose the European shape on the profile (the select auto-submits).
     visit app_url("/en/admins/#{@admin.id}")
@@ -31,7 +33,9 @@ class NumberFormatPrefTest < ApplicationSystemTestCase
     field = first("input.posting-amount")
     field.set("1234.5")
     field.native.send_keys(:tab)
-    assert_equal "1.234,50", first("input.posting-amount").value
+    # A filter block, not .value: the reformat runs on blur, after Tab returns,
+    # and only Capybara's matchers wait for it.
+    assert_selector("input.posting-amount", minimum: 1) { |el| el.value == "1.234,50" }
   end
 
   test "clearing the choice falls back to the UI language" do

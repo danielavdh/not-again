@@ -291,8 +291,13 @@ const Accounts = {
 	       rate). See CurrencyConfig / ExchangeRate.calculate_fx_variance. */
 	    delegate(document, 'submit', '.form_transfer_entry', async (e, form) => {
 	      if (form.dataset.fxConfirmed) { delete form.dataset.fxConfirmed; return; }
+	      /* Decided before cancelling: requestSubmit() is silently ignored while
+	         this submit event is still being dispatched, so a check that resolved
+	         without waiting on the network swallowed the click. */
+	      const transfer = this.transferRateCheck();
+	      if (!transfer) return;
 	      e.preventDefault();
-	      const warning = await this.transferRateWarning(form);
+	      const warning = await this.transferRateWarning(form, transfer);
 	      if (warning && !confirm(warning)) return;
 	      form.dataset.fxConfirmed = 'true';
 	      form.requestSubmit();
@@ -1611,7 +1616,9 @@ const Accounts = {
 	   (same currency, an amount missing, or no published rate to compare with).
 	   The gap between what they typed and what the published rate says lands
 	   in translated reports as extra profit or loss — that figure is quoted. */
-	async transferRateWarning(form) {
+	/* The two currencies and amounts a rate check needs, or null when there is
+	   nothing to check: one currency, or an amount missing. */
+	transferRateCheck() {
 	  const currencies = this.getTransferCurrencies();
 	  const from = currencies[document.getElementById('journal_entry_from_account_id')?.value];
 	  const to   = currencies[document.getElementById('journal_entry_to_account_id')?.value];
@@ -1621,6 +1628,9 @@ const Accounts = {
 	  const targetCents = parseAmountToCents(document.getElementById('journal_entry_target_amount_display')?.value);
 	  if (!sourceCents || !targetCents || sourceCents <= 0 || targetCents <= 0) return null;
 
+	  return { from, to, sourceCents, targetCents };
+	},
+	async transferRateWarning(form, { from, to, sourceCents, targetCents }) {
 	  const date = document.getElementById('journal_entry_entry_date')?.value || '';
 	  let published;
 	  try {
