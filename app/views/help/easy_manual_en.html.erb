@@ -141,7 +141,7 @@
   <p>The VAT and the net amount are shown. A &pound;120 purchase at 20% becomes &pound;100 of expense and &pound;20 of VAT. The bank still shows &pound;120, because that is what you paid.</p>
   <p>If the invoice shows a slightly different VAT figure &thinsp;&mdash;&thinsp; suppliers round differently &thinsp;&mdash;&thinsp; you can type theirs over ours. The total stays as you typed it and the net adjusts. If you change the total or the code afterwards, the app recalculates. Where the figure is greyed out there is nothing to type over.</p>
   <p>A refund works the same way with a minus sign: enter it as a negative amount with the same code, and the VAT comes back out with it.</p>
-  <p>The first time you use a VAT code, the app creates a VAT account and tells you. Rename it or file it under a parent if you like.</p>
+  <p>When you tick the VAT scheme, the app creates two VAT accounts &thinsp;&mdash;&thinsp; one for the VAT you pay, one for the VAT you charge &thinsp;&mdash;&thinsp; and tells you. Rename them or file them under a parent if you like.</p>
 
   <h3>No VAT</h3>
   <p>Leave the VAT at "No VAT" on anything that has none: a supplier who is not registered, a bank charge, a wage. On a split bill the VAT code stays on the business line; the private portion gets none.</p>
@@ -156,7 +156,12 @@
   <p>Some countries let you pay a fixed percentage of your turnover instead of the difference between the VAT you charged and the VAT you paid &thinsp;&mdash;&thinsp; the UK Flat Rate Scheme, the Spanish <em>r&eacute;gimen simplificado</em>. They make the quarterly return quicker, not the bookkeeping: at the year end you need the exact figures anyway, so <strong>record everything as you would without the scheme</strong>. It changes the number you hand over, nothing else.</p>
 
   <h3>Paying the VAT</h3>
-  <p>When you pay the quarter, record a <em>transfer</em> from your bank account to the VAT account. That empties it, ready for the next quarter.</p>
+  <p>The app keeps two VAT accounts: <em>VAT on purchases</em> (what you reclaim) and <em>VAT on sales</em> (what you owe). When the quarter is settled, empty both with a <em>transfer</em> each, using the figures from your return:</p>
+  <ol>
+    <li>From <em>VAT on purchases</em> to <em>VAT on sales</em>: the VAT you reclaim.</li>
+    <li>From your bank to <em>VAT on sales</em>: the amount you pay. For a refund, from <em>VAT on sales</em> to your bank when the money arrives.</li>
+  </ol>
+  <p>Both accounts are then back to zero, ready for the next quarter.</p>
 
   <p>If you are not sure a purchase is reverse charge, ask your accountant. Getting it wrong does not lose money, but it does make the return wrong.</p>
 
@@ -212,7 +217,7 @@
   <p><strong>Repeat</strong> to add more tax schemes.</p>
 
   <h2 id="filing">Filing quarterly figures yourself</h2>
-    <p>Some returns can be sent straight from the app &thinsp;&mdash;&thinsp; UK Making Tax Digital (MTD), VAT soon &thinsp;&mdash;&thinsp; but not your annual tax return.</p>
+    <p>UK Making Tax Digital (MTD) updates can be sent straight from the app, but not your annual tax return. This works only if the installation you use has been approved by HMRC &thinsp;&mdash;&thinsp; ask whoever runs it.</p>
     <ol>
       <li>Say yes when the tax setup asks about submitting from the app, and choose or add the taxpayer. Save and assign your accounts (see &laquo;Setting up tax reporting&raquo;).</li>
       <li>To connect to your tax authority, click Connect &thinsp;&mdash;&thinsp; on the dashboard or the tax setup page. Log in at the tax office.</li>

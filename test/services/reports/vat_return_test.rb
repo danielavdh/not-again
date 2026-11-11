@@ -461,8 +461,8 @@ class Reports::VatReturnTest < ActiveSupport::TestCase
                  "the box and the summary cannot disagree about what is owed"
   end
 
-  # The manual says: pay the quarter with a transfer from the bank to the VAT
-  # account. That is a movement on the control account that no code explains —
+  # Paying the quarter is a transfer from the bank to a control account: a
+  # movement on the control account that no code explains —
   # and it was reported as VAT nobody accounted for, on every return after the
   # first. A settlement carries no income or expense; VAT that a code should
   # have produced always sits beside the row that produced it.
@@ -481,6 +481,51 @@ class Reports::VatReturnTest < ActiveSupport::TestCase
     q2 = result
     assert_equal 0, q2[:unassigned]
     assert_equal 0, q2[:net_payable], "and the payment is not a figure on the return either"
+  end
+
+  # The manual's two transfers, both the way the transfer form builds them: the
+  # reclaim moved across to the owed side, then the difference paid (or
+  # refunded). Afterwards neither control account may hold anything of the
+  # quarter, or every later balance sheet carries last quarter's VAT twice over.
+  def control(role) = Account.vat_accounts.for_entity_codes([ "10" ]).find_by(vat_role: role)
+
+  def transfer(from:, to:, amount:, date: Date.new(2026, 5, 7))
+    je = JournalEntry.new(entry_date: date, memo: "VAT settlement", posted: true)
+    je.postings.build(account: to,   entry_type: :debit,  amount: amount, currency: "GBP")
+    je.postings.build(account: from, entry_type: :credit, amount: amount, currency: "GBP")
+    je.save!
+  end
+
+  def balance(account) = account.postings.sum { |p| p.debit? ? p.amount.to_i : -p.amount.to_i }
+
+  test "settling a quarter with the manual's two transfers empties both control accounts" do
+    entry(gross: 60_000, key: "sale_standard",     account: accounts(:income_sales),     side: :credit,
+          date: Date.new(2026, 2, 10))
+    entry(gross: 12_000, key: "purchase_standard", account: accounts(:expenses_general), side: :debit,
+          date: Date.new(2026, 2, 11))
+    q1 = result(from: Date.new(2026, 1, 1), to: Date.new(2026, 3, 31))
+    assert_equal 10_000, box(q1, "vat_due_sales")
+    assert_equal 2_000,  box(q1, "vat_reclaimed")
+
+    transfer(from: control(:input), to: control(:output), amount: box(q1, "vat_reclaimed"))
+    transfer(from: accounts(:bank_gbp), to: control(:output), amount: q1[:net_payable])
+
+    assert_equal 0, balance(control(:input)),  "the reclaim has moved across"
+    assert_equal 0, balance(control(:output)), "and the payment settled the rest"
+    assert_equal 0, result[:unassigned], "neither transfer is VAT on the next return"
+  end
+
+  test "a refund quarter settles the same way, with the money coming in" do
+    entry(gross: 12_000, key: "purchase_standard", account: accounts(:expenses_general), side: :debit,
+          date: Date.new(2026, 2, 11))
+    q1 = result(from: Date.new(2026, 1, 1), to: Date.new(2026, 3, 31))
+    assert_equal(-2_000, q1[:net_payable])
+
+    transfer(from: control(:input), to: control(:output), amount: box(q1, "vat_reclaimed"))
+    transfer(from: control(:output), to: accounts(:bank_gbp), amount: -q1[:net_payable])
+
+    assert_equal 0, balance(control(:input))
+    assert_equal 0, balance(control(:output))
   end
 
   test "box 5 goes negative when more was reclaimed than charged" do

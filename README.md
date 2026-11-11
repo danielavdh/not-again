@@ -1,6 +1,6 @@
 # Not Again
 
-Self-hosted double-entry bookkeeping for sole traders and micro-businesses — VAT is the next feature to be added. Multi-currency, with tax categories for the UK, Germany, Switzerland and the Netherlands, and **built to be extended**.
+Self-hosted double-entry bookkeeping for sole traders and small businesses. Multi-currency, with tax categories and VAT returns for the UK, Germany, Switzerland, the Netherlands and Spain, and **built to be extended**.
 
 Rails 8. No SaaS, no subscription. Your books live in your database, on your server, and **nothing a visitor's browser loads comes from anyone else** — no CDN fonts, no analytics, no trackers.
 
@@ -52,9 +52,13 @@ The server side does talk to services you choose: object storage for the receipt
 
 It was built with Europe in mind — the tax catalogues, the FX rules and the filing model all follow European practice — but nothing in it is Europe-only.
 
-**It is bookkeeping, not business management:** No invoices, no quotes, no customers, no suppliers, no payments, no bank feeds, no payroll, no inventory, no budgets. **VAT is not supported yet** (next on agenda though) — the six tax schemes that ship cover self-employment and rental income, and MTD filing to HMRC covers Self Assessment and Property.
+**It is bookkeeping, not business management:** No invoices, no quotes, no customers, no suppliers, no payments, no bank feeds, no payroll, no inventory, no budgets.
 
-⚠️  Digital submission to HMRC requires HMRC's approval, applied for separately by each installation — see [docs/tier-3-hmrc.md](docs/tier-3-hmrc.md)
+Besides standard and custom reports, the app allows you to create tax reports that can be submitted to your tax authority on its own website. In the UK, HMRC accepts returns only from software — see [tier 3](docs/tier-3-hmrc.md).
+
+The app ships with eleven tax forms, transcribed from the current editions: self-employment for the UK, Germany, Switzerland and the Netherlands, rental income for the UK and Germany, and VAT for the UK, Germany, Switzerland, the Netherlands and Spain. Not every one has been used on a year of real books yet.
+
+They are meant to be extended by anyone who needs another country or form — see [Extend it](docs/README.md#extend-it). Check your first return with your accountant before you submit it. The figures are yours to verify.
 
 **Three ways to run this**
 
@@ -293,6 +297,10 @@ extending it, or looking something up. The essentials:
 | [docs/self-hosting.md](docs/self-hosting.md) | Self-hosted: the seven steps from accounts to first sign-in |
 | [docs/provider-setup.md](docs/provider-setup.md) | Self-hosted: setting up the server, DNS, storage, email and CDN, click by click |
 | [docs/maintenance.md](docs/maintenance.md) | What has to keep happening once it is live, and by whom |
+| [docs/tier-1-extending-languages-currencies.md](docs/tier-1-extending-languages-currencies.md) | Extend it, tier 1: adding a language or a currency |
+| [docs/tier-2-extending-countries.md](docs/tier-2-extending-countries.md) | Extend it, tier 2: adding or correcting a tax form, for any country |
+| [docs/tier-2-add-rate-source.md](docs/tier-2-add-rate-source.md) | Extend it, tier 2: adding an exchange-rate source |
+| [docs/tier-3-extending-filing.md](docs/tier-3-extending-filing.md) | Extend it, tier 3: filing to an authority from the app (HMRC exists; how to add another) |
 | [docs/self-hosting-legal.md](docs/self-hosting-legal.md) | What EU product-liability and cyber-resilience law expects, and what changes if you charge |
 | [docs/known-limitations.md](docs/known-limitations.md) | The self-hosting risks worked through — resolved and still-open |
 | [SECURITY.md](SECURITY.md) | How to report a security problem, and what is by design rather than a defect |
@@ -326,6 +334,8 @@ document now, and needs your eye:
   users or you are elsewhere, check the wording fits.
 - **"If we hold data for your business"** — the Article 28 processor section.
   Only relevant if you keep books for other people; read it if you do.
+
+**Filing to HMRC from the app** works only once HMRC has approved your installation — see [docs/tier-3-hmrc.md](docs/tier-3-hmrc.md). Until then, the manuals' section on filing quarterly figures describes something your users cannot do: apply, or tell them.
 
 ### **Stack**
 
