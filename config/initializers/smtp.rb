@@ -19,5 +19,9 @@ Rails.application.config.action_mailer.smtp_settings = {
   user_name: ENV["SMTP_USERNAME"].presence || Rails.application.credentials.dig(:smtp, :username),
   password:  ENV["SMTP_PASSWORD"].presence || Rails.application.credentials.dig(:smtp, :password),
   authentication: :plain,
-  enable_starttls_auto: true
+  enable_starttls_auto: true,
+  # The mail gem's default is 5 seconds. The provider has taken longer to
+  # confirm a message it then delivered, and the job counted as failed.
+  open_timeout: 30,
+  read_timeout: 30
 }

@@ -1,0 +1,107 @@
+#!/bin/sh
+# Takes not-again's database volume offline cleanly for a Hetzner maintenance
+# window on its network path, and brings it back afterwards. Runs on the SERVER.
+# Deploy with: scp script/db-volume-maintenance root@<host>:/usr/local/bin/
+#
+#   db-volume-maintenance stop     visitors get a maintenance page, then app
+#                                  and database are stopped, the volume
+#                                  unmounted and its encryption closed
+#   db-volume-maintenance start    waits until the volume answers again (up to
+#                                  $WAIT_HOURS), then reopens, mounts and starts
+#                                  everything, checks the books are readable,
+#                                  and only then takes the maintenance page down
+#
+# Scheduled as one-off timers, e.g. for a window starting 05:30 UTC:
+#   systemd-run --on-calendar="2026-11-10 05:15:00 UTC" /usr/local/bin/db-volume-maintenance stop
+#   systemd-run --on-calendar="2026-11-10 06:45:00 UTC" /usr/local/bin/db-volume-maintenance start
+#
+# A stop that fails half-way starts everything again at once: a running
+# database through the window is the state we would have had without this
+# script, and a half-stopped one is worse than either.
+#
+# Everything goes to /var/log/db-volume-maintenance.log.
+
+DEVICE=/dev/disk/by-id/scsi-0HC_Volume_106738165
+MAPPING=not-again-db-crypt
+MOUNT=/root/not-again-db/data
+DB=not-again-db
+DB_USER=not_again_user
+SERVICE=not-again-web                    # kamal-proxy's name for the app
+MESSAGE="Scheduled maintenance — back within the hour. · Wartungsarbeiten — in einer Stunde wieder da. · Onderhoud — binnen het uur terug. · Mantenimiento programado — volvemos en una hora."
+STATE=/root/.db-volume-maintenance.web   # which web container stop stopped
+WAIT_HOURS=${WAIT_HOURS:-4}              # start gives up after this long
+LOG=/var/log/db-volume-maintenance.log
+
+exec >>"$LOG" 2>&1
+log() { echo "$(date -u '+%F %T') $*"; }
+
+volume_answers() {
+  [ -e "$DEVICE" ] && dd if="$DEVICE" of=/dev/null bs=4096 count=1 iflag=direct 2>/dev/null
+}
+
+start_all() {
+  if ! mountpoint -q "$MOUNT"; then
+    [ -e "/dev/mapper/$MAPPING" ] || cryptdisks_start "$MAPPING" || return 1
+    mount "$MOUNT" || return 1
+  fi
+  docker start "$DB" >/dev/null || return 1
+
+  i=0
+  until docker exec "$DB" pg_isready -q -U "$DB_USER"; do
+    i=$((i + 1)); [ $i -ge 30 ] && { log "database not ready after 60s"; return 1; }
+    sleep 2
+  done
+
+  web=$(cat "$STATE" 2>/dev/null)
+  [ -n "$web" ] || web=$(docker ps -a --filter "name=^not-again-web-" --format "{{.Names}}" | head -1)   # newest first
+  docker start "$web" >/dev/null || return 1
+
+  i=0
+  until docker exec "$web" bin/rails runner 'puts "journal entries: #{JournalEntry.count}"'; do
+    i=$((i + 1)); [ $i -ge 6 ] && { log "the app cannot read the database"; return 1; }
+    sleep 10
+  done
+  rm -f "$STATE"
+  docker exec kamal-proxy kamal-proxy resume "$SERVICE" || return 1
+}
+
+case "$1" in
+  stop)
+    log "stop: begin"
+    web=$(docker ps --format '{{.Names}}' | grep '^not-again-web-' | head -1)
+    echo "$web" > "$STATE"
+    if docker exec kamal-proxy kamal-proxy stop "$SERVICE" --message "$MESSAGE" &&
+       docker stop -t 30 "$web" >/dev/null &&
+       docker stop -t 60 "$DB" >/dev/null &&
+       umount "$MOUNT" &&
+       cryptdisks_stop "$MAPPING"; then
+      log "stop: done — maintenance page up, $web and $DB stopped, $MOUNT unmounted, $MAPPING closed"
+    else
+      log "stop: FAILED — starting everything again"
+      start_all && log "stop: everything running again" || log "stop: AND THE RESTART FAILED"
+      exit 1
+    fi
+    ;;
+  start)
+    deadline=$(( $(date +%s) + WAIT_HOURS * 3600 ))
+    log "start: begin, waiting up to $WAIT_HOURS hours for the volume"
+    until volume_answers; do
+      if [ "$(date +%s)" -gt "$deadline" ]; then
+        log "start: GAVE UP — volume still unreachable after $WAIT_HOURS hours"
+        exit 1
+      fi
+      log "start: volume not answering, retrying in 15 minutes"
+      sleep 900
+    done
+    if start_all; then
+      log "start: done — not-again is running"
+    else
+      log "start: FAILED — see above"
+      exit 1
+    fi
+    ;;
+  *)
+    echo "usage: $0 stop|start" >&2
+    exit 2
+    ;;
+esac
