@@ -32,11 +32,11 @@ The server side does talk to services you choose: object storage for the receipt
 ### What it does
 
 - **Double-entry bookkeeping** with full journal entry support
-- **Multi-currency** Ships with the published rates from the ECB, HMRC, the Bundesbank and the Swiss tax authority (ESTV) — monthly from all four, plus the ECB's daily rates where a country's rules ask for it. Exchange-rate differences are explicit on the trial balance.    accounts with FX rate translation and explicit variance  reporting, from the published rates of the ECB, HMRC, the Bundesbank and the Swiss ESTV — all monthly, plus the ECB's daily series where a country's rules ask for it.n
+- **Multi-currency** Rates are the published ones from the ECB, HMRC, the Bundesbank and the Swiss tax authority (ESTV) — monthly from all four, plus the ECB's daily rates where a country's rules ask for a daily rate. Exchange-rate differences appear as their own line on the trial balance (Exchange Rate Variance).
 - **Nothing is converted when an entry is saved.** Only balance-sheet postings carry a currency. Everything else is translated when the report is run, by the rules that report follows, at the rate for the entry's date. A euro expense paid from a sterling account, or a reverse charge from an account in any currency, is an ordinary entry rather than a conversion.
-- **Tax export** — the transactions, each with a link to its receipt, and a CSV in the authority's own tax categories / boxes. An extra format is optional (DATEV today; adding one is a single file).
-- **Receipt management** — upload, compress and link photos, scans and PDFs to their postings, including from a phone by someone who can do nothing else
-- **Entity-scoped access control** — co-admins, read-only and upload-only roles, OTP
+- **Tax export** — the transactions, each with a link to its receipt, and a tax-category CSV in the authority's own boxes. An accountant's format is optional (DATEV today; adding one is a single file).
+- **Receipts** — upload, compress and link photos, scans and PDFs to their postings, including from a phone by someone who can do nothing else
+- **Control access per entity** — admins, co-admins (read-only and upload-only). Two-factor sign-in.
 - **Multi-entity** — up to 100 businesses or households in one install, each with a two-digit code; group them into families for consolidated reports, or link a payment across separate businesses, visible in both
 - **Reports** — over any date range: profit and loss, balance sheet, trial balance and tax summaries for each business or household; custom reports over any accounts you choose, plus an assisted year-end close
 - **Your books, portable any time** — a one-click CSV of every account, generated automatically at each year-end close and on demand for the year to date. Any spreadsheet, or any other bookkeeping software, can read it - not a restore file for this app specifically — see "Reports" on the dashboard
@@ -48,14 +48,14 @@ The server side does talk to services you choose: object storage for the receipt
 
 - Bookkeepers and small practices keeping books for several clients in one install, instead of paying per client
 - Freelancers and sole traders with bank accounts in more than one currency, cross-border trade, or both
-- Small businesses needing multi-currency accounting with proper FX handling
+- Small businesses keeping books in more than one currency — the rate the rules require, for the date of the entry
 - Rails developers who want to extend this Rails 8 codebase
 
 It was built with Europe in mind — the tax catalogues, the FX rules and the filing model all follow European practice — but nothing in it is Europe-only.
 
 **It is bookkeeping, not business management:** No invoices, no quotes, no customers, no suppliers, no payments, no bank feeds, no payroll, no inventory, no budgets.
 
-Besides standard and custom reports, the app allows you to create tax reports that can be submitted to your tax authority on its own website. In the UK, HMRC accepts returns only from software — see [tier 3](docs/tier-3-hmrc.md).
+Besides standard and custom reports, the app allows you to create tax reports, which you file yourself, on the authority's website. In the UK, HMRC takes the quarterly update only from software — see [tier 3](docs/tier-3-hmrc.md). The app does not file annual returns.
 
 The app ships with eleven tax forms, transcribed from the current editions: self-employment for the UK, Germany, Switzerland and the Netherlands, rental income for the UK and Germany, and VAT for the UK, Germany, Switzerland, the Netherlands and Spain. Not every one has been used on a year of real books yet.
 
@@ -64,8 +64,8 @@ They are meant to be extended by anyone who needs another country or form — se
 **Three ways to run this**
 
 - **On your own computer**, for yourself alone — see [Run it locally](#run-it-locally). Cost: 0
-- **Hosted for you** — see [docs/scalingo.md](docs/scalingo.md), a few clicks and a card. The machine is theirs; they maintain it. Cost: from about €36/month
-- **On a server you rent** — see [Run it in production](#run-it-in-production). More involved, you maintain. Our instructions are detailed, but if you have never used the terminal, it may not be for you. You could hire someone to set it up for you and do the maintenance. Cost: €5+/month.
+- **Hosted for you** — see [docs/scalingo.md](docs/scalingo.md), a few clicks and a card. The machine is theirs; they maintain it. No filing to HMRC from this route. Cost: from about €36/month
+- **On a server you rent** — see [Run it in production](#run-it-in-production). More involved, you maintain it. Our instructions are detailed, but if you have never used a terminal, hire someone to set it up and maintain it. Cost: €5+/month.
 
 ---
 
