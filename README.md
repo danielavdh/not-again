@@ -32,14 +32,15 @@ The server side does talk to services you choose: object storage for the receipt
 ### What it does
 
 - **Double-entry bookkeeping** with full journal entry support
-- **Multi-currency** accounts with FX rate translation and explicit variance reporting, from the published rates of the ECB, HMRC, the Bundesbank and the Swiss ESTV — all monthly, plus the ECB's daily series where a country's rules ask for it. The principle behind it: **only balance-sheet postings carry a currency. Everything else is translated at report time, by the rules of the scheme being reported, at the rate for the entry's date. Nothing is converted when an entry is saved.** That is what makes a euro expense paid from a sterling account, or a reverse charge from an account in any currency, an ordinary entry rather than a conversion
-- **Tax export** — a transactions listing with receipt links and a tax-category CSV in the authority's own boxes, plus an optional accountant format (DATEV today; adding one is a single file)
-- **Receipt management** — upload, compress and link photos, scans and PDFs to postings, including from a phone by someone who can do nothing else
+- **Multi-currency** Ships with the published rates from the ECB, HMRC, the Bundesbank and the Swiss tax authority (ESTV) — monthly from all four, plus the ECB's daily rates where a country's rules ask for it. Exchange-rate differences are explicit on the trial balance.    accounts with FX rate translation and explicit variance  reporting, from the published rates of the ECB, HMRC, the Bundesbank and the Swiss ESTV — all monthly, plus the ECB's daily series where a country's rules ask for it.n
+- **Nothing is converted when an entry is saved.** Only balance-sheet postings carry a currency. Everything else is translated when the report is run, by the rules that report follows, at the rate for the entry's date. A euro expense paid from a sterling account, or a reverse charge from an account in any currency, is an ordinary entry rather than a conversion.
+- **Tax export** — the transactions, each with a link to its receipt, and a CSV in the authority's own tax categories / boxes. An extra format is optional (DATEV today; adding one is a single file).
+- **Receipt management** — upload, compress and link photos, scans and PDFs to their postings, including from a phone by someone who can do nothing else
 - **Entity-scoped access control** — co-admins, read-only and upload-only roles, OTP
-- **Multi-entity** — up to 100 businesses or households in one install, each with a two-digit code; group them into families for consolidated reports, or link a payment across separate businesses with a two-sided cross-entity entry
-- **Reports** — custom reports over any accounts you choose, profit/loss, balance sheet, trial balance and tax summaries per entity, over any date range, plus an assisted year-end close
-- **Your books, portable any time** — a one-click CSV of every account, generated automatically at each year-end close and on demand for the year to date; describes the books openly (any spreadsheet, any other bookkeeping software), not a restore file for this app specifically — see "Reports" on the dashboard
-- **Locale-aware** — en / de / es / nl, and any language can be added
+- **Multi-entity** — up to 100 businesses or households in one install, each with a two-digit code; group them into families for consolidated reports, or link a payment across separate businesses, visible in both
+- **Reports** — over any date range: profit and loss, balance sheet, trial balance and tax summaries for each business or household; custom reports over any accounts you choose, plus an assisted year-end close
+- **Your books, portable any time** — a one-click CSV of every account, generated automatically at each year-end close and on demand for the year to date. Any spreadsheet, or any other bookkeeping software, can read it - not a restore file for this app specifically — see "Reports" on the dashboard
+- **Languages** — English, German, Spanish and Dutch, any other can be added
 
 ---
 
@@ -301,6 +302,8 @@ extending it, or looking something up. The essentials:
 | [docs/tier-2-extending-countries.md](docs/tier-2-extending-countries.md) | Extend it, tier 2: adding or correcting a tax form, for any country |
 | [docs/tier-2-add-rate-source.md](docs/tier-2-add-rate-source.md) | Extend it, tier 2: adding an exchange-rate source |
 | [docs/tier-3-extending-filing.md](docs/tier-3-extending-filing.md) | Extend it, tier 3: filing to an authority from the app (HMRC exists; how to add another) |
+| [docs/vat-reference.md](docs/vat-reference.md) | VAT per country: what is shared, what differs, which special cases are handled |
+| [docs/tax-category-reference.md](docs/tax-category-reference.md) | Every shipped tax catalogue, and every field a catalogue file can hold |
 | [docs/self-hosting-legal.md](docs/self-hosting-legal.md) | What EU product-liability and cyber-resilience law expects, and what changes if you charge |
 | [docs/known-limitations.md](docs/known-limitations.md) | The self-hosting risks worked through — resolved and still-open |
 | [SECURITY.md](SECURITY.md) | How to report a security problem, and what is by design rather than a defect |

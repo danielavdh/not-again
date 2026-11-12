@@ -36,6 +36,30 @@ class ReportFlatRateTest < ActiveSupport::TestCase
     assert_includes report.errors.attribute_names, :prepayment
   end
 
+  # The form hides the fields elsewhere; these are values sent anyway.
+  test "a flat rate is refused on a scheme without one, accepted on GB and CH" do
+    %w[de_vat nl_vat es_vat].each do |scheme|
+      report = Report.new(report_group: ReportGroup.new(tax_scheme: scheme), flat_rate_bps: 1450)
+      report.valid?
+      assert_includes report.errors.attribute_names, :flat_rate_bps, scheme
+    end
+    %w[gb_vat ch_vat].each do |scheme|
+      report = Report.new(report_group: ReportGroup.new(tax_scheme: scheme), flat_rate_bps: 1450)
+      report.valid?
+      assert_not_includes report.errors.attribute_names, :flat_rate_bps, scheme
+    end
+  end
+
+  test "a prepayment is refused where the return has no box for it" do
+    report = Report.new(report_group: ReportGroup.new(tax_scheme: "gb_vat"), prepayment: 5_000)
+    report.valid?
+    assert_includes report.errors.attribute_names, :prepayment
+
+    report = Report.new(report_group: ReportGroup.new(tax_scheme: "de_vat"), prepayment: 5_000)
+    report.valid?
+    assert_not_includes report.errors.attribute_names, :prepayment
+  end
+
   test "a rate outside any real scheme is refused" do
     report = Report.new(flat_rate_percentage: "150")
     report.valid?

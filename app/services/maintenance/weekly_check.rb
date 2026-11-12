@@ -91,7 +91,7 @@ module Maintenance
     end
 
     def call
-      [ backup, mirror, bucket_privacy, rates, failed_jobs, errors, sign_ins ]
+      [ backup, mirror, bucket_privacy, rates, failed_jobs, errors, sign_ins, retired_tax_codes ]
     end
 
     private
@@ -337,6 +337,21 @@ module Maintenance
                  "#{months.first.strftime('%Y-%m')}…#{months.last.strftime('%Y-%m')}"
         "#{label} #{rows.size} (#{span})"
       }.join(", ")
+    end
+
+    # VAT code rows the catalogue no longer declares, kept because entries still
+    # use them (TaxCategoryLoader#prune_tax_codes). The bookkeepers were emailed
+    # once; this repeats it every week until the entries have a current code.
+    def retired_tax_codes
+      counts = Posting.joins(:tax_code).where.not(tax_codes: { retired_at: nil })
+                      .group("tax_codes.scheme", "tax_codes.key", "tax_codes.valid_from")
+                      .distinct.count(:journal_entry_id)
+      return ok("Retired VAT codes", "none in use") if counts.empty?
+
+      detail = counts.map { |(scheme, key, from), entries|
+        "#{scheme} #{key} (from #{from}): #{entries} #{'entry'.pluralize(entries)}"
+      }.join("; ")
+      bad("Retired VAT codes", "#{detail} — the bookkeepers were emailed; each entry needs a current code")
     end
 
     def ok(area, detail)  = Finding.new(area: area, ok: true,  detail: detail)

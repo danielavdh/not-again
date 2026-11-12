@@ -52,8 +52,18 @@ class Report < ApplicationRecord
     self.prepayment = value.presence && (value.to_f * 100).round
   end
   validate :end_date_after_start_date
+  validate :flat_rate_and_prepayment_only_where_the_scheme_has_them
 
 private
+
+  # The form only shows the fields where the scheme has them; this refuses a
+  # value sent anyway. A prepayment on a scheme without the box would still be
+  # subtracted from the amount to pay.
+  def flat_rate_and_prepayment_only_where_the_scheme_has_them
+    errors.add(:flat_rate_bps, :present) if flat_rate_bps && !report_group&.flat_rate?
+    errors.add(:prepayment, :present) if prepayment &&
+                                         !TaxSchemeConfig.prepayment_category(report_group&.tax_scheme)
+  end
 
   def end_date_after_start_date
     return unless start_date && end_date

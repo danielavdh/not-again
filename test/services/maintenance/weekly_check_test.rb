@@ -91,7 +91,7 @@ class Maintenance::WeeklyCheckTest < ActiveSupport::TestCase
     assert_includes backup.detail, "cannot read"
     # Named rather than counted: a bare number tells you something changed, but
     # not that the check you cared about is still running.
-    assert_equal [ "Backups", "Second-provider mirror", "Bucket privacy", "Exchange rates", "Background jobs", "Runtime errors", "Sign-ins" ],
+    assert_equal [ "Backups", "Second-provider mirror", "Bucket privacy", "Exchange rates", "Background jobs", "Runtime errors", "Sign-ins", "Retired VAT codes" ],
                  findings.map(&:area), "one failing check must not suppress the others"
   end
 

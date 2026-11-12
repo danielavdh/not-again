@@ -408,6 +408,14 @@ private
         next
       end
 
+      # Kept only for the entries that already had it; a copy or a new row
+      # must take a current code.
+      if code.retired_at && row.tax_code_id_changed?
+        errors.add(:base, I18n.t("journal_entries.errors.tax_code_retired",
+                                 account: name, code: code.label))
+        next
+      end
+
       if row.tax_amount_invalid
         errors.add(:base, I18n.t("journal_entries.errors.tax_amount_exceeds_gross",
                                  account: name))

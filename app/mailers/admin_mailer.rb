@@ -184,6 +184,15 @@ class AdminMailer < ApplicationMailer
     end
   end
 
+  def tax_codes_retired
+    @admin   = params[:admin]
+    @entries = params[:entries]
+
+    I18n.with_locale(params[:locale] || I18n.default_locale) do
+      mail(to: @admin.email_address, subject: t('.subject', count: @entries.size))
+    end
+  end
+
   # The weekly maintenance report. Internal ops mail, sudo only, so English.
   #
   # Sent whether or not anything is wrong — see Maintenance::WeeklyCheck. The

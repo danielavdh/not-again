@@ -51,6 +51,22 @@ class JournalEntryVatTest < ActiveSupport::TestCase
            .find_by(tax_scheme: "gb_vat", vat_role: direction)
   end
 
+  # Kept only for the entries that already had it (TaxCategoryLoader). A new
+  # row, or a copy, must take a current code.
+  test "a retired code is refused on a new row and kept on a row that already had it" do
+    @purchase.update_column(:retired_at, Time.current)
+
+    je = bank_entry(gross: 12_000, code: @purchase)
+    assert_not je.valid?
+    assert_includes je.errors[:base].join, @purchase.label
+
+    @purchase.update_column(:retired_at, nil)
+    je = bank_entry(gross: 12_000, code: @purchase)
+    je.save!
+    @purchase.update_column(:retired_at, Time.current)
+    assert je.reload.valid?, je.errors.full_messages.to_sentence
+  end
+
   test "a purchase typed as gross leaves the bank at the gross and the P&L at the net" do
     je = bank_entry(gross: 12_000, code: @purchase)
     assert je.save, je.errors.full_messages.join("; ")

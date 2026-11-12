@@ -1,0 +1,11 @@
+<%= t('.greeting', name: @admin.username) %>
+
+<%= t('.body') %>
+
+<% @entries.each do |code, date, reference, memo| %>
+  <%= l(date) %>  <%= [reference, memo].compact_blank.join(" · ") %> — <%= TaxSchemeConfig.scheme_label(code.scheme) %>: <%= code.display_name %>
+<% end %>
+
+<%= t('.what_to_do') %>
+
+<%= t('.closing') %>

@@ -211,6 +211,13 @@ module TaxSchemeConfig
     config[:flat_rate_labels][scheme.to_s].presence || "Flat rate"
   end
 
+  # Whether the scheme has a flat rate at all. A catalogue declares one by
+  # naming it (flat_rate_label); Spain's régimen simplificado is not a
+  # percentage of turnover, so es_vat names none.
+  def self.flat_rate?(scheme)
+    config[:flat_rate_labels][scheme.to_s].present?
+  end
+
   # The key of the box a prepayment fixed by the authority is deducted in —
   # Germany's Kz 39, Sondervorauszahlung — or nil for a scheme whose return has
   # no such line. Declared in the catalogue header as prepayment_category.

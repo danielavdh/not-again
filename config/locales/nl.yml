@@ -262,6 +262,12 @@ nl:
       what_to_do: "Open elke rekening en kies opnieuw een categorie. Tot die tijd ontbreken hun bedragen in belastingoverzichten en aangiften."
       periods_note: "Dit geldt alleen voor lopende en toekomstige periodes. Wat al is ingediend, verandert niet."
       closing: "Excuses voor de onderbreking."
+    tax_codes_retired:
+      subject: "Actie nodig: %{count} boeking(en) met een gewijzigde btw-code"
+      greeting: "Hallo %{name},"
+      body: "Een btw-code in de catalogus is gecorrigeerd. Deze boekingen konden niet automatisch worden omgezet, omdat de gecorrigeerde code een ander tarief heeft of hun datum niet dekt:"
+      what_to_do: "Open elke boeking en kies de btw-code opnieuw. De btw wordt dan opnieuw berekend. Tot die tijd houdt de boeking de oude code en telt ze in de aangifte mee zoals voorheen."
+      closing: "U ontvangt dit bericht omdat u de boekhouding van dit bedrijf voert."
     filing_submitted:
       subject: "Indiening bij %{authority} — %{entity} — %{period}"
       greeting: "Hallo %{name},"
@@ -763,6 +769,7 @@ nl:
       closing_entry_managed: "Deze afsluitboeking wordt beheerd door de jaarafsluiting. Doe de afsluiting opnieuw in plaats van deze hier te bewerken."
       vat_leg_currency: "De btw-boeking op %{account} staat in %{currency}, maar de boeking zelf in %{bank_currency}"
       tax_code_date: "De btw-code op %{account} geldt niet op %{date}"
+      tax_code_retired: "De btw-code %{code} op %{account} staat niet meer in de catalogus — kies een actuele"
       tax_code_not_nominal: "%{account} kan geen btw-code dragen — alleen opbrengst- en kostenregels"
       tax_code_currency: "%{scheme} wordt aangegeven in %{scheme_currency} en kan dus niet op een boeking in %{entry_currency}. Zet eerst om, of boek het brutobedrag en vraag niets terug."
       tax_code_scheme: "%{account} kan geen %{scheme}-code gebruiken — deze onderneming geeft die regeling niet aan"

@@ -39,6 +39,22 @@ class ReportModalFlatRateTest < ActionDispatch::IntegrationTest
     assert_no_match(/report\[prepayment_display\]/, dashboard_body)
   end
 
+  # Only GB and CH have one. Spain's régimen simplificado is not a percentage,
+  # and Germany and the Netherlands have no such scheme.
+  test "a German, Dutch or Spanish VAT group's form does not offer the flat rate" do
+    %w[de_vat nl_vat es_vat].each do |scheme|
+      TaxCategoryLoader.call(Rails.root.join("db/tax_categories/#{scheme}_2026.yml"))
+      patch update_tax_entity_path(@entity), params: { entity: { tax_schemes: [ scheme ] } }
+      assert_no_match(/report\[flat_rate_percentage\]/, dashboard_body, scheme)
+    end
+  end
+
+  test "a Swiss VAT group's form offers it" do
+    TaxCategoryLoader.call(Rails.root.join("db/tax_categories/ch_vat_2026.yml"))
+    patch update_tax_entity_path(@entity), params: { entity: { tax_schemes: [ "ch_vat" ] } }
+    assert_match(/report\[flat_rate_percentage\]/, dashboard_body)
+  end
+
   # An income-tax scheme has no flat rate, and offering one would invite a
   # number that silently changes nothing.
   test "a non-VAT group's form does not" do

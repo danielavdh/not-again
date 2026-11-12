@@ -22,6 +22,20 @@ class AdminEntity < ApplicationRecord
   scope :with_full_access, -> { where(access_level: :full_access) }
   scope :with_read_only, -> { where(access_level: :read_only) }
 
+  # Who can fix a business's books, by entity code: its full-access admins. A
+  # read_only or upload_receipts co-admin cannot, so telling them is noise.
+  # Three queries, however many codes.
+  def self.full_access_admins_by_entity_code(entity_codes)
+    codes_by_id = Entity.where(code: entity_codes).pluck(:id, :code).to_h
+    links  = with_full_access.where(entity_id: codes_by_id.keys).pluck(:admin_id, :entity_id)
+    admins = Admin.where(id: links.map(&:first).uniq).index_by(&:id)
+
+    links.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(admin_id, entity_id), out|
+      admin = admins[admin_id] or next
+      out[codes_by_id[entity_id]] << admin
+    end
+  end
+
   # Two disjoint domains: sudo only ever removes a full_access row, and a full-
   # access admin only ever removes a read_only/upload_receipts row on an entity
   # they themselves hold full_access on.

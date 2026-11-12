@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <% if @report_group&.vat_report? %>
+    <% if @report_group&.flat_rate? %>
       <div class="field">
         <%= f.label :flat_rate_percentage, t("tax.vat.flat_rate_label") %>
         <%= f.number_field :flat_rate_percentage, min: 0.01, max: 100, step: 0.01,

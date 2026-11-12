@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -472,6 +472,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_130000) do
     t.string "net_category_key"
     t.integer "position", default: 0, null: false
     t.integer "rate_bps", null: false
+    t.datetime "retired_at"
     t.boolean "reverse_charge", default: false, null: false
     t.string "reverse_tax_category_key"
     t.string "scheme", null: false

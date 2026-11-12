@@ -207,7 +207,9 @@ class TaxCategoryLoader
         reverse_tax_category_key: row['reverse_tax_category_key'],
         # What a DATEV import expects.
         datev_bu:         row['datev_bu'],
-        position:         row['position'].to_i
+        position:         row['position'].to_i,
+        # A retired row the file declares again is current again.
+        retired_at:       nil
       }
     end
 
@@ -222,8 +224,15 @@ class TaxCategoryLoader
     rows.size
   end
 
-  # A code with postings is HISTORY: deleting it would orphan the VAT on entries
-  # already filed. Retiring a rate means giving it a valid_to.
+  # A row is key + valid_from, so a corrected start date, a removed code and a
+  # period split by a rate change all leave a row the file no longer declares.
+  #
+  # Its entries move to the row of the same key that covers their date, where
+  # that row books them the same way. What cannot move stays on the old row,
+  # which is kept and marked retired: deleting it would leave entries pointing
+  # at nothing, and refusing the load would stop the deploy of every
+  # installation over books only their owner can decide about. Retired rows are
+  # tried again on every load and deleted once nothing uses them.
   def prune_tax_codes(scheme, rows)
     live   = rows.map { |r| [ r[:key], r[:valid_from].to_s ] }
     doomed = TaxCode.where(scheme: scheme).reject { |c|
@@ -231,19 +240,42 @@ class TaxCategoryLoader
     }
     return if doomed.empty?
 
-    in_use = TaxCode.where(id: doomed.map(&:id)).joins(:postings).distinct.pluck(:key)
-    if in_use.any?
-      raise "#{@path} no longer declares tax code(s) #{in_use.sort.join(', ')}, but postings " \
-            "use them. A code with postings is history — give it a valid_to instead of " \
-            "removing it."
+    successors = TaxCode.where(scheme: scheme, key: doomed.map(&:key).uniq)
+                        .where.not(id: doomed.map(&:id)).to_a.group_by(&:key)
+    removed, newly_retired = 0, []
+
+    doomed.each do |old|
+      candidates = successors.fetch(old.key, [])
+      candidates.select { |row| row.books_like?(old) }.each do |row|
+        Posting.where(tax_code_id: old.id)
+               .where(journal_entry_id: JournalEntry.where(entry_date: row.valid_from..row.valid_to))
+               .update_all(tax_code_id: row.id)
+      end
+
+      # A remembered default is a form prefill, not history: today's row of the
+      # same key, or none.
+      Account.where(default_tax_code_id: old.id)
+             .update_all(default_tax_code_id: candidates.find { |row| row.on?(Date.current) }&.id)
+
+      if Posting.where(tax_code_id: old.id).exists?
+        next if old.retired_at
+        old.update_columns(retired_at: Time.current)
+        newly_retired << old.id
+      else
+        old.delete
+        removed += 1
+      end
     end
 
-    # An account's remembered default is a form prefill, not history, and the
-    # foreign key would otherwise refuse the delete halfway through.
-    Account.where(default_tax_code_id: doomed.map(&:id)).update_all(default_tax_code_id: nil)
-    TaxCode.where(id: doomed.map(&:id)).delete_all
-    Rails.logger.info("TaxCategoryLoader: removed #{doomed.size} unused tax code row(s) " \
-                      "from #{scheme} — no longer in #{File.basename(@path)}")
+    if removed.positive?
+      Rails.logger.info("TaxCategoryLoader: removed #{removed} tax code row(s) from #{scheme} " \
+                        "— no longer in #{File.basename(@path)}")
+    end
+    return if newly_retired.empty?
+
+    Rails.logger.warn("TaxCategoryLoader: kept #{newly_retired.size} retired tax code row(s) in " \
+                      "#{scheme} — entries use them and no current row books them the same way")
+    TaxCodeRetirementNotificationJob.perform_later(tax_code_ids: newly_retired)
   end
 
   def check_direction!(value, index)

@@ -262,6 +262,12 @@ de:
       what_to_do: "Bitte öffne jedes Konto und wähle erneut eine Kategorie. Bis dahin fehlen ihre Beträge in Steuerauswertungen und Übermittlungen."
       periods_note: "Das betrifft nur laufende und künftige Zeiträume. Bereits übermittelte Daten bleiben unverändert."
       closing: "Entschuldige die Störung."
+    tax_codes_retired:
+      subject: "Bitte prüfen: %{count} Buchung(en) mit einem geänderten Steuerschlüssel"
+      greeting: "Hallo %{name},"
+      body: "Ein Steuerschlüssel im Katalog wurde berichtigt. Diese Buchungen konnten nicht automatisch umgestellt werden, weil der berichtigte Schlüssel einen anderen Steuersatz hat oder ihr Datum nicht abdeckt:"
+      what_to_do: "Bitte öffnen Sie jede Buchung und wählen Sie den Steuerschlüssel neu. Die Steuer wird dann neu berechnet. Bis dahin behält die Buchung den alten Schlüssel und zählt in der Voranmeldung wie bisher."
+      closing: "Sie erhalten diese Nachricht, weil Sie die Bücher dieses Unternehmens führen."
     filing_submitted:
       subject: "Übermittlung an %{authority} — %{entity} — %{period}"
       greeting: "Hallo %{name},"
@@ -763,6 +769,7 @@ de:
       closing_entry_managed: "Diese Abschlussbuchung wird vom Jahresabschluss verwaltet. Führe den Abschluss erneut durch, statt sie hier zu bearbeiten."
       vat_leg_currency: "Die Umsatzsteuerbuchung auf %{account} lautet auf %{currency}, der Beleg aber auf %{bank_currency}"
       tax_code_date: "Der Steuerschlüssel auf %{account} gilt am %{date} nicht"
+      tax_code_retired: "Der Steuerschlüssel %{code} auf %{account} ist nicht mehr im Katalog — bitte einen aktuellen wählen"
       tax_code_not_nominal: "%{account} kann keinen Steuerschlüssel tragen — nur Erlös- und Aufwandszeilen"
       tax_code_currency: "%{scheme} wird in %{scheme_currency} erklärt und kann daher nicht bei einem Beleg in %{entry_currency} verwendet werden. Erst umbuchen, oder brutto buchen und keine Vorsteuer ziehen."
       tax_code_scheme: "%{account} kann keinen %{scheme}-Schlüssel verwenden — dieser Betrieb erklärt ihn nicht"

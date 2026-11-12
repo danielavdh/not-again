@@ -262,6 +262,12 @@ es:
       what_to_do: "Abre cada cuenta y elige una categoría de nuevo. Hasta entonces, sus importes quedan fuera de las exportaciones fiscales y de los envíos."
       periods_note: "Esto afecta solo a los periodos actuales y futuros. Lo ya presentado no cambia."
       closing: "Disculpa las molestias."
+    tax_codes_retired:
+      subject: "Acción necesaria: %{count} asiento(s) con un código de IVA modificado"
+      greeting: "Hola %{name}:"
+      body: "Se ha corregido un código de IVA del catálogo. Estos asientos no se han podido pasar al código corregido automáticamente, porque tiene otro tipo o no cubre su fecha:"
+      what_to_do: "Abra cada asiento y vuelva a elegir el código de IVA. El IVA se calculará de nuevo. Hasta entonces, el asiento conserva el código antiguo y cuenta en la declaración como antes."
+      closing: "Recibe este mensaje porque lleva la contabilidad de esta empresa."
     filing_submitted:
       subject: "Presentación ante %{authority} — %{entity} — %{period}"
       greeting: "Hola %{name},"
@@ -763,6 +769,7 @@ es:
       closing_entry_managed: "Este asiento de cierre lo gestiona el cierre de ejercicio. Rehaz el cierre en lugar de editarlo aquí."
       vat_leg_currency: "El apunte de IVA en %{account} está en %{currency}, pero el asiento está en %{bank_currency}"
       tax_code_date: "El código de IVA de %{account} no se aplica el %{date}"
+      tax_code_retired: "El código de IVA %{code} en %{account} ya no está en el catálogo: elija uno vigente"
       tax_code_not_nominal: "%{account} no puede llevar un código de IVA — solo las líneas de ingresos y gastos"
       tax_code_currency: "%{scheme} se declara en %{scheme_currency}, por lo que no puede usarse en un asiento en %{entry_currency}. Convierta primero, o contabilice el importe bruto sin deducir."
       tax_code_scheme: "%{account} no puede usar un código de %{scheme} — esta empresa no lo declara"

@@ -58,13 +58,20 @@ The available categories per country / scheme / year are defined as YAML in `db/
 
 ```
 db/tax_categories/
-├── gb_self_employment_2026.yml
-├── gb_property_2026.yml
-├── de_euer_2026.yml
-├── de_vermietung_2026.yml
 ├── ch_selbst_2026.yml
+├── ch_vat_2026.yml
+├── de_euer_2026.yml
+├── de_vat_2026.yml
+├── de_vermietung_2026.yml
+├── es_vat_2026.yml
+├── gb_property_2026.yml
+├── gb_self_employment_2026.yml
+├── gb_vat_2026.yml
+├── nl_vat_2026.yml
 └── nl_winst_2025.yml
 ```
+
+What each one covers: [tax category reference](tax-category-reference.md).
 
 **Each file is built from the authority's actual form**, and the original it was built from is kept in `docs/tax-forms/` so the next person can check the work rather than trust it &mdash; `SA103F_2026.pdf`, `SA105_2026.pdf`, `anlage-euer-2025.pdf`, `anlage-v-…-2025.pdf`, `ch-zh-hilfsblatt-a.pdf`, and for countries that publish no PDF a readable extract instead. See [Finding the original scheme](#finding-the-original-scheme).
 
@@ -241,9 +248,11 @@ the output half in box 1 and the input half in box 4.
 fail nowhere — the figure would simply never reach the return, for every user of
 the scheme, silently. The loader refuses it instead.
 
-Removing a code from the file deletes it, like a category — unless postings use
-it, and then the load **refuses**. A code with postings is history: end its
-validity with `valid_to` instead.
+Removing a code row from the file (or changing its `valid_from`) moves its
+entries to the row of the same key covering their date, where that row books
+them the same way; whatever cannot move keeps the old row, retired, and its
+bookkeepers are told. See [VAT reference](vat-reference.md#traps-when-changing-a-vat-catalogue).
+To end a code, give it a `valid_to`.
 
 **Do not offer a choice the return cannot see.** Two codes that reach the same
 boxes at the same rate ask the user a question with no consequence, and put two
@@ -442,8 +451,8 @@ Commit the snapshot **in the same commit as the catalogue**, so the diff shows w
 **3. Two tests that pin the known countries and schemes as a literal list.** `TaxSchemeConfig.countries` and `.all_schemes` themselves derive from the catalogue headers, same as everywhere else — but `test/services/tax_scheme_config_test.rb` asserts their result against a hardcoded `%w[...]` array right in the test, once for each:
 
 ```ruby
-assert_equal %w[ch de gb nl], TaxSchemeConfig.countries
-assert_equal %w[ch_selbst de_euer de_vermietung gb_self_employment gb_property nl_winst],
+assert_equal %w[ch de es gb nl], TaxSchemeConfig.countries
+assert_equal %w[ch_selbst ch_vat de_euer de_vat de_vermietung es_vat gb_self_employment gb_property gb_vat nl_winst nl_vat],
              TaxSchemeConfig.all_schemes
 ```
 

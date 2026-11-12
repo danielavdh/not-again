@@ -299,12 +299,13 @@ class BaseController < ApplicationController
     # And whatever the entry's rows already carry: a code from a scheme the
     # business has since stopped filing must stay selectable, or the select
     # would come back without it and the save would silently drop it.
+    carried = @journal_entry ? @journal_entry.postings.map(&:tax_code_id).compact.uniq : []
     if @journal_entry&.persisted?
-      schemes |= TaxCode.where(id: @journal_entry.postings.map(&:tax_code_id).compact.uniq)
-                        .distinct.pluck(:scheme)
+      schemes |= TaxCode.where(id: carried).distinct.pluck(:scheme)
     end
     @tax_code_options = schemes.empty? ? [] :
-      TaxCode.options_for(schemes: schemes, on: @journal_entry&.entry_date || Date.current)
+      TaxCode.options_for(schemes: schemes, on: @journal_entry&.entry_date || Date.current,
+                          keep: carried)
 
     # In the SCHEME's own language, not the reader's. Two authorities in play
     # has no single country's word for it, so that falls back to a translation.

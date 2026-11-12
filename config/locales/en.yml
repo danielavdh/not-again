@@ -263,6 +263,12 @@ en:
       what_to_do: "Please open each account and choose a category again. Until you do, their figures are left out of tax exports and submissions."
       periods_note: "This affects current and future periods only. Anything you have already submitted is unchanged."
       closing: "Sorry for the interruption."
+    tax_codes_retired:
+      subject: "Action needed: %{count} entry/entries use a VAT code that has changed"
+      greeting: "Hello %{name},"
+      body: "A VAT code in the catalogue has been corrected, and these entries could not be moved to the corrected code automatically, because it would book them at a different rate or does not cover their date:"
+      what_to_do: "Please open each entry and choose the VAT code again. Its VAT is then worked out anew. Until you do, the entry keeps the old code and the return counts it as before."
+      closing: "You are receiving this because you keep the books for that business."
     filing_submitted:
       subject: "%{authority} submission — %{entity} — %{period}"
       greeting: "Hello %{name},"
@@ -760,6 +766,7 @@ en:
       closing_entry_managed: "This closing entry is maintained by the year-end close. Redo the close instead of editing it here."
       vat_leg_currency: "The VAT posting to %{account} is in %{currency}, but the entry is in %{bank_currency}"
       tax_code_date: "The VAT code on %{account} does not apply on %{date}"
+      tax_code_retired: "The VAT code %{code} on %{account} is no longer in the catalogue — choose a current one"
       tax_code_not_nominal: "%{account} cannot carry a VAT code — only income and expense rows can"
       tax_code_currency: "%{scheme} is filed in %{scheme_currency}, so it cannot be used on an entry in %{entry_currency}. Convert first, or book the gross and reclaim nothing."
       tax_code_scheme: "%{account} cannot use a %{scheme} code — this business does not file it"

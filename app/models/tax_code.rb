@@ -38,6 +38,9 @@ class TaxCode < ApplicationRecord
   validate  :valid_to_after_valid_from
 
   scope :for_schemes, ->(schemes) { where(scheme: Array(schemes)) }
+  # Retired: no longer in the catalogue, kept only for the entries that still
+  # use it (TaxCategoryLoader#prune_tax_codes). Never offered for a new pick.
+  scope :current,     ->          { where(retired_at: nil) }
   scope :on,          ->(date)    { where(valid_from: ..date)
                                       .where("valid_to IS NULL OR valid_to >= ?", date) }
   scope :ordered,     ->          { order(:scheme, :position, :key) }
@@ -46,7 +49,7 @@ class TaxCode < ApplicationRecord
   # code introduced in 2027 cannot be used in 2026.
   def self.resolve(scheme:, key:, on:)
     return nil if [ scheme, key, on ].any?(&:blank?)
-    for_schemes(scheme).where(key: key).on(on).first
+    for_schemes(scheme).current.where(key: key).on(on).first
   end
 
   # One query for a whole entry's codes, so deriving a twelve-row entry costs
@@ -65,6 +68,14 @@ class TaxCode < ApplicationRecord
 
   def input?  = direction == INPUT
   def output? = direction == OUTPUT
+
+  # Whether an entry booked under the other row would be booked identically
+  # under this one: the same VAT split off, into the same account, or none.
+  # The boxes may differ — the return reads them at report time.
+  def books_like?(other)
+    rate_bps == other.rate_bps && direction == other.direction &&
+      reverse_charge == other.reverse_charge && amount_is_tax? == other.amount_is_tax?
+  end
 
   # A code with no rate, a tax box and no net box: the amount entered IS the
   # tax. Import VAT paid at the border — the goods were bought in their own
@@ -115,11 +126,15 @@ class TaxCode < ApplicationRecord
   # server recomputes regardless. The scheme is named only when two authorities
   # are in play, where "20%" alone would not say which — as a flag, because the
   # authority's own name is 26 characters and the option has none to spare.
-  def self.options_for(schemes:, on:)
+  #
+  # `keep` is the codes the entry's rows already carry: a retired one must stay
+  # selectable there, or the select would come back without it and the save
+  # would silently drop it.
+  def self.options_for(schemes:, on:, keep: [])
     schemes = Array(schemes)
     label_scheme = schemes.size > 1
 
-    rows  = for_schemes(schemes).on(on).ordered.to_a
+    rows  = for_schemes(schemes).on(on).merge(current.or(where(id: keep))).ordered.to_a
     boxes = boxes_for(rows, on: on)
 
     codes = rows.map { |code|

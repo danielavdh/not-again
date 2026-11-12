@@ -52,22 +52,9 @@ class TaxCategoryRemovalNotificationJob < ApplicationJob
   def by_admin(affected)
     by_entity_code = affected.group_by { |(code, *)| code.to_s[1, 2] }
 
-    entity_ids = Entity.where(code: by_entity_code.keys).pluck(:id, :code).to_h
-    return {} if entity_ids.empty?
-
-    links = AdminEntity.with_full_access
-                            .where(entity_id: entity_ids.keys)
-                            .pluck(:admin_id, :entity_id)
-    return {} if links.empty?
-
-    admins = Admin.where(id: links.map(&:first).uniq).index_by(&:id)
-
-    links.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(admin_id, entity_id), out|
-      admin = admins[admin_id]
-      next if admin.nil?
-
-      rows = by_entity_code[entity_ids[entity_id]] || []
-      out[admin].concat(rows)
+    AdminEntity.full_access_admins_by_entity_code(by_entity_code.keys)
+               .each_with_object(Hash.new { |h, k| h[k] = [] }) do |(entity_code, admins), out|
+      admins.each { |admin| out[admin].concat(by_entity_code[entity_code]) }
     end
   end
 end

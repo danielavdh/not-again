@@ -49,6 +49,10 @@ class ReportGroup < ApplicationRecord
     tax_scheme.present? && TaxSchemeConfig.vat_scheme?(tax_scheme)
   end
 
+  def flat_rate?
+    vat_report? && TaxSchemeConfig.flat_rate?(tax_scheme)
+  end
+
   # The box a prepayment is deducted in, when this scheme's return has one, so
   # the report form can ask for it in the authority's own words.
   def prepayment_category
