@@ -3,16 +3,28 @@
 # no work happens on — so they piled up unread, which is worse than none: a
 # genuine security bump looks exactly like the other eleven.
 #
-# So: weekly, and GROUPED into one PR per ecosystem. Security advisories are
+# So: monthly, and GROUPED into one PR per ecosystem. Security advisories are
 # never grouped by Dependabot and still arrive on their own, which is the point.
 # CI also runs `bundler-audit` on every push, so an advisory is caught there
 # whether or not anyone reads a PR.
+#
+# A version is only proposed once it has been out for 7 days (cooldown). A
+# poisoned release from a hijacked maintainer account is usually found and
+# pulled within days; whoever updates at once is who installs it. Security
+# updates ignore the cooldown, per GitHub's docs.
+#
+# Never merged from the PR page: the update is installed locally, the whole
+# suite and the system tests run, and the release notes of every major jump
+# (direct or not — the minor-and-patch group lets a transitive major through)
+# are read before committing. The pushed lockfile then closes the PR.
 version: 2
 updates:
 - package-ecosystem: bundler
   directory: "/"
   schedule:
-    interval: weekly
+    interval: monthly
+  cooldown:
+    default-days: 7
   open-pull-requests-limit: 5
   groups:
     # Everything routine in one PR. Majors stay separate: those are the ones
@@ -27,7 +39,9 @@ updates:
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
-    interval: weekly
+    interval: monthly
+  cooldown:
+    default-days: 7
   open-pull-requests-limit: 5
   groups:
     actions:
@@ -36,5 +50,7 @@ updates:
 - package-ecosystem: docker
   directory: "/"
   schedule:
-    interval: weekly
+    interval: monthly
+  cooldown:
+    default-days: 7
   open-pull-requests-limit: 5
