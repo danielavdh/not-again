@@ -23,6 +23,7 @@ Minitest.after_run do
   next unless Rails.env.test?
   FileUtils.rm_rf(Rails.root.join("public", "uploads", "cache"))
   FileUtils.rm_rf(Rails.root.join("public", "uploads", "tax_exports"))
+  FileUtils.rm_rf(Rails.root.join("public", "uploads", "vat_returns"))
   FileUtils.rm_rf(Dir.glob(Rails.root.join("public", "{uploads,tax_submissions}", "w[0-9]*")))
 end
 

@@ -37,6 +37,22 @@
       </div>
     </div>
 
+    <%# The same two fields as on a new report, so a wrong or forgotten rate can
+        be put right. A final report refuses the change (Report). %>
+    <% if @report.report_group.flat_rate? %>
+      <div class="field">
+        <%= f.label :flat_rate_percentage, t("tax.vat.flat_rate_label") %>
+        <%= f.number_field :flat_rate_percentage, min: 0.01, max: 100, step: 0.01,
+                           placeholder: @report.previous_in_group&.flat_rate_percentage&.to_s || t("tax.vat.flat_rate_placeholder") %>
+      </div>
+    <% end %>
+    <% if (prepayment = @report.report_group.prepayment_category) %>
+      <div class="field">
+        <%= f.label :prepayment_display, "#{prepayment.reference} — #{prepayment.label}" %>
+        <%= f.number_field :prepayment_display, min: 0, step: 0.01 %>
+      </div>
+    <% end %>
+
     <div class="actions">
       <%= f.submit (@report.persisted? ? t("crud.update") : t("crud.create")) + " " + t("jargon.report") %>
     </div>

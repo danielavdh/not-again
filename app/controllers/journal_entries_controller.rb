@@ -143,12 +143,14 @@ class JournalEntriesController < BaseController
       notice = [base, refresh_affected_closing_entry(@journal_entry)].compact.join(" ")
       redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]), notice: notice
     else
-      redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]), alert: t("journal_entries.cannot_post_unbalanced")
+      redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]), alert: post_refusal
     end
   end
 
   def unpost
-    @journal_entry.unpost!
+    unless @journal_entry.unpost!
+      return redirect_to journal_entry_path(@journal_entry, from: params[:from], account_id: params[:account_id]), alert: post_refusal
+    end
     writable_linked_entries(@journal_entry).each(&:unpost!)
     base   = t("journal_entries.unposted")
     notice = [base, refresh_affected_closing_entry(@journal_entry)].compact.join(" ")
@@ -167,6 +169,9 @@ class JournalEntriesController < BaseController
     @journal_entry.closing_entry = false
     @journal_entry.period_start  = nil
     @journal_entry.period_end    = nil
+    # Nor the mark of a VAT return's clearing entry: only marking the return
+    # final books one.
+    @journal_entry.vat_report_id = nil
     pair_id_map = {}
     copy = build_cross_entity_copy(@original) # fresh links + the JE₂′ mirror (#8)
     # The whole entry, legs included, so gross_amount reads them from memory.
@@ -228,6 +233,20 @@ class JournalEntriesController < BaseController
   end
 
   private
+
+  # post! and unpost! answer false for three reasons: an unbalanced entry, one
+  # inside a final VAT return's period, or a final return's clearing entry.
+  def post_refusal
+    return t("journal_entries.errors.vat_clearing_managed") if @journal_entry.vat_clearing?
+
+    report = @journal_entry.final_vat_report
+    return t("journal_entries.cannot_post_unbalanced") unless report
+
+    t("journal_entries.errors.vat_period_final",
+      report: report.name,
+      from:   l(report.start_date, format: :short_date),
+      to:     l(report.end_date, format: :short_date))
+  end
 
   # A cross-entity pair is CREATED by someone holding both businesses — create
   # refuses anything less — so it is never one side's to alter alone. Only an
@@ -349,8 +368,9 @@ class JournalEntriesController < BaseController
     @cross_entity_je_ids = Set.new # JEs with a linked posting → "linked" cue in the index
     # Closing entries the year-end flow generated post to a locked retained-
     # earnings account and are read-only, so their rows offer no copy or edit.
-    # Collected here rather than asked per row.
-    @app_owned_close_ids = Set.new
+    # Collected here rather than asked per row. A final VAT return's clearing
+    # entry is the app's in the same way.
+    @app_owned_close_ids = Set.new(JournalEntry.where(id: je_ids).where.not(vat_report_id: nil).pluck(:id))
 
     # Collected first, decided after: what the column should say depends on
     # whether the entry has nominals, which is not known until every row is in.

@@ -7,7 +7,9 @@ class Account < ApplicationRecord
   enum :account_type, { asset: 1, liability: 2, equity: 3, income: 4, expense: 5, personal: 6 }
   # Read with tax_scheme: gb_vat + output is the entity's UK output-VAT account.
   # Prefixed, because bare `input?` would read as a question about the type.
-  enum :vat_role, { input: 0, output: 1 }, prefix: :vat
+  # flat_rate is not a control account: the income account a flat-rate return's
+  # difference is booked to when the return is marked final.
+  enum :vat_role, { input: 0, output: 1, flat_rate: 2 }, prefix: :vat
 
   belongs_to :parent, class_name: 'Account', optional: true
   # Prefilled on a new row, last-used-wins. The posting's own tax_code_id is
@@ -61,6 +63,8 @@ class Account < ApplicationRecord
   scope :locked, -> { where(locked: true) }
   scope :retained_earnings, -> { locked.where(account_type: :equity) }
   scope :vat_accounts, -> { where.not(vat_role: nil) }
+  # The two control accounts only: the ones derived VAT legs land on.
+  scope :vat_control_accounts, -> { where(vat_role: TaxCode::DIRECTIONS) }
   scope :by_type, ->(type) { where(account_type: type) }
   scope :balance_accounts, -> { where(account_type: [:asset, :liability, :equity]) }
   scope :by_currency, ->(curr) { where(currency: curr) }
@@ -227,7 +231,7 @@ class Account < ApplicationRecord
                      .find_by(tax_scheme: scheme, vat_role: direction)
     return existing if existing
 
-    nominal = TaxSchemeConfig.vat_accounts_nominal?(scheme)
+    nominal = TaxSchemeConfig.vat_accounts_nominal?(scheme) || direction.to_s == "flat_rate"
     type    = if nominal
                 direction.to_s == TaxCode::INPUT ? :expense : :income
               else

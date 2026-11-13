@@ -28,7 +28,7 @@
 			<%= journal_entry&.errors[:from_account_id].to_sentence %>
 		</span><br />
         <%= f.select :from_account_id, 
-                       options_for_select(@account_options, journal_entry.from_account_id || account.id), 
+                       options_for_select(@from_account_options, journal_entry.from_account_id || account.id), 
                        { include_blank: t("attrs.from_account_blank") },
                        class: 'form-select', 
 	   				   id: :journal_entry_from_account_id, 
@@ -48,7 +48,7 @@
 			<%= journal_entry&.errors[:to_account_id].to_sentence %>
 		</span><br />
         <%= f.select :to_account_id, 
-                       options_for_select(@account_options, journal_entry.to_account_id), 
+                       options_for_select(@to_account_options, journal_entry.to_account_id), 
                        { include_blank: 'Select destination account...'} ,
                        class: 'form-select', 
 		   			   id: :journal_entry_to_account_id, 

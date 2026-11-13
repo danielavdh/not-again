@@ -53,6 +53,13 @@ class ReportGroup < ApplicationRecord
     vat_report? && TaxSchemeConfig.flat_rate?(tax_scheme)
   end
 
+  # The flat rate of the latest report, as the new report's placeholder. Never
+  # filled in: a return on the flat rate is one the user said is.
+  def last_flat_rate_percentage
+    bps = reports.reorder(end_date: :desc).pick(:flat_rate_bps)
+    bps && bps / 100.0
+  end
+
   # The box a prepayment is deducted in, when this scheme's return has one, so
   # the report form can ask for it in the authority's own words.
   def prepayment_category

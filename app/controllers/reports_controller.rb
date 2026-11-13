@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class ReportsController < BaseController
-  before_action :set_report, only: [:show, :edit, :update, :destroy, :tax_export, :download_tax_export_backup]
+  before_action :set_report, only: [:show, :edit, :update, :destroy, :tax_export, :download_tax_export_backup,
+                                    :finalize, :reopen, :unfinalize, :download_final_vat_return]
   # Reports and closes belong to an entity; changing them is a write into it.
   # tax_export is deliberately NOT here — a read_only admin may export, the one
   # write-shaped thing their level allows.
-  before_action :require_writable_report,           only: [:edit, :update, :destroy]
+  before_action :require_writable_report,           only: [:edit, :update, :destroy, :finalize, :reopen, :unfinalize]
+  before_action :require_vat_report,                only: [:finalize, :reopen, :unfinalize, :download_final_vat_return]
   before_action :require_writable_report_group_param, only: [:new, :create]
   before_action :require_writable_year_end_entity,  only: [:new_year_end, :change_year_end, :create_year_end]
 
@@ -218,7 +220,7 @@ class ReportsController < BaseController
     @report_group = accessible_report_groups.find(params[:report_group_id])
     @report = @report_group.reports.build(report_params)
     if @report.save
-      redirect_to dashboard_path, notice: t("reports.created")
+      redirect_to dashboard_path, notice: [t("reports.created"), *flat_rate_notices].join(" ")
     else
       load_form_data
       render :new, status: :unprocessable_entity
@@ -231,7 +233,7 @@ class ReportsController < BaseController
 
   def update
     if @report.update(report_params)
-      redirect_to report_path(@report), notice: t("reports.updated")
+      redirect_to report_path(@report), notice: [t("reports.updated"), *flat_rate_notices].join(" ")
     else
       load_form_data
       render :edit, status: :unprocessable_entity
@@ -239,8 +241,64 @@ class ReportsController < BaseController
   end
 
   def destroy
-    @report.destroy
-    redirect_to reports_path, notice: t("reports.deleted")
+    if @report.destroy
+      redirect_to reports_path, notice: t("reports.deleted")
+    else
+      redirect_to report_path(@report), alert: @report.errors.full_messages.to_sentence
+    end
+  end
+
+  # "This VAT return has been submitted": keeps its CSV, locks the period's
+  # coded entries and books the clearing entry. See Reports::VatReturnFinal.
+  def finalize
+    return redirect_to(report_path(@report)) if @report.finalized?
+
+    data = with_rates(nil) { @report.vat_return_data }
+    return redirect_to(report_path(@report), alert: flash.now[:alert]) if data.nil?
+
+    entry  = Reports::VatReturnFinal.new(@report)
+                                    .finalize!(data: data, csv: Reports::VatReturnCsv.new(data: data).generate)
+    notice = [ t("reports.vat_final.finalized"), entry && refresh_affected_closing_entry(entry) ]
+    redirect_to report_path(@report), notice: notice.compact.join(" ")
+  end
+
+  # The question before reopening: "Have you submitted this return?" With
+  # submitted=yes, the warning that follows that answer.
+  def reopen
+    return redirect_to(report_path(@report)) unless @report.finalized?
+
+    @submitted = params[:submitted] == "yes"
+    @authority = TaxSchemeConfig.authority_for(@report.tax_scheme)
+  end
+
+  # Never without an answer: not submitted, or submitted and the warning
+  # confirmed.
+  def unfinalize
+    return redirect_to(report_path(@report)) unless @report.finalized?
+    unless params[:submitted] == "no" || params[:confirmed] == "1"
+      return redirect_to(reopen_report_path(@report))
+    end
+
+    entry  = Reports::VatReturnFinal.new(@report).reopen!
+    notice = [ t("reports.vat_final.reopened"), entry && refresh_affected_closing_entry(entry) ]
+    redirect_to report_path(@report), notice: notice.compact.join(" ")
+  end
+
+  # key is the filename only, rebuilt under this report's own prefix — the same
+  # rule as #download_tax_export_backup.
+  def download_final_vat_return
+    filename = params[:key].to_s
+    unless filename.match?(VatReturnStorage::FILENAME_FORMAT)
+      return redirect_to(report_path(@report), alert: t("reports.index.not_found"))
+    end
+
+    key = "#{VatReturnStorage::PREFIX}/#{@report.id}/#{filename}"
+    send_data VatReturnStorage.read(key),
+      filename: "#{@report.tax_scheme}-#{@report.report_group.entity.code}-" \
+                "#{@report.start_date}-#{@report.end_date}-final.csv",
+      type: "text/csv", disposition: "attachment"
+  rescue Shrine::FileNotFound, Errno::ENOENT, Aws::S3::Errors::NoSuchKey
+    redirect_to report_path(@report), alert: t("reports.index.not_found")
   end
 
   def tax_export
@@ -721,17 +779,14 @@ class ReportsController < BaseController
   def show_vat_return
     group = @report.report_group
     @display_currency = group.display_currency
-    @vat_return = with_rates(nil) {
-      Reports::VatReturn.new(
-        entity: group.entity, scheme: group.tax_scheme,
-        from:   @report.start_date, to: @report.end_date,
-        # From the REPORT, so a rate change or joining the scheme mid-year cannot
-        # rewrite a quarter already filed.
-        flat_rate_bps: @report.flat_rate_bps,
-        prepayment:    @report.prepayment
-      ).call
-    }
+    @vat_return = with_rates(nil) { @report.vat_return_data }
     return redirect_to report_group_path(group), alert: flash.now[:alert] if @vat_return.nil?
+
+    if @report.finalized?
+      @final_file    = VatReturnStorage.latest(@report.id)
+      @books_changed = @final_file &&
+                       @final_file.fingerprint != Reports::VatReturnFinal.fingerprint(@vat_return)
+    end
 
     respond_to do |format|
       format.html { render :vat_return }
@@ -783,6 +838,37 @@ class ReportsController < BaseController
   def require_writable_report
     return if @report.nil?
     deny_write unless writable_reports.exists?(@report.id)
+  end
+
+  def require_vat_report
+    redirect_to(report_path(@report)) unless @report.vat_report?
+  end
+
+  # After a VAT report is saved: the flat-rate income account, created the
+  # first time a report of the scheme uses a flat rate, and a word when the
+  # rate differs from the report before.
+  def flat_rate_notices
+    return [] unless @report.report_group.flat_rate?
+
+    notices = []
+    if @report.flat_rate_bps
+      account = Account.resolve_vat_account(entity_code: @report.report_group.entity.code,
+                                            scheme: @report.tax_scheme, direction: "flat_rate")
+      if account.previously_new_record?
+        notices << t("accounts.vat_account_created", count: 1, accounts: "#{account.code} #{account.name}")
+      end
+    end
+
+    previous = @report.previous_in_group
+    if previous&.flat_rate_bps && previous.flat_rate_bps != @report.flat_rate_bps
+      notices << if @report.flat_rate_bps
+                   t("reports.flat_rate.changed", previous: previous.flat_rate_percentage,
+                                                  current: @report.flat_rate_percentage)
+                 else
+                   t("reports.flat_rate.dropped", previous: previous.flat_rate_percentage)
+                 end
+    end
+    notices
   end
 
   def require_writable_report_group_param

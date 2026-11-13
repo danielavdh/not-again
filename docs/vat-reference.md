@@ -73,9 +73,19 @@ figures are typed into the authority's own site. The only connector,
 - **Currency.** The VAT lines are already in the scheme's currency. The net
   amounts are translated when the report runs, per date, at the authority's
   rate (`db/exchange_rate_rules.yml`). Nothing is converted at save.
-- **Settling.** The manuals' method: one transfer from *VAT on purchases* to
-  *VAT on sales* for the amount reclaimed, then one between the bank and *VAT on
-  sales* for the net. A settlement button is planned.
+- **Paying.** Payments and refunds are ordinary transfers between the bank and
+  *VAT on sales*, any amount, linked to no return. The transfer form offers
+  *VAT on sales* as "VAT payment" and "VAT refund", and not *VAT on purchases*.
+- **Final.** "Mark as final" on a return (`Reports::VatReturnFinal`) stores its
+  CSV under `vat_returns/<report_id>/` in the tier-2 bucket (`VatReturnStorage`,
+  figures' fingerprint in the filename), sets `reports.finalized_at`, and books a
+  clearing entry (`journal_entries.vat_report_id`) on the period's last day:
+  the posted input VAT moves onto *VAT on sales*; on a flat-rate return the
+  difference to the flat amount goes to the flat-rate income account
+  (`vat_role: flat_rate`, created with the first report that has a %). Coded
+  entries of a final period are locked (`JournalEntry#final_vat_report`).
+  Reopening asks whether the return was submitted, removes the clearing entry
+  and keeps the file.
 
 ## How each return is shaped
 

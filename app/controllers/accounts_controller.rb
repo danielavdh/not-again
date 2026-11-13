@@ -804,6 +804,32 @@ private
     @transfer_account_currencies = @account_options.each_with_object({}) do |(_, id, attrs), hash|
       hash[id] = attrs['data-currency']
     end
+    load_vat_transfer_options
+  end
+
+  # A transfer touches a VAT account only to pay the authority or receive a
+  # refund, so VAT on sales is offered under those two names, one per select,
+  # and VAT on purchases not at all: a final return's clearing entry moves the
+  # purchases side over, so VAT on sales is what is owed. An old transfer that
+  # used VAT on purchases keeps it, or its select would come back empty.
+  def load_vat_transfer_options
+    carried = @journal_entry ? @journal_entry.postings.map(&:account_id) : []
+    vat = Account.vat_control_accounts.where(id: @account_options.map(&:second))
+                 .pluck(:id, :code, :vat_role, :tax_scheme)
+    hidden = vat.filter_map { |id, _, role, _| id if role == TaxCode::INPUT && carried.exclude?(id) }
+    sales  = vat.select { |_, _, role, _| role == TaxCode::OUTPUT }
+                .to_h { |id, code, _, scheme| [ id, [ code, TaxSchemeConfig.authority_for(scheme).presence || TaxSchemeConfig.scheme_label(scheme) ] ] }
+
+    options = @account_options.reject { |_, id, _| hidden.include?(id) }
+    @to_account_options   = vat_transfer_labels(options, sales, "accounts.vat_transfer.payment")
+    @from_account_options = vat_transfer_labels(options, sales, "accounts.vat_transfer.refund")
+  end
+
+  def vat_transfer_labels(options, sales, key)
+    options.map { |label, id, attrs|
+      next [ label, id, attrs ] unless (code, authority = sales[id])
+      [ "#{code} - #{t(key, authority: authority)}", id, attrs ]
+    }
   end
   
   def fetch_transfer_currencies(from_id, to_id)

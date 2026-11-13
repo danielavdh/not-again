@@ -1,0 +1,30 @@
+<% content_for :title, t(".title", report: @report.name) %>
+
+<div id="new_edit_view">
+    <h1><%= t(".title", report: @report.name) %></h1>
+
+    <%= render partial: 'shared/flash' %>
+
+    <%# Not submitted yet: nothing is lost by reopening. Submitted: the authority holds these figures, so the warning comes before the way through. %>
+    <% if @submitted %>
+      <%= clean t(".warning", authority: @authority) %>
+
+      <%= button_to t(".confirm"), unfinalize_report_path(@report),
+            method: :patch,
+            params: { submitted: "yes", confirmed: "1" },
+            data: { sure: t(".confirm_sure") },
+            class: "button red" %>
+    <% else %>
+      <p><%= t(".question", authority: @authority) %></p>
+
+      <%= button_to t(".not_submitted"), unfinalize_report_path(@report),
+            method: :patch,
+            params: { submitted: "no" },
+            class: "button green" %>
+      <%= link_to t(".submitted"), reopen_report_path(@report, submitted: "yes"), class: "button" %>
+    <% end %>
+
+    <div class="crud_navigation">
+      <%= link_to t("crud.cancel"), report_path(@report), class: "button" %>
+    </div>
+</div>

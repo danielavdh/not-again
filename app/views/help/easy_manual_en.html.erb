@@ -152,16 +152,27 @@
   <p>Click the report and you get the boxes of the real form, in the authority&rsquo;s own numbering, ready to copy across, plus a breakdown by code and a CSV.</p>
   <p>This app does not send the return. You file it yourself.</p>
 
+  <h3>Final: once the return is submitted</h3>
+  <p>Once you have submitted the return, click <strong>Mark as final</strong> on it. From then on:</p>
+  <ul>
+    <li>every entry with a VAT code in that quarter is locked &thinsp;&mdash;&thinsp; zero-rated and exempt ones too. Entries without a VAT code stay editable;</li>
+    <li>the return is kept as it was when you marked it, as a CSV you can download from the return;</li>
+    <li>the app moves that quarter&rsquo;s <em>VAT on purchases</em> onto <em>VAT on sales</em>, so <em>VAT on sales</em> shows what you owe.</li>
+  </ul>
+  <p>Found a mistake in a submitted quarter? Correct it in the current quarter: a new entry with the same VAT code, with a minus sign where needed. That is how corrections are meant to be made.</p>
+  <p>If you marked a return final by mistake, or it has not actually gone off yet, click <strong>Reopen</strong>. The app first asks whether you have submitted it. Reopening a submitted return means submitting a corrected one yourself.</p>
+
   <h3>Flat-rate schemes</h3>
   <p>Some countries let you pay a fixed percentage of your turnover instead of the difference between the VAT you charged and the VAT you paid &thinsp;&mdash;&thinsp; the UK Flat Rate Scheme, the Spanish <em>r&eacute;gimen simplificado</em>. They make the quarterly return quicker, not the bookkeeping: at the year end you need the exact figures anyway, so <strong>record everything as you would without the scheme</strong>. It changes the number you hand over, nothing else.</p>
+  <p>In the app, enter the scheme&rsquo;s percentage on every VAT report, each quarter. The field suggests the percentage you used last time, but never fills itself in: a report without a percentage is an ordinary return. The first time, the app creates an income account for the difference between the VAT you charged and the flat amount you pay, and tells you. When you mark a return final, that difference is booked there &thinsp;&mdash;&thinsp; a gain, or a loss.</p>
 
   <h3>Paying the VAT</h3>
-  <p>The app keeps two VAT accounts: <em>VAT on purchases</em> (what you reclaim) and <em>VAT on sales</em> (what you owe). When the quarter is settled, empty both with a <em>transfer</em> each, using the figures from your return:</p>
-  <ol>
-    <li>From <em>VAT on purchases</em> to <em>VAT on sales</em>: the VAT you reclaim.</li>
-    <li>From your bank to <em>VAT on sales</em>: the amount you pay. For a refund, from <em>VAT on sales</em> to your bank when the money arrives.</li>
-  </ol>
-  <p>Both accounts are then back to zero, ready for the next quarter.</p>
+  <p>Paying the authority, or receiving a refund, is a <em>transfer</em> from your bank ledger, like any other:</p>
+  <ul>
+    <li>Paying: from your bank to <strong>VAT payment</strong>.</li>
+    <li>A refund: from <strong>VAT refund</strong> to your bank, when the money arrives.</li>
+  </ul>
+  <p>Enter what actually left or arrived. It does not have to match a return: payments on account, instalments and the final payment are all just transfers. Once your returns are marked final, the balance of <em>VAT on sales</em> is what you still owe.</p>
 
   <p>If you are not sure a purchase is reverse charge, ask your accountant. Getting it wrong does not lose money, but it does make the return wrong.</p>
 
@@ -173,6 +184,7 @@
 
   <h2 id="correcting">Correcting a mistake</h2>
   <p>You can change or remove anything you entered yourself. The only accounts you cannot touch are the ones the app creates and maintains on its own, such as Retained Earnings.</p>
+  <p>Entries with a VAT code in a quarter you marked final are locked: see <em>Final</em> under <a href="#vat">VAT</a>.</p>
   <p>To edit, go to your bank account, find the entry in the ledger, and click Edit. Make your changes and save.</p>
   <p>To delete an entry, click View JE to open the journal entry behind it &thinsp;&mdash;&thinsp; the two-sided record the app wrote for you. Deleting takes two steps because a posted entry is part of your figures, so it has to come out of them first: click Unpost/Delete to unpost it, which turns it into a draft, hidden from your figures but not yet gone. Click delete on the unposted entry (the draft) to remove it completely.</p>
 

@@ -191,8 +191,8 @@
   <% end %>
   	<button id="print-button"
 			class="button green"><%= t("crud.print") %></button>
-  <%# Rebuilt on every change inside its period. The way back is reopening the year, which takes all its currencies together. %>
-  <% unless @journal_entry.posts_to_locked_retained_earnings? %>
+  <%# Rebuilt on every change inside its period. The way back is reopening the year, which takes all its currencies together. A VAT return's clearing entry likewise: reopening the return removes it. %>
+  <% unless @journal_entry.posts_to_locked_retained_earnings? || @journal_entry.vat_clearing? %>
   <% if current_admin.full_access_pro? %>
 	<%= link_to t("crud.copy"),
 			duplicate_journal_entry_path(@journal_entry),

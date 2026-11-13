@@ -150,16 +150,27 @@
   <p>Klick den Bericht an, und du bekommst die Felder des echten Formulars in der Nummerierung der Behörde, bereit zum Übertragen, dazu eine Aufschlüsselung nach Code und eine CSV-Datei.</p>
   <p>Diese App übermittelt die Erklärung nicht. Du reichst sie selbst ein.</p>
 
+  <h3>Endgültig: wenn die Erklärung abgegeben ist</h3>
+  <p>Sobald du die Erklärung abgegeben hast, klick bei ihr auf <strong>Als endgültig markieren</strong>. Ab dann:</p>
+  <ul>
+    <li>ist jede Buchung mit Umsatzsteuercode in diesem Zeitraum gesperrt &thinsp;&mdash;&thinsp; auch steuerfreie und solche mit 0 %. Buchungen ohne Code bleiben bearbeitbar;</li>
+    <li>wird die Erklärung so aufbewahrt, wie sie beim Markieren war, als CSV, die du bei der Erklärung herunterladen kannst;</li>
+    <li>verrechnet die App die <em>Vorsteuer</em> dieses Zeitraums mit der <em>Umsatzsteuer</em>, sodass <em>Umsatzsteuer</em> zeigt, was du schuldest.</li>
+  </ul>
+  <p>Einen Fehler in einem abgegebenen Zeitraum gefunden? Korrigiere ihn im laufenden Zeitraum: eine neue Buchung mit demselben Code, wo nötig mit Minuszeichen. So sind Korrekturen gedacht.</p>
+  <p>Hast du eine Erklärung versehentlich als endgültig markiert, oder ist sie noch gar nicht raus, klick auf <strong>Wieder öffnen</strong>. Die App fragt zuerst, ob du sie abgegeben hast. Eine abgegebene Erklärung wieder zu öffnen heißt, selbst eine berichtigte abzugeben.</p>
+
   <h3>Pauschalregelungen</h3>
   <p>Manche Länder lassen dich einen festen Prozentsatz deines Umsatzes zahlen statt der Differenz zwischen der Umsatzsteuer, die du berechnet, und der, die du gezahlt hast &thinsp;&mdash;&thinsp; das britische Flat Rate Scheme, das spanische <em>r&eacute;gimen simplificado</em>. Die Voranmeldung geht damit schneller, die Buchhaltung nicht: zum Jahresende brauchst du die genauen Zahlen ohnehin, also <strong>erfass alles so, wie du es ohne die Regelung erfassen würdest</strong>. Sie ändert nur den Betrag, den du abführst, sonst nichts.</p>
+  <p>In der App trägst du den Prozentsatz der Regelung bei jedem Umsatzsteuerbericht ein, in jedem Zeitraum. Das Feld schlägt den zuletzt verwendeten Satz vor, füllt sich aber nie selbst aus: ein Bericht ohne Prozentsatz ist eine normale Erklärung. Beim ersten Mal legt die App ein Ertragskonto für die Differenz zwischen der berechneten Umsatzsteuer und dem pauschalen Betrag an und sagt es dir. Markierst du eine Erklärung als endgültig, wird diese Differenz dort gebucht &thinsp;&mdash;&thinsp; ein Gewinn oder ein Verlust.</p>
 
   <h3>Die Umsatzsteuer bezahlen</h3>
-  <p>Die App führt zwei Umsatzsteuerkonten: <em>Vorsteuer</em> (was du zurückbekommst) und <em>Umsatzsteuer</em> (was du schuldest). Wird der Zeitraum abgerechnet, leerst du beide mit je einer <em>Umbuchung</em>, mit den Zahlen aus deiner Erklärung:</p>
-  <ol>
-    <li>Von <em>Vorsteuer</em> auf <em>Umsatzsteuer</em>: die Vorsteuer, die du abziehst.</li>
-    <li>Von deinem Bankkonto auf <em>Umsatzsteuer</em>: den Betrag, den du zahlst. Bei einer Erstattung von <em>Umsatzsteuer</em> auf dein Bankkonto, sobald das Geld da ist.</li>
-  </ol>
-  <p>Danach stehen beide Konten wieder auf null, bereit für den nächsten Zeitraum.</p>
+  <p>Eine Zahlung an die Behörde oder eine Erstattung ist eine <em>Umbuchung</em> in deinem Bankkonto, wie jede andere:</p>
+  <ul>
+    <li>Zahlung: von deinem Bankkonto auf <strong>USt-Zahlung</strong>.</li>
+    <li>Erstattung: von <strong>USt-Erstattung</strong> auf dein Bankkonto, sobald das Geld da ist.</li>
+  </ul>
+  <p>Trag ein, was tatsächlich abging oder ankam. Es muss zu keiner Erklärung passen: Vorauszahlungen, Raten und die Abschlusszahlung sind alles einfach Umbuchungen. Sind deine Erklärungen als endgültig markiert, ist der Saldo von <em>Umsatzsteuer</em> das, was du noch schuldest.</p>
 
   <h2 id="receipts">Belege anhängen</h2>
   <p>Bei jeder Einzahlung oder Auszahlung kannst du auf die Schaltfläche + neben einer Zeile klicken, um ein Foto oder eine Datei anzuhängen (JPEG, PNG, PDF). Wenn du einen Beleg bereits separat hochgeladen hast, verwende stattdessen das Verknüpfungssymbol. An eine Zeile können mehrere Belege angehängt werden.</p>
@@ -169,6 +180,7 @@
 
   <h2 id="correcting">Einen Fehler korrigieren</h2>
   <p>Alles, was du selbst gebucht hast, kannst du ändern oder entfernen. Nur die Konten, die die App selbst anlegt und pflegt &thinsp;&mdash;&thinsp; etwa den Gewinnvortrag &thinsp;&mdash;&thinsp; kannst du nicht anfassen.</p>
+  <p>Buchungen mit Umsatzsteuercode in einem Zeitraum, den du als endgültig markiert hast, sind gesperrt: siehe <em>Endgültig</em> unter <a href="#vat">Umsatzsteuer</a>.</p>
   <p>Zum Bearbeiten geh zu deinem Bankkonto, such den Eintrag im Kontobuch und klicke auf Bearbeiten. Nimm deine Änderungen vor und speichere.</p>
   <p>Um einen Eintrag zu löschen, klicke auf Anzeigen, um die dahinterliegende Journalbuchung zu öffnen &thinsp;&mdash;&thinsp; die zweiseitige Aufzeichnung, die die App für dich geschrieben hat. Löschen geht in zwei Schritten, weil eine gebuchte Buchung Teil deiner Zahlen ist und erst da heraus muss: Klicke auf Entbuchen/Löschen, um sie zu entbuchen &thinsp;&mdash;&thinsp; sie wird zu einem Entwurf, aus deinen Zahlen verschwunden, aber noch nicht weg. Klicke bei der entbuchten Buchung (dem Entwurf) auf Löschen, um sie vollständig zu entfernen.</p>
 

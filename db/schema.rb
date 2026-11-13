@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -182,10 +182,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
     t.date "period_start"
     t.boolean "posted", default: false, null: false
     t.datetime "updated_at", null: false
+    t.bigint "vat_report_id"
     t.index ["entry_date"], name: "index_journal_entries_on_entry_date"
     t.index ["journal_reference"], name: "index_journal_entries_on_journal_reference"
     t.index ["posted", "entry_date"], name: "index_journal_entries_on_posted_and_entry_date"
     t.index ["posted"], name: "index_journal_entries_on_posted"
+    t.index ["vat_report_id"], name: "index_journal_entries_on_vat_report_id"
   end
 
   create_table "languages", force: :cascade do |t|
@@ -288,6 +290,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
   create_table "reports", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "end_date", null: false
+    t.datetime "finalized_at"
     t.integer "flat_rate_bps"
     t.string "name", null: false
     t.integer "prepayment"
@@ -507,6 +510,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
   add_foreign_key "entity_group_memberships", "entities"
   add_foreign_key "exchange_rates", "admins", column: "entered_by_id", on_delete: :nullify
   add_foreign_key "exchange_rates", "entities"
+  add_foreign_key "journal_entries", "reports", column: "vat_report_id"
   add_foreign_key "languages", "admins", column: "released_by_admin_id"
   add_foreign_key "postings", "accounts"
   add_foreign_key "postings", "journal_entries"

@@ -90,6 +90,7 @@ class EntityPurgeService
     Archives::Storage.delete_scope(code)
     Filing::Storage.delete_all_for(code)
     report_ids.each { |id| TaxExportStorage.delete_report(id) }
+    report_ids.each { |id| VatReturnStorage.delete_report(id) }
 
     Result.new(code: code, name: name, counts: counts)
   end

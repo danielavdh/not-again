@@ -20,6 +20,9 @@ class Current < ActiveSupport::CurrentAttributes
   # users (JournalEntry#app_owned_close?), so every legitimate rewrite must
   # announce itself here.
   attribute :app_closing_entry_write
+  # The same for the clearing entry a VAT return books when it is marked final,
+  # and removes when it is reopened. See Reports::VatReturnFinal.
+  attribute :app_vat_clearing_write
   # Set while a cross-entity gift's own side is taking the whole pair down. The
   # counterpart's capital posting severs on its way out, which normally emails
   # the donor that the gift was handed back — and here the donor IS the one

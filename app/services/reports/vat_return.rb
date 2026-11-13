@@ -76,7 +76,12 @@ module Reports
         account_lines: account_lines,
         # VAT in the control accounts that no code put there: in the balance,
         # in no box, and nothing else would say so.
-        unassigned:  unassigned
+        unassigned:  unassigned,
+        # What the codes actually put on each control account, without the
+        # reverse charge (which posts nothing). The clean-up entry of a final
+        # return moves these, not the return's figures.
+        posted_output: posted_on(TaxCode::OUTPUT),
+        posted_input:  posted_on(TaxCode::INPUT)
       }
     end
 
@@ -386,7 +391,7 @@ module Reports
       # wrong — the comparison column is where that difference belongs.
       return 0 if flat_rate?
 
-      ids = Account.vat_accounts.for_entity_codes([ @entity.code ])
+      ids = Account.vat_control_accounts.for_entity_codes([ @entity.code ])
                    .where(tax_scheme: @scheme).pluck(:id)
       return 0 if ids.empty?
 
@@ -480,6 +485,10 @@ module Reports
       end
     end
 
+    def posted_on(role)
+      tax_totals.sum { |(_code_id, role_name), amount| role_name == role ? amount : 0 }
+    end
+
     # Debits less credits, posted entries only. Callers apply the authority's
     # sign.
     def signed_sums(scope, group:)
@@ -495,7 +504,7 @@ module Reports
     end
 
     def vat_account_ids
-      @vat_account_ids ||= Account.vat_accounts.for_entity_codes([ @entity.code ])
+      @vat_account_ids ||= Account.vat_control_accounts.for_entity_codes([ @entity.code ])
                                   .where(tax_scheme: @scheme).select(:id)
     end
 

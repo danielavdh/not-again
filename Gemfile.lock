@@ -489,7 +489,7 @@ DEPENDENCIES
   puma (>= 7.0.3)
   rack-attack
   rack-cors
-  rails (~> 8.1.1)
+  rails (~> 8.1.4)
   rails-i18n (~> 8.0)
   recaptcha
   rotp (~> 6.3)
@@ -504,7 +504,7 @@ DEPENDENCIES
   web-console
 
 RUBY VERSION
-  ruby 3.4.7p58
+  ruby 3.4.12
 
 BUNDLED WITH
   4.0.2

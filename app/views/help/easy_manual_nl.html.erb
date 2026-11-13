@@ -150,16 +150,27 @@
   <p>Klik het rapport aan en je krijgt de vakken van het echte formulier, in de nummering van de dienst zelf, klaar om over te nemen, plus een uitsplitsing per code en een CSV.</p>
   <p>Deze app verstuurt de aangifte niet. Die dien je zelf in.</p>
 
+  <h3>Definitief: als de aangifte is ingediend</h3>
+  <p>Zodra je de aangifte hebt ingediend, klik je bij haar op <strong>Als definitief markeren</strong>. Vanaf dan:</p>
+  <ul>
+    <li>is elke boeking met een btw-code in dat tijdvak vergrendeld &thinsp;&mdash;&thinsp; ook vrijgestelde en die met 0 %. Boekingen zonder code blijven bewerkbaar;</li>
+    <li>wordt de aangifte bewaard zoals ze was toen je haar markeerde, als CSV die je bij de aangifte kunt downloaden;</li>
+    <li>verrekent de app de <em>Voorbelasting</em> van dat tijdvak met de <em>Af te dragen omzetbelasting</em>, zodat die laat zien wat je verschuldigd bent.</li>
+  </ul>
+  <p>Een fout gevonden in een ingediend tijdvak? Corrigeer die in het huidige tijdvak: een nieuwe boeking met dezelfde btw-code, waar nodig met een minteken. Zo zijn correcties bedoeld.</p>
+  <p>Heb je een aangifte per ongeluk als definitief gemarkeerd, of is ze nog niet echt weg, klik dan op <strong>Weer openen</strong>. De app vraagt eerst of je haar hebt ingediend. Een ingediende aangifte weer openen betekent zelf een gecorrigeerde indienen.</p>
+
   <h3>Forfaitaire regelingen</h3>
   <p>Sommige landen laten je een vast percentage van je omzet betalen in plaats van het verschil tussen de btw die je in rekening bracht en de btw die je betaalde &thinsp;&mdash;&thinsp; het Britse Flat Rate Scheme, het Spaanse <em>r&eacute;gimen simplificado</em>. De kwartaalaangifte gaat er sneller mee, de boekhouding niet: aan het eind van het jaar heb je de exacte cijfers toch nodig, dus <strong>boek alles zoals je het zonder de regeling zou boeken</strong>. Het verandert alleen het bedrag dat je afdraagt, verder niets.</p>
+  <p>In de app vul je het percentage van de regeling in op elk btw-rapport, elk tijdvak. Het veld stelt het percentage van de vorige keer voor, maar vult zich nooit zelf in: een rapport zonder percentage is een gewone aangifte. De eerste keer maakt de app een opbrengstrekening aan voor het verschil tussen de btw die je in rekening bracht en het forfaitaire bedrag, en meldt dat. Markeer je een aangifte als definitief, dan wordt dat verschil daar geboekt &thinsp;&mdash;&thinsp; een winst of een verlies.</p>
 
   <h3>De btw betalen</h3>
-  <p>De app houdt twee btw-rekeningen bij: <em>Voorbelasting</em> (wat je terugkrijgt) en <em>Af te dragen omzetbelasting</em> (wat je verschuldigd bent). Wordt het tijdvak afgerekend, maak ze dan allebei leeg met elk een <em>overboeking</em>, met de cijfers uit je aangifte:</p>
-  <ol>
-    <li>Van <em>Voorbelasting</em> naar <em>Af te dragen omzetbelasting</em>: de btw die je terugvraagt.</li>
-    <li>Van je bankrekening naar <em>Af te dragen omzetbelasting</em>: het bedrag dat je betaalt. Bij een teruggave van <em>Af te dragen omzetbelasting</em> naar je bankrekening, zodra het geld binnen is.</li>
-  </ol>
-  <p>Daarna staan beide rekeningen weer op nul, klaar voor het volgende tijdvak.</p>
+  <p>Een betaling aan de dienst of een teruggave is een <em>overboeking</em> in je bankrekening, zoals elke andere:</p>
+  <ul>
+    <li>Betalen: van je bankrekening naar <strong>Btw-betaling</strong>.</li>
+    <li>Een teruggave: van <strong>Btw-teruggave</strong> naar je bankrekening, zodra het geld binnen is.</li>
+  </ul>
+  <p>Vul in wat er echt afging of binnenkwam. Het hoeft bij geen aangifte te passen: voorschotten, termijnen en de slotbetaling zijn allemaal gewoon overboekingen. Zijn je aangiftes als definitief gemarkeerd, dan is het saldo van <em>Af te dragen omzetbelasting</em> wat je nog verschuldigd bent.</p>
 
   <h2 id="receipts">Bonnen bijvoegen</h2>
   <p>Bij elke storting of opname kun je op de + knop naast een regel klikken om een foto of bestand bij te voegen (JPEG, PNG, PDF). Als je al eerder een bon afzonderlijk hebt geüpload, gebruik dan het koppelicoon om deze te verbinden. Aan één regel kunnen meerdere bonnen worden bijgevoegd.</p>
@@ -169,6 +180,7 @@
 
   <h2 id="correcting">Een fout corrigeren</h2>
   <p>Alles wat je zelf hebt geboekt, kun je wijzigen of verwijderen. Alleen de rekeningen die de app zelf aanmaakt en bijhoudt &thinsp;&mdash;&thinsp; zoals de ingehouden winst &thinsp;&mdash;&thinsp; kun je niet aanraken.</p>
+  <p>Boekingen met een btw-code in een tijdvak dat je als definitief hebt gemarkeerd, zijn vergrendeld: zie <em>Definitief</em> onder <a href="#vat">btw</a>.</p>
   <p>Om te bewerken, ga naar je bankrekening, zoek de boeking in het grootboek en klik op Bewerken. Breng je wijzigingen aan en sla op.</p>
   <p>Om een boeking te verwijderen, klik op Bekijken om de journaalboeking erachter te openen &thinsp;&mdash;&thinsp; de tweezijdige vastlegging die de app voor je heeft geschreven. Verwijderen gaat in twee stappen, omdat een geboekte boeking deel is van je cijfers en er eerst uit moet: klik op Ontboeken/Verwijderen om te ontboeken &thinsp;&mdash;&thinsp; ze wordt een concept, verdwenen uit je cijfers maar nog niet weg. Klik bij de ontboekte boeking (het concept) op Verwijderen om ze volledig te wissen.</p>
 

@@ -145,7 +145,12 @@ Under a cumulative regime such as UK MTD corrections reach the authority with th
   <p>Otherwise the rule stays in place: a loan repayment split into principal and interest is still two entries.</p>
 
   <h3>Clearing the control account</h3>
-  <p>Any difference between what the account holds and what the codes account for appears on the return as <em>unassigned VAT</em> &thinsp;&mdash;&thinsp; which is what a hand-typed VAT posting shows up as. Only entries carrying income or expense are counted: paying the quarter, the transfers that empty the two VAT accounts, is a settlement and is not reported.</p>
+  <p>Any difference between what the account holds and what the codes account for appears on the return as <em>unassigned VAT</em> &thinsp;&mdash;&thinsp; which is what a hand-typed VAT posting shows up as. Only entries carrying income or expense are counted: a payment or refund, a transfer to or from <em>VAT on sales</em>, is not reported.</p>
+
+  <h3>Marking a return final</h3>
+  <p>Final stores the return&rsquo;s CSV (a tier-2 file, kept apart from anything filed through a connector), stamps the report, and books one clearing entry on the period&rsquo;s last day: <em>VAT on sales</em> debit and <em>VAT on purchases</em> credit, for the input VAT the codes posted in the period. A reverse charge posted none, so none is moved. On a flat-rate return a third line takes the difference between the VAT posted and the flat amount due to the scheme&rsquo;s flat-rate income account, created with the first report that carries a percentage. The clearing entry belongs to the app: it cannot be edited, copied as such or deleted, and reopening the return removes it.</p>
+  <p>The lock: an entry cannot be created, changed, posted, unposted or deleted if, before or after the change, it has a coded row dated inside a final period of the same business and scheme. So moving an entry into or out of the period, or adding or removing a code, is refused too. Entries without a code are not part of the return and stay open. A final report&rsquo;s period, flat rate and prepayment are fixed; its name is not.</p>
+  <p>If the books ever give different figures from the stored file &thinsp;&mdash;&thinsp; a catalogue correction can move postings to a new code row without going through the lock &thinsp;&mdash;&thinsp; the return says so.</p>
 
   <h3>Stopping and starting again</h3>
   <p>Unticking a VAT scheme deletes its control accounts if nothing was ever posted to them. Otherwise they stay, deactivated, and the entries from the years you filed keep their codes. Tick the scheme again and the same accounts come back.</p>

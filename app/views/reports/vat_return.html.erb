@@ -12,6 +12,17 @@
 
 	<%= render partial: 'shared/flash' %>
 
+	<%# Final: the user has said this return was submitted. Its CSV was kept
+	    then, and the coded entries of the period are locked. %>
+	<% if @report.finalized? %>
+		<p><%= t(".final_since", date: l(@report.finalized_at.to_date, format: :short_date)) %></p>
+		<% if @books_changed %>
+			<p class="warning"><%= t(".books_changed") %></p>
+		<% end %>
+	<% else %>
+		<p><%= t(".draft_explained") %></p>
+	<% end %>
+
 	<%# A quiet period is still a return, and it is filed with every box at
 	    zero — so the boxes are shown whatever the period holds. Only the
 	    per-code and per-account detail has nothing to say then. %>
@@ -170,4 +181,20 @@
 			target: "_blank", rel: "noopener",
 			class: 'button green',
 			data: { sure: t("crud.csv_confirm") } %>
+
+	<% if @final_file %>
+		<%= link_to t(".final_csv"),
+				download_final_vat_return_report_path(@report, key: @final_file.filename),
+				class: "button green" %>
+	<% end %>
+
+	<% if can_edit_for_entity?(@report.report_group.entity.code) %>
+		<% if @report.finalized? %>
+			<%= link_to t(".reopen"), reopen_report_path(@report), class: "button" %>
+		<% else %>
+			<%= button_to t(".finalize"), finalize_report_path(@report),
+					data: { sure: t(".finalize_confirm") },
+					class: "button green" %>
+		<% end %>
+	<% end %>
 </div>

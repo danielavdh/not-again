@@ -139,6 +139,13 @@ Rails.application.routes.draw do
         # ".csv", so it needs the wildcard, same as the archive routes below.
         get "tax_export_backup/*key", to: "reports#download_tax_export_backup",
                                        as: :download_tax_export_backup, format: false
+        # A VAT return marked final, and the way back: a question first (GET),
+        # then the reopening itself.
+        post  :finalize
+        get   :reopen
+        patch :unfinalize
+        get "final_vat_return/*key", to: "reports#download_final_vat_return",
+                                      as: :download_final_vat_return, format: false
       end
       collection do
         get :trial_balance

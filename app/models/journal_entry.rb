@@ -7,6 +7,8 @@ class JournalEntry < ApplicationRecord
            foreign_key: :journal_entry_id,
            inverse_of: :journal_entry, 
            dependent: :destroy
+  # Set only on the clearing entry a VAT return books when it is marked final.
+  belongs_to :vat_report, class_name: "Report", optional: true
   accepts_nested_attributes_for :postings, allow_destroy: true, reject_if: proc { |attrs|
 display = attrs['amount_display'].to_s.strip
 all_blank = attrs['account_id'].blank? && attrs['amount'].blank? && display.blank?
@@ -24,6 +26,9 @@ all_blank || new_record_zero
   # prepend: so it runs before `has_many :postings, dependent: :destroy` — that
   # cascade removes the very postings this guard inspects.
   before_destroy :prevent_user_destroy_of_app_owned_close, prepend: true
+  validate :vat_clearing_is_read_only
+  validate :not_in_a_final_vat_period
+  before_destroy :prevent_destroy_of_locked_vat_entry, prepend: true
   validate :postings_must_balance
   validate :must_have_balance_sheet_posting
   validate :single_balance_account_with_nominals
@@ -66,14 +71,37 @@ all_blank || new_record_zero
                 :transfer_amount, :transfer_amount_display,
                 :target_amount, :target_amount_display
 
+  # update_column skips validation, so the final-VAT lock is asked here: the
+  # return reads posted entries only, and posting or unposting one changes it.
   def post!
     return false unless balanced?
+    return false if final_vat_report || (vat_clearing? && !Current.app_vat_clearing_write)
     #update(posted: true)
     update_column(:posted, true)
   end
   def unpost!
+    return false if final_vat_report || (vat_clearing? && !Current.app_vat_clearing_write)
     #update(posted: false)
     update_column(:posted, false)
+  end
+
+  # The final VAT return this entry is part of, as it is now or as it was
+  # saved, or nil. Part of means a coded posting (any code, zero-rated and
+  # exempt included) dated inside the return's period, for the business of the
+  # posting's account and the scheme of its code. Both states, so moving an
+  # entry out of the period, or taking its code away, is caught as well as
+  # moving one in.
+  def final_vat_report
+    scopes = (coded_scopes_in_memory + coded_scopes_in_database).uniq
+    scopes.each do |entity_code, scheme, date|
+      report = Report.finalized.covering(entity_code: entity_code, scheme: scheme, date: date).first
+      return report if report
+    end
+    nil
+  end
+
+  def vat_clearing?
+    vat_report_id.present? || vat_report_id_in_database.present?
   end
   
   def total_debits
@@ -516,6 +544,60 @@ private
     throw :abort
   end
 
+  def vat_clearing_is_read_only
+    return unless vat_clearing? && !Current.app_vat_clearing_write
+    errors.add(:base, I18n.t("journal_entries.errors.vat_clearing_managed"))
+  end
+
+  # A save that changes nothing passes: the forms re-submit every field, and
+  # opening and saving an entry unchanged is not a change to the return.
+  def not_in_a_final_vat_period
+    return unless new_record? || changed? ||
+                  postings.any? { |p| p.new_record? || p.changed? || p.marked_for_destruction? }
+    report = final_vat_report or return
+    errors.add(:base, vat_period_final_message(report))
+  end
+
+  def prevent_destroy_of_locked_vat_entry
+    if vat_clearing? && !Current.app_vat_clearing_write
+      errors.add(:base, I18n.t("journal_entries.errors.vat_clearing_managed"))
+      throw :abort
+    end
+    report = final_vat_report or return
+    errors.add(:base, vat_period_final_message(report))
+    throw :abort
+  end
+
+  def vat_period_final_message(report)
+    I18n.t("journal_entries.errors.vat_period_final",
+           report: report.name,
+           from:   I18n.l(report.start_date, format: :short_date),
+           to:     I18n.l(report.end_date, format: :short_date))
+  end
+
+  def coded_scopes_in_memory
+    rows = postings.reject { |p| p.marked_for_destruction? || p.tax_code_id.blank? }
+    return [] if rows.empty? || entry_date.blank?
+
+    schemes = TaxCode.where(id: rows.map(&:tax_code_id).uniq).pluck(:id, :scheme).to_h
+    rows.filter_map { |p|
+      entity_code = account_for_posting(p)&.entity_code
+      scheme      = schemes[p.tax_code_id]
+      [ entity_code, scheme, entry_date ] if entity_code && scheme
+    }
+  end
+
+  def coded_scopes_in_database
+    return [] unless persisted?
+
+    date = entry_date_in_database
+    Posting.where(journal_entry_id: id).where.not(tax_code_id: nil)
+           .joins(:account, :tax_code)
+           .distinct
+           .pluck(Arel.sql("SUBSTRING(accounts.code, 2, 2)"), "tax_codes.scheme")
+           .map { |entity_code, scheme| [ entity_code, scheme, date ] }
+  end
+
 
   # A cross-entity COUNTERPART (JE₂, holding an equity bridge with a link) must
   # have its real leg on a NOMINAL income/expense account, never a balance
@@ -607,6 +689,9 @@ private
     # rows refused that, and named the account twice in the message saying so.
     balance = balance.uniq
     return if nominal.empty? || balance.size <= 1
+    # A flat-rate return's clearing entry: both control accounts and the
+    # income account the difference goes to. Built by the app, never typed.
+    return if vat_clearing?
 
     # Named, because the message left the user to work out which of six rows.
     errors.add(:base, I18n.t("journal_entries.errors.multiple_balance_accounts",
