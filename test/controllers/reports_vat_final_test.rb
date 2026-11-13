@@ -167,6 +167,29 @@ class ReportsVatFinalTest < ActionDispatch::IntegrationTest
     assert_select "option[value='#{purchases.id}']", count: 0
   end
 
+  # --- a closed year --------------------------------------------------------------
+
+  def year_profit
+    close = JournalEntry.find_by!(closing_entry: true, period_end: Date.new(2026, 12, 31))
+    scope = close.postings.where(account_id: Account.retained_earnings.select(:id))
+    scope.credit.sum(:amount) - scope.debit.sum(:amount)
+  end
+
+  # The flat-rate difference is income, so a return marked final inside a year
+  # already closed changes that year's profit, and reopening it changes it back.
+  test "a flat-rate return marked final in a closed year moves the year's closing entry" do
+    @q2.update!(flat_rate_bps: 1_000)
+    YearEndService.new(entity: @entity, start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31)).call
+    before = year_profit
+
+    post finalize_report_path(@q2)
+    # 100.00 charged - 20.00 paid - 60.00 owed at 10 % of 600.00
+    assert_equal before + 2_000, year_profit
+
+    patch unfinalize_report_path(@q2), params: { submitted: "no" }
+    assert_equal before, year_profit
+  end
+
   # --- flat rate ---------------------------------------------------------------
 
   test "a report with a flat rate creates the flat-rate income account once" do

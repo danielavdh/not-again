@@ -63,19 +63,25 @@ class BaseController < ApplicationController
     entity = Entity.find_by(code: entity_code)
     return nil unless entity
 
-    Archives::Lock.with(entity.scope_key_on(je.entry_date)) do
-      message = rebuild_own_closing_entry(entity, je)
-      Archives::YearEnd.refresh(entity.scope_key_on(je.entry_date), je.entry_date)
+    refresh_closing_entry_on(entity, je.entry_date, except_id: je.id)
+  end
+
+  # The same, for a date and a business known some other way: after an entry
+  # has been deleted, its postings no longer say whose it was.
+  def refresh_closing_entry_on(entity, date, except_id: nil)
+    Archives::Lock.with(entity.scope_key_on(date)) do
+      message = rebuild_own_closing_entry(entity, date, except_id)
+      Archives::YearEnd.refresh(entity.scope_key_on(date), date)
       message
     end
   end
 
   # Only THIS entity's own closing entry, never a sibling's — a closing entry
   # is computed purely from its own entity's postings.
-  def rebuild_own_closing_entry(entity, je)
+  def rebuild_own_closing_entry(entity, date, except_id)
     affected = app_generated_closing_entries(entity.code)
-      .where("period_start <= ? AND period_end >= ?", je.entry_date, je.entry_date)
-      .where.not(id: je.id)
+      .where("period_start <= ? AND period_end >= ?", date, date)
+      .where.not(id: except_id)
       .first
     return nil unless affected
 

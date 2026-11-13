@@ -5,8 +5,14 @@ require "tempfile"
 class TaxCategoryLoaderTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
+  # Held until teardown: a Tempfile nobody references is deleted by the garbage
+  # collector, and a path handed back alone can point at nothing by the time
+  # the loader opens it.
+  teardown { @tempfiles&.each(&:close!) }
+
   def write_yaml(content)
     f = Tempfile.new(["cat", ".yml"])
+    (@tempfiles ||= []) << f
     f.write(content); f.flush
     f.path
   end

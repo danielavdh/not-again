@@ -8,8 +8,14 @@ require "tempfile"
 class TaxCategoryLoaderCodesTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
+  # Held until teardown: a Tempfile nobody references is deleted by the garbage
+  # collector, and a path handed back alone can point at nothing by the time
+  # the loader opens it.
+  teardown { @tempfiles&.each(&:close!) }
+
   def write_yaml(codes)
     f = Tempfile.new([ "xx_vat", ".yml" ])
+    (@tempfiles ||= []) << f
     f.write(<<~YML)
       country_code: xx
       scheme: vat

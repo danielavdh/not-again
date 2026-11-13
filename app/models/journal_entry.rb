@@ -18,6 +18,10 @@ all_blank || new_record_zero
 
   validates :entry_date, presence: true
   before_validation :derive_closing_period, if: :closing_entry?
+  # Every save, whoever makes it: a coded row saved without its legs would
+  # keep the gross as its net, and the return would read it as such. Also when
+  # the last code was just removed, so its legs go with it.
+  before_validation :derive_tax_legs, if: :carries_vat?
   validate :closing_period_is_ordered, if: :closing_entry?
   # No `on:` restriction — a BRAND NEW entry posting into the app's own
   # retained-earnings account is exactly as much "not yours to write" as editing
@@ -279,13 +283,16 @@ all_blank || new_record_zero
     posts_to_locked_retained_earnings?
   end
 
-  # Builds, updates and removes this entry's derived VAT legs, in place.
-  # Returns any control accounts it had to create, so the caller can say so.
+  # Builds, updates and removes this entry's derived VAT legs, in place. Runs
+  # before every validation; running it again changes nothing, because each
+  # row remembers the gross it was split from (Posting#gross_for_tax).
   #
-  # Called explicitly and always BEFORE the caller works out the bank leg: that
-  # leg is the sum of the others and must come to the GROSS, which it only does
-  # once the legs are among them. A callback would hide that ordering, and would
-  # also fire on post! and the year-end paths, which never touch VAT.
+  # A bank form also calls it itself, BEFORE working out the bank leg: that leg
+  # is the sum of the others and only comes to the gross once the legs are
+  # among them.
+  #
+  # Returns any control accounts it had to create; #created_vat_accounts keeps
+  # them for the save notice.
   def derive_tax_legs
     rows  = postings.reject { |p| p.marked_for_destruction? || p.tax_leg? }
     codes = TaxCode.lookup(rows.map(&:tax_code_id), on: entry_date)
@@ -304,17 +311,31 @@ all_blank || new_record_zero
       # Handed to the row, so the form that renders it afterwards does not
       # load the same code again, once per row.
       row.association(:tax_code).target = code if code
+      # Code taken away and the amount not sent again: the column holds the
+      # net, and the gross is the invariant, so the VAT goes back into it.
+      if code.nil? && mine.any? && !(row.amount_changed? || row.amount_submitted? || row.new_record?)
+        row.amount = row.amount.to_i + mine.sum { |leg| leg.amount.to_i }
+      end
       reconcile_tax_legs(row, mine, code ? tax_legs_wanted(row, code, created) : [])
     end
 
     orphans.each_value { |legs| legs.each(&:mark_for_destruction) }
+    @created_vat_accounts = (created_vat_accounts + created).uniq
     created
   end
 
-  # Whether anything in this entry carries a VAT code — the cheap test the
-  # controllers use before asking for the work.
+  def created_vat_accounts
+    @created_vat_accounts || []
+  end
+
   def tax_coded?
     postings.any? { |p| !p.marked_for_destruction? && p.tax_code_id.present? }
+  end
+
+  # A code on a row, or a leg left from one: either way there is VAT to derive
+  # or to take away.
+  def carries_vat?
+    postings.any? { |p| p.tax_leg? || (!p.marked_for_destruction? && p.tax_code_id.present?) }
   end
 
 private

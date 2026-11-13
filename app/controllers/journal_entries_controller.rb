@@ -2,7 +2,7 @@
 
 class JournalEntriesController < BaseController
   include CrossEntityJournalEntries
-  include TaxLegDerivation
+  include VatAccountsNotice
   before_action :set_journal_entry, only: [:show, :edit, :update, :destroy, :post, :unpost, :duplicate]
   # An entry may be READ wherever the admin has a link, but only changed where
   # that link says full_access — see Admin#writable_journal_entries.
@@ -77,10 +77,9 @@ class JournalEntriesController < BaseController
 
   def create
     @journal_entry = JournalEntry.new(journal_entry_params)
-    derive_tax_legs_for(@journal_entry)
     if save_with_cross_entity_entries(@journal_entry)
       redirect_to journal_entry_path(@journal_entry),
-                  notice: [t("journal_entries.created"), vat_accounts_notice].compact.join(" ")
+                  notice: [t("journal_entries.created"), vat_accounts_notice(@journal_entry.created_vat_accounts)].compact.join(" ")
     else
       while @journal_entry.postings.size < 2
         @journal_entry.postings.build(entry_type: :credit)
@@ -104,14 +103,13 @@ class JournalEntriesController < BaseController
 
   def update
     @journal_entry.assign_attributes(journal_entry_params)
-    derive_tax_legs_for(@journal_entry)
     if entry_emptied?(@journal_entry)
       @journal_entry.destroy # all postings marked → delete the entry (cascades a cross-entity JE₂ if the gift was among them)
       return redirect_to journal_entries_path, notice: t("journal_entries.deleted")
     end
     if save_with_cross_entity_entries(@journal_entry)
       redirect_to journal_entry_path(@journal_entry),
-                  notice: [t("journal_entries.updated"), vat_accounts_notice].compact.join(" ")
+                  notice: [t("journal_entries.updated"), vat_accounts_notice(@journal_entry.created_vat_accounts)].compact.join(" ")
     else
       load_form_data
       @cross_entity_rerender = cross_entity_rerender_entries

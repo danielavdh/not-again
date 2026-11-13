@@ -2,7 +2,7 @@
 
 class AccountsController < BaseController
   include CrossEntityJournalEntries
-  include TaxLegDerivation
+  include VatAccountsNotice
   before_action :set_account, only: [
     :show, :edit, :update, :destroy, :ledger, :balance_at,
     :quick_map_tax, :save_deduction_percentage, :save_default_tax_code,
@@ -197,7 +197,8 @@ class AccountsController < BaseController
     @entry_type = 'deposit'
     @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:journal_entry_id])
     @journal_entry.assign_attributes(bank_entry_params)
-    derive_tax_legs_for(@journal_entry)
+    # Before the bank leg, which is the sum of the derived rows.
+    @journal_entry.derive_tax_legs
     recalculate_bank_posting
 
     if entry_emptied?(@journal_entry, balance_account_id: @account.id)
@@ -206,7 +207,7 @@ class AccountsController < BaseController
     end
     if save_with_cross_entity_entries(@journal_entry)
       base   = t("accounts.#{@account.equity? ? 'drawing_updated' : 'deposit_updated'}")
-      notice = [base, refresh_affected_closing_entry(@journal_entry), vat_accounts_notice].compact.join(" ")
+      notice = [base, refresh_affected_closing_entry(@journal_entry), vat_accounts_notice(@journal_entry.created_vat_accounts)].compact.join(" ")
       redirect_or_close_popup ledger_account_path(@account), notice: notice
     else
       load_form_data(account_types: [:income, :expense, :personal])
@@ -292,7 +293,8 @@ class AccountsController < BaseController
     @journal_entry = accessible_journal_entries.includes(postings: [:receipts, :account, :tax_code]).find(params[:journal_entry_id])
     
     @journal_entry.assign_attributes(bank_entry_params)
-    derive_tax_legs_for(@journal_entry)
+    # Before the bank leg, which is the sum of the derived rows.
+    @journal_entry.derive_tax_legs
     recalculate_bank_posting
 
     if entry_emptied?(@journal_entry, balance_account_id: @account.id)
@@ -301,7 +303,7 @@ class AccountsController < BaseController
     end
     if save_with_cross_entity_entries(@journal_entry)
       base   = t("accounts.#{@account.equity? ? 'contribution_updated' : 'withdrawal_updated'}")
-      notice = [base, refresh_affected_closing_entry(@journal_entry), vat_accounts_notice].compact.join(" ")
+      notice = [base, refresh_affected_closing_entry(@journal_entry), vat_accounts_notice(@journal_entry.created_vat_accounts)].compact.join(" ")
       redirect_or_close_popup ledger_account_path(@account), notice: notice
     else
       load_form_data(account_types: [:income, :expense, :personal])
@@ -854,7 +856,7 @@ private
     @journal_entry.postings.select { |p| p.account_id == @account.id }.each(&:mark_for_destruction)
 
     # Before the sum below, never after: the bank leg has to come to the GROSS.
-    derive_tax_legs_for(@journal_entry)
+    @journal_entry.derive_tax_legs
 
     # Calculate net balance from counter account postings
     default_currency = @account.currency# || 'GBP'

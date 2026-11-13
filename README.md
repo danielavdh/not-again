@@ -2,7 +2,7 @@
 
 Self-hosted double-entry bookkeeping for sole traders and small businesses. Multi-currency, with tax categories and VAT returns for the UK, Germany, Switzerland, the Netherlands and Spain, and **built to be extended**.
 
-Rails 8. No SaaS, no subscription. Your books live in your database, on your server, and **nothing a visitor's browser loads comes from anyone else** — no CDN fonts, no analytics, no trackers.
+Rails 8. No SaaS, no subscription. Your books live in your database, on your server, and **nothing a visitor's browser loads comes from anyone else** — no CDN fonts, no analytics, no trackers. A CDN that mirrors your own files is optional (not-again.eu uses one).
 
 The server side does talk to services you choose: object storage for the receipts, an SMTP provider for mail, and the tax authorities' own published rate feeds.
 
@@ -347,7 +347,7 @@ document now, and needs your eye:
 - Shrine for receipts, with ImageMagick + Ghostscript compressing anything over 2MB down to that ceiling
 - No Bootstrap and no framework JS in the app itself — see `app/javascript/scripts/` for the house style. Turbo and Stimulus are in the bundle, but only because `mission_control-jobs` (the `/jobs` dashboard) depends on them; nothing this app renders uses either.
 
-**No runtime dependencies.** The app serves every asset it uses; nothing is fetched from a CDN, a font host or a package registry while it runs. That is what makes it work on a private network, survive someone else's outage, and keep a Content-Security-Policy naming only your own origins.
+**No runtime dependencies.** The app serves every asset it uses; nothing is fetched from a font host or a package registry while it runs. A CDN is optional (`ASSET_HOST`), and it only ever mirrors the app's own files. That is what makes it work on a private network, survive someone else's outage, and keep a Content-Security-Policy naming only your own origins.
 TomSelect and the fonts are vendored for exactly that reason; they and everything the container image bundles are listed in [THIRD-PARTY.md](THIRD-PARTY.md).
 
 **Built with extensive use of Claude (Anthropic) as a development collaborator.**

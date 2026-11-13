@@ -280,7 +280,10 @@ class ReportsController < BaseController
     end
 
     entry  = Reports::VatReturnFinal.new(@report).reopen!
-    notice = [ t("reports.vat_final.reopened"), entry && refresh_affected_closing_entry(entry) ]
+    # By business and date: the entry is gone, and with it the postings that
+    # would have said whose it was.
+    refreshed = entry && refresh_closing_entry_on(@report.report_group.entity, entry.entry_date)
+    notice = [ t("reports.vat_final.reopened"), refreshed ]
     redirect_to report_path(@report), notice: notice.compact.join(" ")
   end
 
