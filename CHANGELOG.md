@@ -6,12 +6,6 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
-### Security
-
-- Puma 8.0.5 (ten advisories, among them memory exhaustion over SSL and slow
-  clients holding worker threads) and net-ssh 7.3.10, used by Kamal for
-  deploying (a revoked host key was accepted).
-
 ## [1.0.0] — 2026-11-26
 
 The first release. It has been keeping real books in production since September
