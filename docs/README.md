@@ -12,7 +12,7 @@ machine. These are the deeper documents.
 | [provider-setup.md](provider-setup.md) | Self-hosted: setting up the outside services — server, DNS, object storage, email, optional CDN — click by click, plus the GitHub token the deploy needs |
 | [maintenance.md](maintenance.md) | What has to keep happening once it is live, and by whom: scheduled jobs, backups, the weekly report |
 | [self-hosting-legal.md](self-hosting-legal.md) | A developer's reading of the EU product-liability and cyber-resilience rules — what the app already does, and what changes if you charge for hosting. Not legal advice |
-| [known-limitations.md](known-limitations.md) | The self-hosting risks worked through: what each is, how it was resolved, what is still open |
+| [known-limitations.md](known-limitations.md) | What is still open, and why |
 | [CRA/](CRA/) | Cyber Resilience Act pack for an operator who sells hosting — a declaration of conformity to publish, and two documents to keep. Explained in [self-hosting-legal.md](self-hosting-legal.md) |
 
 ## Extend it

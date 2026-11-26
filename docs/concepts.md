@@ -224,7 +224,7 @@ A scheme is a VAT scheme when its header says `kind: vat`. Load-bearing: a retur
 
 **Control accounts belong to the registration, not to an entry.** `Entity#sync_vat_control_accounts` creates the pair when a VAT scheme is subscribed; `Account.drop_unused_vat_accounts` removes it on unsubscribing, if neither side has postings. Ordinary `Account`s keyed by `tax_scheme` + `vat_role`. `Account.resolve_vat_account` is the lazy fallback for entities registered earlier.
 
-**Derivation must run before the bank leg is summed** — that leg is the sum of the others, so it only reaches the gross once the VAT legs are there. `TaxLegDerivation` calls `derive_tax_legs` from the six controller actions that can carry a code. It is **not** a callback, so a `JournalEntry` saved any other way keeps the code and derives nothing, and the return reads that gross as a net. Unreachable through the UI, unenforced: todo item 30.
+**Derivation runs on every save** — `JournalEntry` calls `derive_tax_legs` before validation whenever a row carries a code or a leg is left from one, so an entry saved any way at all gets its split, and removing the last code takes the VAT back into the row. The bank forms also call it themselves before summing the bank leg, which only reaches the gross once the VAT legs are there.
 
 **Where the leg lands follows the scheme.** `vat_accounts: nominal` puts the control accounts in the P&L (input → expense, output → income); otherwise balance-sheet (input → asset, output → liability). German EÜR is cash-basis and has no balance sheet to put them on.
 
@@ -234,7 +234,7 @@ A scheme is a VAT scheme when its header says `kind: vat`. Load-bearing: a retur
 
 **The return groups by code, not by account** — one expense account carries several rates and several boxes — which is why it is neither a `Reports::Presenter` nor `LedgerBalances`. No currency translation (a code may only be used in its scheme's currency), no date buckets, no debit-normal rule: a box's sign is the code's direction. Boxes that total others say so in `tax_categories.includes`.
 
-**Not built:** filing (screen and CSV only), VAT group registrations, inter-entity recharge. Todo items 27–28 and [known-limitations.md](known-limitations.md).
+**Not built:** filing (screen and CSV only), VAT group registrations, inter-entity recharge. See [known-limitations.md](known-limitations.md).
 
 **Taxpayer** — a taxpayer *as one authority knows them*: their number and their permission for the app to act. Owned by an admin, chosen per tax report group.
 

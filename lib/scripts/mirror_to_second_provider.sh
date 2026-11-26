@@ -1,6 +1,6 @@
 #!/bin/bash
 # Mirrors ONE bucket/prefix to a second, independent object-storage provider —
-# see docs/known-limitations.md §8 and docs/maintenance.md. Entirely optional:
+# see docs/known-limitations.md §4 and docs/maintenance.md. Entirely optional:
 # nothing in the app requires this to exist, and the app never reads from it.
 #
 # Provider-agnostic on purpose — everything specific to a provider (endpoint,

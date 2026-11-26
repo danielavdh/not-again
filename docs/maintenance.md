@@ -8,7 +8,7 @@ Three roles, because self-hosting splits them:
 - **operator** — whoever runs the server; may not be a developer
 - **developer** — whoever maintains the code
 
-Companion document: `docs/known-limitations.md` — what has to be true before somebody else can run this.
+Companion document: `docs/known-limitations.md` — what is still open, and why.
 
 <!-- toc -->
 
@@ -91,7 +91,7 @@ Set `scaleway.backup_bucket` in credentials to the bucket `backup_db.sh` uploads
 Left unset, the check says the backups are not being watched rather than passing silently.
 
 A gap it does **not** close: it tells the maintainer, not the bookkeepers. See
-`known-limitations.md` §7.
+`known-limitations.md` §3.
 
 ### If the report says a backup shrank
 
@@ -141,7 +141,7 @@ Nothing means it is current. Anything means the server is running an older backu
 
 **A failed run is caught by the weekly report**, not by the script. `set -e` exits nonzero and cron mails root, which on a bare server goes nowhere — so the check is made from the other end, against the bucket's newest object, where a run that never happened and a run that failed look the same and are both wrong.
 
-**Receipts are deliberately not backed up at all — decided, not an oversight.** This only dumps Postgres; the receipt files themselves live in object storage. A receipt already exists in two independent places — the admin's own copy (a phone, a scanner, wherever the original came from) and the live bucket — and retaining the source document for the statutory period is the admin's responsibility, not this app's; see `docs/self-hosting-legal.md`. A third copy would not meaningfully reduce risk. Tax filings and the year-end/on-demand books archives (`known-limitations.md` §8) are different: nobody but this app has a copy of those, so they ARE mirrored — see below.
+**Receipts are deliberately not backed up at all — decided, not an oversight.** This only dumps Postgres; the receipt files themselves live in object storage. A receipt already exists in two independent places — the admin's own copy (a phone, a scanner, wherever the original came from) and the live bucket — and retaining the source document for the statutory period is the admin's responsibility, not this app's; see `docs/self-hosting-legal.md`. A third copy would not meaningfully reduce risk. Tax filings and the year-end/on-demand books archives (`known-limitations.md` §4) are different: nobody but this app has a copy of those, so they ARE mirrored — see below.
 
 ### Mirroring to a second provider — optional, `lib/scripts/mirror_to_second_provider.sh`
 
@@ -255,7 +255,7 @@ reboot for this.
 
 ### The master key
 
-`config/master.key` backed up somewhere that is not the server and not the laptop it was generated on. See `known-limitations.md` §6 for what its loss actually costs — less than folk wisdom suggests, but the **succession** case is real: if only one person can get into the Scaleway account, the books have a single point of failure that is a human being.
+`config/master.key` backed up somewhere that is not the server and not the laptop it was generated on. See `known-limitations.md` §2 for what its loss actually costs — less than folk wisdom suggests, but the **succession** case is real: if only one person can get into the Scaleway account, the books have a single point of failure that is a human being.
 
 ### Secret rotation
 
@@ -300,7 +300,7 @@ solo entity code), written when the last member with activity has closed through
 that year — or by `ArchiveSweepJob` on 1 Jan for year `current - 2` if nobody
 has. `Archives::YearEnd` is the trigger brain; `EntityGroupMembership` (a
 complete per-entity timeline) decides which scope owns which days. See
-`known-limitations.md` §8.
+`known-limitations.md` §4.
 
 ### Retention sweep
 
@@ -325,4 +325,4 @@ Automatic, monthly. It never deletes on its own: it emails the sudo admin — fa
 ## Known gaps
 
 - **Receipts have no backup separate from the live bucket, by design** — not planned, see the "Database backups" section above for why.
-- No visible "last backup" or "last archive" date for the people who depend on them. The weekly report tells the maintainer; the bookkeepers still cannot see it. `known-limitations.md` §7.
+- No visible "last backup" or "last archive" date for the people who depend on them. The weekly report tells the maintainer; the bookkeepers still cannot see it. `known-limitations.md` §3.

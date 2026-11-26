@@ -25,6 +25,7 @@ Anything that lets someone reach books they are not entitled to, act as an admin
 - **The public demo signs a visitor in without a password**, if the operator chose to seed it. It can read, and nothing else. Every request that is not a plain `GET` is refused, as are the filing actions even on `GET` (those would talk to a real tax authority); receipt upload and deletion are refused by a guard of their own; and `AdminEntity` refuses to put a demo account and a real one on the same books, or to give a demo account full access. **Any write reached from a demo session is a vulnerability and worth reporting.**
 
 - **In development, uploads are served from `public/` without a login**, and the server binds to localhost only. Running development mode as an installation is not supported.
+- **In production, there is no filesystem fallback for uploads.** Production refuses to boot without an S3 bucket (`config/initializers/00_object_storage.rb`), `.kamal/hooks/pre-connect` checks the bucket before a deploy starts, and `test/object_storage_guard_test.rb` fails if a fallback is reintroduced.
 
 Known gaps are listed openly in [docs/known-limitations.md](docs/known-limitations.md). Something already described there is not news, but a way to exploit it is.
 

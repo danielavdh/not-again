@@ -54,7 +54,7 @@ module Authentication
     # ⚠️ NOT the same rule as OTP's exemptions. upload_receipts_only admins are
     # exempt from OTP for friction reasons (a phone, nothing more to prove) but
     # they still handle real personal data through receipts, so they are NOT
-    # exempt here — see known-limitations.md §13. Demo is exempt: there is no
+    # exempt here — see self-hosting-legal.md. Demo is exempt: there is no
     # real relationship to consent to, and asking a passwordless stranger to
     # "agree to terms" for a public demo is nonsensical.
     #

@@ -189,7 +189,7 @@ Saldosteuersatz).
 | Header facts (currency, labels, flat rate, prepayment) | `TaxSchemeConfig` |
 | A code: rate maths, validity, the dropdown | `TaxCode` |
 | Control accounts: create, retire, revive, find | `Account.resolve_vat_account`, `Entity#sync_vat_control_accounts` |
-| Splitting the VAT off at save | `JournalEntry#derive_tax_legs`, `TaxLegDerivation` (controllers) |
+| Splitting the VAT off at save | `JournalEntry#derive_tax_legs` (before every validation) |
 | Save rules | `JournalEntry#tax_codes_are_usable`, `#single_balance_account_with_nominals`, `#vat_leg_currency_matches_the_balance_leg`; `Account#tax_code_problem` |
 | The return | `Reports::VatReturn`, `reports/vat_return.html.erb` |
 | Flat rate and prepayment on a report | `Report`, `ReportGroup#flat_rate?`, `ReportGroup#prepayment_category`, `reports/_report-modal.html.erb` |

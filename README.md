@@ -305,7 +305,8 @@ extending it, or looking something up. The essentials:
 | [docs/vat-reference.md](docs/vat-reference.md) | VAT per country: what is shared, what differs, which special cases are handled |
 | [docs/tax-category-reference.md](docs/tax-category-reference.md) | Every shipped tax catalogue, and every field a catalogue file can hold |
 | [docs/self-hosting-legal.md](docs/self-hosting-legal.md) | What EU product-liability and cyber-resilience law expects, and what changes if you charge |
-| [docs/known-limitations.md](docs/known-limitations.md) | The self-hosting risks worked through — resolved and still-open |
+| [docs/known-limitations.md](docs/known-limitations.md) | What is still open, and why |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each release, and how to upgrade |
 | [SECURITY.md](SECURITY.md) | How to report a security problem, and what is by design rather than a defect |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | House style |
 
